@@ -20,6 +20,7 @@ const ProfileForm = ({ user, setUser, onUpdate }) => {
     about_me: user.about_me || ''
   });
   const [uploading, setUploading] = useState(false);
+  const [uploadingId, setUploadingId] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const handleChange = (e) => {
