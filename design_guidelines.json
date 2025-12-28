@@ -1,0 +1,211 @@
+{
+  "project_name": "servispro",
+  "design_philosophy": {
+    "name": "Swiss Utility",
+    "description": "A hyper-functional, high-contrast aesthetic inspired by Swiss design and industrial manuals. It prioritizes clarity, legibility, and trust over decoration. It uses a strict grid, bold typography, and 'Signal' colors to guide action.",
+    "core_principles": [
+      "Function is Beauty: If it doesn't help the user, delete it.",
+      "Signal vs. Noise: Use color only to signal status or action.",
+      "The Grid is King: Everything aligns. No floating elements.",
+      "Tactile Reality: Use subtle borders and shadows to create depth, not flatness."
+    ]
+  },
+  "typography": {
+    "font_family": {
+      "headings": "Manrope, sans-serif",
+      "body": "Public Sans, sans-serif",
+      "mono": "JetBrains Mono, monospace"
+    },
+    "installation": {
+      "google_fonts_url": "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+    },
+    "usage_rules": {
+      "headings": "Use Manrope. Weight: 700 or 800. Tracking: -0.02em (tight). Line-height: 1.1.",
+      "body": "Use Public Sans. Weight: 400 or 500. Line-height: 1.6 (relaxed).",
+      "labels": "Use Manrope. Weight: 600. Uppercase. Tracking: 0.05em (wide). Size: text-xs.",
+      "data": "Use JetBrains Mono for phone numbers, prices, and IDs."
+    }
+  },
+  "colors": {
+    "theme": "light",
+    "palette": {
+      "primary": {
+        "name": "Deep Azure",
+        "hex": "#0033CC",
+        "hsl": "225 100% 40%",
+        "usage": "Primary actions, active states, brand identity."
+      },
+      "secondary": {
+        "name": "Signal Orange",
+        "hex": "#FF5500",
+        "hsl": "20 100% 50%",
+        "usage": "Alerts, urgent notifications, 'Book Now' CTAs."
+      },
+      "background": {
+        "name": "Paper White",
+        "hex": "#FFFFFF",
+        "hsl": "0 0% 100%",
+        "usage": "Main background."
+      },
+      "surface": {
+        "name": "Off-White",
+        "hex": "#F8F9FA",
+        "hsl": "210 20% 98%",
+        "usage": "Sidebar, card backgrounds."
+      },
+      "foreground": {
+        "name": "Ink Black",
+        "hex": "#1A1A1A",
+        "hsl": "0 0% 10%",
+        "usage": "Main text."
+      },
+      "muted": {
+        "name": "Industrial Grey",
+        "hex": "#F1F5F9",
+        "hsl": "210 40% 96.1%",
+        "usage": "Secondary backgrounds, disabled states."
+      },
+      "border": {
+        "name": "Line Grey",
+        "hex": "#E2E8F0",
+        "hsl": "215 27.9% 16.9%",
+        "usage": "Borders, dividers."
+      }
+    },
+    "tailwind_config_extension": {
+      "colors": {
+        "border": "hsl(214.3 31.8% 91.4%)",
+        "input": "hsl(214.3 31.8% 91.4%)",
+        "ring": "hsl(225 100% 40%)",
+        "background": "hsl(0 0% 100%)",
+        "foreground": "hsl(222.2 84% 4.9%)",
+        "primary": {
+          "DEFAULT": "hsl(225 100% 40%)",
+          "foreground": "hsl(210 40% 98%)"
+        },
+        "secondary": {
+          "DEFAULT": "hsl(20 100% 50%)",
+          "foreground": "hsl(210 40% 98%)"
+        },
+        "destructive": {
+          "DEFAULT": "hsl(0 84.2% 60.2%)",
+          "foreground": "hsl(210 40% 98%)"
+        },
+        "muted": {
+          "DEFAULT": "hsl(210 40% 96.1%)",
+          "foreground": "hsl(215.4 16.3% 46.9%)"
+        },
+        "accent": {
+          "DEFAULT": "hsl(210 40% 96.1%)",
+          "foreground": "hsl(222.2 47.4% 11.2%)"
+        },
+        "popover": {
+          "DEFAULT": "hsl(0 0% 100%)",
+          "foreground": "hsl(222.2 84% 4.9%)"
+        },
+        "card": {
+          "DEFAULT": "hsl(0 0% 100%)",
+          "foreground": "hsl(222.2 84% 4.9%)"
+        }
+      }
+    }
+  },
+  "layout": {
+    "spacing_system": {
+      "base": "4px",
+      "scale": [
+        "p-1",
+        "p-2",
+        "p-4",
+        "p-6",
+        "p-8",
+        "p-12",
+        "p-16",
+        "p-24",
+        "p-32"
+      ],
+      "rule": "Use 2x more padding than you think is necessary. White space is a luxury."
+    },
+    "grids": {
+      "dashboard": {
+        "name": "Control Room Grid",
+        "classes": "grid grid-cols-1 md:grid-cols-12 gap-6",
+        "usage": "Main dashboard view. Widgets span 3, 4, or 6 columns."
+      },
+      "profile": {
+        "name": "Tetris Grid",
+        "classes": "grid grid-cols-1 md:grid-cols-8 gap-8",
+        "usage": "Public profile. Hero image spans full width or 5 cols, details span 3 cols."
+      }
+    },
+    "containers": {
+      "max_width": "max-w-7xl",
+      "padding": "px-4 md:px-8 lg:px-12"
+    }
+  },
+  "components": {
+    "buttons": {
+      "style": "Sharp corners or minimal radius (rounded-md).",
+      "primary": "bg-primary text-white hover:bg-primary/90 shadow-sm hover:shadow-md transition-all",
+      "secondary": "bg-white border border-input hover:bg-accent hover:text-accent-foreground",
+      "ghost": "hover:bg-accent hover:text-accent-foreground"
+    },
+    "cards": {
+      "style": "Flat or Low Elevation.",
+      "classes": "bg-card border border-border shadow-sm rounded-lg p-6",
+      "hover": "hover:border-primary/50 transition-colors duration-300"
+    },
+    "inputs": {
+      "style": "Industrial.",
+      "classes": "h-12 rounded-md border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+    },
+    "status_badges": {
+      "online": "bg-green-100 text-green-700 border border-green-200",
+      "offline": "bg-slate-100 text-slate-600 border border-slate-200",
+      "busy": "bg-orange-100 text-orange-700 border border-orange-200"
+    }
+  },
+  "images": {
+    "electrician": [
+      "https://images.unsplash.com/photo-1467733238130-bb6846885316?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NjZ8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBlbGVjdHJpY2lhbiUyMHdvcmtpbmd8ZW58MHx8fHwxNzY2OTYzNDcyfDA&ixlib=rb-4.1.0&q=85",
+      "https://images.unsplash.com/photo-1762330465376-b89b5584306d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NjZ8MHwxfHNlYXJjaHwyfHxwcm9mZXNzaW9uYWwlMjBlbGVjdHJpY2lhbiUyMHdvcmtpbmd8ZW58MHx8fHwxNzY2OTYzNDcyfDA&ixlib=rb-4.1.0&q=85"
+    ],
+    "plumber": [
+      "https://images.unsplash.com/photo-1635221798248-8a3452ad07cd?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2NDN8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBwbHVtYmVyJTIwZml4aW5nJTIwc2lua3xlbnwwfHx8fDE3NjY5NjM0NzN8MA&ixlib=rb-4.1.0&q=85",
+      "https://images.unsplash.com/photo-1666855181339-433c42872bba?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2NDN8MHwxfHNlYXJjaHwzfHxwcm9mZXNzaW9uYWwlMjBwbHVtYmVyJTIwZml4aW5nJTIwc2lua3xlbnwwfHx8fDE3NjY5NjM0NzN8MA&ixlib=rb-4.1.0&q=85"
+    ],
+    "mechanic": [
+      "https://images.unsplash.com/photo-1765325780632-8b6d55f0c6f1?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzR8MHwxfHNlYXJjaHwxfHxhdXRvJTIwbWVjaGFuaWMlMjB3b3JraW5nJTIwb24lMjBjYXJ8ZW58MHx8fHwxNzY2OTYzNDc2fDA&ixlib=rb-4.1.0&q=85",
+      "https://images.unsplash.com/photo-1764015805414-df7de89d405b?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzR8MHwxfHNlYXJjaHwyfHxhdXRvJTIwbWVjaGFuaWMlMjB3b3JraW5nJTIwb24lMjBjYXJ8ZW58MHx8fHwxNzY2OTYzNDc2fDA&ixlib=rb-4.1.0&q=85"
+    ],
+    "placeholders": {
+      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix",
+      "hero_bg": "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80"
+    }
+  },
+  "universal_guidelines": {
+    "anti_ai_rules": [
+      "DO NOT use generic 'SaaS Blue' gradients.",
+      "DO NOT center text by default. Left-align for strength.",
+      "DO NOT use 'Inter' for headings. Use 'Manrope'.",
+      "DO NOT make everything a card. Use whitespace to separate content."
+    ],
+    "accessibility": {
+      "contrast": "Ensure 4.5:1 contrast ratio for text.",
+      "focus": "Visible focus rings are mandatory.",
+      "motion": "Respect prefers-reduced-motion."
+    },
+    "testing": {
+      "attribute": "data-testid",
+      "format": "kebab-case",
+      "example": "login-submit-button"
+    }
+  },
+  "instructions_to_main_agent": [
+    "1. Update tailwind.config.js with the colors and fonts defined above.",
+    "2. Install the fonts via Google Fonts in index.html or CSS import.",
+    "3. Create the 'Control Room' layout for the dashboard.",
+    "4. Use the provided image URLs for the respective service categories.",
+    "5. Implement the 'Swiss Utility' aesthetic: high contrast, bold type, strict grid."
+  ]
+}
