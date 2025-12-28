@@ -246,6 +246,30 @@ async def upload_profile_picture(file: UploadFile = File(...), current_user: dic
     
     return {'profile_picture': profile_picture_url}
 
+@api_router.post("/profile/upload-id-verification")
+async def upload_id_verification(file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):
+    # Validate file type
+    if not file.content_type.startswith('image/'):
+        raise HTTPException(status_code=400, detail="File must be an image")
+    
+    # Generate unique filename
+    file_extension = file.filename.split('.')[-1]
+    filename = f"{current_user['id']}_id_verification_{uuid.uuid4()}.{file_extension}"
+    file_path = UPLOAD_DIR / filename
+    
+    # Save file
+    with file_path.open('wb') as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    # Update user profile
+    id_verification_url = f"/uploads/{filename}"
+    await db.service_providers.update_one(
+        {'id': current_user['id']},
+        {'$set': {'id_verification_picture': id_verification_url}}
+    )
+    
+    return {'id_verification_picture': id_verification_url}
+
 @api_router.get("/providers", response_model=List[ServiceProvider])
 async def get_all_providers():
     providers = await db.service_providers.find({}, {'_id': 0, 'password': 0}).to_list(100)
