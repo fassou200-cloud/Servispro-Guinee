@@ -88,6 +88,7 @@ class ServiceProvider(BaseModel):
     profession: str
     about_me: Optional[str] = None
     profile_picture: Optional[str] = None
+    id_verification_picture: Optional[str] = None
     online_status: bool = False
     created_at: str
 
