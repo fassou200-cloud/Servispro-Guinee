@@ -175,8 +175,8 @@ async def register(input_data: RegisterInput):
     # Generate token
     token = create_token(user_id)
     
-    # Return user without password
-    user_response = {k: v for k, v in user_doc.items() if k != 'password'}
+    # Get user from database without _id and password
+    user_response = await db.service_providers.find_one({'id': user_id}, {'_id': 0, 'password': 0})
     
     return AuthResponse(token=token, user=user_response)
 
