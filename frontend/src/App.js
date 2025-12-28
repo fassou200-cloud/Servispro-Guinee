@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import '@/App.css';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import LandingPage from '@/pages/LandingPage';
+import BrowseProviders from '@/pages/BrowseProviders';
+import ProviderProfile from '@/pages/ProviderProfile';
 import AuthPage from '@/pages/AuthPage';
 import Dashboard from '@/pages/Dashboard';
 import { Toaster } from '@/components/ui/sonner';
@@ -23,6 +26,12 @@ function App() {
     <div className="App">
       <BrowserRouter>
         <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/browse" element={<BrowseProviders />} />
+          <Route path="/provider/:providerId" element={<ProviderProfile />} />
+          
+          {/* Provider Routes */}
           <Route 
             path="/auth" 
             element={isAuthenticated ? <Navigate to="/dashboard" /> : <AuthPage setIsAuthenticated={setIsAuthenticated} />} 
@@ -31,7 +40,6 @@ function App() {
             path="/dashboard" 
             element={isAuthenticated ? <Dashboard setIsAuthenticated={setIsAuthenticated} /> : <Navigate to="/auth" />} 
           />
-          <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/auth"} />} />
         </Routes>
       </BrowserRouter>
       <Toaster />
