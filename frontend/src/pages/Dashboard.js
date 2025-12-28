@@ -124,14 +124,23 @@ const Dashboard = ({ setIsAuthenticated }) => {
                 {user.first_name} {user.last_name}
               </h2>
               <p className="text-lg text-muted-foreground mb-2">{user.profession}</p>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md text-sm font-medium border" 
-                   data-testid="status-badge"
-                   className={user.online_status 
-                     ? 'bg-green-100 text-green-700 border-green-200' 
-                     : 'bg-slate-100 text-slate-600 border-slate-200'
-                   }>
-                <div className={`h-2 w-2 rounded-full ${user.online_status ? 'bg-green-500' : 'bg-slate-400'}`} />
-                {user.online_status ? 'Available' : 'Unavailable'}
+              <div className="flex items-center gap-2">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md text-sm font-medium border" 
+                     data-testid="status-badge"
+                     className={user.online_status 
+                       ? 'bg-green-100 text-green-700 border-green-200' 
+                       : 'bg-slate-100 text-slate-600 border-slate-200'
+                     }>
+                  <div className={`h-2 w-2 rounded-full ${user.online_status ? 'bg-green-500' : 'bg-slate-400'}`} />
+                  {user.online_status ? 'Available' : 'Unavailable'}
+                </div>
+                {user.id_verification_picture && (
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md text-sm font-medium border bg-blue-100 text-blue-700 border-blue-200"
+                       data-testid="verified-badge">
+                    <ShieldCheck className="h-4 w-4" />
+                    ID Verified
+                  </div>
+                )}
               </div>
             </div>
           </div>
