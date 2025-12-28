@@ -59,6 +59,38 @@ const ProfileForm = ({ user, setUser, onUpdate }) => {
     }
   };
 
+  const handleIdVerificationUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file');
+      return;
+    }
+
+    setUploadingId(true);
+    try {
+      const token = localStorage.getItem('token');
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await axios.post(`${API}/profile/upload-id-verification`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      setUser({ ...user, id_verification_picture: response.data.id_verification_picture });
+      toast.success('ID verification uploaded successfully');
+      onUpdate();
+    } catch (error) {
+      toast.error('Failed to upload ID verification');
+    } finally {
+      setUploadingId(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
