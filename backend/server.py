@@ -167,6 +167,7 @@ async def register(input_data: RegisterInput):
         'profession': input_data.profession.value,
         'about_me': '',
         'profile_picture': None,
+        'id_verification_picture': None,
         'online_status': False,
         'created_at': datetime.now(timezone.utc).isoformat()
     }
