@@ -148,6 +148,40 @@ const ProfileForm = ({ user, setUser, onUpdate }) => {
           </div>
         </div>
 
+        {/* ID Verification Upload */}
+        <div className="space-y-2">
+          <Label htmlFor="id-verification" className="font-heading text-xs uppercase tracking-wide">
+            ID Verification
+          </Label>
+          <p className="text-xs text-muted-foreground mb-2">
+            Upload a photo of your government-issued ID for verification
+          </p>
+          <div className="flex items-center gap-4">
+            <input
+              id="id-verification"
+              type="file"
+              data-testid="id-verification-input"
+              accept="image/*"
+              onChange={handleIdVerificationUpload}
+              className="hidden"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              data-testid="upload-id-button"
+              onClick={() => document.getElementById('id-verification').click()}
+              disabled={uploadingId}
+              className="gap-2"
+            >
+              <Upload className="h-4 w-4" />
+              {uploadingId ? 'Uploading...' : 'Upload ID'}
+            </Button>
+            {user.id_verification_picture && (
+              <span className="text-sm text-green-600 font-medium">✓ ID Verified</span>
+            )}
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <Label htmlFor="first_name" className="font-heading text-xs uppercase tracking-wide">
