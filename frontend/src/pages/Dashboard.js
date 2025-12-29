@@ -9,6 +9,8 @@ import { toast } from 'sonner';
 import axios from 'axios';
 import ProfileForm from '@/components/ProfileForm';
 import JobsList from '@/components/JobsList';
+import RentalListingForm from '@/components/RentalListingForm';
+import MyRentals from '@/components/MyRentals';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
