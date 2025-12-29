@@ -231,18 +231,19 @@ const RentalListingForm = ({ onSuccess }) => {
             {photoPreviewUrls.length > 0 && (
               <div className="grid grid-cols-3 gap-2 mt-4">
                 {photoPreviewUrls.map((url, index) => (
-                  <div key={index} className="relative">
+                  <div key={index} className="relative group">
                     <img
                       src={url}
                       alt={`Preview ${index + 1}`}
-                      className="w-full h-20 object-cover rounded border"
+                      className="w-full h-24 object-cover rounded-lg border border-border"
                     />
                     <button
                       type="button"
                       onClick={() => removePhoto(index)}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                      className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full w-6 h-6 flex items-center justify-center hover:bg-destructive/90 transition-colors opacity-0 group-hover:opacity-100"
+                      data-testid={`remove-photo-${index}`}
                     >
-                      ×
+                      <X className="h-4 w-4" />
                     </button>
                   </div>
                 ))}
