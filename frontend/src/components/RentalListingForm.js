@@ -70,12 +70,40 @@ const RentalListingForm = ({ onSuccess }) => {
         rental_price: parseFloat(formData.rental_price)
       };
 
+      // Create rental listing
       const response = await axios.post(`${API}/rentals`, payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      setCreatedListingId(response.data.id);
-      toast.success('Rental listing created! Now add photos.');
+      const rentalId = response.data.id;
+
+      // Upload photos if any
+      if (selectedPhotos.length > 0) {
+        for (const photo of selectedPhotos) {
+          const photoFormData = new FormData();
+          photoFormData.append('file', photo);
+
+          await axios.post(`${API}/rentals/${rentalId}/upload-photo`, photoFormData, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'multipart/form-data'
+            }
+          });
+        }
+      }
+
+      toast.success('Rental listing created successfully!');
+      
+      // Reset form
+      setFormData({
+        property_type: 'Apartment',
+        title: '',
+        description: '',
+        location: '',
+        rental_price: ''
+      });
+      setSelectedPhotos([]);
+      setPhotoPreviewUrls([]);
       
       if (onSuccess) onSuccess();
     } catch (error) {
