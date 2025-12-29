@@ -182,23 +182,25 @@ const LandingPage = () => {
       </section>
 
       {/* Features Section */}
-      <section className="bg-muted py-16 md:py-24">
+      <section className="bg-gradient-to-br from-muted/50 to-white py-20 md:py-28">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <h3 className="text-3xl font-heading font-bold text-foreground mb-12 text-center">
+          <h3 className="text-4xl font-heading font-bold text-foreground mb-16 text-center">
             Why Choose ServisPro
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
             {features.map((feature) => {
               const Icon = feature.icon;
               return (
-                <div key={feature.title} className="text-center">
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-lg bg-primary/10 text-primary mb-4">
-                    <Icon className="h-8 w-8" />
+                <div key={feature.title} className="text-center group">
+                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary/70 text-white mb-6 group-hover:scale-110 transition-transform shadow-lg">
+                    <Icon className="h-10 w-10" />
                   </div>
-                  <h4 className="text-xl font-heading font-bold text-foreground mb-2">
+                  <h4 className="text-2xl font-heading font-bold text-foreground mb-3">
                     {feature.title}
                   </h4>
-                  <p className="text-muted-foreground">{feature.description}</p>
+                  <p className="text-lg text-muted-foreground leading-relaxed">
+                    {feature.description}
+                  </p>
                 </div>
               );
             })}
@@ -207,18 +209,27 @@ const LandingPage = () => {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border py-8">
+      <footer className="border-t border-border py-10 bg-white">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary via-secondary to-accent flex items-center justify-center">
+                <span className="text-2xl font-bold text-white">S</span>
+              </div>
+              <div>
+                <p className="font-heading font-bold text-lg text-foreground">ServisPro</p>
+                <p className="text-sm text-muted-foreground">Professional Services Platform</p>
+              </div>
+            </div>
             <p className="text-sm text-muted-foreground">
               © 2024 ServisPro. All rights reserved.
             </p>
             <Button
               variant="link"
               onClick={() => navigate('/auth')}
-              className="text-primary"
+              className="text-primary hover:text-primary/80"
             >
-              Are you a service provider? Join us
+              Are you a service provider? Join us →
             </Button>
           </div>
         </div>
