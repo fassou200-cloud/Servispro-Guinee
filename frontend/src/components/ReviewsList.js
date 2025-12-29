@@ -52,7 +52,7 @@ const ReviewsList = ({ providerId }) => {
   };
 
   if (loading) {
-    return <Card className="p-6"><p className="text-muted-foreground">Loading reviews...</p></Card>;
+    return <Card className="p-6"><p className="text-muted-foreground">Chargement des avis...</p></Card>;
   }
 
   return (
@@ -69,7 +69,7 @@ const ReviewsList = ({ providerId }) => {
                 {renderStars(Math.round(stats.average_rating))}
               </div>
               <div className="text-sm text-muted-foreground">
-                {stats.total_reviews} review{stats.total_reviews !== 1 ? 's' : ''}
+                {stats.total_reviews} avis
               </div>
             </div>
             <div className="flex-1 space-y-2">
@@ -100,7 +100,7 @@ const ReviewsList = ({ providerId }) => {
         {reviews.length === 0 ? (
           <Card className="p-8 text-center">
             <p className="text-muted-foreground">
-              No reviews yet. Be the first to leave a review!
+              Aucun avis pour le moment. Soyez le premier à laisser un avis !
             </p>
           </Card>
         ) : (

@@ -45,7 +45,7 @@ const ServiceRequestForm = ({ providerId, providerName, onSuccess }) => {
 
       await axios.post(`${API}/jobs`, payload);
       
-      toast.success('Service request sent successfully!');
+      toast.success('Demande de service envoyée avec succès !');
       setFormData({
         client_name: '',
         phone_number: '',
@@ -58,7 +58,7 @@ const ServiceRequestForm = ({ providerId, providerName, onSuccess }) => {
       
       if (onSuccess) onSuccess();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to send request');
+      toast.error(error.response?.data?.detail || 'Échec de l\'envoi de la demande');
     } finally {
       setLoading(false);
     }

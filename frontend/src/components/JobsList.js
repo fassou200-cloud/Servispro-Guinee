@@ -41,10 +41,10 @@ const JobsList = () => {
         { status },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      toast.success(`Job ${status.toLowerCase()} successfully`);
+      toast.success(`Travail ${status === 'Accepted' ? 'accepté' : status === 'Rejected' ? 'refusé' : 'terminé'} avec succès`);
       fetchJobs();
     } catch (error) {
-      toast.error(`Failed to ${status.toLowerCase()} job`);
+      toast.error(`Échec de l'opération sur le travail`);
     }
   };
 
