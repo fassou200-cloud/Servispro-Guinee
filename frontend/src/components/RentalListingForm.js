@@ -161,8 +161,7 @@ const RentalListingForm = ({ onSuccess }) => {
         Create Rental Listing
       </h3>
 
-      {!createdListingId ? (
-        <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="property_type" className="font-heading text-xs uppercase tracking-wide">
               Property Type *
