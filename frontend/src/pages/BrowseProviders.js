@@ -47,7 +47,7 @@ const BrowseProviders = () => {
       });
       setProviderStats(statsMap);
     } catch (error) {
-      toast.error('Failed to load providers');
+      toast.error('Échec du chargement des prestataires');
     } finally {
       setLoading(false);
     }
@@ -73,7 +73,7 @@ const BrowseProviders = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg">Loading providers...</div>
+        <div className="text-lg">Chargement des prestataires...</div>
       </div>
     );
   }
@@ -184,7 +184,7 @@ const BrowseProviders = () => {
                           </span>
                         </div>
                         <span className="text-sm text-muted-foreground">
-                          ({providerStats[provider.id].total_reviews} review{providerStats[provider.id].total_reviews !== 1 ? 's' : ''})
+                          ({providerStats[provider.id].total_reviews} avis)
                         </span>
                       </div>
                     )}
@@ -193,13 +193,13 @@ const BrowseProviders = () => {
                       {provider.online_status && (
                         <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-green-100 text-green-700 border border-green-200">
                           <div className="h-1.5 w-1.5 rounded-full bg-green-500" />
-                          Available
+                          Disponible
                         </span>
                       )}
                       {provider.id_verification_picture && (
                         <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-700 border border-blue-200">
                           <ShieldCheck className="h-3 w-3" />
-                          Verified
+                          Vérifié
                         </span>
                       )}
                     </div>
@@ -219,7 +219,7 @@ const BrowseProviders = () => {
                     navigate(`/provider/${provider.id}`);
                   }}
                 >
-                  View Profile & Request Service
+                  Voir le Profil & Demander un Service
                 </Button>
               </Card>
             ))}
