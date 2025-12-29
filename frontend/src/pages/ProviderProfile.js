@@ -101,12 +101,12 @@ const ProviderProfile = () => {
         <Card className="p-8 mb-8">
           <div className="flex flex-col md:flex-row items-start gap-8">
             <div className="flex flex-col items-center gap-4">
-              <Avatar className="h-32 w-32 ring-4 ring-primary/20">
+              <Avatar className="h-[250px] w-[250px] ring-4 ring-primary/20">
                 <AvatarImage
                   src={provider.profile_picture ? `${BACKEND_URL}${provider.profile_picture}` : undefined}
                   alt={`${provider.first_name} ${provider.last_name}`}
                 />
-                <AvatarFallback className="text-4xl font-heading bg-primary text-primary-foreground">
+                <AvatarFallback className="text-6xl font-heading bg-primary text-primary-foreground">
                   {provider.first_name[0]}{provider.last_name[0]}
                 </AvatarFallback>
               </Avatar>

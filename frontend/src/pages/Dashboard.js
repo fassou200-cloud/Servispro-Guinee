@@ -78,9 +78,20 @@ const Dashboard = ({ setIsAuthenticated }) => {
       <header className="bg-card border-b border-border">
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-heading font-bold text-foreground">
-              ServisPro Guinée
-            </h1>
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                data-testid="home-button"
+                onClick={() => window.location.href = '/'}
+                className="gap-2"
+              >
+                <Home className="h-4 w-4" />
+                Accueil
+              </Button>
+              <h1 className="text-2xl font-heading font-bold text-foreground">
+                ServisPro Guinée
+              </h1>
+            </div>
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-3">
                 <Label htmlFor="online-status" className="font-heading text-xs uppercase tracking-wide">
@@ -112,12 +123,12 @@ const Dashboard = ({ setIsAuthenticated }) => {
         {/* Profile Header */}
         <Card className="p-6 mb-8">
           <div className="flex items-center gap-6">
-            <Avatar className="h-24 w-24">
+            <Avatar className="h-[250px] w-[250px] ring-4 ring-primary/20">
               <AvatarImage 
                 src={user.profile_picture ? `${BACKEND_URL}${user.profile_picture}` : undefined} 
                 alt={`${user.first_name} ${user.last_name}`}
               />
-              <AvatarFallback className="text-2xl font-heading bg-primary text-primary-foreground">
+              <AvatarFallback className="text-6xl font-heading bg-primary text-primary-foreground">
                 {user.first_name[0]}{user.last_name[0]}
               </AvatarFallback>
             </Avatar>
