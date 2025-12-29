@@ -119,6 +119,7 @@ const BrowseProviders = () => {
                   <SelectItem value="Electrician">Electrician</SelectItem>
                   <SelectItem value="Mechanic">Mechanic</SelectItem>
                   <SelectItem value="Plumber">Plumber</SelectItem>
+                  <SelectItem value="Logistics">Logistics</SelectItem>
                 </SelectContent>
               </Select>
             </div>
