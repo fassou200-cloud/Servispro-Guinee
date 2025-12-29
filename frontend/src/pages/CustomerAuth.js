@@ -11,7 +11,7 @@ import axios from 'axios';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-const CustomerAuth = () => {
+const CustomerAuth = ({ setIsCustomerAuthenticated }) => {
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -42,8 +42,12 @@ const CustomerAuth = () => {
       localStorage.setItem('customerToken', response.data.token);
       localStorage.setItem('customer', JSON.stringify(response.data.user));
       
-      toast.success(isLogin ? 'Connexion réussie !' : 'Inscription réussie !');
-      navigate('/');
+      if (setIsCustomerAuthenticated) {
+        setIsCustomerAuthenticated(true);
+      }
+      
+      toast.success(isLogin ? `Bienvenue ${response.data.user.first_name} !` : `Compte créé avec succès, bienvenue ${response.data.user.first_name} !`);
+      navigate('/customer/dashboard');
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Une erreur est survenue');
     } finally {
