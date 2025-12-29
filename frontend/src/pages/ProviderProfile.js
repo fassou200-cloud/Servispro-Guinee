@@ -110,18 +110,6 @@ const ProviderProfile = () => {
                   {provider.first_name[0]}{provider.last_name[0]}
                 </AvatarFallback>
               </Avatar>
-              
-              {/* Display Profile Picture if exists */}
-              {provider.profile_picture && (
-                <div className="text-center">
-                  <p className="text-xs text-muted-foreground mb-2">Photo de Profil</p>
-                  <img
-                    src={`${BACKEND_URL}${provider.profile_picture}`}
-                    alt="Photo de profil"
-                    className="w-64 h-48 object-cover rounded-lg border-2 border-border shadow-sm"
-                  />
-                </div>
-              )}
             </div>
 
             <div className="flex-1">
