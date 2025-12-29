@@ -304,61 +304,6 @@ const RentalListingForm = ({ onSuccess }) => {
             {saving ? 'Creating...' : 'Create Listing'}
           </Button>
         </form>
-      ) : (
-        <div className="space-y-6">
-          <div className="text-center p-6 bg-green-50 border border-green-200 rounded-lg">
-            <p className="text-green-700 font-medium mb-2">
-              ✓ Listing created successfully!
-            </p>
-            <p className="text-sm text-green-600">
-              Now add photos to make your listing more attractive
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="rental-photos" className="font-heading text-xs uppercase tracking-wide">
-              Upload Photos (Multiple)
-            </Label>
-            <input
-              id="rental-photos"
-              type="file"
-              data-testid="rental-photos-input"
-              accept="image/*"
-              multiple
-              onChange={handlePhotoUpload}
-              className="hidden"
-            />
-            <Button
-              type="button"
-              variant="outline"
-              data-testid="upload-rental-photos-button"
-              onClick={() => document.getElementById('rental-photos').click()}
-              disabled={uploadingPhotos}
-              className="w-full h-12 gap-2"
-            >
-              <Upload className="h-4 w-4" />
-              {uploadingPhotos ? 'Uploading...' : 'Select Photos'}
-            </Button>
-          </div>
-
-          <Button
-            variant="ghost"
-            onClick={() => {
-              setCreatedListingId(null);
-              setFormData({
-                property_type: 'Apartment',
-                title: '',
-                description: '',
-                location: '',
-                rental_price: ''
-              });
-            }}
-            className="w-full"
-          >
-            Create Another Listing
-          </Button>
-        </div>
-      )}
     </Card>
   );
 };
