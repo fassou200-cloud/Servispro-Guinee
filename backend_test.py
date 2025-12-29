@@ -359,6 +359,8 @@ class ServisProAPITester:
         else:
             self.log_test("Submit Review", False, "Could not create prerequisite job")
             return False
+
+    def test_invalid_login(self):
         """Test login with invalid credentials"""
         login_data = {
             "phone_number": "9999999999",
