@@ -315,8 +315,8 @@ async def register_customer(input_data: CustomerRegisterInput):
     # Generate token
     token = create_token(customer_id)
     
-    # Return customer without password
-    customer_response = {k: v for k, v in customer_doc.items() if k != 'password'}
+    # Return customer without password and _id
+    customer_response = {k: v for k, v in customer_doc.items() if k not in ['password', '_id']}
     customer_response['user_type'] = 'customer'
     
     return AuthResponse(token=token, user=customer_response)
