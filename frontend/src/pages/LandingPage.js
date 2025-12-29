@@ -158,7 +158,7 @@ const LandingPage = () => {
                       alt={category.name}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
-                    <div className={`absolute inset-0 bg-gradient-to-t ${category.color} opacity-80 group-hover:opacity-70 transition-opacity`} />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-6">
                       <div className="bg-white/20 backdrop-blur-sm rounded-full p-4 mb-4 group-hover:scale-110 transition-transform">
                         <Icon className="h-10 w-10" />
