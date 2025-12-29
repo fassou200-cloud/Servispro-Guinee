@@ -49,7 +49,14 @@ const CustomerAuth = ({ setIsCustomerAuthenticated }) => {
       toast.success(isLogin ? `Bienvenue ${response.data.user.first_name} !` : `Compte créé avec succès, bienvenue ${response.data.user.first_name} !`);
       navigate('/customer/dashboard');
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Une erreur est survenue');
+      const errorDetail = error.response?.data?.detail;
+      let errorMessage = 'Une erreur est survenue';
+      if (typeof errorDetail === 'string') {
+        errorMessage = errorDetail;
+      } else if (Array.isArray(errorDetail) && errorDetail.length > 0) {
+        errorMessage = errorDetail[0]?.msg || errorMessage;
+      }
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
