@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
-import { Zap, Wrench, Droplet, ArrowRight, Shield, Clock, Star } from 'lucide-react';
+import { Zap, Wrench, Droplet, Truck, Home, ArrowRight, Shield, Clock, Star } from 'lucide-react';
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -12,36 +12,33 @@ const LandingPage = () => {
       name: 'Electrician',
       icon: Zap,
       description: 'Professional electrical services for your home and business',
-      image: 'https://images.unsplash.com/photo-1467733238130-bb6846885316?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NjZ8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBlbGVjdHJpY2lhbiUyMHdvcmtpbmd8ZW58MHx8fHwxNzY2OTYzNDcyfDA&ixlib=rb-4.1.0&q=85',
+      image: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800&q=80',
+      color: 'from-yellow-500 to-yellow-600',
       link: '/browse?category=Electrician'
     },
     {
       name: 'Mechanic',
       icon: Wrench,
       description: 'Expert auto repair and maintenance services',
-      image: 'https://images.unsplash.com/photo-1765325780632-8b6d55f0c6f1?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzR8MHwxfHNlYXJjaHwxfHxhdXRvJTIwbWVjaGFuaWMlMjB3b3JraW5nJTIwb24lMjBjYXJ8ZW58MHx8fHwxNzY2OTYzNDc2fDA&ixlib=rb-4.1.0&q=85',
+      image: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=800&q=80',
+      color: 'from-red-500 to-red-600',
       link: '/browse?category=Mechanic'
     },
     {
       name: 'Plumber',
       icon: Droplet,
       description: 'Reliable plumbing solutions for all your needs',
-      image: 'https://images.unsplash.com/photo-1635221798248-8a3452ad07cd?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2NDN8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBwbHVtYmVyJTIwZml4aW5nJTIwc2lua3xlbnwwfHx8fDE3NjY5NjM0NzN8MA&ixlib=rb-4.1.0&q=85',
+      image: 'https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?w=800&q=80',
+      color: 'from-blue-500 to-blue-600',
       link: '/browse?category=Plumber'
     },
     {
       name: 'Logistics',
-      icon: Wrench,
-      description: 'Delivery and logistics services for your needs',
-      image: 'https://images.unsplash.com/photo-1566576721346-d4a3b4eaeb55?crop=entropy&cs=srgb&fm=jpg&q=85',
+      icon: Truck,
+      description: 'Fast and reliable delivery and logistics services',
+      image: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80',
+      color: 'from-green-500 to-green-600',
       link: '/browse?category=Logistics'
-    },
-    {
-      name: 'Apartment Rentals',
-      icon: Droplet,
-      description: 'Find your perfect apartment or house for rent',
-      image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?crop=entropy&cs=srgb&fm=jpg&q=85',
-      link: '/rentals'
     }
   ];
 
