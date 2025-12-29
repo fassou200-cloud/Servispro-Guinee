@@ -50,6 +50,10 @@ class JobStatus(str, Enum):
     REJECTED = "Rejected"
     COMPLETED = "Completed"
 
+class PropertyType(str, Enum):
+    APARTMENT = "Apartment"
+    HOUSE = "House"
+
 # Models
 class RegisterInput(BaseModel):
     first_name: str
