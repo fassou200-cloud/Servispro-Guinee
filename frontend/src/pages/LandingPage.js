@@ -1,10 +1,26 @@
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
-import { Zap, Wrench, Droplet, Truck, Home, ArrowRight, Shield, Clock, Star } from 'lucide-react';
+import { Zap, Wrench, Droplet, Truck, Home, ArrowRight, Shield, Clock, Star, User, LogOut } from 'lucide-react';
 
-const LandingPage = () => {
+const LandingPage = ({ isCustomerAuthenticated }) => {
   const navigate = useNavigate();
+  const [customer, setCustomer] = useState(null);
+
+  useEffect(() => {
+    const storedCustomer = localStorage.getItem('customer');
+    if (storedCustomer) {
+      setCustomer(JSON.parse(storedCustomer));
+    }
+  }, []);
+
+  const handleCustomerLogout = () => {
+    localStorage.removeItem('customerToken');
+    localStorage.removeItem('customer');
+    setCustomer(null);
+    window.location.reload();
+  };
 
   const categories = [
     {
