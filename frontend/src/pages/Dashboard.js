@@ -33,7 +33,7 @@ const Dashboard = ({ setIsAuthenticated }) => {
       setUser(response.data);
       localStorage.setItem('user', JSON.stringify(response.data));
     } catch (error) {
-      toast.error('Failed to fetch profile');
+      toast.error('Échec du chargement du profil');
       if (error.response?.status === 401) {
         handleLogout();
       }
@@ -58,16 +58,16 @@ const Dashboard = ({ setIsAuthenticated }) => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setUser({ ...user, online_status: newStatus });
-      toast.success(`Status updated to ${newStatus ? 'Online' : 'Offline'}`);
+      toast.success(`Statut mis à jour: ${newStatus ? 'En ligne' : 'Hors ligne'}`);
     } catch (error) {
-      toast.error('Failed to update status');
+      toast.error('Échec de la mise à jour du statut');
     }
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg">Loading...</div>
+        <div className="text-lg">Chargement...</div>
       </div>
     );
   }
@@ -79,12 +79,12 @@ const Dashboard = ({ setIsAuthenticated }) => {
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-4">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-heading font-bold text-foreground">
-              ServisPro
+              ServisPro Guinée
             </h1>
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-3">
                 <Label htmlFor="online-status" className="font-heading text-xs uppercase tracking-wide">
-                  {user.online_status ? 'Online' : 'Offline'}
+                  {user.online_status ? 'En ligne' : 'Hors ligne'}
                 </Label>
                 <Switch
                   id="online-status"
@@ -100,7 +100,7 @@ const Dashboard = ({ setIsAuthenticated }) => {
                 className="gap-2"
               >
                 <LogOut className="h-4 w-4" />
-                Logout
+                Déconnexion
               </Button>
             </div>
           </div>
@@ -134,13 +134,13 @@ const Dashboard = ({ setIsAuthenticated }) => {
                        : 'bg-slate-100 text-slate-600 border-slate-200'
                      }>
                   <div className={`h-2 w-2 rounded-full ${user.online_status ? 'bg-green-500' : 'bg-slate-400'}`} />
-                  {user.online_status ? 'Available' : 'Unavailable'}
+                  {user.online_status ? 'Disponible' : 'Indisponible'}
                 </div>
                 {user.id_verification_picture && (
                   <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md text-sm font-medium border bg-blue-100 text-blue-700 border-blue-200"
                        data-testid="verified-badge">
                     <ShieldCheck className="h-4 w-4" />
-                    ID Verified
+                    ID Vérifié
                   </div>
                 )}
               </div>
@@ -149,7 +149,7 @@ const Dashboard = ({ setIsAuthenticated }) => {
         </Card>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6">
+        <div className="flex gap-2 mb-6 flex-wrap">
           <Button
             variant={activeTab === 'profile' ? 'default' : 'outline'}
             data-testid="profile-tab-button"
@@ -157,7 +157,7 @@ const Dashboard = ({ setIsAuthenticated }) => {
             className="gap-2 font-heading"
           >
             <User className="h-4 w-4" />
-            Profile
+            Profil
           </Button>
           <Button
             variant={activeTab === 'jobs' ? 'default' : 'outline'}
@@ -166,7 +166,7 @@ const Dashboard = ({ setIsAuthenticated }) => {
             className="gap-2 font-heading"
           >
             <Briefcase className="h-4 w-4" />
-            Job Offers
+            Demandes de Travail
           </Button>
           <Button
             variant={activeTab === 'rentals' ? 'default' : 'outline'}
@@ -175,7 +175,7 @@ const Dashboard = ({ setIsAuthenticated }) => {
             className="gap-2 font-heading"
           >
             <Home className="h-4 w-4" />
-            My Rentals
+            Mes Locations
           </Button>
           <Button
             variant={activeTab === 'create-rental' ? 'default' : 'outline'}
@@ -184,7 +184,7 @@ const Dashboard = ({ setIsAuthenticated }) => {
             className="gap-2 font-heading"
           >
             <Home className="h-4 w-4" />
-            + Add Rental
+            + Ajouter Location
           </Button>
         </div>
 
@@ -197,7 +197,7 @@ const Dashboard = ({ setIsAuthenticated }) => {
         {activeTab === 'create-rental' && (
           <RentalListingForm onSuccess={() => {
             setActiveTab('rentals');
-            toast.success('Rental listing created successfully!');
+            toast.success('Annonce de location créée avec succès!');
           }} />
         )}
       </div>
