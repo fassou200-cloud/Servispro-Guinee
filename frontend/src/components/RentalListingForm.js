@@ -113,48 +113,6 @@ const RentalListingForm = ({ onSuccess }) => {
     }
   };
 
-  const handlePhotoUpload = async (e) => {
-    const files = Array.from(e.target.files);
-    if (files.length === 0) return;
-
-    setUploadingPhotos(true);
-    const token = localStorage.getItem('token');
-
-    try {
-      for (const file of files) {
-        if (!file.type.startsWith('image/')) {
-          toast.error(`${file.name} is not an image`);
-          continue;
-        }
-
-        const formData = new FormData();
-        formData.append('file', file);
-
-        await axios.post(`${API}/rentals/${createdListingId}/upload-photo`, formData, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data'
-          }
-        });
-      }
-
-      toast.success('Photos uploaded successfully!');
-      setFormData({
-        property_type: 'Apartment',
-        title: '',
-        description: '',
-        location: '',
-        rental_price: ''
-      });
-      setCreatedListingId(null);
-      if (onSuccess) onSuccess();
-    } catch (error) {
-      toast.error('Failed to upload photos');
-    } finally {
-      setUploadingPhotos(false);
-    }
-  };
-
   return (
     <Card className="p-8">
       <h3 className="text-2xl font-heading font-bold text-foreground mb-6">
