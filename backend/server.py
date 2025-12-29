@@ -365,6 +365,97 @@ async def update_job_status(job_id: str, update_data: JobOfferUpdate, current_us
     updated_job = await db.job_offers.find_one({'id': job_id}, {'_id': 0})
     return updated_job
 
+# Rental Listing Routes
+@api_router.post("/rentals", response_model=RentalListing)
+async def create_rental_listing(listing_data: RentalListingCreate, current_user: dict = Depends(get_current_user)):
+    listing_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+    
+    listing_doc = {
+        'id': listing_id,
+        'service_provider_id': current_user['id'],
+        'provider_name': f"{current_user['first_name']} {current_user['last_name']}",
+        'provider_phone': current_user['phone_number'],
+        'property_type': listing_data.property_type.value,
+        'title': listing_data.title,
+        'description': listing_data.description,
+        'location': listing_data.location,
+        'rental_price': listing_data.rental_price,
+        'photos': [],
+        'created_at': now,
+        'updated_at': now
+    }
+    
+    await db.rental_listings.insert_one(listing_doc)
+    
+    listing_response = {k: v for k, v in listing_doc.items() if k != '_id'}
+    return RentalListing(**listing_response)
+
+@api_router.get("/rentals", response_model=List[RentalListing])
+async def get_all_rentals():
+    rentals = await db.rental_listings.find({}, {'_id': 0}).to_list(100)
+    return [RentalListing(**r) for r in rentals]
+
+@api_router.get("/rentals/my-listings", response_model=List[RentalListing])
+async def get_my_rental_listings(current_user: dict = Depends(get_current_user)):
+    rentals = await db.rental_listings.find({'service_provider_id': current_user['id']}, {'_id': 0}).to_list(100)
+    return [RentalListing(**r) for r in rentals]
+
+@api_router.get("/rentals/{rental_id}", response_model=RentalListing)
+async def get_rental_by_id(rental_id: str):
+    rental = await db.rental_listings.find_one({'id': rental_id}, {'_id': 0})
+    if not rental:
+        raise HTTPException(status_code=404, detail="Rental listing not found")
+    return RentalListing(**rental)
+
+@api_router.post("/rentals/{rental_id}/upload-photo")
+async def upload_rental_photo(rental_id: str, file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):
+    # Find rental and verify ownership
+    rental = await db.rental_listings.find_one({'id': rental_id})
+    if not rental:
+        raise HTTPException(status_code=404, detail="Rental listing not found")
+    
+    if rental['service_provider_id'] != current_user['id']:
+        raise HTTPException(status_code=403, detail="Not authorized to update this listing")
+    
+    # Validate file type
+    if not file.content_type.startswith('image/'):
+        raise HTTPException(status_code=400, detail="File must be an image")
+    
+    # Generate unique filename
+    file_extension = file.filename.split('.')[-1]
+    filename = f"rental_{rental_id}_{uuid.uuid4()}.{file_extension}"
+    file_path = UPLOAD_DIR / filename
+    
+    # Save file
+    with file_path.open('wb') as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    # Update rental photos array
+    photo_url = f"/uploads/{filename}"
+    await db.rental_listings.update_one(
+        {'id': rental_id},
+        {
+            '$push': {'photos': photo_url},
+            '$set': {'updated_at': datetime.now(timezone.utc).isoformat()}
+        }
+    )
+    
+    return {'photo_url': photo_url}
+
+@api_router.delete("/rentals/{rental_id}")
+async def delete_rental_listing(rental_id: str, current_user: dict = Depends(get_current_user)):
+    # Find rental and verify ownership
+    rental = await db.rental_listings.find_one({'id': rental_id})
+    if not rental:
+        raise HTTPException(status_code=404, detail="Rental listing not found")
+    
+    if rental['service_provider_id'] != current_user['id']:
+        raise HTTPException(status_code=403, detail="Not authorized to delete this listing")
+    
+    await db.rental_listings.delete_one({'id': rental_id})
+    return {'message': 'Rental listing deleted successfully'}
+
 # Include router
 app.include_router(api_router)
 
