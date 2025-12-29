@@ -7,17 +7,21 @@ import ProviderProfile from '@/pages/ProviderProfile';
 import BrowseRentals from '@/pages/BrowseRentals';
 import RentalDetail from '@/pages/RentalDetail';
 import CustomerAuth from '@/pages/CustomerAuth';
+import CustomerDashboard from '@/pages/CustomerDashboard';
 import AuthPage from '@/pages/AuthPage';
 import Dashboard from '@/pages/Dashboard';
 import { Toaster } from '@/components/ui/sonner';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isCustomerAuthenticated, setIsCustomerAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
+    const customerToken = localStorage.getItem('customerToken');
     setIsAuthenticated(!!token);
+    setIsCustomerAuthenticated(!!customerToken);
     setLoading(false);
   }, []);
 
@@ -30,14 +34,21 @@ function App() {
       <BrowserRouter>
         <Routes>
           {/* Public Routes */}
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/browse" element={<BrowseProviders />} />
-          <Route path="/provider/:providerId" element={<ProviderProfile />} />
-          <Route path="/rentals" element={<BrowseRentals />} />
+          <Route path="/" element={<LandingPage isCustomerAuthenticated={isCustomerAuthenticated} />} />
+          <Route path="/browse" element={<BrowseProviders isCustomerAuthenticated={isCustomerAuthenticated} />} />
+          <Route path="/provider/:providerId" element={<ProviderProfile isCustomerAuthenticated={isCustomerAuthenticated} />} />
+          <Route path="/rentals" element={<BrowseRentals isCustomerAuthenticated={isCustomerAuthenticated} />} />
           <Route path="/rental/:rentalId" element={<RentalDetail />} />
           
-          {/* Customer Auth */}
-          <Route path="/customer/auth" element={<CustomerAuth />} />
+          {/* Customer Routes */}
+          <Route 
+            path="/customer/auth" 
+            element={isCustomerAuthenticated ? <Navigate to="/customer/dashboard" /> : <CustomerAuth setIsCustomerAuthenticated={setIsCustomerAuthenticated} />} 
+          />
+          <Route 
+            path="/customer/dashboard" 
+            element={isCustomerAuthenticated ? <CustomerDashboard setIsCustomerAuthenticated={setIsCustomerAuthenticated} /> : <Navigate to="/customer/auth" />} 
+          />
           
           {/* Provider Routes */}
           <Route 
