@@ -116,12 +116,34 @@ const BrowseProviders = ({ isCustomerAuthenticated }) => {
                 Parcourir les Prestataires
               </h1>
             </div>
-            <Button
-              variant="outline"
-              onClick={() => navigate('/auth')}
-            >
-              Connexion Prestataire
-            </Button>
+            <div className="flex items-center gap-3">
+              {customer ? (
+                <Button
+                  variant="outline"
+                  onClick={() => navigate('/customer/dashboard')}
+                  className="gap-2 border-primary text-primary"
+                >
+                  <User className="h-4 w-4" />
+                  {customer.first_name}
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate('/customer/auth')}
+                    className="border-primary text-primary"
+                  >
+                    Connexion Client
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    onClick={() => navigate('/auth')}
+                  >
+                    Connexion Prestataire
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </header>
