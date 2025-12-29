@@ -249,6 +249,52 @@ const RentalListingForm = ({ onSuccess }) => {
             />
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="photos" className="font-heading text-xs uppercase tracking-wide">
+              Photos (Optional)
+            </Label>
+            <input
+              id="photos"
+              type="file"
+              data-testid="rental-photos-input"
+              accept="image/*"
+              multiple
+              onChange={handlePhotoSelect}
+              className="hidden"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              data-testid="select-rental-photos-button"
+              onClick={() => document.getElementById('photos').click()}
+              className="w-full h-12 gap-2"
+            >
+              <Upload className="h-4 w-4" />
+              Select Photos ({selectedPhotos.length} selected)
+            </Button>
+            
+            {photoPreviewUrls.length > 0 && (
+              <div className="grid grid-cols-3 gap-2 mt-4">
+                {photoPreviewUrls.map((url, index) => (
+                  <div key={index} className="relative">
+                    <img
+                      src={url}
+                      alt={`Preview ${index + 1}`}
+                      className="w-full h-20 object-cover rounded border"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removePhoto(index)}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           <Button
             type="submit"
             data-testid="create-rental-button"
