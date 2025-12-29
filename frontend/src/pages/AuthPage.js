@@ -35,10 +35,10 @@ const AuthPage = ({ setIsAuthenticated }) => {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
       
-      toast.success(isLogin ? 'Login successful!' : 'Registration successful!');
+      toast.success(isLogin ? 'Connexion réussie !' : 'Inscription réussie !');
       setIsAuthenticated(true);
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'An error occurred');
+      toast.error(error.response?.data?.detail || 'Une erreur est survenue');
     } finally {
       setLoading(false);
     }
@@ -54,10 +54,10 @@ const AuthPage = ({ setIsAuthenticated }) => {
         <div className="bg-card border border-border rounded-lg shadow-sm p-8">
           <div className="text-center mb-8">
             <h1 className="text-4xl font-heading font-bold text-foreground mb-2">
-              ServisPro
+              ServisPro Guinée
             </h1>
             <p className="text-muted-foreground">
-              {isLogin ? 'Welcome back' : 'Create your profile'}
+              {isLogin ? 'Espace Prestataire' : 'Créez votre profil professionnel'}
             </p>
           </div>
 
@@ -66,7 +66,7 @@ const AuthPage = ({ setIsAuthenticated }) => {
               <>
                 <div className="space-y-2">
                   <Label htmlFor="first_name" className="font-heading text-xs uppercase tracking-wide">
-                    First Name
+                    Prénom
                   </Label>
                   <Input
                     id="first_name"
@@ -81,7 +81,7 @@ const AuthPage = ({ setIsAuthenticated }) => {
 
                 <div className="space-y-2">
                   <Label htmlFor="last_name" className="font-heading text-xs uppercase tracking-wide">
-                    Last Name
+                    Nom
                   </Label>
                   <Input
                     id="last_name"
@@ -104,13 +104,13 @@ const AuthPage = ({ setIsAuthenticated }) => {
                     required={!isLogin}
                   >
                     <SelectTrigger data-testid="register-profession-select" className="h-12">
-                      <SelectValue placeholder="Select your profession" />
+                      <SelectValue placeholder="Sélectionnez votre profession" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Electrician">Electrician</SelectItem>
-                      <SelectItem value="Mechanic">Mechanic</SelectItem>
-                      <SelectItem value="Plumber">Plumber</SelectItem>
-                      <SelectItem value="Logistics">Logistics</SelectItem>
+                      <SelectItem value="Electrician">Électricien</SelectItem>
+                      <SelectItem value="Mechanic">Mécanicien</SelectItem>
+                      <SelectItem value="Plumber">Plombier</SelectItem>
+                      <SelectItem value="Logistics">Logistique</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -119,7 +119,7 @@ const AuthPage = ({ setIsAuthenticated }) => {
 
             <div className="space-y-2">
               <Label htmlFor="phone_number" className="font-heading text-xs uppercase tracking-wide">
-                Phone Number
+                Numéro de Téléphone
               </Label>
               <Input
                 id="phone_number"
@@ -129,13 +129,13 @@ const AuthPage = ({ setIsAuthenticated }) => {
                 onChange={handleChange}
                 required
                 className="h-12 font-mono"
-                placeholder="1234567890"
+                placeholder="+224 620 00 00 00"
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="password" className="font-heading text-xs uppercase tracking-wide">
-                Password
+                Mot de Passe
               </Label>
               <Input
                 id="password"
@@ -155,7 +155,7 @@ const AuthPage = ({ setIsAuthenticated }) => {
               className="w-full h-12 font-heading font-bold text-base"
               disabled={loading}
             >
-              {loading ? 'Please wait...' : (isLogin ? 'Login' : 'Register')}
+              {loading ? 'Veuillez patienter...' : (isLogin ? 'Se Connecter' : 'S\'inscrire')}
             </Button>
           </form>
 
@@ -169,10 +169,10 @@ const AuthPage = ({ setIsAuthenticated }) => {
               }}
               className="text-sm text-primary hover:underline"
             >
-              {isLogin ? "Don't have an account? Register" : 'Already have an account? Login'}
+              {isLogin ? "Pas encore inscrit ? Créez un compte" : 'Déjà inscrit ? Connectez-vous'}
             </button>
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );

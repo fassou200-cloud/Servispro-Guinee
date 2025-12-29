@@ -42,10 +42,10 @@ const CustomerAuth = () => {
       localStorage.setItem('customerToken', response.data.token);
       localStorage.setItem('customer', JSON.stringify(response.data.user));
       
-      toast.success(isLogin ? 'Login successful!' : 'Registration successful!');
+      toast.success(isLogin ? 'Connexion réussie !' : 'Inscription réussie !');
       navigate('/');
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'An error occurred');
+      toast.error(error.response?.data?.detail || 'Une erreur est survenue');
     } finally {
       setLoading(false);
     }
@@ -65,7 +65,7 @@ const CustomerAuth = () => {
           data-testid="back-to-home"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to Home
+          Retour à l'Accueil
         </Button>
 
         <Card className="p-8 shadow-xl">
@@ -74,10 +74,10 @@ const CustomerAuth = () => {
               <span className="text-3xl font-bold text-white">S</span>
             </div>
             <h1 className="text-3xl font-heading font-bold text-foreground mb-2">
-              Customer {isLogin ? 'Login' : 'Sign Up'}
+              {isLogin ? 'Connexion Client' : 'Inscription Client'}
             </h1>
             <p className="text-muted-foreground">
-              {isLogin ? 'Welcome back! Sign in to continue' : 'Create your account to get started'}
+              {isLogin ? 'Bon retour ! Connectez-vous pour continuer' : 'Créez votre compte pour commencer'}
             </p>
           </div>
 
@@ -87,7 +87,7 @@ const CustomerAuth = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="first_name" className="font-heading text-xs uppercase tracking-wide">
-                      First Name *
+                      Prénom *
                     </Label>
                     <Input
                       id="first_name"
@@ -97,12 +97,13 @@ const CustomerAuth = () => {
                       onChange={handleChange}
                       required={!isLogin}
                       className="h-12"
+                      placeholder="Mamadou"
                     />
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="last_name" className="font-heading text-xs uppercase tracking-wide">
-                      Last Name *
+                      Nom *
                     </Label>
                     <Input
                       id="last_name"
@@ -112,6 +113,7 @@ const CustomerAuth = () => {
                       onChange={handleChange}
                       required={!isLogin}
                       className="h-12"
+                      placeholder="Diallo"
                     />
                   </div>
                 </div>
@@ -120,7 +122,7 @@ const CustomerAuth = () => {
 
             <div className="space-y-2">
               <Label htmlFor="phone_number" className="font-heading text-xs uppercase tracking-wide">
-                Phone Number *
+                Numéro de Téléphone *
               </Label>
               <Input
                 id="phone_number"
@@ -130,13 +132,13 @@ const CustomerAuth = () => {
                 onChange={handleChange}
                 required
                 className="h-12 font-mono"
-                placeholder="1234567890"
+                placeholder="+224 620 00 00 00"
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="password" className="font-heading text-xs uppercase tracking-wide">
-                Password *
+                Mot de Passe *
               </Label>
               <Input
                 id="password"
@@ -156,7 +158,7 @@ const CustomerAuth = () => {
               className="w-full h-12 font-heading font-bold text-base bg-primary hover:bg-primary/90"
               disabled={loading}
             >
-              {loading ? 'Please wait...' : (isLogin ? 'Sign In' : 'Create Account')}
+              {loading ? 'Veuillez patienter...' : (isLogin ? 'Se Connecter' : 'Créer un Compte')}
             </Button>
           </form>
 
@@ -170,18 +172,18 @@ const CustomerAuth = () => {
               }}
               className="text-sm text-primary hover:underline font-medium"
             >
-              {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
+              {isLogin ? "Pas encore de compte ? Inscrivez-vous" : 'Déjà un compte ? Connectez-vous'}
             </button>
           </div>
 
           <div className="mt-6 pt-6 border-t border-border text-center">
-            <p className="text-sm text-muted-foreground mb-2">Are you a service provider?</p>
+            <p className="text-sm text-muted-foreground mb-2">Êtes-vous un prestataire de services ?</p>
             <Button
               variant="outline"
               onClick={() => navigate('/auth')}
               className="border-primary text-primary hover:bg-primary hover:text-white"
             >
-              Provider Login
+              Connexion Prestataire
             </Button>
           </div>
         </Card>
