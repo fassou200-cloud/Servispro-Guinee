@@ -56,7 +56,7 @@ const ReviewForm = ({ providerId, onSuccess }) => {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="reviewer_name" className="font-heading text-xs uppercase tracking-wide">
-            Your Name *
+            Votre Nom *
           </Label>
           <Input
             id="reviewer_name"
@@ -65,13 +65,13 @@ const ReviewForm = ({ providerId, onSuccess }) => {
             onChange={(e) => setFormData({ ...formData, reviewer_name: e.target.value })}
             required
             className="h-12"
-            placeholder="John Doe"
+            placeholder="Mamadou Diallo"
           />
         </div>
 
         <div className="space-y-2">
           <Label className="font-heading text-xs uppercase tracking-wide">
-            Rating *
+            Note *
           </Label>
           <div className="flex gap-2">
             {[1, 2, 3, 4, 5].map((star) => (
@@ -101,7 +101,7 @@ const ReviewForm = ({ providerId, onSuccess }) => {
 
         <div className="space-y-2">
           <Label htmlFor="comment" className="font-heading text-xs uppercase tracking-wide">
-            Comment *
+            Commentaire *
           </Label>
           <Textarea
             id="comment"
@@ -111,7 +111,7 @@ const ReviewForm = ({ providerId, onSuccess }) => {
             required
             rows={4}
             className="resize-none"
-            placeholder="Share your experience with this service provider..."
+            placeholder="Partagez votre expérience avec ce prestataire..."
           />
         </div>
 
@@ -121,7 +121,7 @@ const ReviewForm = ({ providerId, onSuccess }) => {
           className="w-full h-12 font-heading font-bold"
           disabled={submitting}
         >
-          {submitting ? 'Submitting...' : 'Submit Review'}
+          {submitting ? 'Envoi en cours...' : 'Soumettre l\'Avis'}
         </Button>
       </form>
     </Card>
