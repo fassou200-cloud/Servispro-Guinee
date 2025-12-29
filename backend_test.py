@@ -398,16 +398,21 @@ class ServisProAPITester:
         print("🚀 Starting ServisPro API Tests")
         print("=" * 50)
         
-        # Test registration and login
-        reg_success, test_phone = self.test_user_registration()
-        if not reg_success:
-            print("❌ Registration failed, stopping tests")
+        # Test provider registration and login
+        provider_reg_success, provider_phone = self.test_provider_registration()
+        if not provider_reg_success:
+            print("❌ Provider registration failed, stopping tests")
             return self.get_results()
         
-        login_success = self.test_user_login(test_phone)
-        if not login_success:
-            print("❌ Login failed, stopping tests")
+        provider_login_success = self.test_provider_login(provider_phone)
+        if not provider_login_success:
+            print("❌ Provider login failed, stopping tests")
             return self.get_results()
+        
+        # Test customer registration and login
+        customer_reg_success, customer_phone = self.test_customer_registration()
+        if customer_reg_success:
+            self.test_customer_login(customer_phone)
         
         # Test profile operations
         self.test_get_profile()
@@ -417,11 +422,18 @@ class ServisProAPITester:
         self.test_get_all_providers()
         self.test_get_provider_by_id()
         
+        # Test rental operations
+        rental_success, rental_id = self.test_create_rental_listing()
+        self.test_get_all_rentals()
+        
         # Test job operations
         job_success, job_id = self.test_create_job_offer()
         self.test_get_my_jobs()
         if job_success:
             self.test_update_job_status(job_id)
+        
+        # Test review system
+        self.test_submit_review()
         
         # Test error cases
         self.test_invalid_login()
