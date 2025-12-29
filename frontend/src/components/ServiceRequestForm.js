@@ -67,17 +67,17 @@ const ServiceRequestForm = ({ providerId, providerName, onSuccess }) => {
   return (
     <div>
       <h3 className="text-2xl font-heading font-bold text-foreground mb-2">
-        Request Service from {providerName}
+        Demander un Service de {providerName}
       </h3>
       <p className="text-muted-foreground mb-6">
-        Fill out the form below to send a service request
+        Remplissez le formulaire ci-dessous pour envoyer une demande de service
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <Label htmlFor="client_name" className="font-heading text-xs uppercase tracking-wide">
-              Your Name *
+              Votre Nom *
             </Label>
             <Input
               id="client_name"
@@ -87,13 +87,13 @@ const ServiceRequestForm = ({ providerId, providerName, onSuccess }) => {
               onChange={handleChange}
               required
               className="h-12"
-              placeholder="John Doe"
+              placeholder="Mamadou Diallo"
             />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="phone_number" className="font-heading text-xs uppercase tracking-wide">
-              Phone Number *
+              Numéro de Téléphone *
             </Label>
             <Input
               id="phone_number"
@@ -103,14 +103,14 @@ const ServiceRequestForm = ({ providerId, providerName, onSuccess }) => {
               onChange={handleChange}
               required
               className="h-12 font-mono"
-              placeholder="1234567890"
+              placeholder="+224 620 00 00 00"
             />
           </div>
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="service_type" className="font-heading text-xs uppercase tracking-wide">
-            Job Title *
+            Type de Service *
           </Label>
           <Input
             id="service_type"
@@ -120,13 +120,13 @@ const ServiceRequestForm = ({ providerId, providerName, onSuccess }) => {
             onChange={handleChange}
             required
             className="h-12"
-            placeholder="e.g., Fix electrical outlet, Car oil change, Pipe repair"
+            placeholder="ex: Réparation électrique, Vidange voiture, Réparation tuyau"
           />
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="description" className="font-heading text-xs uppercase tracking-wide">
-            Job Description *
+            Description du Travail *
           </Label>
           <Textarea
             id="description"
@@ -137,13 +137,13 @@ const ServiceRequestForm = ({ providerId, providerName, onSuccess }) => {
             required
             rows={4}
             className="resize-none"
-            placeholder="Describe the service you need in detail..."
+            placeholder="Décrivez en détail le service dont vous avez besoin..."
           />
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="location" className="font-heading text-xs uppercase tracking-wide">
-            Location *
+            Localisation *
           </Label>
           <Input
             id="location"
@@ -153,14 +153,14 @@ const ServiceRequestForm = ({ providerId, providerName, onSuccess }) => {
             onChange={handleChange}
             required
             className="h-12"
-            placeholder="Street address, City, State"
+            placeholder="Commune de Matam, Conakry"
           />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <Label htmlFor="preferred_date" className="font-heading text-xs uppercase tracking-wide">
-              Preferred Date
+              Date Préférée
             </Label>
             <Input
               id="preferred_date"
@@ -176,7 +176,7 @@ const ServiceRequestForm = ({ providerId, providerName, onSuccess }) => {
 
           <div className="space-y-2">
             <Label htmlFor="preferred_time" className="font-heading text-xs uppercase tracking-wide">
-              Preferred Time
+              Heure Préférée
             </Label>
             <Input
               id="preferred_time"
@@ -196,7 +196,7 @@ const ServiceRequestForm = ({ providerId, providerName, onSuccess }) => {
           className="w-full h-12 font-heading font-bold text-base"
           disabled={loading}
         >
-          {loading ? 'Sending Request...' : 'Send Service Request'}
+          {loading ? 'Envoi en cours...' : 'Envoyer la Demande'}
         </Button>
       </form>
     </div>
