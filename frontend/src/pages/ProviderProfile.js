@@ -19,6 +19,7 @@ const ProviderProfile = () => {
   const [provider, setProvider] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showRequestForm, setShowRequestForm] = useState(false);
+  const [refreshReviews, setRefreshReviews] = useState(0);
 
   useEffect(() => {
     fetchProvider();
