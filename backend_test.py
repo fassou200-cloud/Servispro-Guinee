@@ -77,19 +77,19 @@ class ServisProAPITester:
             self.log_test(name, False, f"Exception: {str(e)}")
             return False, {}
 
-    def test_user_registration(self):
-        """Test user registration"""
-        test_phone = f"555{str(uuid.uuid4())[:8]}"
+    def test_provider_registration(self):
+        """Test provider registration"""
+        test_phone = f"224{str(uuid.uuid4())[:8]}"  # Guinea phone format
         registration_data = {
-            "first_name": "Test",
-            "last_name": "User",
+            "first_name": "Mamadou",
+            "last_name": "Diallo", 
             "phone_number": test_phone,
-            "password": "TestPass123!",
+            "password": "SecurePass123!",
             "profession": "Electrician"
         }
         
         success, response = self.run_test(
-            "User Registration",
+            "Provider Registration",
             "POST",
             "auth/register",
             200,
@@ -99,6 +99,28 @@ class ServisProAPITester:
         if success and 'token' in response:
             self.token = response['token']
             self.user_id = response['user']['id']
+            return True, test_phone
+        return False, None
+
+    def test_customer_registration(self):
+        """Test customer registration"""
+        test_phone = f"224{str(uuid.uuid4())[:8]}"  # Guinea phone format
+        registration_data = {
+            "first_name": "Fatoumata",
+            "last_name": "Camara",
+            "phone_number": test_phone,
+            "password": "CustomerPass123!"
+        }
+        
+        success, response = self.run_test(
+            "Customer Registration",
+            "POST",
+            "auth/customer/register",
+            200,
+            data=registration_data
+        )
+        
+        if success and 'token' in response:
             return True, test_phone
         return False, None
 
