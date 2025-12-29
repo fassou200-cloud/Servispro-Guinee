@@ -131,7 +131,7 @@ const ProviderProfile = () => {
                 </h1>
                 <div className="flex items-center gap-2 mb-3">
                   <Briefcase className="h-5 w-5 text-muted-foreground" />
-                  <span className="text-xl text-muted-foreground">{provider.profession}</span>
+                  <span className="text-xl text-muted-foreground">{translateProfession(provider.profession)}</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {provider.online_status && (
