@@ -9,30 +9,30 @@ const LandingPage = () => {
 
   const categories = [
     {
-      name: 'Electrician',
+      name: 'Électricien',
       icon: Zap,
-      description: 'Professional electrical services for your home and business',
+      description: 'Services électriques professionnels pour votre maison et entreprise en Guinée',
       image: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800&q=80',
       link: '/browse?category=Electrician'
     },
     {
-      name: 'Mechanic',
+      name: 'Mécanicien',
       icon: Wrench,
-      description: 'Expert auto repair and maintenance services',
+      description: 'Réparation automobile et services d\'entretien experts à Conakry et environs',
       image: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=800&q=80',
       link: '/browse?category=Mechanic'
     },
     {
-      name: 'Plumber',
+      name: 'Plombier',
       icon: Droplet,
-      description: 'Reliable plumbing solutions for all your needs',
+      description: 'Solutions de plomberie fiables pour tous vos besoins',
       image: 'https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?w=800&q=80',
       link: '/browse?category=Plumber'
     },
     {
-      name: 'Logistics',
+      name: 'Logistique',
       icon: Truck,
-      description: 'Fast and reliable delivery and logistics services',
+      description: 'Services de livraison et logistique rapides et fiables en Guinée',
       image: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80',
       link: '/browse?category=Logistics'
     }
@@ -41,18 +41,18 @@ const LandingPage = () => {
   const features = [
     {
       icon: Shield,
-      title: 'Verified Professionals',
-      description: 'All service providers are ID verified for your safety'
+      title: 'Professionnels Vérifiés',
+      description: 'Tous les prestataires sont vérifiés pour votre sécurité'
     },
     {
       icon: Clock,
-      title: 'Quick Response',
-      description: 'Get responses from available providers fast'
+      title: 'Réponse Rapide',
+      description: 'Obtenez des réponses rapides des prestataires disponibles'
     },
     {
       icon: Star,
-      title: 'Quality Service',
-      description: 'Experienced professionals ready to help'
+      title: 'Service de Qualité',
+      description: 'Professionnels expérimentés prêts à vous aider'
     }
   ];
 
@@ -67,7 +67,7 @@ const LandingPage = () => {
                 <span className="text-2xl font-bold text-white">S</span>
               </div>
               <h1 className="text-2xl font-heading font-bold text-foreground">
-                ServisPro
+                ServisPro Guinée
               </h1>
             </div>
             <div className="flex items-center gap-3">
@@ -77,7 +77,7 @@ const LandingPage = () => {
                 onClick={() => navigate('/customer/auth')}
                 className="border-primary text-primary hover:bg-primary hover:text-white"
               >
-                Customer Login
+                Connexion Client
               </Button>
               <Button
                 variant="ghost"
@@ -85,7 +85,7 @@ const LandingPage = () => {
                 onClick={() => navigate('/auth')}
                 className="text-muted-foreground hover:text-foreground"
               >
-                Provider Login
+                Connexion Prestataire
               </Button>
             </div>
           </div>
@@ -102,10 +102,10 @@ const LandingPage = () => {
         <div className="relative max-w-7xl mx-auto px-4 md:px-8">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-5xl md:text-7xl font-heading font-bold text-foreground mb-6 leading-tight">
-              Find Trusted Service Providers
+              Trouvez des Prestataires de Confiance en Guinée
             </h2>
             <p className="text-xl md:text-2xl text-muted-foreground mb-10 leading-relaxed max-w-3xl mx-auto">
-              Connect with verified electricians, mechanics, plumbers, and logistics providers. Quality service when you need it.
+              Connectez-vous avec des électriciens, mécaniciens, plombiers et prestataires logistiques vérifiés. Service de qualité à Conakry, Kindia, Labé et partout en Guinée.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
@@ -114,7 +114,7 @@ const LandingPage = () => {
                 onClick={() => navigate('/browse')}
                 className="h-16 px-10 text-lg font-heading font-bold bg-primary hover:bg-primary/90 text-white shadow-lg"
               >
-                Browse Services
+                Parcourir les Services
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
               <Button
@@ -124,7 +124,7 @@ const LandingPage = () => {
                 className="h-16 px-10 text-lg font-heading font-bold border-2 border-primary text-primary hover:bg-primary hover:text-white"
               >
                 <Home className="mr-2 h-5 w-5" />
-                View Rentals
+                Voir les Locations
               </Button>
             </div>
           </div>
@@ -136,10 +136,10 @@ const LandingPage = () => {
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="text-center mb-16">
             <h3 className="text-4xl md:text-5xl font-heading font-bold text-foreground mb-4">
-              Service Categories
+              Catégories de Services
             </h3>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Choose from our range of professional services
+              Choisissez parmi notre gamme de services professionnels disponibles en Guinée
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -176,7 +176,7 @@ const LandingPage = () => {
                         navigate(category.link);
                       }}
                     >
-                      View Providers
+                      Voir les Prestataires
                       <ArrowRight className="h-4 w-4" />
                     </Button>
                   </div>
@@ -191,7 +191,7 @@ const LandingPage = () => {
       <section className="bg-gradient-to-br from-muted/50 to-white py-20 md:py-28">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <h3 className="text-4xl font-heading font-bold text-foreground mb-16 text-center">
-            Why Choose ServisPro
+            Pourquoi Choisir ServisPro Guinée
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
             {features.map((feature) => {
@@ -223,19 +223,19 @@ const LandingPage = () => {
                 <span className="text-2xl font-bold text-white">S</span>
               </div>
               <div>
-                <p className="font-heading font-bold text-lg text-foreground">ServisPro</p>
-                <p className="text-sm text-muted-foreground">Professional Services Platform</p>
+                <p className="font-heading font-bold text-lg text-foreground">ServisPro Guinée</p>
+                <p className="text-sm text-muted-foreground">Plateforme de Services Professionnels</p>
               </div>
             </div>
             <p className="text-sm text-muted-foreground">
-              © 2024 ServisPro. All rights reserved.
+              © 2024 ServisPro Guinée. Tous droits réservés.
             </p>
             <Button
               variant="link"
               onClick={() => navigate('/auth')}
               className="text-primary hover:text-primary/80"
             >
-              Are you a service provider? Join us →
+              Vous êtes prestataire ? Rejoignez-nous →
             </Button>
           </div>
         </div>
