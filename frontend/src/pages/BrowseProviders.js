@@ -172,6 +172,22 @@ const BrowseProviders = () => {
                       {provider.first_name} {provider.last_name}
                     </h3>
                     <p className="text-sm text-muted-foreground mb-2">{provider.profession}</p>
+                    
+                    {/* Rating Display */}
+                    {providerStats[provider.id]?.total_reviews > 0 && (
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="flex items-center gap-1">
+                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                          <span className="font-bold text-foreground">
+                            {providerStats[provider.id].average_rating}
+                          </span>
+                        </div>
+                        <span className="text-sm text-muted-foreground">
+                          ({providerStats[provider.id].total_reviews} review{providerStats[provider.id].total_reviews !== 1 ? 's' : ''})
+                        </span>
+                      </div>
+                    )}
+                    
                     <div className="flex flex-wrap gap-2">
                       {provider.online_status && (
                         <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-green-100 text-green-700 border border-green-200">
