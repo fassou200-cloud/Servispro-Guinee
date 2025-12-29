@@ -13,7 +13,6 @@ const LandingPage = () => {
       icon: Zap,
       description: 'Professional electrical services for your home and business',
       image: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800&q=80',
-      color: 'from-yellow-500 to-yellow-600',
       link: '/browse?category=Electrician'
     },
     {
@@ -21,7 +20,6 @@ const LandingPage = () => {
       icon: Wrench,
       description: 'Expert auto repair and maintenance services',
       image: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=800&q=80',
-      color: 'from-red-500 to-red-600',
       link: '/browse?category=Mechanic'
     },
     {
@@ -29,7 +27,6 @@ const LandingPage = () => {
       icon: Droplet,
       description: 'Reliable plumbing solutions for all your needs',
       image: 'https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?w=800&q=80',
-      color: 'from-blue-500 to-blue-600',
       link: '/browse?category=Plumber'
     },
     {
@@ -37,7 +34,6 @@ const LandingPage = () => {
       icon: Truck,
       description: 'Fast and reliable delivery and logistics services',
       image: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80',
-      color: 'from-green-500 to-green-600',
       link: '/browse?category=Logistics'
     }
   ];
