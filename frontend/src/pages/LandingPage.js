@@ -85,22 +85,47 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
               </h1>
             </div>
             <div className="flex items-center gap-3">
-              <Button
-                variant="outline"
-                data-testid="customer-login-button"
-                onClick={() => navigate('/customer/auth')}
-                className="border-primary text-primary hover:bg-primary hover:text-white"
-              >
-                Connexion Client
-              </Button>
-              <Button
-                variant="ghost"
-                data-testid="provider-login-button"
-                onClick={() => navigate('/auth')}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                Connexion Prestataire
-              </Button>
+              {customer ? (
+                <>
+                  <Button
+                    variant="outline"
+                    data-testid="customer-dashboard-button"
+                    onClick={() => navigate('/customer/dashboard')}
+                    className="border-primary text-primary hover:bg-primary hover:text-white gap-2"
+                  >
+                    <User className="h-4 w-4" />
+                    {customer.first_name}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    data-testid="customer-logout-button"
+                    onClick={handleCustomerLogout}
+                    className="text-muted-foreground hover:text-foreground gap-2"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Déconnexion
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    variant="outline"
+                    data-testid="customer-login-button"
+                    onClick={() => navigate('/customer/auth')}
+                    className="border-primary text-primary hover:bg-primary hover:text-white"
+                  >
+                    Connexion Client
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    data-testid="provider-login-button"
+                    onClick={() => navigate('/auth')}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    Connexion Prestataire
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>
