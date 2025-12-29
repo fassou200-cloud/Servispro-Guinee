@@ -132,7 +132,7 @@ const JobsList = () => {
                 className="gap-2 bg-primary hover:bg-primary/90"
               >
                 <CheckCircle className="h-4 w-4" />
-                Accept
+                Accepter
               </Button>
               <Button
                 onClick={() => handleJobAction(job.id, 'Rejected')}
@@ -141,7 +141,7 @@ const JobsList = () => {
                 className="gap-2"
               >
                 <XCircle className="h-4 w-4" />
-                Reject
+                Refuser
               </Button>
             </div>
           )}
