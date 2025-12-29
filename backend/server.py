@@ -121,6 +121,35 @@ class JobOffer(BaseModel):
     status: str
     created_at: str
 
+class RentalListingCreate(BaseModel):
+    property_type: PropertyType
+    title: str
+    description: str
+    location: str
+    rental_price: float
+    
+    @field_validator('rental_price')
+    def validate_price(cls, v):
+        if v <= 0:
+            raise ValueError('Rental price must be greater than 0')
+        return v
+
+class RentalListing(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str
+    service_provider_id: str
+    provider_name: str
+    provider_phone: str
+    property_type: str
+    title: str
+    description: str
+    location: str
+    rental_price: float
+    photos: List[str] = []
+    created_at: str
+    updated_at: str
+
 # Helper Functions
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
