@@ -184,7 +184,7 @@ const BrowseProviders = () => {
                     <h3 className="text-xl font-heading font-bold text-foreground mb-1">
                       {provider.first_name} {provider.last_name}
                     </h3>
-                    <p className="text-sm text-muted-foreground mb-2">{provider.profession}</p>
+                    <p className="text-sm text-muted-foreground mb-2">{translateProfession(provider.profession)}</p>
                     
                     {/* Rating Display */}
                     {providerStats[provider.id]?.total_reviews > 0 && (
