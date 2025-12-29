@@ -274,7 +274,91 @@ class ServisProAPITester:
         )
         return success
 
-    def test_invalid_login(self):
+    def test_create_rental_listing(self):
+        """Test creating a rental listing"""
+        rental_data = {
+            "property_type": "Apartment",
+            "title": "Bel Appartement à Conakry",
+            "description": "Appartement moderne avec 2 chambres dans le centre de Conakry",
+            "location": "Kaloum, Conakry",
+            "rental_price": 500000  # GNF per month
+        }
+        
+        success, response = self.run_test(
+            "Create Rental Listing",
+            "POST",
+            "rentals",
+            200,
+            data=rental_data
+        )
+        
+        if success and 'id' in response:
+            return True, response['id']
+        return False, None
+
+    def test_get_all_rentals(self):
+        """Test getting all rental listings"""
+        success, response = self.run_test(
+            "Get All Rentals",
+            "GET",
+            "rentals",
+            200
+        )
+        return success
+
+    def test_submit_review(self):
+        """Test submitting a review"""
+        if not self.user_id:
+            self.log_test("Submit Review", False, "No user ID available")
+            return False
+            
+        # First create a job and accept it to allow review
+        job_data = {
+            "service_provider_id": self.user_id,
+            "client_name": "Aminata Touré",
+            "service_type": "Réparation Électrique",
+            "description": "Réparer une prise électrique défectueuse",
+            "location": "Matam, Conakry"
+        }
+        
+        job_success, job_response = self.run_test(
+            "Create Job for Review Test",
+            "POST",
+            "jobs",
+            200,
+            data=job_data
+        )
+        
+        if job_success and 'id' in job_response:
+            # Update job status to Accepted to allow review
+            update_data = {"status": "Accepted"}
+            self.run_test(
+                "Accept Job for Review Test",
+                "PUT",
+                f"jobs/{job_response['id']}",
+                200,
+                data=update_data
+            )
+            
+            # Now submit review
+            review_data = {
+                "service_provider_id": self.user_id,
+                "reviewer_name": "Aminata Touré",
+                "rating": 5,
+                "comment": "Excellent travail! Très professionnel et ponctuel."
+            }
+            
+            success, response = self.run_test(
+                "Submit Review",
+                "POST",
+                "reviews",
+                200,
+                data=review_data
+            )
+            return success
+        else:
+            self.log_test("Submit Review", False, "Could not create prerequisite job")
+            return False
         """Test login with invalid credentials"""
         login_data = {
             "phone_number": "9999999999",
