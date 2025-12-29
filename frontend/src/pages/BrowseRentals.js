@@ -23,7 +23,7 @@ const BrowseRentals = () => {
       const response = await axios.get(`${API}/rentals`);
       setRentals(response.data);
     } catch (error) {
-      toast.error('Failed to load rental listings');
+      toast.error('Échec du chargement des annonces de location');
     } finally {
       setLoading(false);
     }
@@ -32,7 +32,7 @@ const BrowseRentals = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg">Loading rental listings...</div>
+        <div className="text-lg">Chargement des annonces de location...</div>
       </div>
     );
   }
@@ -51,17 +51,17 @@ const BrowseRentals = () => {
                 className="gap-2"
               >
                 <ArrowLeft className="h-4 w-4" />
-                Back
+                Accueil
               </Button>
               <h1 className="text-2xl font-heading font-bold text-foreground">
-                Browse Rental Listings
+                Parcourir les Locations
               </h1>
             </div>
             <Button
               variant="outline"
               onClick={() => navigate('/auth')}
             >
-              Provider Login
+              Connexion Prestataire
             </Button>
           </div>
         </div>
@@ -71,10 +71,10 @@ const BrowseRentals = () => {
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
         <div className="mb-8">
           <h2 className="text-2xl font-heading font-bold text-foreground mb-2">
-            Available Properties for Rent
+            Propriétés Disponibles à Louer
           </h2>
           <p className="text-muted-foreground">
-            {rentals.length} propert{rentals.length !== 1 ? 'ies' : 'y'} found
+            {rentals.length} propriété{rentals.length !== 1 ? 's' : ''} trouvée{rentals.length !== 1 ? 's' : ''}
           </p>
         </div>
 
@@ -83,7 +83,7 @@ const BrowseRentals = () => {
           <Card className="p-12 text-center">
             <HomeIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-lg text-muted-foreground">
-              No rental listings available at the moment.
+              Aucune annonce de location disponible pour le moment.
             </p>
           </Card>
         ) : (
@@ -130,7 +130,7 @@ const BrowseRentals = () => {
                     </div>
                     <div className="flex items-center gap-2 text-lg font-bold text-primary">
                       <DollarSign className="h-5 w-5" />
-                      {rental.rental_price}/month
+                      {rental.rental_price} GNF/mois
                     </div>
                   </div>
 
@@ -141,7 +141,7 @@ const BrowseRentals = () => {
                       navigate(`/rental/${rental.id}`);
                     }}
                   >
-                    View Details
+                    Voir les Détails
                   </Button>
                 </div>
               </Card>
