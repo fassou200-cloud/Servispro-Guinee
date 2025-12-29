@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,6 +11,7 @@ const API = `${BACKEND_URL}/api`;
 
 const ServiceRequestForm = ({ providerId, providerName, onSuccess }) => {
   const [loading, setLoading] = useState(false);
+  const [customer, setCustomer] = useState(null);
   const [formData, setFormData] = useState({
     client_name: '',
     phone_number: '',
@@ -20,6 +21,20 @@ const ServiceRequestForm = ({ providerId, providerName, onSuccess }) => {
     preferred_date: '',
     preferred_time: ''
   });
+
+  useEffect(() => {
+    // Pre-fill with customer data if logged in
+    const storedCustomer = localStorage.getItem('customer');
+    if (storedCustomer) {
+      const customerData = JSON.parse(storedCustomer);
+      setCustomer(customerData);
+      setFormData(prev => ({
+        ...prev,
+        client_name: `${customerData.first_name} ${customerData.last_name}`,
+        phone_number: customerData.phone_number
+      }));
+    }
+  }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
