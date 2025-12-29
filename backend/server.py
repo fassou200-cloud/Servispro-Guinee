@@ -150,6 +150,28 @@ class RentalListing(BaseModel):
     created_at: str
     updated_at: str
 
+class ReviewCreate(BaseModel):
+    service_provider_id: str
+    reviewer_name: str
+    rating: int
+    comment: str
+    
+    @field_validator('rating')
+    def validate_rating(cls, v):
+        if v < 1 or v > 5:
+            raise ValueError('Rating must be between 1 and 5')
+        return v
+
+class Review(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str
+    service_provider_id: str
+    reviewer_name: str
+    rating: int
+    comment: str
+    created_at: str
+
 # Helper Functions
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
