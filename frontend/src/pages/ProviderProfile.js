@@ -167,7 +167,7 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
               <Button
                 size="lg"
                 data-testid="request-service-button"
-                onClick={() => setShowRequestForm(!showRequestForm)}
+                onClick={handleRequestService}
                 className="h-12 px-8 font-heading font-bold gap-2"
               >
                 <Phone className="h-5 w-5" />
