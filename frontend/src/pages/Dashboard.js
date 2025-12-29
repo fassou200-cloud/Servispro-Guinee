@@ -148,7 +148,7 @@ const Dashboard = ({ setIsAuthenticated }) => {
               <h2 className="text-3xl font-heading font-bold text-foreground mb-1">
                 {user.first_name} {user.last_name}
               </h2>
-              <p className="text-lg text-muted-foreground mb-2">{user.profession}</p>
+              <p className="text-lg text-muted-foreground mb-2">{translateProfession(user.profession)}</p>
               <div className="flex items-center gap-2">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md text-sm font-medium border" 
                      data-testid="status-badge"
