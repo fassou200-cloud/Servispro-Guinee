@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
@@ -58,7 +57,6 @@ const LandingPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="border-b border-border bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-4">
           <div className="flex items-center justify-between">
@@ -92,7 +90,6 @@ const LandingPage = () => {
         </div>
       </header>
 
-      {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-green-50 via-yellow-50 to-red-50 py-20 md:py-32 overflow-hidden">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-20 left-10 w-64 h-64 bg-primary rounded-full blur-3xl"></div>
@@ -131,7 +128,6 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Categories Section */}
       <section className="py-20 md:py-28 bg-white">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="text-center mb-16">
@@ -187,7 +183,6 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Features Section */}
       <section className="bg-gradient-to-br from-muted/50 to-white py-20 md:py-28">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <h3 className="text-4xl font-heading font-bold text-foreground mb-16 text-center">
@@ -214,7 +209,6 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="border-t border-border py-10 bg-white">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
