@@ -6,6 +6,7 @@ import BrowseProviders from '@/pages/BrowseProviders';
 import ProviderProfile from '@/pages/ProviderProfile';
 import BrowseRentals from '@/pages/BrowseRentals';
 import RentalDetail from '@/pages/RentalDetail';
+import CustomerAuth from '@/pages/CustomerAuth';
 import AuthPage from '@/pages/AuthPage';
 import Dashboard from '@/pages/Dashboard';
 import { Toaster } from '@/components/ui/sonner';
@@ -34,6 +35,9 @@ function App() {
           <Route path="/provider/:providerId" element={<ProviderProfile />} />
           <Route path="/rentals" element={<BrowseRentals />} />
           <Route path="/rental/:rentalId" element={<RentalDetail />} />
+          
+          {/* Customer Auth */}
+          <Route path="/customer/auth" element={<CustomerAuth />} />
           
           {/* Provider Routes */}
           <Route 
