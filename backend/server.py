@@ -42,6 +42,7 @@ class ProfessionType(str, Enum):
     ELECTRICIAN = "Electrician"
     MECHANIC = "Mechanic"
     PLUMBER = "Plumber"
+    LOGISTICS = "Logistics"
 
 class JobStatus(str, Enum):
     PENDING = "Pending"
