@@ -151,7 +151,7 @@ const ProviderProfile = () => {
 
         {/* About Section */}
         {provider.about_me && (
-          <Card className="p-8">
+          <Card className="p-8 mb-8">
             <h2 className="text-2xl font-heading font-bold text-foreground mb-4">
               About
             </h2>
@@ -162,12 +162,29 @@ const ProviderProfile = () => {
         )}
 
         {!provider.about_me && (
-          <Card className="p-8">
+          <Card className="p-8 mb-8">
             <p className="text-muted-foreground text-center">
               This provider hasn't added a description yet.
             </p>
           </Card>
         )}
+
+        {/* Reviews Section */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-heading font-bold text-foreground mb-6">
+            Reviews & Ratings
+          </h2>
+          <ReviewsList key={refreshReviews} providerId={provider.id} />
+        </div>
+
+        {/* Leave a Review */}
+        <ReviewForm 
+          providerId={provider.id} 
+          onSuccess={() => {
+            setRefreshReviews(prev => prev + 1);
+            toast.success('Thank you for your review!');
+          }}
+        />
       </div>
     </div>
   );
