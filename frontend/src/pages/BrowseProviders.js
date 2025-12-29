@@ -16,6 +16,7 @@ const BrowseProviders = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [providers, setProviders] = useState([]);
   const [filteredProviders, setFilteredProviders] = useState([]);
+  const [providerStats, setProviderStats] = useState({});
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'All');
 
