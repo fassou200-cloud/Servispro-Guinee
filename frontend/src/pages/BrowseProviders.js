@@ -92,17 +92,17 @@ const BrowseProviders = () => {
                 className="gap-2"
               >
                 <ArrowLeft className="h-4 w-4" />
-                Back
+                Accueil
               </Button>
               <h1 className="text-2xl font-heading font-bold text-foreground">
-                Browse Providers
+                Parcourir les Prestataires
               </h1>
             </div>
             <Button
               variant="outline"
               onClick={() => navigate('/auth')}
             >
-              Provider Login
+              Connexion Prestataire
             </Button>
           </div>
         </div>
@@ -115,26 +115,27 @@ const BrowseProviders = () => {
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div>
               <h2 className="text-2xl font-heading font-bold text-foreground mb-2">
-                Available Service Providers
+                Prestataires de Services Disponibles
               </h2>
               <p className="text-muted-foreground">
-                {filteredProviders.length} provider{filteredProviders.length !== 1 ? 's' : ''} found
+                {filteredProviders.length} prestataire{filteredProviders.length !== 1 ? 's' : ''} trouvé{filteredProviders.length !== 1 ? 's' : ''}
               </p>
             </div>
             <div className="w-full md:w-64">
               <Label htmlFor="category-filter" className="font-heading text-xs uppercase tracking-wide mb-2 block">
-                Filter by Category
+                Filtrer par Catégorie
               </Label>
               <Select value={selectedCategory} onValueChange={handleCategoryChange}>
                 <SelectTrigger data-testid="category-filter" className="h-12">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="All">All Categories</SelectItem>
-                  <SelectItem value="Electrician">Electrician</SelectItem>
-                  <SelectItem value="Mechanic">Mechanic</SelectItem>
-                  <SelectItem value="Plumber">Plumber</SelectItem>
-                  <SelectItem value="Logistics">Logistics</SelectItem>
+                  <SelectItem value="All">Toutes les Catégories</SelectItem>
+                  <SelectItem value="Electrician">Électricien</SelectItem>
+                  <SelectItem value="Mechanic">Mécanicien</SelectItem>
+                  <SelectItem value="Plumber">Plombier</SelectItem>
+                  <SelectItem value="Logistics">Logistique</SelectItem>
+                  <SelectItem value="Other">Autres</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -145,7 +146,7 @@ const BrowseProviders = () => {
         {filteredProviders.length === 0 ? (
           <Card className="p-12 text-center">
             <p className="text-lg text-muted-foreground">
-              No providers found in this category.
+              Aucun prestataire trouvé dans cette catégorie.
             </p>
           </Card>
         ) : (
