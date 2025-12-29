@@ -75,6 +75,28 @@ class RegisterInput(BaseModel):
 class LoginInput(BaseModel):
     phone_number: str
     password: str
+    user_type: Optional[UserType] = UserType.CUSTOMER
+
+class CustomerRegisterInput(BaseModel):
+    first_name: str
+    last_name: str
+    phone_number: str
+    password: str
+    
+    @field_validator('phone_number')
+    def validate_phone(cls, v):
+        if not v or len(v) < 10:
+            raise ValueError('Phone number must be at least 10 digits')
+        return v
+
+class Customer(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str
+    first_name: str
+    last_name: str
+    phone_number: str
+    created_at: str
 
 class AuthResponse(BaseModel):
     token: str
