@@ -28,6 +28,35 @@ const RentalListingForm = ({ onSuccess }) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handlePhotoSelect = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    // Validate files
+    const validFiles = files.filter(file => file.type.startsWith('image/'));
+    if (validFiles.length !== files.length) {
+      toast.error('Some files were not images and were skipped');
+    }
+
+    // Add to selected photos
+    setSelectedPhotos([...selectedPhotos, ...validFiles]);
+
+    // Create preview URLs
+    const newPreviewUrls = validFiles.map(file => URL.createObjectURL(file));
+    setPhotoPreviewUrls([...photoPreviewUrls, ...newPreviewUrls]);
+  };
+
+  const removePhoto = (index) => {
+    const newPhotos = selectedPhotos.filter((_, i) => i !== index);
+    const newPreviews = photoPreviewUrls.filter((_, i) => i !== index);
+    
+    // Revoke the object URL to free memory
+    URL.revokeObjectURL(photoPreviewUrls[index]);
+    
+    setSelectedPhotos(newPhotos);
+    setPhotoPreviewUrls(newPreviews);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
