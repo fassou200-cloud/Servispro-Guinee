@@ -39,6 +39,8 @@ const BrowseProviders = ({ isCustomerAuthenticated }) => {
       setCustomer(JSON.parse(storedCustomer));
     }
   }, []);
+
+  useEffect(() => {
     fetchProviders();
   }, []);
 
