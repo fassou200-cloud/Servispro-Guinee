@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, MapPin, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, MapPin, ShieldCheck, Star } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
 
