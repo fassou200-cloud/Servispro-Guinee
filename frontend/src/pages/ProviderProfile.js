@@ -7,6 +7,8 @@ import { ArrowLeft, ShieldCheck, Briefcase, Phone } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
 import ServiceRequestForm from '@/components/ServiceRequestForm';
+import ReviewForm from '@/components/ReviewForm';
+import ReviewsList from '@/components/ReviewsList';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
