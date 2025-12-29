@@ -168,6 +168,24 @@ const Dashboard = ({ setIsAuthenticated }) => {
             <Briefcase className="h-4 w-4" />
             Job Offers
           </Button>
+          <Button
+            variant={activeTab === 'rentals' ? 'default' : 'outline'}
+            data-testid="rentals-tab-button"
+            onClick={() => setActiveTab('rentals')}
+            className="gap-2 font-heading"
+          >
+            <Home className="h-4 w-4" />
+            My Rentals
+          </Button>
+          <Button
+            variant={activeTab === 'create-rental' ? 'default' : 'outline'}
+            data-testid="create-rental-tab-button"
+            onClick={() => setActiveTab('create-rental')}
+            className="gap-2 font-heading"
+          >
+            <Home className="h-4 w-4" />
+            + Add Rental
+          </Button>
         </div>
 
         {/* Tab Content */}
@@ -175,6 +193,13 @@ const Dashboard = ({ setIsAuthenticated }) => {
           <ProfileForm user={user} setUser={setUser} onUpdate={fetchProfile} />
         )}
         {activeTab === 'jobs' && <JobsList />}
+        {activeTab === 'rentals' && <MyRentals />}
+        {activeTab === 'create-rental' && (
+          <RentalListingForm onSuccess={() => {
+            setActiveTab('rentals');
+            toast.success('Rental listing created successfully!');
+          }} />
+        )}
       </div>
     </div>
   );
