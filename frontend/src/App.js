@@ -4,6 +4,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import LandingPage from '@/pages/LandingPage';
 import BrowseProviders from '@/pages/BrowseProviders';
 import ProviderProfile from '@/pages/ProviderProfile';
+import BrowseRentals from '@/pages/BrowseRentals';
+import RentalDetail from '@/pages/RentalDetail';
 import AuthPage from '@/pages/AuthPage';
 import Dashboard from '@/pages/Dashboard';
 import { Toaster } from '@/components/ui/sonner';
@@ -30,6 +32,8 @@ function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/browse" element={<BrowseProviders />} />
           <Route path="/provider/:providerId" element={<ProviderProfile />} />
+          <Route path="/rentals" element={<BrowseRentals />} />
+          <Route path="/rental/:rentalId" element={<RentalDetail />} />
           
           {/* Provider Routes */}
           <Route 
