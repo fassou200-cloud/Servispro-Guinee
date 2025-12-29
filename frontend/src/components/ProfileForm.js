@@ -254,6 +254,7 @@ const ProfileForm = ({ user, setUser, onUpdate }) => {
               <SelectItem value="Mechanic">Mécanicien</SelectItem>
               <SelectItem value="Plumber">Plombier</SelectItem>
               <SelectItem value="Logistics">Logistique</SelectItem>
+              <SelectItem value="Other">Autres</SelectItem>
             </SelectContent>
           </Select>
         </div>
