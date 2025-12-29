@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Upload } from 'lucide-react';
+import { Upload, CheckCircle } from 'lucide-react';
 import axios from 'axios';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -32,7 +32,7 @@ const ProfileForm = ({ user, setUser, onUpdate }) => {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      toast.error('Please upload an image file');
+      toast.error('Veuillez télécharger un fichier image');
       return;
     }
 
@@ -50,10 +50,10 @@ const ProfileForm = ({ user, setUser, onUpdate }) => {
       });
 
       setUser({ ...user, profile_picture: response.data.profile_picture });
-      toast.success('Profile picture uploaded successfully');
+      toast.success('Photo de profil téléchargée avec succès');
       onUpdate();
     } catch (error) {
-      toast.error('Failed to upload profile picture');
+      toast.error('Échec du téléchargement de la photo');
     } finally {
       setUploading(false);
     }
@@ -64,7 +64,7 @@ const ProfileForm = ({ user, setUser, onUpdate }) => {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      toast.error('Please upload an image file');
+      toast.error('Veuillez télécharger un fichier image');
       return;
     }
 
@@ -82,10 +82,10 @@ const ProfileForm = ({ user, setUser, onUpdate }) => {
       });
 
       setUser({ ...user, id_verification_picture: response.data.id_verification_picture });
-      toast.success('ID verification uploaded successfully');
+      toast.success('Pièce d\'identité téléchargée avec succès');
       onUpdate();
     } catch (error) {
-      toast.error('Failed to upload ID verification');
+      toast.error('Échec du téléchargement de la pièce d\'identité');
     } finally {
       setUploadingId(false);
     }
@@ -101,10 +101,10 @@ const ProfileForm = ({ user, setUser, onUpdate }) => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      toast.success('Profile updated successfully');
+      toast.success('Profil mis à jour avec succès');
       onUpdate();
     } catch (error) {
-      toast.error('Failed to update profile');
+      toast.error('Échec de la mise à jour du profil');
     } finally {
       setSaving(false);
     }
@@ -113,15 +113,24 @@ const ProfileForm = ({ user, setUser, onUpdate }) => {
   return (
     <Card className="p-8">
       <h3 className="text-2xl font-heading font-bold text-foreground mb-6">
-        Edit Profile
+        Modifier le Profil
       </h3>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Profile Picture Upload */}
+        {/* Profile Picture Upload with Preview */}
         <div className="space-y-2">
           <Label htmlFor="profile-picture" className="font-heading text-xs uppercase tracking-wide">
-            Profile Picture
+            Photo de Profil
           </Label>
+          {user.profile_picture && (
+            <div className="mb-3">
+              <img
+                src={`${BACKEND_URL}${user.profile_picture}`}
+                alt="Photo de profil"
+                className="w-32 h-32 rounded-full object-cover border-4 border-primary"
+              />
+            </div>
+          )}
           <div className="flex items-center gap-4">
             <input
               id="profile-picture"
@@ -140,22 +149,34 @@ const ProfileForm = ({ user, setUser, onUpdate }) => {
               className="gap-2"
             >
               <Upload className="h-4 w-4" />
-              {uploading ? 'Uploading...' : 'Upload Picture'}
+              {uploading ? 'Téléchargement...' : 'Télécharger Photo'}
             </Button>
             {user.profile_picture && (
-              <span className="text-sm text-muted-foreground">Current picture uploaded</span>
+              <span className="text-sm text-green-600 flex items-center gap-2">
+                <CheckCircle className="h-4 w-4" />
+                Photo téléchargée
+              </span>
             )}
           </div>
         </div>
 
-        {/* ID Verification Upload */}
+        {/* ID Verification Upload with Preview */}
         <div className="space-y-2">
           <Label htmlFor="id-verification" className="font-heading text-xs uppercase tracking-wide">
-            ID Verification
+            Vérification d'Identité
           </Label>
           <p className="text-xs text-muted-foreground mb-2">
-            Upload a photo of your government-issued ID for verification
+            Téléchargez une photo de votre pièce d'identité pour vérification
           </p>
+          {user.id_verification_picture && (
+            <div className="mb-3">
+              <img
+                src={`${BACKEND_URL}${user.id_verification_picture}`}
+                alt="Pièce d'identité"
+                className="w-48 h-32 rounded-lg object-cover border-2 border-blue-500"
+              />
+            </div>
+          )}
           <div className="flex items-center gap-4">
             <input
               id="id-verification"
@@ -174,10 +195,13 @@ const ProfileForm = ({ user, setUser, onUpdate }) => {
               className="gap-2"
             >
               <Upload className="h-4 w-4" />
-              {uploadingId ? 'Uploading...' : 'Upload ID'}
+              {uploadingId ? 'Téléchargement...' : 'Télécharger ID'}
             </Button>
             {user.id_verification_picture && (
-              <span className="text-sm text-green-600 font-medium">✓ ID Verified</span>
+              <span className="text-sm text-green-600 flex items-center gap-2 font-medium">
+                <CheckCircle className="h-4 w-4" />
+                ID Vérifié
+              </span>
             )}
           </div>
         </div>
@@ -185,7 +209,7 @@ const ProfileForm = ({ user, setUser, onUpdate }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <Label htmlFor="first_name" className="font-heading text-xs uppercase tracking-wide">
-              First Name
+              Prénom
             </Label>
             <Input
               id="first_name"
@@ -200,7 +224,7 @@ const ProfileForm = ({ user, setUser, onUpdate }) => {
 
           <div className="space-y-2">
             <Label htmlFor="last_name" className="font-heading text-xs uppercase tracking-wide">
-              Last Name
+              Nom
             </Label>
             <Input
               id="last_name"
@@ -226,17 +250,17 @@ const ProfileForm = ({ user, setUser, onUpdate }) => {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Electrician">Electrician</SelectItem>
-              <SelectItem value="Mechanic">Mechanic</SelectItem>
-              <SelectItem value="Plumber">Plumber</SelectItem>
-              <SelectItem value="Logistics">Logistics</SelectItem>
+              <SelectItem value="Electrician">Électricien</SelectItem>
+              <SelectItem value="Mechanic">Mécanicien</SelectItem>
+              <SelectItem value="Plumber">Plombier</SelectItem>
+              <SelectItem value="Logistics">Logistique</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="about_me" className="font-heading text-xs uppercase tracking-wide">
-            About Me
+            À Propos de Moi
           </Label>
           <Textarea
             id="about_me"
@@ -245,7 +269,7 @@ const ProfileForm = ({ user, setUser, onUpdate }) => {
             value={formData.about_me}
             onChange={handleChange}
             rows={6}
-            placeholder="Tell clients about your experience and skills..."
+            placeholder="Parlez aux clients de votre expérience et compétences..."
             className="resize-none"
           />
         </div>
@@ -256,7 +280,7 @@ const ProfileForm = ({ user, setUser, onUpdate }) => {
           className="w-full h-12 font-heading font-bold text-base"
           disabled={saving}
         >
-          {saving ? 'Saving...' : 'Save Changes'}
+          {saving ? 'Enregistrement...' : 'Enregistrer les Modifications'}
         </Button>
       </form>
     </Card>
