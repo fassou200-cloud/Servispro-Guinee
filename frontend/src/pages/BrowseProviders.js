@@ -32,6 +32,20 @@ const BrowseProviders = () => {
     try {
       const response = await axios.get(`${API}/providers`);
       setProviders(response.data);
+      
+      // Fetch rating stats for each provider
+      const statsPromises = response.data.map(provider => 
+        axios.get(`${API}/reviews/${provider.id}/stats`)
+          .then(res => ({ id: provider.id, stats: res.data }))
+          .catch(() => ({ id: provider.id, stats: { total_reviews: 0, average_rating: 0 } }))
+      );
+      
+      const stats = await Promise.all(statsPromises);
+      const statsMap = {};
+      stats.forEach(({ id, stats }) => {
+        statsMap[id] = stats;
+      });
+      setProviderStats(statsMap);
     } catch (error) {
       toast.error('Failed to load providers');
     } finally {
