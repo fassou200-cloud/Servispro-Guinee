@@ -21,8 +21,8 @@ const RentalListingForm = ({ onSuccess }) => {
     rental_price: ''
   });
   const [saving, setSaving] = useState(false);
-  const [createdListingId, setCreatedListingId] = useState(null);
-  const [uploadingPhotos, setUploadingPhotos] = useState(false);
+  const [selectedPhotos, setSelectedPhotos] = useState([]);
+  const [photoPreviewUrls, setPhotoPreviewUrls] = useState([]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
