@@ -74,14 +74,24 @@ const LandingPage = () => {
                 ServisPro
               </h1>
             </div>
-            <Button
-              variant="outline"
-              data-testid="provider-login-button"
-              onClick={() => navigate('/auth')}
-              className="border-primary text-primary hover:bg-primary hover:text-white"
-            >
-              Provider Login
-            </Button>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                data-testid="customer-login-button"
+                onClick={() => navigate('/customer/auth')}
+                className="border-primary text-primary hover:bg-primary hover:text-white"
+              >
+                Customer Login
+              </Button>
+              <Button
+                variant="ghost"
+                data-testid="provider-login-button"
+                onClick={() => navigate('/auth')}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                Provider Login
+              </Button>
+            </div>
           </div>
         </div>
       </header>
