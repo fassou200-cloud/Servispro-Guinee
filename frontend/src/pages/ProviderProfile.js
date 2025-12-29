@@ -25,13 +25,32 @@ const translateProfession = (profession) => {
   return translations[profession] || profession;
 };
 
-const ProviderProfile = () => {
+const ProviderProfile = ({ isCustomerAuthenticated }) => {
   const navigate = useNavigate();
   const { providerId } = useParams();
   const [provider, setProvider] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showRequestForm, setShowRequestForm] = useState(false);
   const [refreshReviews, setRefreshReviews] = useState(0);
+  const [customer, setCustomer] = useState(null);
+
+  useEffect(() => {
+    fetchProvider();
+    // Check if customer is logged in
+    const storedCustomer = localStorage.getItem('customer');
+    if (storedCustomer) {
+      setCustomer(JSON.parse(storedCustomer));
+    }
+  }, [providerId]);
+
+  const handleRequestService = () => {
+    if (!isCustomerAuthenticated && !localStorage.getItem('customerToken')) {
+      toast.error('Veuillez vous connecter pour demander un service');
+      navigate('/customer/auth');
+      return;
+    }
+    setShowRequestForm(!showRequestForm);
+  };
 
   useEffect(() => {
     fetchProvider();
