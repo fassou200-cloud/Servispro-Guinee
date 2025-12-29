@@ -119,8 +119,8 @@ const LandingPage = () => {
                 <Card
                   key={category.name}
                   className="overflow-hidden hover:border-primary/50 transition-colors duration-300 cursor-pointer"
-                  data-testid={`category-card-${category.name.toLowerCase()}`}
-                  onClick={() => navigate(`/browse?category=${category.name}`)}
+                  data-testid={`category-card-${category.name.toLowerCase().replace(/ /g, '-')}`}
+                  onClick={() => navigate(category.link)}
                 >
                   <div className="aspect-video relative overflow-hidden">
                     <img
@@ -143,10 +143,10 @@ const LandingPage = () => {
                       className="gap-2 p-0 h-auto font-heading"
                       onClick={(e) => {
                         e.stopPropagation();
-                        navigate(`/browse?category=${category.name}`);
+                        navigate(category.link);
                       }}
                     >
-                      View Providers
+                      {category.name === 'Apartment Rentals' ? 'View Listings' : 'View Providers'}
                       <ArrowRight className="h-4 w-4" />
                     </Button>
                   </div>
