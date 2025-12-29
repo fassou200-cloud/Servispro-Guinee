@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { LogOut, User, Briefcase, ShieldCheck } from 'lucide-react';
+import { LogOut, User, Briefcase, ShieldCheck, Home } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
 import ProfileForm from '@/components/ProfileForm';
