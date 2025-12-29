@@ -61,7 +61,7 @@ const JobsList = () => {
   if (loading) {
     return (
       <Card className="p-8">
-        <p className="text-center text-muted-foreground">Loading jobs...</p>
+        <p className="text-center text-muted-foreground">Chargement des travaux...</p>
       </Card>
     );
   }
@@ -72,10 +72,10 @@ const JobsList = () => {
         <div className="text-center">
           <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-xl font-heading font-bold text-foreground mb-2">
-            No Job Offers Yet
+            Aucune Demande de Travail
           </h3>
           <p className="text-muted-foreground">
-            You'll see job offers from clients here when they arrive.
+            Vous verrez ici les demandes de travail des clients quand elles arrivent.
           </p>
         </div>
       </Card>
@@ -86,7 +86,7 @@ const JobsList = () => {
     <div className="space-y-4">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-2xl font-heading font-bold text-foreground">
-          Job Offers ({jobs.length})
+          Demandes de Travail ({jobs.length})
         </h3>
       </div>
 
