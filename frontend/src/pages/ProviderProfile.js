@@ -13,6 +13,18 @@ import ReviewsList from '@/components/ReviewsList';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+// Traduction des professions en français
+const translateProfession = (profession) => {
+  const translations = {
+    'Electrician': 'Électricien',
+    'Mechanic': 'Mécanicien',
+    'Plumber': 'Plombier',
+    'Logistics': 'Logistique',
+    'Other': 'Autres'
+  };
+  return translations[profession] || profession;
+};
+
 const ProviderProfile = () => {
   const navigate = useNavigate();
   const { providerId } = useParams();
