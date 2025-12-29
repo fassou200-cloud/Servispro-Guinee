@@ -43,6 +43,7 @@ class ProfessionType(str, Enum):
     MECHANIC = "Mechanic"
     PLUMBER = "Plumber"
     LOGISTICS = "Logistics"
+    OTHER = "Other"
 
 class UserType(str, Enum):
     PROVIDER = "provider"
