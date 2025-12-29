@@ -266,8 +266,14 @@ async def register(input_data: RegisterInput):
 
 @api_router.post("/auth/login", response_model=AuthResponse)
 async def login(input_data: LoginInput):
+    # Determine which collection to search
+    if input_data.user_type == UserType.PROVIDER:
+        collection = db.service_providers
+    else:
+        collection = db.customers
+    
     # Find user
-    user = await db.service_providers.find_one({'phone_number': input_data.phone_number})
+    user = await collection.find_one({'phone_number': input_data.phone_number})
     if not user:
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
@@ -280,8 +286,40 @@ async def login(input_data: LoginInput):
     
     # Return user without password
     user_response = {k: v for k, v in user.items() if k not in ['password', '_id']}
+    user_response['user_type'] = input_data.user_type.value
     
     return AuthResponse(token=token, user=user_response)
+
+@api_router.post("/auth/customer/register", response_model=AuthResponse)
+async def register_customer(input_data: CustomerRegisterInput):
+    # Check if phone number already exists
+    existing_user = await db.customers.find_one({'phone_number': input_data.phone_number})
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Phone number already registered")
+    
+    # Create customer
+    customer_id = str(uuid.uuid4())
+    hashed_pwd = hash_password(input_data.password)
+    
+    customer_doc = {
+        'id': customer_id,
+        'first_name': input_data.first_name,
+        'last_name': input_data.last_name,
+        'phone_number': input_data.phone_number,
+        'password': hashed_pwd,
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.customers.insert_one(customer_doc)
+    
+    # Generate token
+    token = create_token(customer_id)
+    
+    # Return customer without password
+    customer_response = {k: v for k, v in customer_doc.items() if k != 'password'}
+    customer_response['user_type'] = 'customer'
+    
+    return AuthResponse(token=token, user=customer_response)
 
 # Profile Routes
 @api_router.get("/profile/me", response_model=ServiceProvider)
