@@ -83,7 +83,7 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
               </h2>
               <p className="text-muted-foreground flex items-center gap-2">
                 <User className="h-4 w-4" />
-                Client depuis {new Date(customer.created_at).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+                Client ServisPro
               </p>
             </div>
           </div>
