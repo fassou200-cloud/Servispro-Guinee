@@ -32,12 +32,13 @@ const ReviewForm = ({ providerId, onSuccess }) => {
         comment: formData.comment
       });
 
-      toast.success('Review submitted successfully!');
+      toast.success('Avis soumis avec succès !');
       setFormData({ reviewer_name: '', rating: 5, comment: '' });
       
       if (onSuccess) onSuccess();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to submit review');
+      const errorMsg = error.response?.data?.detail || 'Échec de la soumission de l\'avis';
+      toast.error(errorMsg);
     } finally {
       setSubmitting(false);
     }
@@ -46,8 +47,11 @@ const ReviewForm = ({ providerId, onSuccess }) => {
   return (
     <Card className="p-6">
       <h3 className="text-xl font-heading font-bold text-foreground mb-4">
-        Leave a Review
+        Laisser un Avis
       </h3>
+      <p className="text-sm text-muted-foreground mb-4">
+        Note: Vous ne pouvez évaluer que les prestataires qui vous ont fourni un service
+      </p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
