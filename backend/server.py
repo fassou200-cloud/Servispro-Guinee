@@ -478,6 +478,69 @@ async def delete_rental_listing(rental_id: str, current_user: dict = Depends(get
     await db.rental_listings.delete_one({'id': rental_id})
     return {'message': 'Rental listing deleted successfully'}
 
+# Review Routes
+@api_router.post("/reviews", response_model=Review)
+async def create_review(review_data: ReviewCreate):
+    # Verify provider exists
+    provider = await db.service_providers.find_one({'id': review_data.service_provider_id}, {'_id': 0})
+    if not provider:
+        raise HTTPException(status_code=404, detail="Service provider not found")
+    
+    review_id = str(uuid.uuid4())
+    review_doc = {
+        'id': review_id,
+        'service_provider_id': review_data.service_provider_id,
+        'reviewer_name': review_data.reviewer_name,
+        'rating': review_data.rating,
+        'comment': review_data.comment,
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.reviews.insert_one(review_doc)
+    
+    review_response = {k: v for k, v in review_doc.items() if k != '_id'}
+    return Review(**review_response)
+
+@api_router.get("/reviews/{provider_id}", response_model=List[Review])
+async def get_provider_reviews(provider_id: str):
+    reviews = await db.reviews.find({'service_provider_id': provider_id}, {'_id': 0}).sort('created_at', -1).to_list(100)
+    return [Review(**r) for r in reviews]
+
+@api_router.get("/reviews/{provider_id}/stats")
+async def get_provider_rating_stats(provider_id: str):
+    reviews = await db.reviews.find({'service_provider_id': provider_id}, {'_id': 0, 'rating': 1}).to_list(1000)
+    
+    if not reviews:
+        return {
+            'total_reviews': 0,
+            'average_rating': 0,
+            'rating_distribution': {
+                '5': 0,
+                '4': 0,
+                '3': 0,
+                '2': 0,
+                '1': 0
+            }
+        }
+    
+    total = len(reviews)
+    ratings = [r['rating'] for r in reviews]
+    average = sum(ratings) / total
+    
+    distribution = {
+        '5': ratings.count(5),
+        '4': ratings.count(4),
+        '3': ratings.count(3),
+        '2': ratings.count(2),
+        '1': ratings.count(1)
+    }
+    
+    return {
+        'total_reviews': total,
+        'average_rating': round(average, 1),
+        'rating_distribution': distribution
+    }
+
 # Include router
 app.include_router(api_router)
 
