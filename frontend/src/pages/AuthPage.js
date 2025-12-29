@@ -27,7 +27,7 @@ const AuthPage = ({ setIsAuthenticated }) => {
     try {
       const endpoint = isLogin ? `${API}/auth/login` : `${API}/auth/register`;
       const payload = isLogin 
-        ? { phone_number: formData.phone_number, password: formData.password }
+        ? { phone_number: formData.phone_number, password: formData.password, user_type: 'provider' }
         : formData;
 
       const response = await axios.post(endpoint, payload);
