@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, MapPin, ShieldCheck, Star } from 'lucide-react';
+import { ArrowLeft, MapPin, ShieldCheck, Star, User, LogOut } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
 
@@ -23,7 +23,7 @@ const translateProfession = (profession) => {
   return translations[profession] || profession;
 };
 
-const BrowseProviders = () => {
+const BrowseProviders = ({ isCustomerAuthenticated }) => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [providers, setProviders] = useState([]);
@@ -31,8 +31,14 @@ const BrowseProviders = () => {
   const [providerStats, setProviderStats] = useState({});
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'All');
+  const [customer, setCustomer] = useState(null);
 
   useEffect(() => {
+    const storedCustomer = localStorage.getItem('customer');
+    if (storedCustomer) {
+      setCustomer(JSON.parse(storedCustomer));
+    }
+  }, []);
     fetchProviders();
   }, []);
 
