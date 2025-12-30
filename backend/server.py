@@ -638,11 +638,68 @@ class AdminLoginInput(BaseModel):
     username: str
     password: str
 
+class AdminRegisterInput(BaseModel):
+    username: str = Field(..., min_length=3, max_length=50)
+    password: str = Field(..., min_length=6)
+    invite_code: str
+
+@api_router.post("/admin/register")
+async def admin_register(input_data: AdminRegisterInput):
+    """Register a new admin with invitation code"""
+    # Verify invitation code
+    if input_data.invite_code != ADMIN_INVITE_CODE:
+        raise HTTPException(status_code=403, detail="Code d'invitation invalide")
+    
+    # Check if username already exists
+    existing_admin = await db.admins.find_one({'username': input_data.username})
+    if existing_admin:
+        raise HTTPException(status_code=400, detail="Ce nom d'utilisateur existe déjà")
+    
+    # Hash password and create admin
+    hashed_pwd = bcrypt.hashpw(input_data.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    admin_id = str(uuid.uuid4())
+    
+    admin_doc = {
+        'id': admin_id,
+        'username': input_data.username,
+        'password': hashed_pwd,
+        'role': 'admin',
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.admins.insert_one(admin_doc)
+    
+    token = create_token(admin_id)
+    return {
+        "token": token, 
+        "user": {
+            "id": admin_id, 
+            "username": input_data.username,
+            "role": "admin"
+        },
+        "message": "Compte admin créé avec succès"
+    }
+
 @api_router.post("/admin/login")
 async def admin_login(input_data: AdminLoginInput):
+    # Check fixed super-admin first
     if input_data.username == ADMIN_USERNAME and input_data.password == ADMIN_PASSWORD:
         token = create_token("admin")
-        return {"token": token, "user": {"id": "admin", "role": "admin"}}
+        return {"token": token, "user": {"id": "admin", "username": "admin", "role": "super-admin"}}
+    
+    # Check database admins
+    admin = await db.admins.find_one({'username': input_data.username}, {'_id': 0})
+    if admin and bcrypt.checkpw(input_data.password.encode('utf-8'), admin['password'].encode('utf-8')):
+        token = create_token(admin['id'])
+        return {
+            "token": token, 
+            "user": {
+                "id": admin['id'], 
+                "username": admin['username'],
+                "role": admin['role']
+            }
+        }
+    
     raise HTTPException(status_code=401, detail="Identifiants admin invalides")
 
 @api_router.get("/admin/providers")
