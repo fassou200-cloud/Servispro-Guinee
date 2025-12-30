@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
-import { Shield, ArrowLeft } from 'lucide-react';
+import { Shield, ArrowLeft, UserPlus, LogIn } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
 
@@ -13,10 +13,13 @@ const API = `${BACKEND_URL}/api`;
 
 const AdminAuth = ({ setIsAdminAuthenticated }) => {
   const navigate = useNavigate();
+  const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     username: '',
-    password: ''
+    password: '',
+    confirmPassword: '',
+    invite_code: ''
   });
 
   const handleSubmit = async (e) => {
@@ -24,19 +27,48 @@ const AdminAuth = ({ setIsAdminAuthenticated }) => {
     setLoading(true);
 
     try {
-      const response = await axios.post(`${API}/admin/login`, formData);
-      
-      localStorage.setItem('adminToken', response.data.token);
-      localStorage.setItem('admin', JSON.stringify(response.data.user));
-      
-      if (setIsAdminAuthenticated) {
-        setIsAdminAuthenticated(true);
+      if (isLogin) {
+        // Login
+        const response = await axios.post(`${API}/admin/login`, {
+          username: formData.username,
+          password: formData.password
+        });
+        
+        localStorage.setItem('adminToken', response.data.token);
+        localStorage.setItem('admin', JSON.stringify(response.data.user));
+        
+        if (setIsAdminAuthenticated) {
+          setIsAdminAuthenticated(true);
+        }
+        
+        toast.success(`Bienvenue ${response.data.user.username} !`);
+        navigate('/admin/dashboard');
+      } else {
+        // Register
+        if (formData.password !== formData.confirmPassword) {
+          toast.error('Les mots de passe ne correspondent pas');
+          setLoading(false);
+          return;
+        }
+
+        const response = await axios.post(`${API}/admin/register`, {
+          username: formData.username,
+          password: formData.password,
+          invite_code: formData.invite_code
+        });
+        
+        localStorage.setItem('adminToken', response.data.token);
+        localStorage.setItem('admin', JSON.stringify(response.data.user));
+        
+        if (setIsAdminAuthenticated) {
+          setIsAdminAuthenticated(true);
+        }
+        
+        toast.success('Compte admin créé avec succès !');
+        navigate('/admin/dashboard');
       }
-      
-      toast.success('Connexion admin réussie !');
-      navigate('/admin/dashboard');
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Identifiants invalides');
+      toast.error(error.response?.data?.detail || 'Une erreur est survenue');
     } finally {
       setLoading(false);
     }
@@ -63,8 +95,30 @@ const AdminAuth = ({ setIsAdminAuthenticated }) => {
               Administration
             </h1>
             <p className="text-slate-400">
-              Connectez-vous pour accéder au panneau d'administration
+              {isLogin ? 'Connectez-vous pour accéder au panneau' : 'Créez un compte administrateur'}
             </p>
+          </div>
+
+          {/* Toggle Login/Register */}
+          <div className="flex gap-2 mb-6">
+            <Button
+              type="button"
+              variant={isLogin ? 'default' : 'outline'}
+              onClick={() => setIsLogin(true)}
+              className={`flex-1 gap-2 ${isLogin ? 'bg-amber-600 hover:bg-amber-700' : 'border-slate-600 text-slate-300'}`}
+            >
+              <LogIn className="h-4 w-4" />
+              Connexion
+            </Button>
+            <Button
+              type="button"
+              variant={!isLogin ? 'default' : 'outline'}
+              onClick={() => setIsLogin(false)}
+              className={`flex-1 gap-2 ${!isLogin ? 'bg-amber-600 hover:bg-amber-700' : 'border-slate-600 text-slate-300'}`}
+            >
+              <UserPlus className="h-4 w-4" />
+              Inscription
+            </Button>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -79,7 +133,7 @@ const AdminAuth = ({ setIsAdminAuthenticated }) => {
                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                 required
                 className="h-12 bg-slate-700 border-slate-600 text-white"
-                placeholder="admin"
+                placeholder="Entrez votre nom d'utilisateur"
               />
             </div>
 
@@ -94,16 +148,56 @@ const AdminAuth = ({ setIsAdminAuthenticated }) => {
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 required
+                minLength={6}
                 className="h-12 bg-slate-700 border-slate-600 text-white"
+                placeholder="Minimum 6 caractères"
               />
             </div>
+
+            {!isLogin && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword" className="text-slate-300 font-heading text-xs uppercase tracking-wide">
+                    Confirmer le mot de passe
+                  </Label>
+                  <Input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type="password"
+                    value={formData.confirmPassword}
+                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                    required
+                    className="h-12 bg-slate-700 border-slate-600 text-white"
+                    placeholder="Confirmez votre mot de passe"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="invite_code" className="text-slate-300 font-heading text-xs uppercase tracking-wide">
+                    Code d'invitation
+                  </Label>
+                  <Input
+                    id="invite_code"
+                    name="invite_code"
+                    value={formData.invite_code}
+                    onChange={(e) => setFormData({ ...formData, invite_code: e.target.value })}
+                    required
+                    className="h-12 bg-slate-700 border-slate-600 text-white"
+                    placeholder="Entrez le code d'invitation"
+                  />
+                  <p className="text-xs text-slate-500">
+                    Contactez un administrateur pour obtenir le code d'invitation
+                  </p>
+                </div>
+              </>
+            )}
 
             <Button 
               type="submit" 
               className="w-full h-12 font-heading font-bold text-base bg-amber-600 hover:bg-amber-700"
               disabled={loading}
             >
-              {loading ? 'Connexion...' : 'Se Connecter'}
+              {loading ? 'Chargement...' : (isLogin ? 'Se Connecter' : 'Créer le Compte')}
             </Button>
           </form>
         </Card>
