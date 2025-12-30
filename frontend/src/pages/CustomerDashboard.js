@@ -184,6 +184,60 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
           </Card>
         </div>
 
+        {/* Pending Jobs Section */}
+        {pendingJobs.length > 0 && (
+          <div className="mt-8">
+            <h3 className="text-2xl font-heading font-bold text-foreground mb-6 flex items-center gap-2">
+              <Briefcase className="h-6 w-6" />
+              Mes Demandes de Service ({pendingJobs.length})
+            </h3>
+            
+            <div className="space-y-4">
+              {pendingJobs.map((job) => (
+                <Card key={job.id} className="p-6">
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <h4 className="text-lg font-heading font-bold text-foreground">
+                        {job.service_type}
+                      </h4>
+                      <p className="text-sm text-muted-foreground">
+                        Prestataire: {job.provider_name} • {translateProfession(job.provider_profession)}
+                      </p>
+                    </div>
+                    {job.status === 'ProviderCompleted' ? (
+                      <span className="inline-flex items-center gap-2 px-3 py-1 rounded-md text-sm font-medium bg-purple-100 text-purple-700 border border-purple-200">
+                        <Clock className="h-4 w-4" />
+                        En attente de votre confirmation
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-2 px-3 py-1 rounded-md text-sm font-medium bg-blue-100 text-blue-700 border border-blue-200">
+                        En cours
+                      </span>
+                    )}
+                  </div>
+                  
+                  <p className="text-muted-foreground text-sm mb-4">{job.description}</p>
+                  
+                  {job.status === 'ProviderCompleted' && (
+                    <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-4">
+                      <p className="text-purple-800 font-medium mb-3">
+                        Le prestataire a marqué ce service comme terminé. Confirmez-vous que le travail a bien été effectué ?
+                      </p>
+                      <Button
+                        onClick={() => handleConfirmComplete(job.id)}
+                        className="gap-2 bg-green-600 hover:bg-green-700"
+                      >
+                        <CheckCircle className="h-4 w-4" />
+                        Oui, Confirmer le Service Terminé
+                      </Button>
+                    </div>
+                  )}
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Info Card */}
         <Card className="p-6 mt-8 bg-blue-50 border-blue-200">
           <div className="flex items-start gap-4">
