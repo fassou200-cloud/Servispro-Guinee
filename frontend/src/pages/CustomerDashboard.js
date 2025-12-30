@@ -3,19 +3,59 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Home, LogOut, Search, Building, User } from 'lucide-react';
+import { Home, LogOut, Search, Building, User, CheckCircle, Clock, Briefcase } from 'lucide-react';
 import { toast } from 'sonner';
+import axios from 'axios';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
+
+// Traduction des professions
+const translateProfession = (profession) => {
+  const translations = {
+    'Electrician': 'Électricien',
+    'Mechanic': 'Mécanicien',
+    'Plumber': 'Plombier',
+    'Logistics': 'Logistique',
+    'Other': 'Autres'
+  };
+  return translations[profession] || profession;
+};
 
 const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
   const navigate = useNavigate();
   const [customer, setCustomer] = useState(null);
+  const [pendingJobs, setPendingJobs] = useState([]);
+  const [loadingJobs, setLoadingJobs] = useState(true);
 
   useEffect(() => {
     const storedCustomer = localStorage.getItem('customer');
     if (storedCustomer) {
       setCustomer(JSON.parse(storedCustomer));
     }
+    fetchPendingJobs();
   }, []);
+
+  const fetchPendingJobs = async () => {
+    try {
+      const response = await axios.get(`${API}/customer/jobs`);
+      setPendingJobs(response.data);
+    } catch (error) {
+      console.error('Failed to fetch jobs:', error);
+    } finally {
+      setLoadingJobs(false);
+    }
+  };
+
+  const handleConfirmComplete = async (jobId) => {
+    try {
+      await axios.put(`${API}/jobs/${jobId}/customer-confirm`);
+      toast.success('Service confirmé comme terminé ! Merci.');
+      fetchPendingJobs();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Erreur lors de la confirmation');
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('customerToken');
