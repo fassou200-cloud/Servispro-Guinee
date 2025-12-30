@@ -619,6 +619,72 @@ class ServisProAPITester:
         self.test_invalid_login()
         self.test_unauthorized_access()
         
+        # ==================== ADMIN DASHBOARD TESTS ====================
+        print("\n🔐 Testing Admin Dashboard...")
+        
+        # Test admin login
+        admin_login_success = self.test_admin_login()
+        if admin_login_success:
+            # Test admin provider management
+            providers_success, providers_data = self.test_admin_get_all_providers()
+            if providers_success and providers_data:
+                # Test approve/reject with first provider
+                first_provider_id = providers_data[0].get('id') if providers_data else None
+                if first_provider_id:
+                    self.test_admin_approve_provider(first_provider_id)
+                    # Test reject on same provider (to test both endpoints)
+                    self.test_admin_reject_provider(first_provider_id)
+            
+            # Test admin job management
+            self.test_admin_get_all_jobs()
+            
+            # Test admin statistics
+            self.test_admin_get_stats()
+        
+        # ==================== JOB COMPLETION FLOW TESTS ====================
+        print("\n✅ Testing Job Completion Flow...")
+        
+        # Create a new job for completion flow testing
+        completion_job_data = {
+            "service_provider_id": self.user_id,
+            "client_name": "Mariama Bah",
+            "service_type": "Plomberie",
+            "description": "Réparer une fuite d'eau dans la salle de bain",
+            "location": "Dixinn, Conakry"
+        }
+        
+        completion_job_success, completion_job_response = self.run_test(
+            "Create Job for Completion Flow",
+            "POST",
+            "jobs",
+            200,
+            data=completion_job_data
+        )
+        
+        if completion_job_success and 'id' in completion_job_response:
+            completion_job_id = completion_job_response['id']
+            
+            # First accept the job
+            accept_data = {"status": "Accepted"}
+            accept_success, _ = self.run_test(
+                "Accept Job for Completion Flow",
+                "PUT",
+                f"jobs/{completion_job_id}",
+                200,
+                data=accept_data
+            )
+            
+            if accept_success:
+                # Test provider marking job as complete
+                provider_complete_success = self.test_provider_mark_job_complete(completion_job_id)
+                
+                if provider_complete_success:
+                    # Test customer confirming job completion
+                    self.test_customer_confirm_job_complete(completion_job_id)
+        
+        # Test customer getting jobs
+        self.test_customer_get_jobs()
+        
         return self.get_results()
 
     def get_results(self):
