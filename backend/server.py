@@ -28,6 +28,10 @@ JWT_SECRET = os.environ.get('JWT_SECRET', 'your-secret-key-change-in-production'
 JWT_ALGORITHM = 'HS256'
 JWT_EXPIRATION_HOURS = 24
 
+# Admin credentials (fixed)
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD = "admin123"
+
 # File upload configuration
 UPLOAD_DIR = Path("/app/backend/uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
