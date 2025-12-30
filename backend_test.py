@@ -393,6 +393,186 @@ class ServisProAPITester:
         self.token = original_token
         return success
 
+    # ==================== ADMIN DASHBOARD TESTS ====================
+    
+    def test_admin_login(self):
+        """Test admin login with fixed credentials"""
+        admin_data = {
+            "username": "admin",
+            "password": "admin123"
+        }
+        
+        success, response = self.run_test(
+            "Admin Login",
+            "POST",
+            "admin/login",
+            200,
+            data=admin_data
+        )
+        
+        if success and 'token' in response:
+            self.admin_token = response['token']
+            return True
+        return False
+
+    def test_admin_get_all_providers(self):
+        """Test admin getting all providers with verification status"""
+        # Use admin token for this request
+        original_token = self.token
+        self.token = getattr(self, 'admin_token', None)
+        
+        success, response = self.run_test(
+            "Admin Get All Providers",
+            "GET",
+            "admin/providers",
+            200
+        )
+        
+        # Restore original token
+        self.token = original_token
+        
+        if success and isinstance(response, list):
+            # Check if providers have verification_status field
+            if response and 'verification_status' in response[0]:
+                return True, response
+        return success, response
+
+    def test_admin_approve_provider(self, provider_id):
+        """Test admin approving a provider"""
+        if not provider_id:
+            self.log_test("Admin Approve Provider", False, "No provider ID available")
+            return False
+            
+        # Use admin token for this request
+        original_token = self.token
+        self.token = getattr(self, 'admin_token', None)
+        
+        success, response = self.run_test(
+            "Admin Approve Provider",
+            "PUT",
+            f"admin/providers/{provider_id}/approve",
+            200
+        )
+        
+        # Restore original token
+        self.token = original_token
+        return success
+
+    def test_admin_reject_provider(self, provider_id):
+        """Test admin rejecting a provider"""
+        if not provider_id:
+            self.log_test("Admin Reject Provider", False, "No provider ID available")
+            return False
+            
+        # Use admin token for this request
+        original_token = self.token
+        self.token = getattr(self, 'admin_token', None)
+        
+        success, response = self.run_test(
+            "Admin Reject Provider",
+            "PUT",
+            f"admin/providers/{provider_id}/reject",
+            200
+        )
+        
+        # Restore original token
+        self.token = original_token
+        return success
+
+    def test_admin_get_all_jobs(self):
+        """Test admin getting all jobs with provider info"""
+        # Use admin token for this request
+        original_token = self.token
+        self.token = getattr(self, 'admin_token', None)
+        
+        success, response = self.run_test(
+            "Admin Get All Jobs",
+            "GET",
+            "admin/jobs",
+            200
+        )
+        
+        # Restore original token
+        self.token = original_token
+        return success, response
+
+    def test_admin_get_stats(self):
+        """Test admin getting dashboard statistics"""
+        # Use admin token for this request
+        original_token = self.token
+        self.token = getattr(self, 'admin_token', None)
+        
+        success, response = self.run_test(
+            "Admin Get Stats",
+            "GET",
+            "admin/stats",
+            200
+        )
+        
+        # Restore original token
+        self.token = original_token
+        
+        if success and isinstance(response, dict):
+            # Check if stats have expected structure
+            expected_keys = ['providers', 'jobs', 'customers', 'rentals']
+            if all(key in response for key in expected_keys):
+                return True
+        return success
+
+    # ==================== JOB COMPLETION FLOW TESTS ====================
+    
+    def test_provider_mark_job_complete(self, job_id):
+        """Test provider marking job as complete"""
+        if not job_id:
+            self.log_test("Provider Mark Job Complete", False, "No job ID available")
+            return False
+            
+        success, response = self.run_test(
+            "Provider Mark Job Complete",
+            "PUT",
+            f"jobs/{job_id}/provider-complete",
+            200
+        )
+        return success
+
+    def test_customer_confirm_job_complete(self, job_id):
+        """Test customer confirming job completion"""
+        if not job_id:
+            self.log_test("Customer Confirm Job Complete", False, "No job ID available")
+            return False
+            
+        # Remove token for customer confirmation (public endpoint)
+        original_token = self.token
+        self.token = None
+        
+        success, response = self.run_test(
+            "Customer Confirm Job Complete",
+            "PUT",
+            f"jobs/{job_id}/customer-confirm",
+            200
+        )
+        
+        # Restore token
+        self.token = original_token
+        return success
+
+    def test_customer_get_jobs(self):
+        """Test customer getting jobs awaiting confirmation"""
+        # Remove token for customer endpoint (public endpoint)
+        original_token = self.token
+        self.token = None
+        
+        success, response = self.run_test(
+            "Customer Get Jobs",
+            "GET",
+            "customer/jobs",
+            200
+        )
+        
+        # Restore token
+        self.token = original_token
+        return success, response
+
     def run_all_tests(self):
         """Run all API tests"""
         print("🚀 Starting ServisPro API Tests")
