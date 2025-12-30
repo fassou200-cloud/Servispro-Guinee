@@ -629,6 +629,153 @@ async def get_provider_rating_stats(provider_id: str):
         'rating_distribution': distribution
     }
 
+# ==================== ADMIN ROUTES ====================
+
+class AdminLoginInput(BaseModel):
+    username: str
+    password: str
+
+@api_router.post("/admin/login")
+async def admin_login(input_data: AdminLoginInput):
+    if input_data.username == ADMIN_USERNAME and input_data.password == ADMIN_PASSWORD:
+        token = create_token("admin")
+        return {"token": token, "user": {"id": "admin", "role": "admin"}}
+    raise HTTPException(status_code=401, detail="Identifiants admin invalides")
+
+@api_router.get("/admin/providers")
+async def get_all_providers_admin():
+    """Get all providers with their verification status for admin review"""
+    providers = await db.service_providers.find({}, {'_id': 0, 'password': 0}).sort('created_at', -1).to_list(1000)
+    return providers
+
+@api_router.put("/admin/providers/{provider_id}/approve")
+async def approve_provider(provider_id: str):
+    """Approve a service provider"""
+    result = await db.service_providers.update_one(
+        {'id': provider_id},
+        {'$set': {'verification_status': ProviderStatus.APPROVED.value}}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Prestataire non trouvé")
+    return {"message": "Prestataire approuvé avec succès"}
+
+@api_router.put("/admin/providers/{provider_id}/reject")
+async def reject_provider(provider_id: str):
+    """Reject a service provider"""
+    result = await db.service_providers.update_one(
+        {'id': provider_id},
+        {'$set': {'verification_status': ProviderStatus.REJECTED.value}}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Prestataire non trouvé")
+    return {"message": "Prestataire rejeté"}
+
+@api_router.get("/admin/jobs")
+async def get_all_jobs_admin():
+    """Get all jobs for admin dashboard"""
+    jobs = await db.job_offers.find({}, {'_id': 0}).sort('created_at', -1).to_list(1000)
+    
+    # Enrich with provider and customer info
+    for job in jobs:
+        provider = await db.service_providers.find_one(
+            {'id': job.get('service_provider_id')}, 
+            {'_id': 0, 'first_name': 1, 'last_name': 1, 'phone_number': 1}
+        )
+        if provider:
+            job['provider_name'] = f"{provider.get('first_name', '')} {provider.get('last_name', '')}"
+            job['provider_phone'] = provider.get('phone_number', '')
+    
+    return jobs
+
+@api_router.get("/admin/stats")
+async def get_admin_stats():
+    """Get statistics for admin dashboard"""
+    total_providers = await db.service_providers.count_documents({})
+    pending_providers = await db.service_providers.count_documents({'verification_status': 'pending'})
+    approved_providers = await db.service_providers.count_documents({'verification_status': 'approved'})
+    
+    total_jobs = await db.job_offers.count_documents({})
+    pending_jobs = await db.job_offers.count_documents({'status': 'Pending'})
+    accepted_jobs = await db.job_offers.count_documents({'status': 'Accepted'})
+    completed_jobs = await db.job_offers.count_documents({'status': 'Completed'})
+    
+    total_customers = await db.customers.count_documents({})
+    total_rentals = await db.rental_listings.count_documents({})
+    
+    return {
+        'providers': {
+            'total': total_providers,
+            'pending': pending_providers,
+            'approved': approved_providers
+        },
+        'jobs': {
+            'total': total_jobs,
+            'pending': pending_jobs,
+            'accepted': accepted_jobs,
+            'completed': completed_jobs
+        },
+        'customers': total_customers,
+        'rentals': total_rentals
+    }
+
+# ==================== JOB COMPLETION FLOW ====================
+
+@api_router.put("/jobs/{job_id}/provider-complete")
+async def provider_mark_complete(job_id: str, current_user: dict = Depends(get_current_user)):
+    """Provider marks job as completed - awaiting customer confirmation"""
+    job = await db.job_offers.find_one({'id': job_id}, {'_id': 0})
+    if not job:
+        raise HTTPException(status_code=404, detail="Travail non trouvé")
+    
+    if job['service_provider_id'] != current_user['id']:
+        raise HTTPException(status_code=403, detail="Non autorisé")
+    
+    if job['status'] != 'Accepted':
+        raise HTTPException(status_code=400, detail="Le travail doit être accepté avant d'être marqué comme terminé")
+    
+    await db.job_offers.update_one(
+        {'id': job_id},
+        {'$set': {'status': JobStatus.PROVIDER_COMPLETED.value}}
+    )
+    return {"message": "Travail marqué comme terminé. En attente de confirmation du client."}
+
+@api_router.put("/jobs/{job_id}/customer-confirm")
+async def customer_confirm_complete(job_id: str):
+    """Customer confirms job is completed"""
+    job = await db.job_offers.find_one({'id': job_id}, {'_id': 0})
+    if not job:
+        raise HTTPException(status_code=404, detail="Travail non trouvé")
+    
+    if job['status'] != 'ProviderCompleted':
+        raise HTTPException(status_code=400, detail="Le prestataire doit d'abord marquer le travail comme terminé")
+    
+    await db.job_offers.update_one(
+        {'id': job_id},
+        {'$set': {'status': JobStatus.COMPLETED.value}}
+    )
+    return {"message": "Service confirmé comme terminé. Merci !"}
+
+@api_router.get("/customer/jobs")
+async def get_customer_jobs():
+    """Get jobs for a customer to confirm completion"""
+    # Get jobs awaiting customer confirmation
+    jobs = await db.job_offers.find(
+        {'status': {'$in': ['Accepted', 'ProviderCompleted']}}, 
+        {'_id': 0}
+    ).sort('created_at', -1).to_list(100)
+    
+    # Enrich with provider info
+    for job in jobs:
+        provider = await db.service_providers.find_one(
+            {'id': job.get('service_provider_id')}, 
+            {'_id': 0, 'first_name': 1, 'last_name': 1, 'profession': 1}
+        )
+        if provider:
+            job['provider_name'] = f"{provider.get('first_name', '')} {provider.get('last_name', '')}"
+            job['provider_profession'] = provider.get('profession', '')
+    
+    return jobs
+
 # Include router
 app.include_router(api_router)
 
