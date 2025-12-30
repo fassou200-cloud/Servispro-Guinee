@@ -262,6 +262,7 @@ async def register(input_data: RegisterInput):
         'profile_picture': None,
         'id_verification_picture': None,
         'online_status': False,
+        'verification_status': ProviderStatus.PENDING.value,  # New field for admin approval
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     
