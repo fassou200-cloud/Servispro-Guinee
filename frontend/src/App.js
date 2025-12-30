@@ -10,18 +10,23 @@ import CustomerAuth from '@/pages/CustomerAuth';
 import CustomerDashboard from '@/pages/CustomerDashboard';
 import AuthPage from '@/pages/AuthPage';
 import Dashboard from '@/pages/Dashboard';
+import AdminAuth from '@/pages/AdminAuth';
+import AdminDashboard from '@/pages/AdminDashboard';
 import { Toaster } from '@/components/ui/sonner';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isCustomerAuthenticated, setIsCustomerAuthenticated] = useState(false);
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     const customerToken = localStorage.getItem('customerToken');
+    const adminToken = localStorage.getItem('adminToken');
     setIsAuthenticated(!!token);
     setIsCustomerAuthenticated(!!customerToken);
+    setIsAdminAuthenticated(!!adminToken);
     setLoading(false);
   }, []);
 
@@ -58,6 +63,16 @@ function App() {
           <Route 
             path="/dashboard" 
             element={isAuthenticated ? <Dashboard setIsAuthenticated={setIsAuthenticated} /> : <Navigate to="/auth" />} 
+          />
+
+          {/* Admin Routes */}
+          <Route 
+            path="/admin" 
+            element={isAdminAuthenticated ? <Navigate to="/admin/dashboard" /> : <AdminAuth setIsAdminAuthenticated={setIsAdminAuthenticated} />} 
+          />
+          <Route 
+            path="/admin/dashboard" 
+            element={isAdminAuthenticated ? <AdminDashboard setIsAdminAuthenticated={setIsAdminAuthenticated} /> : <Navigate to="/admin" />} 
           />
         </Routes>
       </BrowserRouter>
