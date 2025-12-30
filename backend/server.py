@@ -57,7 +57,13 @@ class JobStatus(str, Enum):
     PENDING = "Pending"
     ACCEPTED = "Accepted"
     REJECTED = "Rejected"
-    COMPLETED = "Completed"
+    PROVIDER_COMPLETED = "ProviderCompleted"  # Provider marked as done
+    COMPLETED = "Completed"  # Customer confirmed
+
+class ProviderStatus(str, Enum):
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
 
 class PropertyType(str, Enum):
     APARTMENT = "Apartment"
