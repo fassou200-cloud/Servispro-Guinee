@@ -265,7 +265,9 @@ async def register(input_data: RegisterInput):
         'profile_picture': None,
         'id_verification_picture': None,
         'online_status': False,
-        'verification_status': ProviderStatus.PENDING.value,  # New field for admin approval
+        'verification_status': ProviderStatus.PENDING.value,
+        'price': None,  # Tarif en GNF
+        'transport_fee': None,  # Frais de transport en GNF
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     
