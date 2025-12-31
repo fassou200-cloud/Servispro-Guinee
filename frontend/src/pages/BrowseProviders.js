@@ -254,6 +254,26 @@ const BrowseProviders = ({ isCustomerAuthenticated }) => {
                   </p>
                 )}
 
+                {/* Pricing Display */}
+                {(provider.price || provider.transport_fee) && (
+                  <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                    <div className="flex flex-wrap gap-3 text-sm">
+                      {provider.price && (
+                        <div>
+                          <span className="text-amber-700">Tarif: </span>
+                          <span className="font-bold text-amber-900">{Number(provider.price).toLocaleString('fr-FR')} GNF</span>
+                        </div>
+                      )}
+                      {provider.transport_fee && (
+                        <div>
+                          <span className="text-amber-700">Transport: </span>
+                          <span className="font-bold text-amber-900">{Number(provider.transport_fee).toLocaleString('fr-FR')} GNF</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 <Button
                   className="w-full font-heading"
                   onClick={(e) => {
