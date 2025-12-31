@@ -17,7 +17,9 @@ const ProfileForm = ({ user, setUser, onUpdate }) => {
     first_name: user.first_name,
     last_name: user.last_name,
     profession: user.profession,
-    about_me: user.about_me || ''
+    about_me: user.about_me || '',
+    price: user.price || '',
+    transport_fee: user.transport_fee || ''
   });
   const [uploading, setUploading] = useState(false);
   const [uploadingId, setUploadingId] = useState(false);
