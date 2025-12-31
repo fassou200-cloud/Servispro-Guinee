@@ -122,6 +122,8 @@ class ProfileUpdate(BaseModel):
     profession: Optional[ProfessionType] = None
     about_me: Optional[str] = None
     online_status: Optional[bool] = None
+    price: Optional[int] = None
+    transport_fee: Optional[int] = None
 
 class ServiceProvider(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -135,6 +137,8 @@ class ServiceProvider(BaseModel):
     profile_picture: Optional[str] = None
     id_verification_picture: Optional[str] = None
     online_status: bool = False
+    price: Optional[int] = None
+    transport_fee: Optional[int] = None
     created_at: str
 
 class JobOfferCreate(BaseModel):
