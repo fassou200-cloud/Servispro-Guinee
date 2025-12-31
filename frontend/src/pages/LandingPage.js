@@ -140,10 +140,10 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
         <div className="relative max-w-7xl mx-auto px-4 md:px-8">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-5xl md:text-7xl font-heading font-bold text-foreground mb-6 leading-tight">
-              Trouvez des Prestataires de Confiance en Guinée
+              Service de Qualité à Conakry
             </h2>
             <p className="text-xl md:text-2xl text-muted-foreground mb-10 leading-relaxed max-w-3xl mx-auto">
-              Connectez-vous avec des électriciens, mécaniciens, plombiers et prestataires logistiques vérifiés. Service de qualité à Conakry, Kindia, Labé et partout en Guinée.
+              Connectez-vous avec des électriciens, mécaniciens, plombiers et prestataires logistiques vérifiés partout en Guinée.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
