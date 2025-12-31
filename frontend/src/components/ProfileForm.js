@@ -317,6 +317,57 @@ const ProfileForm = ({ user, setUser, onUpdate }) => {
           </Select>
         </div>
 
+        {/* Pricing Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <Label htmlFor="price" className="font-heading text-xs uppercase tracking-wide">
+              Tarif (GNF)
+            </Label>
+            <div className="relative">
+              <Input
+                id="price"
+                name="price"
+                type="number"
+                data-testid="profile-price-input"
+                value={formData.price}
+                onChange={handleChange}
+                placeholder="Ex: 50000"
+                className="h-12 pr-16"
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">
+                GNF
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Votre tarif de base pour une prestation
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="transport_fee" className="font-heading text-xs uppercase tracking-wide">
+              Frais de Transport (GNF)
+            </Label>
+            <div className="relative">
+              <Input
+                id="transport_fee"
+                name="transport_fee"
+                type="number"
+                data-testid="profile-transport-fee-input"
+                value={formData.transport_fee}
+                onChange={handleChange}
+                placeholder="Ex: 10000"
+                className="h-12 pr-16"
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">
+                GNF
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Frais de déplacement à domicile
+            </p>
+          </div>
+        </div>
+
         <div className="space-y-2">
           <Label htmlFor="about_me" className="font-heading text-xs uppercase tracking-wide">
             À Propos de Moi
