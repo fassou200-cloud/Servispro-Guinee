@@ -162,6 +162,27 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
                     </span>
                   )}
                 </div>
+
+                {/* Pricing Info */}
+                {(provider.price || provider.transport_fee) && (
+                  <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                    <h4 className="font-heading font-bold text-amber-900 mb-2">Tarifs</h4>
+                    <div className="flex flex-wrap gap-4">
+                      {provider.price && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-amber-700 font-medium">Tarif de base:</span>
+                          <span className="text-amber-900 font-bold">{Number(provider.price).toLocaleString('fr-FR')} GNF</span>
+                        </div>
+                      )}
+                      {provider.transport_fee && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-amber-700 font-medium">Frais de transport:</span>
+                          <span className="text-amber-900 font-bold">{Number(provider.transport_fee).toLocaleString('fr-FR')} GNF</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <Button
