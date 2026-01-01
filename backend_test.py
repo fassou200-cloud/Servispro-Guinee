@@ -952,6 +952,26 @@ class ServisProAPITester:
         rental_success, rental_id = self.test_create_rental_listing()
         self.test_get_all_rentals()
         
+        # ==================== NEW SHORT-TERM RENTAL TESTS ====================
+        print("\n🏠 Testing Short-Term Rental Features...")
+        
+        # Test specific provider login for short-term rental testing
+        specific_login_success = self.test_provider_login_specific()
+        if specific_login_success:
+            # Test creating short-term rental
+            short_rental_success, short_rental_id = self.test_create_short_term_rental()
+            
+            if short_rental_success:
+                # Test availability toggle
+                self.test_toggle_rental_availability(short_rental_id)
+                
+                # Test updating rental
+                self.test_update_rental_listing(short_rental_id)
+            
+            # Test rental filtering
+            self.test_get_rentals_by_type()
+            self.test_get_rentals_by_availability()
+        
         # Test job operations
         job_success, job_id = self.test_create_job_offer()
         self.test_get_my_jobs()
