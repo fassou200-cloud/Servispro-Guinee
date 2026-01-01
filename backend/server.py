@@ -175,6 +175,15 @@ class RentalListingCreate(BaseModel):
     description: str
     location: str
     rental_price: float
+    # New fields for short-term rentals (Airbnb-style)
+    rental_type: str = "long_term"  # "long_term" or "short_term"
+    price_per_night: Optional[float] = None  # For short-term rentals
+    min_nights: Optional[int] = 1  # Minimum nights for short-term
+    max_guests: Optional[int] = None  # Maximum number of guests
+    amenities: List[str] = []  # List of amenities (WiFi, AC, etc.)
+    is_available: bool = True  # Availability status
+    available_from: Optional[str] = None  # Available from date
+    available_to: Optional[str] = None  # Available to date
     
     @field_validator('rental_price')
     def validate_price(cls, v):
@@ -194,6 +203,15 @@ class RentalListing(BaseModel):
     description: str
     location: str
     rental_price: float
+    # New fields for short-term rentals
+    rental_type: str = "long_term"
+    price_per_night: Optional[float] = None
+    min_nights: Optional[int] = 1
+    max_guests: Optional[int] = None
+    amenities: List[str] = []
+    is_available: bool = True
+    available_from: Optional[str] = None
+    available_to: Optional[str] = None
     photos: List[str] = []
     created_at: str
     updated_at: str
