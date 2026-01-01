@@ -350,6 +350,28 @@ test_plan:
 agent_communication:
   - agent: "main"
     message: |
+      FIXED IMAGE DISPLAY ISSUE:
+      
+      Root cause identified: Kubernetes ingress only routes /api/* to backend.
+      Images were served at /uploads/* which went to frontend instead of backend.
+      
+      Changes made:
+      1. Changed backend static file mount from /uploads to /api/uploads
+      2. Updated all image URL paths in server.py to use /api/uploads/
+      3. Migrated existing image URLs in MongoDB from /uploads/ to /api/uploads/
+      
+      Verification:
+      - Images now return correct content-type: image/jpeg
+      - Profile pictures visible on /browse page
+      - Rental photos visible on /rentals page
+      
+      Please test:
+      1. Upload a NEW profile picture as a provider
+      2. Upload a NEW rental photo as an Agent Immobilier
+      3. Verify images display on all pages (Dashboard, Browse, Provider Profile, Rental Detail)
+      
+  - agent: "main"
+    message: |
       Completed Admin Dashboard Implementation:
       1. Admin authentication with fixed credentials (admin/admin123)
       2. Admin dashboard with providers list and job requests list
