@@ -557,6 +557,15 @@ async def create_rental_listing(listing_data: RentalListingCreate, current_user:
         'description': listing_data.description,
         'location': listing_data.location,
         'rental_price': listing_data.rental_price,
+        # New short-term rental fields
+        'rental_type': listing_data.rental_type,
+        'price_per_night': listing_data.price_per_night,
+        'min_nights': listing_data.min_nights,
+        'max_guests': listing_data.max_guests,
+        'amenities': listing_data.amenities,
+        'is_available': listing_data.is_available,
+        'available_from': listing_data.available_from,
+        'available_to': listing_data.available_to,
         'photos': [],
         'created_at': now,
         'updated_at': now
@@ -568,14 +577,70 @@ async def create_rental_listing(listing_data: RentalListingCreate, current_user:
     return RentalListing(**listing_response)
 
 @api_router.get("/rentals", response_model=List[RentalListing])
-async def get_all_rentals():
-    rentals = await db.rental_listings.find({}, {'_id': 0}).to_list(100)
+async def get_all_rentals(rental_type: Optional[str] = None, is_available: Optional[bool] = None):
+    """Get all rentals with optional filters"""
+    query = {}
+    if rental_type:
+        query['rental_type'] = rental_type
+    if is_available is not None:
+        query['is_available'] = is_available
+    
+    rentals = await db.rental_listings.find(query, {'_id': 0}).to_list(100)
     return [RentalListing(**r) for r in rentals]
 
 @api_router.get("/rentals/my-listings", response_model=List[RentalListing])
 async def get_my_rental_listings(current_user: dict = Depends(get_current_user)):
     rentals = await db.rental_listings.find({'service_provider_id': current_user['id']}, {'_id': 0}).to_list(100)
     return [RentalListing(**r) for r in rentals]
+
+@api_router.put("/rentals/{rental_id}/availability")
+async def update_rental_availability(rental_id: str, is_available: bool, current_user: dict = Depends(get_current_user)):
+    """Toggle availability of a rental listing"""
+    rental = await db.rental_listings.find_one({'id': rental_id})
+    if not rental:
+        raise HTTPException(status_code=404, detail="Location non trouvée")
+    
+    if rental['service_provider_id'] != current_user['id']:
+        raise HTTPException(status_code=403, detail="Non autorisé")
+    
+    await db.rental_listings.update_one(
+        {'id': rental_id},
+        {'$set': {'is_available': is_available, 'updated_at': datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    return {'is_available': is_available}
+
+@api_router.put("/rentals/{rental_id}")
+async def update_rental_listing(rental_id: str, listing_data: RentalListingCreate, current_user: dict = Depends(get_current_user)):
+    """Update a rental listing"""
+    rental = await db.rental_listings.find_one({'id': rental_id})
+    if not rental:
+        raise HTTPException(status_code=404, detail="Location non trouvée")
+    
+    if rental['service_provider_id'] != current_user['id']:
+        raise HTTPException(status_code=403, detail="Non autorisé")
+    
+    update_doc = {
+        'property_type': listing_data.property_type.value,
+        'title': listing_data.title,
+        'description': listing_data.description,
+        'location': listing_data.location,
+        'rental_price': listing_data.rental_price,
+        'rental_type': listing_data.rental_type,
+        'price_per_night': listing_data.price_per_night,
+        'min_nights': listing_data.min_nights,
+        'max_guests': listing_data.max_guests,
+        'amenities': listing_data.amenities,
+        'is_available': listing_data.is_available,
+        'available_from': listing_data.available_from,
+        'available_to': listing_data.available_to,
+        'updated_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.rental_listings.update_one({'id': rental_id}, {'$set': update_doc})
+    
+    updated_rental = await db.rental_listings.find_one({'id': rental_id}, {'_id': 0})
+    return RentalListing(**updated_rental)
 
 @api_router.get("/rentals/{rental_id}", response_model=RentalListing)
 async def get_rental_by_id(rental_id: str):
