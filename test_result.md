@@ -259,6 +259,42 @@ backend:
         comment: "Customer can view jobs awaiting confirmation and confirm job completion"
 
 frontend:
+  - task: "Agent Immobilier Button Change"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/BrowseProviders.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ AGENT IMMOBILIER BUTTON FEATURE WORKING - Found multiple Agent Immobilier providers showing 'Voir les Locations' button instead of 'Demander un Service'. Button correctly navigates to /rentals page. Feature implemented correctly in BrowseProviders.js with conditional rendering based on profession === 'AgentImmobilier'."
+
+  - task: "Online Status Toggle"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/Dashboard.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ ONLINE STATUS TOGGLE WORKING - Toggle found in dashboard header with correct data-testid. Login successful with phone: 224999888775. Toggle functionality implemented correctly with success toast messages. Status changes reflected in UI with proper labels ('En ligne'/'Hors ligne')."
+
+  - task: "Disabled Service Request for Offline Providers"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/BrowseProviders.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ OFFLINE PROVIDER FUNCTIONALITY WORKING - Offline providers correctly show 'Prestataire Indisponible' button that is disabled. Online providers show 'Voir le Profil & Demander un Service' button that is enabled. Proper conditional rendering based on online_status field. Found 8 online providers with 'Disponible' badge and enabled buttons."
+
   - task: "Landing Page (French)"
     implemented: true
     working: true
