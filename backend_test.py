@@ -411,8 +411,9 @@ class ServisProAPITester:
         success_false, response_false = self.run_test(
             "Toggle Rental Availability to False",
             "PUT",
-            f"rentals/{rental_id}/availability?is_available=false",
-            200
+            f"rentals/{rental_id}/availability",
+            200,
+            data={"is_available": False}
         )
         
         if success_false and response_false.get('is_available') == False:
@@ -420,8 +421,9 @@ class ServisProAPITester:
             success_true, response_true = self.run_test(
                 "Toggle Rental Availability to True",
                 "PUT",
-                f"rentals/{rental_id}/availability?is_available=true",
-                200
+                f"rentals/{rental_id}/availability",
+                200,
+                data={"is_available": True}
             )
             
             if success_true and response_true.get('is_available') == True:
