@@ -46,11 +46,15 @@ security = HTTPBearer()
 
 # Enums
 class ProfessionType(str, Enum):
-    ELECTRICIAN = "Electrician"
-    MECHANIC = "Mechanic"
-    PLUMBER = "Plumber"
-    LOGISTICS = "Logistics"
-    OTHER = "Other"
+    LOGISTICIEN = "Logisticien"
+    ELECTROMECANICIEN = "Electromecanicien"
+    MECANICIEN = "Mecanicien"
+    PLOMBIER = "Plombier"
+    MACON = "Macon"
+    MENUISIER = "Menuisier"
+    AGENT_IMMOBILIER = "AgentImmobilier"
+    SOUDEUR = "Soudeur"
+    AUTRES = "Autres"
 
 class UserType(str, Enum):
     PROVIDER = "provider"
