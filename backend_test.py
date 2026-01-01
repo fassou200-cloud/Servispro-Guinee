@@ -124,16 +124,16 @@ class ServisProAPITester:
             return True, test_phone
         return False, None
 
-    def test_provider_login(self, phone_number):
-        """Test provider login with user_type"""
+    def test_provider_login_specific(self):
+        """Test provider login with specific credentials from review request"""
         login_data = {
-            "phone_number": phone_number,
-            "password": "SecurePass123!",
+            "phone_number": "224999888775",
+            "password": "test123",
             "user_type": "provider"
         }
         
         success, response = self.run_test(
-            "Provider Login",
+            "Provider Login (Specific Credentials)",
             "POST",
             "auth/login",
             200,
@@ -142,6 +142,7 @@ class ServisProAPITester:
         
         if success and 'token' in response:
             self.token = response['token']
+            self.user_id = response['user']['id']
             return True
         return False
 
