@@ -44,10 +44,13 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('providers');
   const [providers, setProviders] = useState([]);
+  const [customers, setCustomers] = useState([]);
   const [jobs, setJobs] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedProvider, setSelectedProvider] = useState(null);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [deleteConfirm, setDeleteConfirm] = useState({ show: false, type: null, id: null, name: '' });
 
   useEffect(() => {
     fetchData();
@@ -55,12 +58,14 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
 
   const fetchData = async () => {
     try {
-      const [providersRes, jobsRes, statsRes] = await Promise.all([
+      const [providersRes, customersRes, jobsRes, statsRes] = await Promise.all([
         axios.get(`${API}/admin/providers`),
+        axios.get(`${API}/admin/customers`),
         axios.get(`${API}/admin/jobs`),
         axios.get(`${API}/admin/stats`)
       ]);
       setProviders(providersRes.data);
+      setCustomers(customersRes.data);
       setJobs(jobsRes.data);
       setStats(statsRes.data);
     } catch (error) {
