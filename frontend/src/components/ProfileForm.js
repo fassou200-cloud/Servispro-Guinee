@@ -105,56 +105,6 @@ const ProfileForm = ({ user, setUser, onUpdate }) => {
     }
   };
 
-  // Helper function to resize images
-  const resizeImage = (file, maxWidth, maxHeight) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
-
-          // Calculate new dimensions maintaining aspect ratio
-          if (width > height) {
-            if (width > maxWidth) {
-              height *= maxWidth / width;
-              width = maxWidth;
-            }
-          } else {
-            if (height > maxHeight) {
-              width *= maxHeight / height;
-              height = maxHeight;
-            }
-          }
-
-          // Set exact dimensions to 800x600
-          canvas.width = maxWidth;
-          canvas.height = maxHeight;
-          
-          const ctx = canvas.getContext('2d');
-          // Fill with white background
-          ctx.fillStyle = '#FFFFFF';
-          ctx.fillRect(0, 0, maxWidth, maxHeight);
-          
-          // Center the image
-          const x = (maxWidth - width) / 2;
-          const y = (maxHeight - height) / 2;
-          ctx.drawImage(img, x, y, width, height);
-
-          canvas.toBlob((blob) => {
-            resolve(new File([blob], file.name, { type: 'image/jpeg' }));
-          }, 'image/jpeg', 0.9);
-        };
-        img.onerror = reject;
-        img.src = e.target.result;
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
