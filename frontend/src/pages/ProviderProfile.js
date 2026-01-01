@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ArrowLeft, ShieldCheck, Briefcase, Phone, Home } from 'lucide-react';
+import { ArrowLeft, ShieldCheck, Briefcase, Phone, Home, Building } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
 import ServiceRequestForm from '@/components/ServiceRequestForm';
