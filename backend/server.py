@@ -399,7 +399,7 @@ async def upload_profile_picture(file: UploadFile = File(...), current_user: dic
         shutil.copyfileobj(file.file, buffer)
     
     # Update user profile
-    profile_picture_url = f"/uploads/{filename}"
+    profile_picture_url = f"/api/uploads/{filename}"
     await db.service_providers.update_one(
         {'id': current_user['id']},
         {'$set': {'profile_picture': profile_picture_url}}
@@ -423,7 +423,7 @@ async def upload_id_verification(file: UploadFile = File(...), current_user: dic
         shutil.copyfileobj(file.file, buffer)
     
     # Update user profile
-    id_verification_url = f"/uploads/{filename}"
+    id_verification_url = f"/api/uploads/{filename}"
     await db.service_providers.update_one(
         {'id': current_user['id']},
         {'$set': {'id_verification_picture': id_verification_url}}
@@ -559,7 +559,7 @@ async def upload_rental_photo(rental_id: str, file: UploadFile = File(...), curr
         shutil.copyfileobj(file.file, buffer)
     
     # Update rental photos array
-    photo_url = f"/uploads/{filename}"
+    photo_url = f"/api/uploads/{filename}"
     await db.rental_listings.update_one(
         {'id': rental_id},
         {
