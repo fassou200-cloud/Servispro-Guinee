@@ -431,6 +431,37 @@ async def upload_id_verification(file: UploadFile = File(...), current_user: dic
     
     return {'id_verification_picture': id_verification_url}
 
+@api_router.put("/profile/online-status")
+async def update_online_status(current_user: dict = Depends(get_current_user)):
+    """Toggle the online status of a service provider"""
+    current_status = current_user.get('online_status', False)
+    new_status = not current_status
+    
+    await db.service_providers.update_one(
+        {'id': current_user['id']},
+        {'$set': {'online_status': new_status}}
+    )
+    
+    return {'online_status': new_status}
+
+@api_router.put("/profile/set-online")
+async def set_online(current_user: dict = Depends(get_current_user)):
+    """Set provider as online"""
+    await db.service_providers.update_one(
+        {'id': current_user['id']},
+        {'$set': {'online_status': True}}
+    )
+    return {'online_status': True}
+
+@api_router.put("/profile/set-offline")
+async def set_offline(current_user: dict = Depends(get_current_user)):
+    """Set provider as offline"""
+    await db.service_providers.update_one(
+        {'id': current_user['id']},
+        {'$set': {'online_status': False}}
+    )
+    return {'online_status': False}
+
 @api_router.get("/providers", response_model=List[ServiceProvider])
 async def get_all_providers():
     providers = await db.service_providers.find({}, {'_id': 0, 'password': 0}).to_list(100)
