@@ -227,6 +227,15 @@ const Dashboard = ({ setIsAuthenticated }) => {
                 <Home className="h-4 w-4" />
                 + Ajouter Location
               </Button>
+              <Button
+                variant={activeTab === 'messages' ? 'default' : 'outline'}
+                data-testid="messages-tab-button"
+                onClick={() => setActiveTab('messages')}
+                className="gap-2 font-heading"
+              >
+                <MessageCircle className="h-4 w-4" />
+                Messages
+              </Button>
             </>
           )}
         </div>
@@ -243,6 +252,7 @@ const Dashboard = ({ setIsAuthenticated }) => {
             toast.success('Annonce de location créée avec succès!');
           }} />
         )}
+        {activeTab === 'messages' && isAgentImmobilier(user.profession) && <RentalConversations />}
       </div>
     </div>
   );
