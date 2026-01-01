@@ -810,6 +810,71 @@ class ServisProAPITester:
             
             # Test admin statistics
             self.test_admin_get_stats()
+            
+            # ==================== ADMIN DELETE FUNCTIONALITY TESTS ====================
+            print("\n🗑️ Testing Admin Delete Functionality...")
+            
+            # Test getting all customers
+            customers_success, customers_data = self.test_admin_get_all_customers()
+            
+            # Create a test provider for deletion testing
+            test_provider_phone = f"224{str(uuid.uuid4())[:8]}"
+            test_provider_data = {
+                "first_name": "TestProvider",
+                "last_name": "ForDeletion",
+                "phone_number": test_provider_phone,
+                "password": "TestPass123!",
+                "profession": "Plombier"
+            }
+            
+            test_provider_success, test_provider_response = self.run_test(
+                "Create Test Provider for Deletion",
+                "POST",
+                "auth/register",
+                200,
+                data=test_provider_data
+            )
+            
+            test_provider_id = None
+            if test_provider_success and 'user' in test_provider_response:
+                test_provider_id = test_provider_response['user']['id']
+                
+                # Test deleting the provider
+                delete_provider_success = self.test_admin_delete_provider(test_provider_id)
+                if delete_provider_success:
+                    # Verify provider was deleted
+                    self.test_verify_provider_deletion(test_provider_id)
+            
+            # Create a test customer for deletion testing
+            test_customer_phone = f"224{str(uuid.uuid4())[:8]}"
+            test_customer_data = {
+                "first_name": "TestCustomer",
+                "last_name": "ForDeletion",
+                "phone_number": test_customer_phone,
+                "password": "TestPass123!"
+            }
+            
+            test_customer_success, test_customer_response = self.run_test(
+                "Create Test Customer for Deletion",
+                "POST",
+                "auth/customer/register",
+                200,
+                data=test_customer_data
+            )
+            
+            test_customer_id = None
+            if test_customer_success and 'user' in test_customer_response:
+                test_customer_id = test_customer_response['user']['id']
+                
+                # Test deleting the customer
+                delete_customer_success = self.test_admin_delete_customer(test_customer_id)
+                if delete_customer_success:
+                    # Verify customer was deleted
+                    self.test_verify_customer_deletion(test_customer_id)
+            
+            # Test error handling - delete non-existent entities
+            self.test_admin_delete_nonexistent_provider()
+            self.test_admin_delete_nonexistent_customer()
         
         # ==================== JOB COMPLETION FLOW TESTS ====================
         print("\n✅ Testing Job Completion Flow...")
