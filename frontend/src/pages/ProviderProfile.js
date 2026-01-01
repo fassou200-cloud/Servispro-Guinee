@@ -185,8 +185,8 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
                   )}
                 </div>
 
-                {/* Pricing Info */}
-                {(provider.price || provider.transport_fee) && (
+                {/* Pricing Info - Not for Agent Immobilier */}
+                {provider.profession !== 'AgentImmobilier' && (provider.price || provider.transport_fee) && (
                   <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
                     <h4 className="font-heading font-bold text-amber-900 mb-2">Tarifs</h4>
                     <div className="flex flex-wrap gap-4">
@@ -207,15 +207,33 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
                 )}
               </div>
 
-              <Button
-                size="lg"
-                data-testid="request-service-button"
-                onClick={handleRequestService}
-                className="h-12 px-8 font-heading font-bold gap-2"
-              >
-                <Phone className="h-5 w-5" />
-                {showRequestForm ? 'Masquer le Formulaire' : 'Demander un Service'}
-              </Button>
+              {/* Different button based on profession and online status */}
+              {provider.profession === 'AgentImmobilier' ? (
+                <Button
+                  size="lg"
+                  data-testid="view-rentals-button"
+                  onClick={() => navigate('/rentals')}
+                  className="h-12 px-8 font-heading font-bold gap-2"
+                >
+                  <Building className="h-5 w-5" />
+                  Voir les Locations
+                </Button>
+              ) : (
+                <Button
+                  size="lg"
+                  data-testid="request-service-button"
+                  onClick={handleRequestService}
+                  disabled={!provider.online_status}
+                  className="h-12 px-8 font-heading font-bold gap-2"
+                >
+                  <Phone className="h-5 w-5" />
+                  {!provider.online_status 
+                    ? 'Prestataire Indisponible' 
+                    : showRequestForm 
+                      ? 'Masquer le Formulaire' 
+                      : 'Demander un Service'}
+                </Button>
+              )}
             </div>
           </div>
 
