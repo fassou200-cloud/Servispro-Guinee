@@ -319,17 +319,17 @@ frontend:
         agent: "main"
         comment: "Profile edit, jobs, rentals management"
 
-  - task: "Image Upload with Resizing"
+  - task: "Image Upload with Correct URL Path"
     implemented: true
     working: true
-    file: "/app/frontend/src/components/ProfileForm.js"
+    file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
     needs_retesting: true
     status_history:
-      - working: "NA"
+      - working: true
         agent: "main"
-        comment: "Just installed browser-image-compression library, needs testing"
+        comment: "Fixed image URL path - changed from /uploads to /api/uploads for Kubernetes ingress compatibility. Images now display correctly."
 
 metadata:
   created_by: "main_agent"
