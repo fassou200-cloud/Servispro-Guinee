@@ -658,6 +658,120 @@ async def get_provider_rating_stats(provider_id: str):
         'rating_distribution': distribution
     }
 
+# ==================== CHAT ROUTES (Rental Listings) ====================
+
+@api_router.post("/chat/rental/{rental_id}/message")
+async def send_chat_message(rental_id: str, message_data: ChatMessageCreate):
+    """Send a chat message for a rental listing"""
+    # Verify rental exists
+    rental = await db.rental_listings.find_one({'id': rental_id}, {'_id': 0})
+    if not rental:
+        raise HTTPException(status_code=404, detail="Annonce non trouvée")
+    
+    # Get sender info from request (customer or owner)
+    sender_id = message_data.message  # We'll pass sender info in the message for now
+    
+    message_id = str(uuid.uuid4())
+    message_doc = {
+        'id': message_id,
+        'rental_id': rental_id,
+        'sender_id': 'customer',
+        'sender_name': 'Client',
+        'sender_type': 'customer',
+        'message': message_data.message,
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.chat_messages.insert_one(message_doc)
+    return {k: v for k, v in message_doc.items() if k != '_id'}
+
+@api_router.post("/chat/rental/{rental_id}/message/customer")
+async def send_customer_message(rental_id: str, message_data: ChatMessageCreate):
+    """Customer sends a message to rental owner"""
+    rental = await db.rental_listings.find_one({'id': rental_id}, {'_id': 0})
+    if not rental:
+        raise HTTPException(status_code=404, detail="Annonce non trouvée")
+    
+    # Get customer info if logged in
+    customer_name = "Client Anonyme"
+    customer_id = "anonymous"
+    
+    message_id = str(uuid.uuid4())
+    message_doc = {
+        'id': message_id,
+        'rental_id': rental_id,
+        'sender_id': customer_id,
+        'sender_name': customer_name,
+        'sender_type': 'customer',
+        'message': message_data.message,
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.chat_messages.insert_one(message_doc)
+    return {k: v for k, v in message_doc.items() if k != '_id'}
+
+@api_router.post("/chat/rental/{rental_id}/message/owner")
+async def send_owner_message(rental_id: str, message_data: ChatMessageCreate, current_user: dict = Depends(get_current_user)):
+    """Owner sends a message to customer"""
+    rental = await db.rental_listings.find_one({'id': rental_id}, {'_id': 0})
+    if not rental:
+        raise HTTPException(status_code=404, detail="Annonce non trouvée")
+    
+    if rental.get('service_provider_id') != current_user['id']:
+        raise HTTPException(status_code=403, detail="Non autorisé")
+    
+    message_id = str(uuid.uuid4())
+    message_doc = {
+        'id': message_id,
+        'rental_id': rental_id,
+        'sender_id': current_user['id'],
+        'sender_name': f"{current_user['first_name']} {current_user['last_name']}",
+        'sender_type': 'owner',
+        'message': message_data.message,
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.chat_messages.insert_one(message_doc)
+    return {k: v for k, v in message_doc.items() if k != '_id'}
+
+@api_router.get("/chat/rental/{rental_id}/messages")
+async def get_rental_chat_messages(rental_id: str):
+    """Get all chat messages for a rental listing"""
+    messages = await db.chat_messages.find(
+        {'rental_id': rental_id}, 
+        {'_id': 0}
+    ).sort('created_at', 1).to_list(100)
+    return messages
+
+@api_router.get("/chat/my-conversations")
+async def get_my_conversations(current_user: dict = Depends(get_current_user)):
+    """Get all rental conversations for the logged-in owner"""
+    # Get all rentals owned by user
+    rentals = await db.rental_listings.find(
+        {'service_provider_id': current_user['id']},
+        {'_id': 0, 'id': 1, 'title': 1}
+    ).to_list(100)
+    
+    conversations = []
+    for rental in rentals:
+        # Get latest message and count
+        messages = await db.chat_messages.find(
+            {'rental_id': rental['id']},
+            {'_id': 0}
+        ).sort('created_at', -1).to_list(1)
+        
+        message_count = await db.chat_messages.count_documents({'rental_id': rental['id']})
+        
+        if message_count > 0:
+            conversations.append({
+                'rental_id': rental['id'],
+                'rental_title': rental['title'],
+                'last_message': messages[0] if messages else None,
+                'message_count': message_count
+            })
+    
+    return conversations
+
 # ==================== ADMIN ROUTES ====================
 
 class AdminLoginInput(BaseModel):
