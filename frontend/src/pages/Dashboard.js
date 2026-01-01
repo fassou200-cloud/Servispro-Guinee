@@ -198,15 +198,17 @@ const Dashboard = ({ setIsAuthenticated }) => {
             <User className="h-4 w-4" />
             Profil
           </Button>
-          <Button
-            variant={activeTab === 'jobs' ? 'default' : 'outline'}
-            data-testid="jobs-tab-button"
-            onClick={() => setActiveTab('jobs')}
-            className="gap-2 font-heading"
-          >
-            <Briefcase className="h-4 w-4" />
-            Demandes de Travail
-          </Button>
+          {!isAgentImmobilier(user.profession) && (
+            <Button
+              variant={activeTab === 'jobs' ? 'default' : 'outline'}
+              data-testid="jobs-tab-button"
+              onClick={() => setActiveTab('jobs')}
+              className="gap-2 font-heading"
+            >
+              <Briefcase className="h-4 w-4" />
+              Demandes de Travail
+            </Button>
+          )}
           {isAgentImmobilier(user.profession) && (
             <>
               <Button
@@ -244,7 +246,7 @@ const Dashboard = ({ setIsAuthenticated }) => {
         {activeTab === 'profile' && (
           <ProfileForm user={user} setUser={setUser} onUpdate={fetchProfile} />
         )}
-        {activeTab === 'jobs' && <JobsList />}
+        {activeTab === 'jobs' && !isAgentImmobilier(user.profession) && <JobsList />}
         {activeTab === 'rentals' && isAgentImmobilier(user.profession) && <MyRentals />}
         {activeTab === 'create-rental' && isAgentImmobilier(user.profession) && (
           <RentalListingForm onSuccess={() => {
