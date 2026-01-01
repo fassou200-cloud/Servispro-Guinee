@@ -14,6 +14,16 @@ const API = `${BACKEND_URL}/api`;
 // Traduction des professions en français
 const translateProfession = (profession) => {
   const translations = {
+    'Logisticien': 'Logisticien',
+    'Electromecanicien': 'Électromécanicien',
+    'Mecanicien': 'Mécanicien',
+    'Plombier': 'Plombier',
+    'Macon': 'Maçon',
+    'Menuisier': 'Menuisier',
+    'AgentImmobilier': 'Agent Immobilier',
+    'Soudeur': 'Soudeur',
+    'Autres': 'Autres Métiers',
+    // Legacy values for backwards compatibility
     'Electrician': 'Électricien',
     'Mechanic': 'Mécanicien',
     'Plumber': 'Plombier',
