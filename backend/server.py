@@ -979,9 +979,9 @@ async def get_customer_jobs():
 # Include router
 app.include_router(api_router)
 
-# Serve uploaded files
+# Serve uploaded files - IMPORTANT: Use /api/uploads to work with Kubernetes ingress
 from fastapi.staticfiles import StaticFiles
-app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
+app.mount("/api/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
 
 app.add_middleware(
     CORSMiddleware,
