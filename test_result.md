@@ -350,12 +350,38 @@ metadata:
   run_ui: true
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Admin Delete Functionality"
+    - "Agent Immobilier Profile No Pricing"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
 agent_communication:
+  - agent: "main"
+    message: |
+      NEW FEATURES IMPLEMENTED:
+      
+      1. ADMIN DELETE FUNCTIONALITY:
+         - Added GET /api/admin/customers endpoint to list all customers
+         - Added DELETE /api/admin/providers/{id} endpoint to delete providers
+         - Added DELETE /api/admin/customers/{id} endpoint to delete customers
+         - Updated AdminDashboard.js with new "Clients" tab
+         - Added delete confirmation modal
+         - Delete button visible in both provider and customer detail views
+      
+      2. AGENT IMMOBILIER PROFILE - NO PRICING:
+         - Modified ProfileForm.js to conditionally hide Tarif and Frais de Transport
+         - For profession === 'AgentImmobilier', the pricing section is hidden
+         - Other professions still see and can edit pricing fields
+      
+      Please test:
+      - Admin can view list of customers
+      - Admin can delete a provider (with confirmation)
+      - Admin can delete a customer (with confirmation)
+      - Agent Immobilier profile form does NOT show Tarif/Transport fields
+      - Other professions STILL show Tarif/Transport fields
+      
   - agent: "main"
     message: |
       FIXED IMAGE DISPLAY ISSUE:
