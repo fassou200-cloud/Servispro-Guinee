@@ -918,6 +918,51 @@ async def get_admin_stats():
         'rentals': total_rentals
     }
 
+@api_router.get("/admin/customers")
+async def get_all_customers_admin():
+    """Get all customers for admin dashboard"""
+    customers = await db.customers.find({}, {'_id': 0, 'password': 0}).sort('created_at', -1).to_list(1000)
+    return customers
+
+@api_router.delete("/admin/providers/{provider_id}")
+async def delete_provider(provider_id: str):
+    """Delete a service provider and their associated data"""
+    # Check if provider exists
+    provider = await db.service_providers.find_one({'id': provider_id})
+    if not provider:
+        raise HTTPException(status_code=404, detail="Prestataire non trouvé")
+    
+    # Delete associated data
+    await db.job_offers.delete_many({'service_provider_id': provider_id})
+    await db.rental_listings.delete_many({'service_provider_id': provider_id})
+    await db.reviews.delete_many({'service_provider_id': provider_id})
+    await db.chat_messages.delete_many({'sender_id': provider_id})
+    
+    # Delete the provider
+    result = await db.service_providers.delete_one({'id': provider_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Prestataire non trouvé")
+    
+    return {"message": "Prestataire et données associées supprimés avec succès"}
+
+@api_router.delete("/admin/customers/{customer_id}")
+async def delete_customer(customer_id: str):
+    """Delete a customer and their associated data"""
+    # Check if customer exists
+    customer = await db.customers.find_one({'id': customer_id})
+    if not customer:
+        raise HTTPException(status_code=404, detail="Client non trouvé")
+    
+    # Delete associated data (job offers where they were the client, chat messages)
+    await db.chat_messages.delete_many({'sender_id': customer_id})
+    
+    # Delete the customer
+    result = await db.customers.delete_one({'id': customer_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Client non trouvé")
+    
+    return {"message": "Client supprimé avec succès"}
+
 # ==================== JOB COMPLETION FLOW ====================
 
 @api_router.put("/jobs/{job_id}/provider-complete")
