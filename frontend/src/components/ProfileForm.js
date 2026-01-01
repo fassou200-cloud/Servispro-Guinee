@@ -38,16 +38,19 @@ const ProfileForm = ({ user, setUser, onUpdate }) => {
       return;
     }
 
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('L\'image est trop grande. Maximum 5MB.');
+      return;
+    }
+
     setUploading(true);
     try {
-      // Resize image to 800x600
-      const resizedImage = await resizeImage(file, 800, 600);
-      
       const token = localStorage.getItem('token');
-      const formData = new FormData();
-      formData.append('file', resizedImage, file.name);
+      const uploadFormData = new FormData();
+      uploadFormData.append('file', file);
 
-      const response = await axios.post(`${API}/profile/upload-picture`, formData, {
+      const response = await axios.post(`${API}/profile/upload-picture`, uploadFormData, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
@@ -55,7 +58,7 @@ const ProfileForm = ({ user, setUser, onUpdate }) => {
       });
 
       setUser({ ...user, profile_picture: response.data.profile_picture });
-      toast.success('Photo de profil téléchargée avec succès (800x600)');
+      toast.success('Photo de profil téléchargée avec succès !');
       onUpdate();
     } catch (error) {
       toast.error('Échec du téléchargement de la photo');
