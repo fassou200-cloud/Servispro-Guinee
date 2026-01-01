@@ -54,6 +54,18 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
   }, [providerId]);
 
   const handleRequestService = () => {
+    // Agent Immobilier - redirect to rentals
+    if (provider?.profession === 'AgentImmobilier') {
+      navigate('/rentals');
+      return;
+    }
+    
+    // Check if provider is online
+    if (!provider?.online_status) {
+      toast.error('Ce prestataire est actuellement indisponible');
+      return;
+    }
+    
     if (!isCustomerAuthenticated && !localStorage.getItem('customerToken')) {
       toast.error('Veuillez vous connecter pour demander un service');
       navigate('/customer/auth');
