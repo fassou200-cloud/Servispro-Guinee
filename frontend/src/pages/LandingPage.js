@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
-import { Zap, Wrench, Droplet, Truck, Home, ArrowRight, Shield, Clock, Star, User, LogOut } from 'lucide-react';
+import { Zap, Wrench, Droplet, Truck, Home, ArrowRight, Shield, Clock, Star, User, LogOut, Hammer, Building, Settings, Flame } from 'lucide-react';
 
 const LandingPage = ({ isCustomerAuthenticated }) => {
   const navigate = useNavigate();
@@ -24,32 +24,60 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
 
   const categories = [
     {
-      name: 'Électricien',
-      icon: Zap,
-      description: 'Services électriques professionnels pour votre maison et entreprise en Guinée',
+      name: 'Logisticien',
+      icon: Truck,
+      description: 'Services de transport et livraison rapides en Guinée',
+      image: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80',
+      link: '/browse?category=Logisticien'
+    },
+    {
+      name: 'Électromécanicien',
+      icon: Settings,
+      description: 'Maintenance et réparation électromécanique professionnelle',
       image: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800&q=80',
-      link: '/browse?category=Electrician'
+      link: '/browse?category=Electromecanicien'
     },
     {
       name: 'Mécanicien',
       icon: Wrench,
-      description: 'Réparation automobile et services d\'entretien experts à Conakry et environs',
+      description: 'Réparation automobile et entretien à Conakry',
       image: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=800&q=80',
-      link: '/browse?category=Mechanic'
+      link: '/browse?category=Mecanicien'
     },
     {
       name: 'Plombier',
       icon: Droplet,
-      description: 'Solutions de plomberie fiables pour tous vos besoins',
+      description: 'Installation et réparation plomberie fiables',
       image: 'https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?w=800&q=80',
-      link: '/browse?category=Plumber'
+      link: '/browse?category=Plombier'
     },
     {
-      name: 'Logistique',
-      icon: Truck,
-      description: 'Services de livraison et logistique rapides et fiables en Guinée',
-      image: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80',
-      link: '/browse?category=Logistics'
+      name: 'Maçon',
+      icon: Hammer,
+      description: 'Construction et rénovation de qualité',
+      image: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800&q=80',
+      link: '/browse?category=Macon'
+    },
+    {
+      name: 'Menuisier',
+      icon: Hammer,
+      description: 'Travaux de bois et menuiserie sur mesure',
+      image: 'https://images.unsplash.com/photo-1588854337115-1c67d9247e4d?w=800&q=80',
+      link: '/browse?category=Menuisier'
+    },
+    {
+      name: 'Agent Immobilier',
+      icon: Building,
+      description: 'Location et vente de biens immobiliers',
+      image: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=80',
+      link: '/rentals'
+    },
+    {
+      name: 'Soudeur',
+      icon: Flame,
+      description: 'Soudure et travaux métalliques professionnels',
+      image: 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=800&q=80',
+      link: '/browse?category=Soudeur'
     }
   ];
 
