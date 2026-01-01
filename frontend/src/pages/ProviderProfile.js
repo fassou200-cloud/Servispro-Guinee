@@ -250,8 +250,8 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
           )}
         </Card>
 
-        {/* Service Request Form */}
-        {showRequestForm && (
+        {/* Service Request Form - Only for non-Agent Immobilier and online providers */}
+        {showRequestForm && provider.profession !== 'AgentImmobilier' && provider.online_status && (
           <Card className="p-8 mb-8" data-testid="service-request-form-container">
             <ServiceRequestForm
               providerId={provider.id}
