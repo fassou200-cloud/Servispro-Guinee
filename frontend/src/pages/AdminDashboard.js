@@ -478,6 +478,105 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
           </div>
         )}
 
+        {/* Customers Tab */}
+        {activeTab === 'customers' && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Customers List */}
+            <div className="space-y-4">
+              <h2 className="text-lg font-heading font-bold text-white mb-4">
+                Liste des Clients
+              </h2>
+              {customers.length === 0 ? (
+                <Card className="p-8 bg-slate-800 border-slate-700 text-center">
+                  <p className="text-slate-400">Aucun client inscrit</p>
+                </Card>
+              ) : (
+                customers.map((customer) => (
+                  <Card 
+                    key={customer.id} 
+                    className={`p-4 bg-slate-800 border-slate-700 cursor-pointer transition-colors ${
+                      selectedCustomer?.id === customer.id ? 'border-amber-500' : 'hover:border-slate-600'
+                    }`}
+                    onClick={() => setSelectedCustomer(customer)}
+                  >
+                    <div className="flex items-center gap-4">
+                      <Avatar className="h-12 w-12">
+                        <AvatarFallback className="bg-slate-700 text-white">
+                          {customer.first_name[0]}{customer.last_name[0]}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <h3 className="font-bold text-white">
+                          {customer.first_name} {customer.last_name}
+                        </h3>
+                        <p className="text-sm text-slate-400">{customer.phone_number}</p>
+                        <p className="text-xs text-slate-500">
+                          Inscrit le {new Date(customer.created_at).toLocaleDateString('fr-FR')}
+                        </p>
+                      </div>
+                    </div>
+                  </Card>
+                ))
+              )}
+            </div>
+
+            {/* Customer Detail */}
+            <div>
+              <h2 className="text-lg font-heading font-bold text-white mb-4">
+                Détails du Client
+              </h2>
+              {selectedCustomer ? (
+                <Card className="p-6 bg-slate-800 border-slate-700">
+                  <div className="flex items-center gap-4 mb-6">
+                    <Avatar className="h-20 w-20">
+                      <AvatarFallback className="bg-slate-700 text-white text-2xl">
+                        {selectedCustomer.first_name[0]}{selectedCustomer.last_name[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h3 className="text-xl font-bold text-white">
+                        {selectedCustomer.first_name} {selectedCustomer.last_name}
+                      </h3>
+                      <p className="text-slate-400">{selectedCustomer.phone_number}</p>
+                    </div>
+                  </div>
+
+                  {/* Info */}
+                  <div className="mb-6 space-y-3">
+                    <div className="flex justify-between items-center p-3 bg-slate-700/50 rounded-lg">
+                      <span className="text-slate-400">Date d'inscription</span>
+                      <span className="text-white font-medium">
+                        {new Date(selectedCustomer.created_at).toLocaleDateString('fr-FR')}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-slate-700/50 rounded-lg">
+                      <span className="text-slate-400">Téléphone</span>
+                      <span className="text-white font-medium">{selectedCustomer.phone_number}</span>
+                    </div>
+                  </div>
+
+                  {/* Delete Button */}
+                  <div className="pt-4 border-t border-slate-700">
+                    <Button
+                      onClick={() => confirmDelete('customer', selectedCustomer.id, `${selectedCustomer.first_name} ${selectedCustomer.last_name}`)}
+                      variant="outline"
+                      className="w-full border-red-600 text-red-400 hover:bg-red-600 hover:text-white gap-2"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Supprimer ce client
+                    </Button>
+                  </div>
+                </Card>
+              ) : (
+                <Card className="p-8 bg-slate-800 border-slate-700 text-center">
+                  <Eye className="h-12 w-12 text-slate-600 mx-auto mb-4" />
+                  <p className="text-slate-400">Sélectionnez un client pour voir ses détails</p>
+                </Card>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Jobs Tab */}
         {activeTab === 'jobs' && (
           <div className="space-y-4">
