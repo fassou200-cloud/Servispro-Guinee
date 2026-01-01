@@ -25,6 +25,9 @@ const ProfileForm = ({ user, setUser, onUpdate }) => {
   const [uploadingId, setUploadingId] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // Check if user is an Agent Immobilier (don't show pricing)
+  const isAgentImmobilier = user.profession === 'AgentImmobilier';
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
