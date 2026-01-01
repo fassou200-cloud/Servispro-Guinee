@@ -32,11 +32,20 @@ const RentalListingForm = ({ onSuccess }) => {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
 
-    // Validate files
-    const validFiles = files.filter(file => file.type.startsWith('image/'));
-    if (validFiles.length !== files.length) {
-      toast.error('Some files were not images and were skipped');
-    }
+    // Validate files - only images and max 5MB each
+    const validFiles = files.filter(file => {
+      if (!file.type.startsWith('image/')) {
+        toast.error(`${file.name} n'est pas une image`);
+        return false;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error(`${file.name} est trop grande (max 5MB)`);
+        return false;
+      }
+      return true;
+    });
+
+    if (validFiles.length === 0) return;
 
     // Add to selected photos
     setSelectedPhotos([...selectedPhotos, ...validFiles]);
@@ -44,6 +53,8 @@ const RentalListingForm = ({ onSuccess }) => {
     // Create preview URLs
     const newPreviewUrls = validFiles.map(file => URL.createObjectURL(file));
     setPhotoPreviewUrls([...photoPreviewUrls, ...newPreviewUrls]);
+    
+    toast.success(`${validFiles.length} photo(s) ajoutée(s)`);
   };
 
   const removePhoto = (index) => {
@@ -90,7 +101,7 @@ const RentalListingForm = ({ onSuccess }) => {
         }
       }
 
-      toast.success('Rental listing created successfully!');
+      toast.success('Annonce de location créée avec succès !');
       
       // Reset form
       setFormData({
@@ -105,7 +116,7 @@ const RentalListingForm = ({ onSuccess }) => {
       
       if (onSuccess) onSuccess();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to create listing');
+      toast.error(error.response?.data?.detail || 'Échec de la création de l\'annonce');
     } finally {
       setSaving(false);
     }
@@ -114,13 +125,13 @@ const RentalListingForm = ({ onSuccess }) => {
   return (
     <Card className="p-8">
       <h3 className="text-2xl font-heading font-bold text-foreground mb-6">
-        Create Rental Listing
+        Créer une Annonce de Location
       </h3>
 
       <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="property_type" className="font-heading text-xs uppercase tracking-wide">
-              Property Type *
+              Type de Propriété *
             </Label>
             <Select
               value={formData.property_type}
@@ -130,15 +141,15 @@ const RentalListingForm = ({ onSuccess }) => {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Apartment">Apartment</SelectItem>
-                <SelectItem value="House">House</SelectItem>
+                <SelectItem value="Apartment">Appartement</SelectItem>
+                <SelectItem value="House">Maison</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="title" className="font-heading text-xs uppercase tracking-wide">
-              Title *
+              Titre *
             </Label>
             <Input
               id="title"
@@ -148,7 +159,7 @@ const RentalListingForm = ({ onSuccess }) => {
               onChange={handleChange}
               required
               className="h-12"
-              placeholder="e.g., Modern 2BR Apartment in Downtown"
+              placeholder="Ex: Bel Appartement 3 Chambres à Kaloum"
             />
           </div>
 
@@ -165,13 +176,13 @@ const RentalListingForm = ({ onSuccess }) => {
               required
               rows={5}
               className="resize-none"
-              placeholder="Describe the property, amenities, etc..."
+              placeholder="Décrivez la propriété, les commodités, etc..."
             />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="location" className="font-heading text-xs uppercase tracking-wide">
-              Location *
+              Localisation *
             </Label>
             <Input
               id="location"
@@ -181,32 +192,37 @@ const RentalListingForm = ({ onSuccess }) => {
               onChange={handleChange}
               required
               className="h-12"
-              placeholder="Street address, City, State"
+              placeholder="Quartier, Commune, Ville"
             />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="rental_price" className="font-heading text-xs uppercase tracking-wide">
-              Monthly Rental Price ($) *
+              Prix Mensuel (GNF) *
             </Label>
-            <Input
-              id="rental_price"
-              name="rental_price"
-              type="number"
-              step="0.01"
-              min="0"
-              data-testid="rental-price-input"
-              value={formData.rental_price}
-              onChange={handleChange}
-              required
-              className="h-12 font-mono"
-              placeholder="1200.00"
-            />
+            <div className="relative">
+              <Input
+                id="rental_price"
+                name="rental_price"
+                type="number"
+                step="1"
+                min="0"
+                data-testid="rental-price-input"
+                value={formData.rental_price}
+                onChange={handleChange}
+                required
+                className="h-12 font-mono pr-16"
+                placeholder="500000"
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">
+                GNF
+              </span>
+            </div>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="photos" className="font-heading text-xs uppercase tracking-wide">
-              Photos (Optional)
+              Photos (Optionnel - max 5MB par photo)
             </Label>
             <input
               id="photos"
@@ -225,7 +241,7 @@ const RentalListingForm = ({ onSuccess }) => {
               className="w-full h-12 gap-2"
             >
               <Upload className="h-4 w-4" />
-              Select Photos ({selectedPhotos.length} selected)
+              Sélectionner des Photos ({selectedPhotos.length} sélectionnée{selectedPhotos.length > 1 ? 's' : ''})
             </Button>
             
             {photoPreviewUrls.length > 0 && (
@@ -234,7 +250,7 @@ const RentalListingForm = ({ onSuccess }) => {
                   <div key={index} className="relative group">
                     <img
                       src={url}
-                      alt={`Preview ${index + 1}`}
+                      alt={`Aperçu ${index + 1}`}
                       className="w-full h-24 object-cover rounded-lg border border-border"
                     />
                     <button
@@ -257,7 +273,7 @@ const RentalListingForm = ({ onSuccess }) => {
             className="w-full h-12 font-heading font-bold text-base"
             disabled={saving}
           >
-            {saving ? 'Creating...' : 'Create Listing'}
+            {saving ? 'Création en cours...' : 'Créer l\'Annonce'}
           </Button>
         </form>
     </Card>
