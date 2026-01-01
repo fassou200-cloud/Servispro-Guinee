@@ -519,6 +519,176 @@ class ServisProAPITester:
                 return True
         return success
 
+    # ==================== ADMIN DELETE FUNCTIONALITY TESTS ====================
+    
+    def test_admin_get_all_customers(self):
+        """Test admin getting all customers"""
+        # Use admin token for this request
+        original_token = self.token
+        self.token = getattr(self, 'admin_token', None)
+        
+        success, response = self.run_test(
+            "Admin Get All Customers",
+            "GET",
+            "admin/customers",
+            200
+        )
+        
+        # Restore original token
+        self.token = original_token
+        
+        if success and isinstance(response, list):
+            # Check if customers have expected fields and NOT password or _id
+            if response:
+                customer = response[0]
+                expected_fields = ['id', 'first_name', 'last_name', 'phone_number', 'created_at']
+                forbidden_fields = ['password', '_id']
+                
+                has_expected = all(field in customer for field in expected_fields)
+                has_forbidden = any(field in customer for field in forbidden_fields)
+                
+                if has_expected and not has_forbidden:
+                    return True, response
+                else:
+                    self.log_test("Admin Get All Customers", False, f"Missing expected fields or contains forbidden fields")
+                    return False, response
+        return success, response
+
+    def test_admin_delete_provider(self, provider_id):
+        """Test admin deleting a provider and associated data"""
+        if not provider_id:
+            self.log_test("Admin Delete Provider", False, "No provider ID available")
+            return False
+            
+        # Use admin token for this request
+        original_token = self.token
+        self.token = getattr(self, 'admin_token', None)
+        
+        success, response = self.run_test(
+            "Admin Delete Provider",
+            "DELETE",
+            f"admin/providers/{provider_id}",
+            200
+        )
+        
+        # Restore original token
+        self.token = original_token
+        return success
+
+    def test_admin_delete_customer(self, customer_id):
+        """Test admin deleting a customer"""
+        if not customer_id:
+            self.log_test("Admin Delete Customer", False, "No customer ID available")
+            return False
+            
+        # Use admin token for this request
+        original_token = self.token
+        self.token = getattr(self, 'admin_token', None)
+        
+        success, response = self.run_test(
+            "Admin Delete Customer",
+            "DELETE",
+            f"admin/customers/{customer_id}",
+            200
+        )
+        
+        # Restore original token
+        self.token = original_token
+        return success
+
+    def test_admin_delete_nonexistent_provider(self):
+        """Test admin deleting a non-existent provider (should return 404)"""
+        fake_provider_id = str(uuid.uuid4())
+        
+        # Use admin token for this request
+        original_token = self.token
+        self.token = getattr(self, 'admin_token', None)
+        
+        success, response = self.run_test(
+            "Admin Delete Non-existent Provider (Should Fail)",
+            "DELETE",
+            f"admin/providers/{fake_provider_id}",
+            404
+        )
+        
+        # Restore original token
+        self.token = original_token
+        return success
+
+    def test_admin_delete_nonexistent_customer(self):
+        """Test admin deleting a non-existent customer (should return 404)"""
+        fake_customer_id = str(uuid.uuid4())
+        
+        # Use admin token for this request
+        original_token = self.token
+        self.token = getattr(self, 'admin_token', None)
+        
+        success, response = self.run_test(
+            "Admin Delete Non-existent Customer (Should Fail)",
+            "DELETE",
+            f"admin/customers/{fake_customer_id}",
+            404
+        )
+        
+        # Restore original token
+        self.token = original_token
+        return success
+
+    def test_verify_provider_deletion(self, provider_id):
+        """Verify that a deleted provider is no longer in the providers list"""
+        if not provider_id:
+            self.log_test("Verify Provider Deletion", False, "No provider ID available")
+            return False
+            
+        success, response = self.run_test(
+            "Verify Provider Deletion",
+            "GET",
+            "providers",
+            200
+        )
+        
+        if success and isinstance(response, list):
+            # Check if the deleted provider is NOT in the list
+            provider_ids = [p.get('id') for p in response]
+            if provider_id not in provider_ids:
+                self.log_test("Verify Provider Deletion", True, "Provider successfully removed from list")
+                return True
+            else:
+                self.log_test("Verify Provider Deletion", False, "Provider still exists in list")
+                return False
+        return False
+
+    def test_verify_customer_deletion(self, customer_id):
+        """Verify that a deleted customer is no longer in the customers list"""
+        if not customer_id:
+            self.log_test("Verify Customer Deletion", False, "No customer ID available")
+            return False
+            
+        # Use admin token for this request
+        original_token = self.token
+        self.token = getattr(self, 'admin_token', None)
+        
+        success, response = self.run_test(
+            "Verify Customer Deletion",
+            "GET",
+            "admin/customers",
+            200
+        )
+        
+        # Restore original token
+        self.token = original_token
+        
+        if success and isinstance(response, list):
+            # Check if the deleted customer is NOT in the list
+            customer_ids = [c.get('id') for c in response]
+            if customer_id not in customer_ids:
+                self.log_test("Verify Customer Deletion", True, "Customer successfully removed from list")
+                return True
+            else:
+                self.log_test("Verify Customer Deletion", False, "Customer still exists in list")
+                return False
+        return False
+
     # ==================== JOB COMPLETION FLOW TESTS ====================
     
     def test_provider_mark_job_complete(self, job_id):
