@@ -3,12 +3,31 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, MapPin, Home as HomeIcon, User, MessageCircle, Send } from 'lucide-react';
+import { ArrowLeft, MapPin, Home as HomeIcon, User, MessageCircle, Send, Calendar, Users, Moon, CheckCircle, XCircle, Wifi, Wind, Car, Utensils, Tv, Bath } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
+
+// Amenity icons mapping
+const AMENITY_ICONS = {
+  wifi: Wifi,
+  climatisation: Wind,
+  parking: Car,
+  cuisine: Utensils,
+  tv: Tv,
+  salle_bain_privee: Bath,
+};
+
+const AMENITY_LABELS = {
+  wifi: 'WiFi',
+  climatisation: 'Climatisation',
+  parking: 'Parking',
+  cuisine: 'Cuisine Équipée',
+  tv: 'Télévision',
+  salle_bain_privee: 'Salle de Bain Privée',
+};
 
 const RentalDetail = () => {
   const navigate = useNavigate();
