@@ -363,7 +363,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Agent Immobilier Profile No Pricing"
+    - "Agent Immobilier Button Change"
+    - "Online Status Toggle"
+    - "Disabled Service Request for Offline Providers"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
