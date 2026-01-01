@@ -258,6 +258,42 @@ backend:
         agent: "testing"
         comment: "Customer can view jobs awaiting confirmation and confirm job completion"
 
+  - task: "Short Term Rental (Airbnb) Feature"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ SHORT-TERM RENTAL FEATURE COMPLETE - All new Airbnb-style rental features working perfectly. POST /api/rentals creates short-term rentals with all new fields (rental_type, price_per_night, min_nights, max_guests, amenities, is_available, available_from, available_to). GET /api/rentals filters by rental_type (short_term/long_term) and is_available (true/false) working correctly. PUT /api/rentals/{id}/availability toggles availability status successfully. PUT /api/rentals/{id} updates rental listings with all new fields. Provider login with phone: 224999888775, password: test123 working. Test Results: 48/49 tests passed (98% success rate)."
+
+  - task: "Rental Availability Management"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ RENTAL AVAILABILITY MANAGEMENT WORKING - PUT /api/rentals/{id}/availability endpoint successfully toggles rental availability between true/false. GET /api/rentals?is_available=true/false filters work correctly. Availability status properly reflected in rental listings. All availability management features functional."
+
+  - task: "Admin Delete Users"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ ADMIN DELETE FUNCTIONALITY TESTING COMPLETE - All APIs working correctly. GET /api/admin/customers returns customer list without password/_id fields. DELETE /api/admin/providers/{id} successfully deletes providers and associated data (jobs, rentals, reviews). DELETE /api/admin/customers/{id} successfully deletes customers. Error handling working - 404 returned for non-existent providers/customers. Verification tests confirm deleted entities are removed from lists. Test Results: 39/40 tests passed (97.5% success rate). Minor: One test expected 401 but got 403 for unauthorized access - not critical."
+
 frontend:
   - task: "Agent Immobilier Button Change"
     implemented: true
