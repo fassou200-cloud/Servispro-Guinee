@@ -455,6 +455,18 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                       <span>Ce prestataire a été rejeté</span>
                     </div>
                   )}
+
+                  {/* Delete Button - Always visible */}
+                  <div className="mt-4 pt-4 border-t border-slate-700">
+                    <Button
+                      onClick={() => confirmDelete('provider', selectedProvider.id, `${selectedProvider.first_name} ${selectedProvider.last_name}`)}
+                      variant="outline"
+                      className="w-full border-red-600 text-red-400 hover:bg-red-600 hover:text-white gap-2"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Supprimer ce prestataire
+                    </Button>
+                  </div>
                 </Card>
               ) : (
                 <Card className="p-8 bg-slate-800 border-slate-700 text-center">
