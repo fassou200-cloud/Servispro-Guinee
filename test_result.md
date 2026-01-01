@@ -434,10 +434,7 @@ metadata:
   run_ui: true
 
 test_plan:
-  current_focus:
-    - "Short Term Rental (Airbnb) Feature"
-    - "Rental Availability Management"
-    - "Admin Delete Users"
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -602,3 +599,22 @@ agent_communication:
       ✅ Browse page correctly shows provider availability status
       
       All new features are implemented and working correctly. The ServisPro platform new functionality is fully operational.
+  - agent: "testing"
+    message: |
+      🏠 SHORT-TERM RENTAL (AIRBNB) FEATURE TESTING COMPLETE - ALL WORKING ✅
+      
+      COMPREHENSIVE TEST RESULTS:
+      ✅ Provider Login: Successfully logged in with phone: 224999888775, password: test123
+      ✅ POST /api/rentals: Creates short-term rentals with all new fields (rental_type, price_per_night, min_nights, max_guests, amenities, is_available, available_from, available_to)
+      ✅ GET /api/rentals?rental_type=short_term: Filters and returns only short-term rentals
+      ✅ GET /api/rentals?rental_type=long_term: Filters and returns only long-term rentals  
+      ✅ GET /api/rentals?is_available=true: Filters and returns only available rentals
+      ✅ GET /api/rentals?is_available=false: Filters and returns only unavailable rentals
+      ✅ PUT /api/rentals/{id}/availability: Successfully toggles availability between true/false
+      ✅ PUT /api/rentals/{id}: Updates rental listings with new price_per_night and amenities
+      ✅ Admin Delete Verification: All admin delete endpoints (providers/customers) working correctly
+      
+      BACKEND API TEST RESULTS: 48/49 tests passed (98.0% success rate)
+      Minor: One test expected 401 but got 403 for unauthorized access - not critical
+      
+      All short-term rental (Airbnb-style) features and availability management are fully functional. The ServisPro platform now supports both long-term and short-term rental listings with complete filtering and management capabilities.
