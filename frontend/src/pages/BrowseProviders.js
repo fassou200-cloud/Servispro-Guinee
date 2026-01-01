@@ -268,8 +268,8 @@ const BrowseProviders = ({ isCustomerAuthenticated }) => {
                   </p>
                 )}
 
-                {/* Pricing Display */}
-                {(provider.price || provider.transport_fee) && (
+                {/* Pricing Display - Not for Agent Immobilier */}
+                {provider.profession !== 'AgentImmobilier' && (provider.price || provider.transport_fee) && (
                   <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
                     <div className="flex flex-wrap gap-3 text-sm">
                       {provider.price && (
@@ -288,15 +288,31 @@ const BrowseProviders = ({ isCustomerAuthenticated }) => {
                   </div>
                 )}
 
-                <Button
-                  className="w-full font-heading"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate(`/provider/${provider.id}`);
-                  }}
-                >
-                  Voir le Profil & Demander un Service
-                </Button>
+                {/* Different button for Agent Immobilier */}
+                {provider.profession === 'AgentImmobilier' ? (
+                  <Button
+                    className="w-full font-heading"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate('/rentals');
+                    }}
+                  >
+                    Voir les Locations
+                  </Button>
+                ) : (
+                  <Button
+                    className="w-full font-heading"
+                    disabled={!provider.online_status}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (provider.online_status) {
+                        navigate(`/provider/${provider.id}`);
+                      }
+                    }}
+                  >
+                    {provider.online_status ? 'Voir le Profil & Demander un Service' : 'Prestataire Indisponible'}
+                  </Button>
+                )}
               </Card>
             ))}
           </div>
