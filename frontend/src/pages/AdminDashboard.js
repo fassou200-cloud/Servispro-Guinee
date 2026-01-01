@@ -264,6 +264,14 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
             Prestataires ({providers.length})
           </Button>
           <Button
+            variant={activeTab === 'customers' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('customers')}
+            className={activeTab === 'customers' ? 'bg-amber-600 hover:bg-amber-700' : 'border-slate-600 text-slate-300'}
+          >
+            <UserCircle className="h-4 w-4 mr-2" />
+            Clients ({customers.length})
+          </Button>
+          <Button
             variant={activeTab === 'jobs' ? 'default' : 'outline'}
             onClick={() => setActiveTab('jobs')}
             className={activeTab === 'jobs' ? 'bg-amber-600 hover:bg-amber-700' : 'border-slate-600 text-slate-300'}
@@ -272,6 +280,38 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
             Demandes de Service ({jobs.length})
           </Button>
         </div>
+
+        {/* Delete Confirmation Modal */}
+        {deleteConfirm.show && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <Card className="p-6 bg-slate-800 border-slate-700 max-w-md w-full mx-4">
+              <div className="text-center">
+                <div className="mx-auto w-12 h-12 rounded-full bg-red-600/20 flex items-center justify-center mb-4">
+                  <Trash2 className="h-6 w-6 text-red-400" />
+                </div>
+                <h3 className="text-lg font-bold text-white mb-2">Confirmer la suppression</h3>
+                <p className="text-slate-400 mb-6">
+                  Êtes-vous sûr de vouloir supprimer {deleteConfirm.type === 'provider' ? 'le prestataire' : 'le client'} <strong className="text-white">{deleteConfirm.name}</strong> ? Cette action est irréversible.
+                </p>
+                <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => setDeleteConfirm({ show: false, type: null, id: null, name: '' })}
+                    className="flex-1 border-slate-600 text-slate-300"
+                  >
+                    Annuler
+                  </Button>
+                  <Button
+                    onClick={executeDelete}
+                    className="flex-1 bg-red-600 hover:bg-red-700"
+                  >
+                    Supprimer
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </div>
+        )}
 
         {/* Providers Tab */}
         {activeTab === 'providers' && (
