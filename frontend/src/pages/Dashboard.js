@@ -206,24 +206,28 @@ const Dashboard = ({ setIsAuthenticated }) => {
             <Briefcase className="h-4 w-4" />
             Demandes de Travail
           </Button>
-          <Button
-            variant={activeTab === 'rentals' ? 'default' : 'outline'}
-            data-testid="rentals-tab-button"
-            onClick={() => setActiveTab('rentals')}
-            className="gap-2 font-heading"
-          >
-            <Home className="h-4 w-4" />
-            Mes Locations
-          </Button>
-          <Button
-            variant={activeTab === 'create-rental' ? 'default' : 'outline'}
-            data-testid="create-rental-tab-button"
-            onClick={() => setActiveTab('create-rental')}
-            className="gap-2 font-heading"
-          >
-            <Home className="h-4 w-4" />
-            + Ajouter Location
-          </Button>
+          {isAgentImmobilier(user.profession) && (
+            <>
+              <Button
+                variant={activeTab === 'rentals' ? 'default' : 'outline'}
+                data-testid="rentals-tab-button"
+                onClick={() => setActiveTab('rentals')}
+                className="gap-2 font-heading"
+              >
+                <Home className="h-4 w-4" />
+                Mes Locations
+              </Button>
+              <Button
+                variant={activeTab === 'create-rental' ? 'default' : 'outline'}
+                data-testid="create-rental-tab-button"
+                onClick={() => setActiveTab('create-rental')}
+                className="gap-2 font-heading"
+              >
+                <Home className="h-4 w-4" />
+                + Ajouter Location
+              </Button>
+            </>
+          )}
         </div>
 
         {/* Tab Content */}
@@ -231,8 +235,8 @@ const Dashboard = ({ setIsAuthenticated }) => {
           <ProfileForm user={user} setUser={setUser} onUpdate={fetchProfile} />
         )}
         {activeTab === 'jobs' && <JobsList />}
-        {activeTab === 'rentals' && <MyRentals />}
-        {activeTab === 'create-rental' && (
+        {activeTab === 'rentals' && isAgentImmobilier(user.profession) && <MyRentals />}
+        {activeTab === 'create-rental' && isAgentImmobilier(user.profession) && (
           <RentalListingForm onSuccess={() => {
             setActiveTab('rentals');
             toast.success('Annonce de location créée avec succès!');
