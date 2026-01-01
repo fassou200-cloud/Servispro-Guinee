@@ -363,7 +363,6 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Admin Delete Functionality"
     - "Agent Immobilier Profile No Pricing"
   stuck_tasks: []
   test_all: false
