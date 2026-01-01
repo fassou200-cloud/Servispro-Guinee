@@ -85,7 +85,7 @@ class ServisProAPITester:
             "last_name": "Diallo", 
             "phone_number": test_phone,
             "password": "SecurePass123!",
-            "profession": "Electrician"
+            "profession": "Electromecanicien"
         }
         
         success, response = self.run_test(
