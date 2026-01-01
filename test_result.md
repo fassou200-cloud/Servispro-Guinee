@@ -339,10 +339,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "French Translation Verification"
-    - "Image Upload with Resizing"
-    - "Browse Providers Page"
-    - "Browse Rentals Page"
+    - "Image Upload with Correct URL Path"
+    - "Profile Picture Upload Test"
+    - "Rental Photo Upload Test"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
