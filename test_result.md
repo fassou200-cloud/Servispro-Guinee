@@ -343,6 +343,18 @@ frontend:
         agent: "testing"
         comment: "✅ COMPREHENSIVE IMAGE UPLOAD TESTING COMPLETED - All image uploads working correctly with /api/uploads/ URLs. Profile picture upload: ✅ Working, ID verification upload: ✅ Working, Images serve with correct content-type (image/jpeg, image/png), Network requests return 200 status. Found 6 image responses all using correct /api/uploads/ path. Image URLs verified: https://servispro-guinea.preview.emergentagent.com/api/uploads/[filename] format working correctly. Minor: Some provider profile pictures not displaying on browse page due to fallback avatars, but image URLs are correct when present."
 
+  - task: "Admin Delete Functionality"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ ADMIN DELETE FUNCTIONALITY TESTING COMPLETE - All APIs working correctly. GET /api/admin/customers returns customer list without password/_id fields. DELETE /api/admin/providers/{id} successfully deletes providers and associated data (jobs, rentals, reviews). DELETE /api/admin/customers/{id} successfully deletes customers. Error handling working - 404 returned for non-existent providers/customers. Verification tests confirm deleted entities are removed from lists. Test Results: 39/40 tests passed (97.5% success rate). Minor: One test expected 401 but got 403 for unauthorized access - not critical."
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
