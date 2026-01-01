@@ -180,7 +180,7 @@ class ServisProAPITester:
         update_data = {
             "first_name": "Updated",
             "last_name": "Name",
-            "profession": "Mechanic",
+            "profession": "Mecanicien",
             "about_me": "I am an experienced mechanic",
             "online_status": True
         }
