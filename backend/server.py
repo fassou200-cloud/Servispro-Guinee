@@ -220,6 +220,22 @@ class Review(BaseModel):
     comment: str
     created_at: str
 
+# Chat Models for Rental Listings
+class ChatMessageCreate(BaseModel):
+    rental_id: str
+    message: str
+
+class ChatMessage(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str
+    rental_id: str
+    sender_id: str
+    sender_name: str
+    sender_type: str  # 'owner' or 'customer'
+    message: str
+    created_at: str
+
 # Helper Functions
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
