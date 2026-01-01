@@ -187,15 +187,58 @@ const RentalDetail = () => {
                   <h1 className="text-3xl font-heading font-bold text-foreground mb-2">
                     {rental.title}
                   </h1>
-                  <span className="inline-block px-3 py-1 rounded-md text-sm font-medium bg-muted text-muted-foreground">
-                    {rental.property_type === 'Apartment' ? 'Appartement' : 'Maison'}
-                  </span>
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    <span className="inline-block px-3 py-1 rounded-md text-sm font-medium bg-muted text-muted-foreground">
+                      {rental.property_type === 'Apartment' ? 'Appartement' : 'Maison'}
+                    </span>
+                    {/* Rental Type Badge */}
+                    <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-md text-sm font-medium ${
+                      rental.rental_type === 'short_term' 
+                        ? 'bg-purple-100 text-purple-700' 
+                        : 'bg-blue-100 text-blue-700'
+                    }`}>
+                      {rental.rental_type === 'short_term' ? (
+                        <>
+                          <Moon className="h-4 w-4" />
+                          Courte Durée
+                        </>
+                      ) : (
+                        <>
+                          <Calendar className="h-4 w-4" />
+                          Longue Durée
+                        </>
+                      )}
+                    </span>
+                    {/* Availability Badge */}
+                    {rental.is_available !== false ? (
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-md text-sm font-medium bg-green-100 text-green-700">
+                        <CheckCircle className="h-4 w-4" />
+                        Disponible
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-md text-sm font-medium bg-red-100 text-red-700">
+                        <XCircle className="h-4 w-4" />
+                        Indisponible
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-3xl font-heading font-bold text-primary">
-                    {Number(rental.rental_price).toLocaleString('fr-FR')} GNF
-                  </div>
-                  <div className="text-sm text-muted-foreground">par mois</div>
+                  {rental.rental_type === 'short_term' && rental.price_per_night ? (
+                    <>
+                      <div className="text-3xl font-heading font-bold text-primary">
+                        {Number(rental.price_per_night).toLocaleString('fr-FR')} GNF
+                      </div>
+                      <div className="text-sm text-muted-foreground">par nuit</div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="text-3xl font-heading font-bold text-primary">
+                        {Number(rental.rental_price).toLocaleString('fr-FR')} GNF
+                      </div>
+                      <div className="text-sm text-muted-foreground">par mois</div>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -203,6 +246,63 @@ const RentalDetail = () => {
                 <MapPin className="h-5 w-5" />
                 <span className="text-lg">{rental.location}</span>
               </div>
+
+              {/* Short term rental info */}
+              {rental.rental_type === 'short_term' && (
+                <div className="flex flex-wrap gap-4 mb-6 p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                  {rental.min_nights && rental.min_nights > 1 && (
+                    <div className="flex items-center gap-2">
+                      <Moon className="h-5 w-5 text-purple-600" />
+                      <span className="text-purple-800">Min {rental.min_nights} nuits</span>
+                    </div>
+                  )}
+                  {rental.max_guests && (
+                    <div className="flex items-center gap-2">
+                      <Users className="h-5 w-5 text-purple-600" />
+                      <span className="text-purple-800">Max {rental.max_guests} invités</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Availability Dates */}
+              {(rental.available_from || rental.available_to) && (
+                <div className="mb-6 p-4 bg-muted rounded-lg">
+                  <h3 className="font-heading font-bold text-foreground mb-2 flex items-center gap-2">
+                    <Calendar className="h-5 w-5" />
+                    Disponibilité
+                  </h3>
+                  <div className="flex gap-4 text-sm">
+                    {rental.available_from && (
+                      <span>Du <strong>{new Date(rental.available_from).toLocaleDateString('fr-FR')}</strong></span>
+                    )}
+                    {rental.available_to && (
+                      <span>Au <strong>{new Date(rental.available_to).toLocaleDateString('fr-FR')}</strong></span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Amenities */}
+              {rental.amenities && rental.amenities.length > 0 && (
+                <div className="mb-6">
+                  <h2 className="text-xl font-heading font-bold text-foreground mb-3">
+                    Équipements
+                  </h2>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {rental.amenities.map((amenity) => {
+                      const Icon = AMENITY_ICONS[amenity] || CheckCircle;
+                      const label = AMENITY_LABELS[amenity] || amenity;
+                      return (
+                        <div key={amenity} className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+                          <Icon className="h-5 w-5 text-primary" />
+                          <span className="text-sm font-medium">{label}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               <div>
                 <h2 className="text-xl font-heading font-bold text-foreground mb-3">
