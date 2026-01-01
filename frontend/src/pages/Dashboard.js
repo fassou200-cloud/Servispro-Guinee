@@ -4,13 +4,14 @@ import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { LogOut, User, Briefcase, ShieldCheck, Home } from 'lucide-react';
+import { LogOut, User, Briefcase, ShieldCheck, Home, MessageCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
 import ProfileForm from '@/components/ProfileForm';
 import JobsList from '@/components/JobsList';
 import RentalListingForm from '@/components/RentalListingForm';
 import MyRentals from '@/components/MyRentals';
+import RentalConversations from '@/components/RentalConversations';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
