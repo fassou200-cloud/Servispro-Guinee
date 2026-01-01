@@ -183,11 +183,15 @@ const BrowseProviders = ({ isCustomerAuthenticated }) => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="All">Toutes les Catégories</SelectItem>
-                  <SelectItem value="Electrician">Électricien</SelectItem>
-                  <SelectItem value="Mechanic">Mécanicien</SelectItem>
-                  <SelectItem value="Plumber">Plombier</SelectItem>
-                  <SelectItem value="Logistics">Logistique</SelectItem>
-                  <SelectItem value="Other">Autres</SelectItem>
+                  <SelectItem value="Logisticien">Logisticien</SelectItem>
+                  <SelectItem value="Electromecanicien">Électromécanicien</SelectItem>
+                  <SelectItem value="Mecanicien">Mécanicien</SelectItem>
+                  <SelectItem value="Plombier">Plombier</SelectItem>
+                  <SelectItem value="Macon">Maçon</SelectItem>
+                  <SelectItem value="Menuisier">Menuisier</SelectItem>
+                  <SelectItem value="AgentImmobilier">Agent Immobilier</SelectItem>
+                  <SelectItem value="Soudeur">Soudeur</SelectItem>
+                  <SelectItem value="Autres">Autres Métiers</SelectItem>
                 </SelectContent>
               </Select>
             </div>
