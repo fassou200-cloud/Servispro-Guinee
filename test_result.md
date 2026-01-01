@@ -292,11 +292,14 @@ frontend:
     file: "/app/frontend/src/pages/BrowseRentals.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Just translated to French with GNF currency"
+      - working: true
+        agent: "testing"
+        comment: "✅ Browse rentals page working correctly. Found 4 rental listings displayed. Page loads properly with French translations and GNF currency formatting."
 
   - task: "Provider Profile Page (French)"
     implemented: true
