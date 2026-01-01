@@ -296,6 +296,181 @@ class ServisProAPITester:
             return True, response['id']
         return False, None
 
+    def test_create_short_term_rental(self):
+        """Test creating a short-term rental (Airbnb-style)"""
+        rental_data = {
+            "property_type": "Apartment",
+            "title": "Studio Moderne Centre-Ville",
+            "description": "Bel studio équipé pour séjours courts",
+            "location": "Kaloum, Conakry",
+            "rental_price": 500000,
+            "rental_type": "short_term",
+            "price_per_night": 150000,
+            "min_nights": 2,
+            "max_guests": 4,
+            "amenities": ["wifi", "climatisation", "cuisine"],
+            "is_available": True,
+            "available_from": "2025-01-15",
+            "available_to": "2025-03-15"
+        }
+        
+        success, response = self.run_test(
+            "Create Short Term Rental",
+            "POST",
+            "rentals",
+            200,
+            data=rental_data
+        )
+        
+        if success and 'id' in response:
+            # Verify all new fields are in response
+            expected_fields = ['rental_type', 'price_per_night', 'min_nights', 'max_guests', 'amenities', 'is_available', 'available_from', 'available_to']
+            missing_fields = [field for field in expected_fields if field not in response]
+            if missing_fields:
+                self.log_test("Create Short Term Rental", False, f"Missing fields in response: {missing_fields}")
+                return False, None
+            return True, response['id']
+        return False, None
+
+    def test_get_rentals_by_type(self):
+        """Test filtering rentals by rental_type"""
+        # Test short-term rentals filter
+        success_short, response_short = self.run_test(
+            "Get Short Term Rentals",
+            "GET",
+            "rentals?rental_type=short_term",
+            200
+        )
+        
+        if success_short and isinstance(response_short, list):
+            # Verify all returned rentals are short_term
+            for rental in response_short:
+                if rental.get('rental_type') != 'short_term':
+                    self.log_test("Get Short Term Rentals", False, f"Found non-short-term rental: {rental.get('rental_type')}")
+                    return False
+        
+        # Test long-term rentals filter
+        success_long, response_long = self.run_test(
+            "Get Long Term Rentals",
+            "GET",
+            "rentals?rental_type=long_term",
+            200
+        )
+        
+        if success_long and isinstance(response_long, list):
+            # Verify all returned rentals are long_term
+            for rental in response_long:
+                if rental.get('rental_type') != 'long_term':
+                    self.log_test("Get Long Term Rentals", False, f"Found non-long-term rental: {rental.get('rental_type')}")
+                    return False
+        
+        return success_short and success_long
+
+    def test_get_rentals_by_availability(self):
+        """Test filtering rentals by availability status"""
+        # Test available rentals filter
+        success_available, response_available = self.run_test(
+            "Get Available Rentals",
+            "GET",
+            "rentals?is_available=true",
+            200
+        )
+        
+        if success_available and isinstance(response_available, list):
+            # Verify all returned rentals are available
+            for rental in response_available:
+                if not rental.get('is_available'):
+                    self.log_test("Get Available Rentals", False, f"Found unavailable rental")
+                    return False
+        
+        # Test unavailable rentals filter
+        success_unavailable, response_unavailable = self.run_test(
+            "Get Unavailable Rentals",
+            "GET",
+            "rentals?is_available=false",
+            200
+        )
+        
+        if success_unavailable and isinstance(response_unavailable, list):
+            # Verify all returned rentals are unavailable
+            for rental in response_unavailable:
+                if rental.get('is_available'):
+                    self.log_test("Get Unavailable Rentals", False, f"Found available rental")
+                    return False
+        
+        return success_available and success_unavailable
+
+    def test_toggle_rental_availability(self, rental_id):
+        """Test toggling rental availability"""
+        if not rental_id:
+            self.log_test("Toggle Rental Availability", False, "No rental ID available")
+            return False
+            
+        # First toggle to false
+        success_false, response_false = self.run_test(
+            "Toggle Rental Availability to False",
+            "PUT",
+            f"rentals/{rental_id}/availability?is_available=false",
+            200
+        )
+        
+        if success_false and response_false.get('is_available') == False:
+            # Then toggle back to true
+            success_true, response_true = self.run_test(
+                "Toggle Rental Availability to True",
+                "PUT",
+                f"rentals/{rental_id}/availability?is_available=true",
+                200
+            )
+            
+            if success_true and response_true.get('is_available') == True:
+                return True
+            else:
+                self.log_test("Toggle Rental Availability", False, "Failed to toggle back to true")
+                return False
+        else:
+            self.log_test("Toggle Rental Availability", False, "Failed to toggle to false")
+            return False
+
+    def test_update_rental_listing(self, rental_id):
+        """Test updating a rental listing"""
+        if not rental_id:
+            self.log_test("Update Rental Listing", False, "No rental ID available")
+            return False
+            
+        update_data = {
+            "property_type": "Apartment",
+            "title": "Studio Moderne Centre-Ville - UPDATED",
+            "description": "Bel studio équipé pour séjours courts - UPDATED",
+            "location": "Kaloum, Conakry",
+            "rental_price": 500000,
+            "rental_type": "short_term",
+            "price_per_night": 175000,  # Updated price
+            "min_nights": 2,
+            "max_guests": 4,
+            "amenities": ["wifi", "climatisation", "cuisine", "parking"],  # Added amenity
+            "is_available": True,
+            "available_from": "2025-01-15",
+            "available_to": "2025-03-15"
+        }
+        
+        success, response = self.run_test(
+            "Update Rental Listing",
+            "PUT",
+            f"rentals/{rental_id}",
+            200,
+            data=update_data
+        )
+        
+        if success:
+            # Verify updated fields
+            if response.get('price_per_night') == 175000 and 'parking' in response.get('amenities', []):
+                return True
+            else:
+                self.log_test("Update Rental Listing", False, "Updated fields not reflected in response")
+                return False
+        return False
+
     def test_get_all_rentals(self):
         """Test getting all rental listings"""
         success, response = self.run_test(
