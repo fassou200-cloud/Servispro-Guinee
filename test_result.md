@@ -398,10 +398,7 @@ metadata:
   run_ui: true
 
 test_plan:
-  current_focus:
-    - "Agent Immobilier Button Change"
-    - "Online Status Toggle"
-    - "Disabled Service Request for Offline Providers"
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -545,3 +542,24 @@ agent_communication:
       Minor: One test expected 401 but got 403 for unauthorized access - not critical
       
       All admin delete functionality is working correctly and securely.
+  - agent: "testing"
+    message: |
+      🎯 NEW FEATURES TESTING COMPLETE - ALL WORKING ✅
+      
+      COMPREHENSIVE TEST RESULTS:
+      ✅ AGENT IMMOBILIER BUTTON: Found multiple Agent Immobilier providers showing 'Voir les Locations' button
+      ✅ BUTTON NAVIGATION: 'Voir les Locations' button correctly navigates to /rentals page
+      ✅ ONLINE STATUS TOGGLE: Toggle found in dashboard header, working correctly with success toast
+      ✅ OFFLINE PROVIDERS: Correctly show 'Prestataire Indisponible' disabled button
+      ✅ ONLINE PROVIDERS: Show enabled 'Voir le Profil & Demander un Service' button
+      ✅ PROVIDER STATUS DISPLAY: Found 8 online providers with 'Disponible' badge
+      ✅ LOGIN FUNCTIONALITY: Provider login working with phone: 224999888775
+      
+      FEATURE VERIFICATION:
+      ✅ Agent Immobilier providers display 'Voir les Locations' instead of 'Demander un Service'
+      ✅ Offline providers have disabled service request buttons
+      ✅ Online status toggle in dashboard header with proper labels
+      ✅ Status changes reflected with toast notifications
+      ✅ Browse page correctly shows provider availability status
+      
+      All new features are implemented and working correctly. The ServisPro platform new functionality is fully operational.
