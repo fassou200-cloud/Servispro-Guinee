@@ -105,6 +105,42 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
     }
   };
 
+  const handleDeleteProvider = async (providerId) => {
+    try {
+      await axios.delete(`${API}/admin/providers/${providerId}`);
+      toast.success('Prestataire supprimé avec succès');
+      fetchData();
+      setSelectedProvider(null);
+      setDeleteConfirm({ show: false, type: null, id: null, name: '' });
+    } catch (error) {
+      toast.error('Erreur lors de la suppression');
+    }
+  };
+
+  const handleDeleteCustomer = async (customerId) => {
+    try {
+      await axios.delete(`${API}/admin/customers/${customerId}`);
+      toast.success('Client supprimé avec succès');
+      fetchData();
+      setSelectedCustomer(null);
+      setDeleteConfirm({ show: false, type: null, id: null, name: '' });
+    } catch (error) {
+      toast.error('Erreur lors de la suppression');
+    }
+  };
+
+  const confirmDelete = (type, id, name) => {
+    setDeleteConfirm({ show: true, type, id, name });
+  };
+
+  const executeDelete = () => {
+    if (deleteConfirm.type === 'provider') {
+      handleDeleteProvider(deleteConfirm.id);
+    } else if (deleteConfirm.type === 'customer') {
+      handleDeleteCustomer(deleteConfirm.id);
+    }
+  };
+
   const getStatusBadge = (status) => {
     const styles = {
       'pending': 'bg-orange-100 text-orange-700 border-orange-200',
