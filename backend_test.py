@@ -1198,6 +1198,21 @@ class ServisProAPITester:
             # Test admin statistics
             self.test_admin_get_stats()
             
+            # ==================== NEW ADMIN RENTAL & AGENT IMMOBILIER TESTS ====================
+            print("\n🏠 Testing New Admin Rental & Agent Immobilier Management...")
+            
+            # Test updated admin stats with rentals object and agent_immobilier count
+            self.test_admin_get_updated_stats()
+            
+            # Test admin getting all rentals
+            self.test_admin_get_all_rentals()
+            
+            # Test admin getting all agents immobilier with rental_count
+            self.test_admin_get_agents_immobilier()
+            
+            # Test admin deleting a rental
+            self.test_admin_delete_rental()
+            
             # ==================== ADMIN DELETE FUNCTIONALITY TESTS ====================
             print("\n🗑️ Testing Admin Delete Functionality...")
             
