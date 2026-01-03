@@ -738,6 +738,40 @@ async def get_provider_reviews(provider_id: str):
     reviews = await db.reviews.find({'service_provider_id': provider_id}, {'_id': 0}).sort('created_at', -1).to_list(100)
     return [Review(**r) for r in reviews]
 
+@api_router.get("/reviews/{provider_id}/can-review")
+async def can_review_provider(provider_id: str, customer_id: str = None):
+    """Check if a customer can review a specific provider"""
+    # A customer can only review if they have a COMPLETED service with this provider
+    if not customer_id:
+        return {"can_review": False, "reason": "Vous devez être connecté pour laisser un avis"}
+    
+    # Check for completed jobs between this customer and provider
+    completed_job = await db.job_offers.find_one({
+        'service_provider_id': provider_id,
+        'customer_id': customer_id,
+        'status': 'Completed'
+    })
+    
+    if completed_job:
+        return {"can_review": True, "reason": "Vous pouvez laisser un avis pour ce prestataire"}
+    
+    # Check if there's a pending or in-progress job
+    pending_job = await db.job_offers.find_one({
+        'service_provider_id': provider_id,
+        'customer_id': customer_id,
+        'status': {'$in': ['Pending', 'Accepted', 'ProviderCompleted']}
+    })
+    
+    if pending_job:
+        status_messages = {
+            'Pending': "Votre demande de service est en attente. Vous pourrez laisser un avis une fois le service terminé.",
+            'Accepted': "Le service est en cours. Vous pourrez laisser un avis une fois terminé et confirmé.",
+            'ProviderCompleted': "Le prestataire a marqué le service comme terminé. Veuillez confirmer la fin du service avant de laisser un avis."
+        }
+        return {"can_review": False, "reason": status_messages.get(pending_job['status'], "Service non terminé")}
+    
+    return {"can_review": False, "reason": "Vous devez d'abord utiliser les services de ce prestataire pour pouvoir laisser un avis"}
+
 @api_router.get("/reviews/{provider_id}/stats")
 async def get_provider_rating_stats(provider_id: str):
     reviews = await db.reviews.find({'service_provider_id': provider_id}, {'_id': 0, 'rating': 1}).to_list(1000)
