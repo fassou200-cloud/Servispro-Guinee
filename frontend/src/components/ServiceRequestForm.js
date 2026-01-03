@@ -52,6 +52,7 @@ const ServiceRequestForm = ({ providerId, providerName, onSuccess }) => {
       const payload = {
         service_provider_id: providerId,
         client_name: formData.client_name,
+        customer_id: customer?.id || null,  // Include customer ID for review validation
         service_type: formData.service_type,
         description: `${formData.description}\n\nContact: ${formData.phone_number}`,
         location: formData.location,
