@@ -3,43 +3,76 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Home, LogOut, Search, Building, User, CheckCircle, Clock, Briefcase } from 'lucide-react';
+import { 
+  Home, LogOut, Search, Building, User, CheckCircle, Clock, Briefcase,
+  ArrowRight, MapPin, Calendar, Star, Bell, Settings, ChevronRight,
+  Phone, Shield, Sparkles, TrendingUp
+} from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-// Traduction des professions
 const translateProfession = (profession) => {
   const translations = {
     'Electrician': 'Électricien',
     'Mechanic': 'Mécanicien',
     'Plumber': 'Plombier',
     'Logistics': 'Logistique',
+    'Logisticien': 'Logisticien',
+    'Electromecanicien': 'Électromécanicien',
+    'Mecanicien': 'Mécanicien',
+    'Macon': 'Maçon',
+    'Menuisier': 'Menuisier',
+    'AgentImmobilier': 'Agent Immobilier',
+    'Soudeur': 'Soudeur',
     'Other': 'Autres'
   };
   return translations[profession] || profession;
 };
 
+const translateStatus = (status) => {
+  const translations = {
+    'Pending': 'En attente',
+    'Accepted': 'Accepté',
+    'Rejected': 'Refusé',
+    'ProviderCompleted': 'En attente de confirmation',
+    'Completed': 'Terminé'
+  };
+  return translations[status] || status;
+};
+
+const getStatusColor = (status) => {
+  const colors = {
+    'Pending': 'bg-orange-100 text-orange-700 border-orange-200',
+    'Accepted': 'bg-blue-100 text-blue-700 border-blue-200',
+    'Rejected': 'bg-gray-100 text-gray-600 border-gray-200',
+    'ProviderCompleted': 'bg-purple-100 text-purple-700 border-purple-200',
+    'Completed': 'bg-green-100 text-green-700 border-green-200'
+  };
+  return colors[status] || 'bg-gray-100 text-gray-600';
+};
+
 const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
   const navigate = useNavigate();
   const [customer, setCustomer] = useState(null);
-  const [pendingJobs, setPendingJobs] = useState([]);
+  const [jobs, setJobs] = useState([]);
   const [loadingJobs, setLoadingJobs] = useState(true);
+  const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
     const storedCustomer = localStorage.getItem('customer');
     if (storedCustomer) {
       setCustomer(JSON.parse(storedCustomer));
     }
-    fetchPendingJobs();
+    fetchJobs();
   }, []);
 
-  const fetchPendingJobs = async () => {
+  const fetchJobs = async () => {
     try {
       const response = await axios.get(`${API}/customer/jobs`);
-      setPendingJobs(response.data);
+      setJobs(response.data);
     } catch (error) {
       console.error('Failed to fetch jobs:', error);
     } finally {
@@ -51,7 +84,7 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
     try {
       await axios.put(`${API}/jobs/${jobId}/customer-confirm`);
       toast.success('Service confirmé comme terminé ! Merci.');
-      fetchPendingJobs();
+      fetchJobs();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Erreur lors de la confirmation');
     }
@@ -65,196 +98,360 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
     navigate('/');
   };
 
+  const pendingConfirmation = jobs.filter(j => j.status === 'ProviderCompleted');
+  const activeJobs = jobs.filter(j => j.status === 'Accepted' || j.status === 'Pending');
+  const completedJobs = jobs.filter(j => j.status === 'Completed');
+
   if (!customer) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg">Chargement...</div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-muted">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-card border-b border-border">
+      <header className="sticky top-0 z-50 bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Button
                 variant="ghost"
-                data-testid="home-button"
+                size="icon"
                 onClick={() => navigate('/')}
-                className="gap-2"
+                className="rounded-xl"
               >
-                <Home className="h-4 w-4" />
-                Accueil
+                <Home className="h-5 w-5" />
               </Button>
-              <h1 className="text-2xl font-heading font-bold text-foreground">
-                ServisPro Guinée
-              </h1>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white font-bold shadow-lg shadow-green-500/25">
+                  S
+                </div>
+                <div>
+                  <h1 className="text-lg font-heading font-bold text-gray-900">
+                    ServisPro
+                  </h1>
+                  <p className="text-xs text-gray-500">Espace Client</p>
+                </div>
+              </div>
             </div>
-            <Button
-              variant="ghost"
-              data-testid="logout-button"
-              onClick={handleLogout}
-              className="gap-2"
-            >
-              <LogOut className="h-4 w-4" />
-              Déconnexion
-            </Button>
+            
+            <div className="flex items-center gap-3">
+              {pendingConfirmation.length > 0 && (
+                <div className="relative">
+                  <Bell className="h-5 w-5 text-gray-600" />
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                    {pendingConfirmation.length}
+                  </span>
+                </div>
+              )}
+              <Button
+                variant="ghost"
+                onClick={handleLogout}
+                className="gap-2 text-gray-600 hover:text-gray-900"
+              >
+                <LogOut className="h-4 w-4" />
+                <span className="hidden sm:inline">Déconnexion</span>
+              </Button>
+            </div>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
-        {/* Welcome Card */}
-        <Card className="p-8 mb-8 bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10">
-          <div className="flex items-center gap-6">
-            <Avatar className="h-24 w-24 ring-4 ring-primary/20">
-              <AvatarFallback className="text-3xl font-heading bg-primary text-primary-foreground">
+        {/* Welcome Section */}
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-green-500 via-emerald-500 to-teal-600 p-8 md:p-12 mb-8">
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"none\" fill-rule=\"evenodd\"%3E%3Cg fill=\"%23ffffff\" fill-opacity=\"0.1\"%3E%3Cpath d=\"M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-50" />
+          
+          <div className="relative flex flex-col md:flex-row items-center gap-6">
+            <Avatar className="h-24 w-24 ring-4 ring-white/30 shadow-2xl">
+              <AvatarFallback className="text-4xl font-bold bg-white text-green-600">
                 {customer.first_name[0]}{customer.last_name[0]}
               </AvatarFallback>
             </Avatar>
-            <div>
-              <p className="text-lg text-muted-foreground mb-1">Bienvenue sur ServisPro</p>
-              <h2 className="text-4xl font-heading font-bold text-foreground mb-2">
+            
+            <div className="text-center md:text-left">
+              <p className="text-green-100 text-sm mb-1">👋 Bienvenue sur ServisPro</p>
+              <h2 className="text-3xl md:text-4xl font-heading font-bold text-white mb-2">
                 {customer.first_name} {customer.last_name}
               </h2>
-              <p className="text-muted-foreground flex items-center gap-2">
-                <User className="h-4 w-4" />
-                Client ServisPro
-              </p>
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
+                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 text-white text-sm">
+                  <Phone className="h-4 w-4" />
+                  {customer.phone_number}
+                </span>
+                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 text-white text-sm">
+                  <Shield className="h-4 w-4" />
+                  Client Vérifié
+                </span>
+              </div>
             </div>
           </div>
-        </Card>
+        </div>
 
-        {/* Quick Actions */}
-        <h3 className="text-2xl font-heading font-bold text-foreground mb-6">
-          Que souhaitez-vous faire ?
-        </h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Browse Providers */}
-          <Card 
-            className="p-8 hover:border-primary/50 transition-colors cursor-pointer"
-            onClick={() => navigate('/browse')}
-          >
-            <div className="flex items-start gap-4">
-              <div className="p-4 rounded-xl bg-primary/10">
-                <Search className="h-8 w-8 text-primary" />
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <Card className="p-6 rounded-2xl border-0 shadow-lg bg-white">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center">
+                <Clock className="h-6 w-6 text-orange-600" />
               </div>
               <div>
-                <h4 className="text-xl font-heading font-bold text-foreground mb-2">
-                  Trouver un Prestataire
-                </h4>
-                <p className="text-muted-foreground mb-4">
-                  Parcourez notre liste d'électriciens, mécaniciens, plombiers et autres professionnels vérifiés en Guinée.
-                </p>
-                <Button className="gap-2">
-                  <Search className="h-4 w-4" />
-                  Parcourir les Prestataires
-                </Button>
+                <p className="text-2xl font-bold text-gray-900">{activeJobs.length}</p>
+                <p className="text-sm text-gray-500">En cours</p>
               </div>
             </div>
           </Card>
-
-          {/* Browse Rentals */}
-          <Card 
-            className="p-8 hover:border-primary/50 transition-colors cursor-pointer"
-            onClick={() => navigate('/rentals')}
-          >
-            <div className="flex items-start gap-4">
-              <div className="p-4 rounded-xl bg-secondary/10">
-                <Building className="h-8 w-8 text-secondary" />
+          
+          <Card className="p-6 rounded-2xl border-0 shadow-lg bg-white">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center">
+                <Bell className="h-6 w-6 text-purple-600" />
               </div>
               <div>
-                <h4 className="text-xl font-heading font-bold text-foreground mb-2">
-                  Voir les Locations
-                </h4>
-                <p className="text-muted-foreground mb-4">
-                  Découvrez les appartements et maisons disponibles à louer à Conakry et partout en Guinée.
-                </p>
-                <Button variant="outline" className="gap-2 border-secondary text-secondary hover:bg-secondary hover:text-white">
-                  <Building className="h-4 w-4" />
-                  Voir les Locations
-                </Button>
+                <p className="text-2xl font-bold text-gray-900">{pendingConfirmation.length}</p>
+                <p className="text-sm text-gray-500">À confirmer</p>
+              </div>
+            </div>
+          </Card>
+          
+          <Card className="p-6 rounded-2xl border-0 shadow-lg bg-white">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center">
+                <CheckCircle className="h-6 w-6 text-green-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-gray-900">{completedJobs.length}</p>
+                <p className="text-sm text-gray-500">Terminés</p>
+              </div>
+            </div>
+          </Card>
+          
+          <Card className="p-6 rounded-2xl border-0 shadow-lg bg-white">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center">
+                <TrendingUp className="h-6 w-6 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-gray-900">{jobs.length}</p>
+                <p className="text-sm text-gray-500">Total</p>
               </div>
             </div>
           </Card>
         </div>
 
-        {/* Pending Jobs Section */}
-        {pendingJobs.length > 0 && (
-          <div className="mt-8">
-            <h3 className="text-2xl font-heading font-bold text-foreground mb-6 flex items-center gap-2">
-              <Briefcase className="h-6 w-6" />
-              Mes Demandes de Service ({pendingJobs.length})
-            </h3>
+        {/* Quick Actions */}
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
+          <Card 
+            className="group p-6 rounded-2xl border-0 shadow-lg bg-white hover:shadow-2xl transition-all cursor-pointer overflow-hidden relative"
+            onClick={() => navigate('/browse')}
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-green-100 to-emerald-100 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform" />
+            <div className="relative">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center mb-4 shadow-lg shadow-green-500/25 group-hover:scale-110 transition-transform">
+                <Search className="h-7 w-7 text-white" />
+              </div>
+              <h3 className="text-xl font-heading font-bold text-gray-900 mb-2">
+                Trouver un Prestataire
+              </h3>
+              <p className="text-gray-600 mb-4">
+                Électriciens, plombiers, mécaniciens et plus encore. Des professionnels vérifiés près de chez vous.
+              </p>
+              <div className="flex items-center gap-2 text-green-600 font-medium group-hover:gap-3 transition-all">
+                Parcourir <ChevronRight className="h-5 w-5" />
+              </div>
+            </div>
+          </Card>
+
+          <Card 
+            className="group p-6 rounded-2xl border-0 shadow-lg bg-white hover:shadow-2xl transition-all cursor-pointer overflow-hidden relative"
+            onClick={() => navigate('/rentals')}
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-100 to-violet-100 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform" />
+            <div className="relative">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center mb-4 shadow-lg shadow-purple-500/25 group-hover:scale-110 transition-transform">
+                <Building className="h-7 w-7 text-white" />
+              </div>
+              <h3 className="text-xl font-heading font-bold text-gray-900 mb-2">
+                Locations Immobilières
+              </h3>
+              <p className="text-gray-600 mb-4">
+                Appartements et maisons disponibles à Conakry et partout en Guinée. Courte et longue durée.
+              </p>
+              <div className="flex items-center gap-2 text-purple-600 font-medium group-hover:gap-3 transition-all">
+                Voir les locations <ChevronRight className="h-5 w-5" />
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* Pending Confirmations */}
+        {pendingConfirmation.length > 0 && (
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
+                <Bell className="h-5 w-5 text-purple-600" />
+              </div>
+              <div>
+                <h3 className="text-xl font-heading font-bold text-gray-900">
+                  Action Requise
+                </h3>
+                <p className="text-sm text-gray-500">Services en attente de votre confirmation</p>
+              </div>
+            </div>
             
             <div className="space-y-4">
-              {pendingJobs.map((job) => (
-                <Card key={job.id} className="p-6">
-                  <div className="flex items-start justify-between mb-3">
+              {pendingConfirmation.map((job) => (
+                <Card key={job.id} className="p-6 rounded-2xl border-2 border-purple-200 bg-purple-50/50 shadow-lg">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
                     <div>
-                      <h4 className="text-lg font-heading font-bold text-foreground">
-                        {job.service_type}
-                      </h4>
-                      <p className="text-sm text-muted-foreground">
-                        Prestataire: {job.provider_name} • {translateProfession(job.provider_profession)}
+                      <div className="flex items-center gap-3 mb-2">
+                        <h4 className="text-lg font-bold text-gray-900">{job.service_type}</h4>
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(job.status)}`}>
+                          {translateStatus(job.status)}
+                        </span>
+                      </div>
+                      <p className="text-gray-600 text-sm">
+                        Prestataire: <strong>{job.provider_name}</strong> • {translateProfession(job.provider_profession)}
                       </p>
                     </div>
-                    {job.status === 'ProviderCompleted' ? (
-                      <span className="inline-flex items-center gap-2 px-3 py-1 rounded-md text-sm font-medium bg-purple-100 text-purple-700 border border-purple-200">
-                        <Clock className="h-4 w-4" />
-                        En attente de votre confirmation
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-2 px-3 py-1 rounded-md text-sm font-medium bg-blue-100 text-blue-700 border border-blue-200">
-                        En cours
-                      </span>
-                    )}
                   </div>
                   
-                  <p className="text-muted-foreground text-sm mb-4">{job.description}</p>
+                  <p className="text-gray-700 mb-4">{job.description}</p>
                   
-                  {job.status === 'ProviderCompleted' && (
-                    <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-4">
-                      <p className="text-purple-800 font-medium mb-3">
-                        Le prestataire a marqué ce service comme terminé. Confirmez-vous que le travail a bien été effectué ?
-                      </p>
-                      <Button
-                        onClick={() => handleConfirmComplete(job.id)}
-                        className="gap-2 bg-green-600 hover:bg-green-700"
-                      >
-                        <CheckCircle className="h-4 w-4" />
-                        Oui, Confirmer le Service Terminé
-                      </Button>
+                  <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+                    <div className="flex items-center gap-4 text-sm text-gray-500">
+                      {job.location && (
+                        <span className="flex items-center gap-1">
+                          <MapPin className="h-4 w-4" />
+                          {job.location}
+                        </span>
+                      )}
+                      {job.scheduled_date && (
+                        <span className="flex items-center gap-1">
+                          <Calendar className="h-4 w-4" />
+                          {new Date(job.scheduled_date).toLocaleDateString('fr-FR')}
+                        </span>
+                      )}
                     </div>
-                  )}
+                    
+                    <Button
+                      onClick={() => handleConfirmComplete(job.id)}
+                      className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg shadow-green-500/25 rounded-xl"
+                    >
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Confirmer le Service Terminé
+                    </Button>
+                  </div>
                 </Card>
               ))}
             </div>
           </div>
         )}
 
-        {/* Info Card */}
-        <Card className="p-6 mt-8 bg-blue-50 border-blue-200">
-          <div className="flex items-start gap-4">
-            <div className="p-2 rounded-lg bg-blue-100">
-              <User className="h-5 w-5 text-blue-600" />
+        {/* Active Jobs */}
+        {activeJobs.length > 0 && (
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+                <Briefcase className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="text-xl font-heading font-bold text-gray-900">
+                  Services en Cours
+                </h3>
+                <p className="text-sm text-gray-500">{activeJobs.length} service(s) actif(s)</p>
+              </div>
             </div>
-            <div>
-              <h4 className="font-heading font-bold text-blue-900 mb-1">
-                Votre Espace Client
-              </h4>
-              <p className="text-sm text-blue-700">
-                En tant que client connecté, vous pouvez demander des services auprès de nos prestataires vérifiés. 
-                Vos informations sont pré-remplies pour faciliter vos demandes.
-              </p>
+            
+            <div className="space-y-4">
+              {activeJobs.map((job) => (
+                <Card key={job.id} className="p-6 rounded-2xl border-0 shadow-lg bg-white">
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <div className="flex items-center gap-3 mb-1">
+                        <h4 className="text-lg font-bold text-gray-900">{job.service_type}</h4>
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(job.status)}`}>
+                          {translateStatus(job.status)}
+                        </span>
+                      </div>
+                      <p className="text-gray-600 text-sm">
+                        Prestataire: <strong>{job.provider_name}</strong>
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-gray-600 text-sm mb-3">{job.description}</p>
+                  <div className="flex items-center gap-4 text-sm text-gray-500">
+                    {job.location && (
+                      <span className="flex items-center gap-1">
+                        <MapPin className="h-4 w-4" />
+                        {job.location}
+                      </span>
+                    )}
+                  </div>
+                </Card>
+              ))}
             </div>
           </div>
-        </Card>
+        )}
+
+        {/* Completed Jobs */}
+        {completedJobs.length > 0 && (
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
+                <CheckCircle className="h-5 w-5 text-green-600" />
+              </div>
+              <div>
+                <h3 className="text-xl font-heading font-bold text-gray-900">
+                  Services Terminés
+                </h3>
+                <p className="text-sm text-gray-500">{completedJobs.length} service(s) complété(s)</p>
+              </div>
+            </div>
+            
+            <div className="grid md:grid-cols-2 gap-4">
+              {completedJobs.slice(0, 4).map((job) => (
+                <Card key={job.id} className="p-5 rounded-2xl border-0 shadow bg-white">
+                  <div className="flex items-center gap-3 mb-2">
+                    <CheckCircle className="h-5 w-5 text-green-500" />
+                    <h4 className="font-bold text-gray-900">{job.service_type}</h4>
+                  </div>
+                  <p className="text-gray-600 text-sm mb-2">
+                    {job.provider_name}
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    {new Date(job.created_at).toLocaleDateString('fr-FR')}
+                  </p>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {jobs.length === 0 && !loadingJobs && (
+          <Card className="p-12 rounded-2xl border-0 shadow-lg bg-white text-center">
+            <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-6">
+              <Briefcase className="h-10 w-10 text-gray-400" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
+              Aucune demande de service
+            </h3>
+            <p className="text-gray-600 mb-6 max-w-md mx-auto">
+              Vous n'avez pas encore fait de demande de service. Parcourez nos prestataires pour trouver le professionnel idéal.
+            </p>
+            <Button
+              onClick={() => navigate('/browse')}
+              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg shadow-green-500/25 rounded-xl"
+            >
+              <Search className="h-4 w-4 mr-2" />
+              Trouver un Prestataire
+            </Button>
+          </Card>
+        )}
       </div>
     </div>
   );
