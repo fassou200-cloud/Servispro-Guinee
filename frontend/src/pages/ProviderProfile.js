@@ -71,15 +71,29 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
   const [refreshReviews, setRefreshReviews] = useState(0);
   const [customer, setCustomer] = useState(null);
   const [reviewStats, setReviewStats] = useState(null);
+  const [canReview, setCanReview] = useState({ can_review: false, reason: '' });
 
   useEffect(() => {
     fetchProvider();
     fetchReviewStats();
     const storedCustomer = localStorage.getItem('customer');
     if (storedCustomer) {
-      setCustomer(JSON.parse(storedCustomer));
+      const customerData = JSON.parse(storedCustomer);
+      setCustomer(customerData);
+      // Check if customer can review this provider
+      checkCanReview(customerData.id);
     }
   }, [providerId]);
+
+  const checkCanReview = async (customerId) => {
+    try {
+      const response = await axios.get(`${API}/reviews/${providerId}/can-review?customer_id=${customerId}`);
+      setCanReview(response.data);
+    } catch (error) {
+      console.error('Failed to check review eligibility');
+      setCanReview({ can_review: false, reason: 'Erreur lors de la vérification' });
+    }
+  };
 
   const fetchProvider = async () => {
     try {
