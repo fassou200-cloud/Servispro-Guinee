@@ -705,16 +705,17 @@ async def create_review(review_data: ReviewCreate):
     if not provider:
         raise HTTPException(status_code=404, detail="Service provider not found")
     
-    # Check if customer has received service from this provider (accepted or completed job)
+    # Check if customer has a COMPLETED service from this provider
+    # Only allow reviews when service is fully completed (not just accepted)
     customer_job = await db.job_offers.find_one({
         'service_provider_id': review_data.service_provider_id,
-        'status': {'$in': ['Accepted', 'Completed']}
+        'status': 'Completed'  # Only completed services can be reviewed
     })
     
     if not customer_job:
         raise HTTPException(
             status_code=403, 
-            detail="Vous ne pouvez évaluer que les prestataires qui vous ont fourni un service"
+            detail="Vous ne pouvez évaluer un prestataire que si le service a été complété. Le service doit être terminé et confirmé avant de laisser un avis."
         )
     
     review_id = str(uuid.uuid4())
