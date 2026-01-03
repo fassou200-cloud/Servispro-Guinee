@@ -5,7 +5,8 @@ import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   Shield, LogOut, Users, Briefcase, CheckCircle, XCircle, 
-  Clock, Eye, Home, Building, UserCheck, UserX, AlertCircle, Trash2, UserCircle
+  Clock, Eye, Home, Building, UserCheck, UserX, AlertCircle, Trash2, UserCircle,
+  MapPin, Calendar, Moon, DollarSign, Star, MessageCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
@@ -20,6 +21,14 @@ const translateProfession = (profession) => {
     'Mechanic': 'Mécanicien',
     'Plumber': 'Plombier',
     'Logistics': 'Logistique',
+    'AgentImmobilier': 'Agent Immobilier',
+    'Logisticien': 'Logisticien',
+    'Electromecanicien': 'Électromécanicien',
+    'Mecanicien': 'Mécanicien',
+    'Macon': 'Maçon',
+    'Menuisier': 'Menuisier',
+    'Soudeur': 'Soudeur',
+    'Autres': 'Autres',
     'Other': 'Autres'
   };
   return translations[profession] || profession;
@@ -46,10 +55,15 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
   const [providers, setProviders] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [jobs, setJobs] = useState([]);
+  const [rentals, setRentals] = useState([]);
+  const [agentsImmobilier, setAgentsImmobilier] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedProvider, setSelectedProvider] = useState(null);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [selectedRental, setSelectedRental] = useState(null);
+  const [selectedAgent, setSelectedAgent] = useState(null);
+  const [rentalFilter, setRentalFilter] = useState('all'); // all, long_term, short_term
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, type: null, id: null, name: '' });
 
   useEffect(() => {
@@ -58,16 +72,20 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
 
   const fetchData = async () => {
     try {
-      const [providersRes, customersRes, jobsRes, statsRes] = await Promise.all([
+      const [providersRes, customersRes, jobsRes, statsRes, rentalsRes, agentsRes] = await Promise.all([
         axios.get(`${API}/admin/providers`),
         axios.get(`${API}/admin/customers`),
         axios.get(`${API}/admin/jobs`),
-        axios.get(`${API}/admin/stats`)
+        axios.get(`${API}/admin/stats`),
+        axios.get(`${API}/admin/rentals`),
+        axios.get(`${API}/admin/agents-immobilier`)
       ]);
       setProviders(providersRes.data);
       setCustomers(customersRes.data);
       setJobs(jobsRes.data);
       setStats(statsRes.data);
+      setRentals(rentalsRes.data);
+      setAgentsImmobilier(agentsRes.data);
     } catch (error) {
       toast.error('Erreur lors du chargement des données');
     } finally {
@@ -111,6 +129,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
       toast.success('Prestataire supprimé avec succès');
       fetchData();
       setSelectedProvider(null);
+      setSelectedAgent(null);
       setDeleteConfirm({ show: false, type: null, id: null, name: '' });
     } catch (error) {
       toast.error('Erreur lors de la suppression');
@@ -129,6 +148,18 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
     }
   };
 
+  const handleDeleteRental = async (rentalId) => {
+    try {
+      await axios.delete(`${API}/admin/rentals/${rentalId}`);
+      toast.success('Location supprimée avec succès');
+      fetchData();
+      setSelectedRental(null);
+      setDeleteConfirm({ show: false, type: null, id: null, name: '' });
+    } catch (error) {
+      toast.error('Erreur lors de la suppression');
+    }
+  };
+
   const confirmDelete = (type, id, name) => {
     setDeleteConfirm({ show: true, type, id, name });
   };
@@ -138,6 +169,8 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
       handleDeleteProvider(deleteConfirm.id);
     } else if (deleteConfirm.type === 'customer') {
       handleDeleteCustomer(deleteConfirm.id);
+    } else if (deleteConfirm.type === 'rental') {
+      handleDeleteRental(deleteConfirm.id);
     }
   };
 
@@ -154,6 +187,11 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
     };
     return styles[status] || 'bg-slate-100 text-slate-600 border-slate-200';
   };
+
+  const filteredRentals = rentals.filter(r => {
+    if (rentalFilter === 'all') return true;
+    return r.rental_type === rentalFilter;
+  });
 
   if (loading) {
     return (
@@ -205,7 +243,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
         {/* Stats Cards */}
         {stats && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
             <Card className="p-4 bg-slate-800 border-slate-700">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-blue-600/20">
@@ -245,8 +283,19 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                   <Building className="h-5 w-5 text-purple-400" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-white">{stats.rentals}</p>
+                  <p className="text-2xl font-bold text-white">{stats.rentals?.total || stats.rentals}</p>
                   <p className="text-xs text-slate-400">Locations</p>
+                </div>
+              </div>
+            </Card>
+            <Card className="p-4 bg-slate-800 border-slate-700">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-amber-600/20">
+                  <Home className="h-5 w-5 text-amber-400" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-white">{stats.providers.agent_immobilier || 0}</p>
+                  <p className="text-xs text-slate-400">Agents Immo.</p>
                 </div>
               </div>
             </Card>
@@ -254,7 +303,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
         )}
 
         {/* Tab Navigation */}
-        <div className="flex gap-2 mb-6">
+        <div className="flex flex-wrap gap-2 mb-6">
           <Button
             variant={activeTab === 'providers' ? 'default' : 'outline'}
             onClick={() => setActiveTab('providers')}
@@ -279,6 +328,22 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
             <Briefcase className="h-4 w-4 mr-2" />
             Demandes de Service ({jobs.length})
           </Button>
+          <Button
+            variant={activeTab === 'rentals' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('rentals')}
+            className={activeTab === 'rentals' ? 'bg-purple-600 hover:bg-purple-700' : 'border-slate-600 text-slate-300'}
+          >
+            <Building className="h-4 w-4 mr-2" />
+            Locations ({rentals.length})
+          </Button>
+          <Button
+            variant={activeTab === 'agents' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('agents')}
+            className={activeTab === 'agents' ? 'bg-amber-600 hover:bg-amber-700' : 'border-slate-600 text-slate-300'}
+          >
+            <Home className="h-4 w-4 mr-2" />
+            Agents Immobilier ({agentsImmobilier.length})
+          </Button>
         </div>
 
         {/* Delete Confirmation Modal */}
@@ -291,7 +356,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                 </div>
                 <h3 className="text-lg font-bold text-white mb-2">Confirmer la suppression</h3>
                 <p className="text-slate-400 mb-6">
-                  Êtes-vous sûr de vouloir supprimer {deleteConfirm.type === 'provider' ? 'le prestataire' : 'le client'} <strong className="text-white">{deleteConfirm.name}</strong> ? Cette action est irréversible.
+                  Êtes-vous sûr de vouloir supprimer <strong className="text-white">{deleteConfirm.name}</strong> ? Cette action est irréversible.
                 </p>
                 <div className="flex gap-3">
                   <Button
@@ -409,18 +474,6 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                     )}
                   </div>
 
-                  {/* Profile Picture */}
-                  {selectedProvider.profile_picture && (
-                    <div className="mb-6">
-                      <h4 className="text-sm font-bold text-slate-300 uppercase mb-2">Photo de Profil</h4>
-                      <img 
-                        src={`${BACKEND_URL}${selectedProvider.profile_picture}`}
-                        alt="Photo de profil"
-                        className="w-32 h-32 rounded-lg object-cover border border-slate-600"
-                      />
-                    </div>
-                  )}
-
                   {/* Actions */}
                   {(selectedProvider.verification_status === 'pending' || !selectedProvider.verification_status) && (
                     <div className="flex gap-3 pt-4 border-t border-slate-700">
@@ -456,7 +509,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                     </div>
                   )}
 
-                  {/* Delete Button - Always visible */}
+                  {/* Delete Button */}
                   <div className="mt-4 pt-4 border-t border-slate-700">
                     <Button
                       onClick={() => confirmDelete('provider', selectedProvider.id, `${selectedProvider.first_name} ${selectedProvider.last_name}`)}
@@ -481,11 +534,8 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
         {/* Customers Tab */}
         {activeTab === 'customers' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Customers List */}
             <div className="space-y-4">
-              <h2 className="text-lg font-heading font-bold text-white mb-4">
-                Liste des Clients
-              </h2>
+              <h2 className="text-lg font-heading font-bold text-white mb-4">Liste des Clients</h2>
               {customers.length === 0 ? (
                 <Card className="p-8 bg-slate-800 border-slate-700 text-center">
                   <p className="text-slate-400">Aucun client inscrit</p>
@@ -506,25 +556,16 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1">
-                        <h3 className="font-bold text-white">
-                          {customer.first_name} {customer.last_name}
-                        </h3>
+                        <h3 className="font-bold text-white">{customer.first_name} {customer.last_name}</h3>
                         <p className="text-sm text-slate-400">{customer.phone_number}</p>
-                        <p className="text-xs text-slate-500">
-                          Inscrit le {new Date(customer.created_at).toLocaleDateString('fr-FR')}
-                        </p>
                       </div>
                     </div>
                   </Card>
                 ))
               )}
             </div>
-
-            {/* Customer Detail */}
             <div>
-              <h2 className="text-lg font-heading font-bold text-white mb-4">
-                Détails du Client
-              </h2>
+              <h2 className="text-lg font-heading font-bold text-white mb-4">Détails du Client</h2>
               {selectedCustomer ? (
                 <Card className="p-6 bg-slate-800 border-slate-700">
                   <div className="flex items-center gap-4 mb-6">
@@ -534,38 +575,24 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <h3 className="text-xl font-bold text-white">
-                        {selectedCustomer.first_name} {selectedCustomer.last_name}
-                      </h3>
+                      <h3 className="text-xl font-bold text-white">{selectedCustomer.first_name} {selectedCustomer.last_name}</h3>
                       <p className="text-slate-400">{selectedCustomer.phone_number}</p>
                     </div>
                   </div>
-
-                  {/* Info */}
                   <div className="mb-6 space-y-3">
                     <div className="flex justify-between items-center p-3 bg-slate-700/50 rounded-lg">
                       <span className="text-slate-400">Date d'inscription</span>
-                      <span className="text-white font-medium">
-                        {new Date(selectedCustomer.created_at).toLocaleDateString('fr-FR')}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center p-3 bg-slate-700/50 rounded-lg">
-                      <span className="text-slate-400">Téléphone</span>
-                      <span className="text-white font-medium">{selectedCustomer.phone_number}</span>
+                      <span className="text-white font-medium">{new Date(selectedCustomer.created_at).toLocaleDateString('fr-FR')}</span>
                     </div>
                   </div>
-
-                  {/* Delete Button */}
-                  <div className="pt-4 border-t border-slate-700">
-                    <Button
-                      onClick={() => confirmDelete('customer', selectedCustomer.id, `${selectedCustomer.first_name} ${selectedCustomer.last_name}`)}
-                      variant="outline"
-                      className="w-full border-red-600 text-red-400 hover:bg-red-600 hover:text-white gap-2"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      Supprimer ce client
-                    </Button>
-                  </div>
+                  <Button
+                    onClick={() => confirmDelete('customer', selectedCustomer.id, `${selectedCustomer.first_name} ${selectedCustomer.last_name}`)}
+                    variant="outline"
+                    className="w-full border-red-600 text-red-400 hover:bg-red-600 hover:text-white gap-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Supprimer ce client
+                  </Button>
                 </Card>
               ) : (
                 <Card className="p-8 bg-slate-800 border-slate-700 text-center">
@@ -580,9 +607,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
         {/* Jobs Tab */}
         {activeTab === 'jobs' && (
           <div className="space-y-4">
-            <h2 className="text-lg font-heading font-bold text-white mb-4">
-              Toutes les Demandes de Service
-            </h2>
+            <h2 className="text-lg font-heading font-bold text-white mb-4">Toutes les Demandes de Service</h2>
             {jobs.length === 0 ? (
               <Card className="p-8 bg-slate-800 border-slate-700 text-center">
                 <p className="text-slate-400">Aucune demande de service</p>
@@ -595,9 +620,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                       <div>
                         <h3 className="font-bold text-white">{job.service_type}</h3>
                         <p className="text-sm text-slate-400">Client: {job.client_name}</p>
-                        {job.provider_name && (
-                          <p className="text-sm text-slate-500">Prestataire: {job.provider_name}</p>
-                        )}
+                        {job.provider_name && <p className="text-sm text-slate-500">Prestataire: {job.provider_name}</p>}
                       </div>
                       <span className={`px-3 py-1 rounded text-xs font-medium border ${getStatusBadge(job.status)}`}>
                         {translateStatus(job.status)}
@@ -606,15 +629,379 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                     <p className="text-slate-400 text-sm mb-3">{job.description}</p>
                     <div className="flex items-center gap-4 text-xs text-slate-500">
                       <span>📍 {job.location}</span>
-                      {job.scheduled_date && (
-                        <span>📅 {new Date(job.scheduled_date).toLocaleDateString('fr-FR')}</span>
-                      )}
-                      <span>🕐 {new Date(job.created_at).toLocaleDateString('fr-FR')}</span>
+                      {job.scheduled_date && <span>📅 {new Date(job.scheduled_date).toLocaleDateString('fr-FR')}</span>}
                     </div>
                   </Card>
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {/* Rentals Tab */}
+        {activeTab === 'rentals' && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-heading font-bold text-white">Annonces de Location</h2>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant={rentalFilter === 'all' ? 'default' : 'outline'}
+                    onClick={() => setRentalFilter('all')}
+                    className={rentalFilter === 'all' ? 'bg-purple-600' : 'border-slate-600 text-slate-300'}
+                  >
+                    Toutes ({rentals.length})
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={rentalFilter === 'long_term' ? 'default' : 'outline'}
+                    onClick={() => setRentalFilter('long_term')}
+                    className={rentalFilter === 'long_term' ? 'bg-blue-600' : 'border-slate-600 text-slate-300'}
+                  >
+                    <Calendar className="h-3 w-3 mr-1" />
+                    Longue ({rentals.filter(r => r.rental_type === 'long_term' || !r.rental_type).length})
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={rentalFilter === 'short_term' ? 'default' : 'outline'}
+                    onClick={() => setRentalFilter('short_term')}
+                    className={rentalFilter === 'short_term' ? 'bg-purple-600' : 'border-slate-600 text-slate-300'}
+                  >
+                    <Moon className="h-3 w-3 mr-1" />
+                    Courte ({rentals.filter(r => r.rental_type === 'short_term').length})
+                  </Button>
+                </div>
+              </div>
+              
+              {filteredRentals.length === 0 ? (
+                <Card className="p-8 bg-slate-800 border-slate-700 text-center">
+                  <p className="text-slate-400">Aucune annonce de location</p>
+                </Card>
+              ) : (
+                filteredRentals.map((rental) => (
+                  <Card 
+                    key={rental.id} 
+                    className={`p-4 bg-slate-800 border-slate-700 cursor-pointer transition-colors ${
+                      selectedRental?.id === rental.id ? 'border-purple-500' : 'hover:border-slate-600'
+                    }`}
+                    onClick={() => setSelectedRental(rental)}
+                  >
+                    <div className="flex gap-4">
+                      {rental.photos && rental.photos.length > 0 ? (
+                        <img 
+                          src={`${BACKEND_URL}${rental.photos[0]}`}
+                          alt={rental.title}
+                          className="w-24 h-20 object-cover rounded-lg"
+                        />
+                      ) : (
+                        <div className="w-24 h-20 bg-slate-700 rounded-lg flex items-center justify-center">
+                          <Building className="h-8 w-8 text-slate-500" />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <h3 className="font-bold text-white truncate">{rental.title}</h3>
+                          <span className={`flex-shrink-0 px-2 py-1 rounded text-xs font-medium ${
+                            rental.rental_type === 'short_term' 
+                              ? 'bg-purple-600/20 text-purple-400' 
+                              : 'bg-blue-600/20 text-blue-400'
+                          }`}>
+                            {rental.rental_type === 'short_term' ? 'Courte' : 'Longue'}
+                          </span>
+                        </div>
+                        <p className="text-sm text-slate-400">{rental.provider_name}</p>
+                        <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
+                          <MapPin className="h-3 w-3" />
+                          {rental.location}
+                        </div>
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className="text-green-400 font-bold text-sm">
+                            {rental.rental_type === 'short_term' && rental.price_per_night
+                              ? `${Number(rental.price_per_night).toLocaleString('fr-FR')} GNF/nuit`
+                              : `${Number(rental.rental_price).toLocaleString('fr-FR')} GNF/mois`
+                            }
+                          </span>
+                          {rental.is_available !== false ? (
+                            <span className="px-2 py-0.5 rounded text-xs bg-green-600/20 text-green-400">Disponible</span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded text-xs bg-red-600/20 text-red-400">Indisponible</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                ))
+              )}
+            </div>
+
+            {/* Rental Detail */}
+            <div>
+              <h2 className="text-lg font-heading font-bold text-white mb-4">Détails de la Location</h2>
+              {selectedRental ? (
+                <Card className="p-6 bg-slate-800 border-slate-700">
+                  {selectedRental.photos && selectedRental.photos.length > 0 && (
+                    <img 
+                      src={`${BACKEND_URL}${selectedRental.photos[0]}`}
+                      alt={selectedRental.title}
+                      className="w-full h-48 object-cover rounded-lg mb-4"
+                    />
+                  )}
+                  
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h3 className="text-xl font-bold text-white">{selectedRental.title}</h3>
+                      <p className="text-slate-400">{selectedRental.property_type === 'Apartment' ? 'Appartement' : 'Maison'}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-2xl font-bold text-green-400">
+                        {selectedRental.rental_type === 'short_term' && selectedRental.price_per_night
+                          ? `${Number(selectedRental.price_per_night).toLocaleString('fr-FR')} GNF`
+                          : `${Number(selectedRental.rental_price).toLocaleString('fr-FR')} GNF`
+                        }
+                      </p>
+                      <p className="text-sm text-slate-400">
+                        {selectedRental.rental_type === 'short_term' ? 'par nuit' : 'par mois'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 mb-4">
+                    <div className="flex items-center gap-2 text-slate-300">
+                      <MapPin className="h-4 w-4 text-slate-400" />
+                      {selectedRental.location}
+                    </div>
+                    <div className="flex items-center gap-2 text-slate-300">
+                      <Users className="h-4 w-4 text-slate-400" />
+                      {selectedRental.provider_name} ({selectedRental.provider_phone})
+                    </div>
+                    {selectedRental.rental_type === 'short_term' && (
+                      <>
+                        {selectedRental.max_guests && (
+                          <div className="flex items-center gap-2 text-slate-300">
+                            <Users className="h-4 w-4 text-slate-400" />
+                            Max {selectedRental.max_guests} invités
+                          </div>
+                        )}
+                        {selectedRental.min_nights > 1 && (
+                          <div className="flex items-center gap-2 text-slate-300">
+                            <Moon className="h-4 w-4 text-slate-400" />
+                            Min {selectedRental.min_nights} nuits
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    <span className={`px-3 py-1 rounded text-sm ${
+                      selectedRental.rental_type === 'short_term' 
+                        ? 'bg-purple-600/20 text-purple-400' 
+                        : 'bg-blue-600/20 text-blue-400'
+                    }`}>
+                      {selectedRental.rental_type === 'short_term' ? 'Courte Durée' : 'Longue Durée'}
+                    </span>
+                    {selectedRental.is_available !== false ? (
+                      <span className="px-3 py-1 rounded text-sm bg-green-600/20 text-green-400">Disponible</span>
+                    ) : (
+                      <span className="px-3 py-1 rounded text-sm bg-red-600/20 text-red-400">Indisponible</span>
+                    )}
+                  </div>
+
+                  {/* Amenities */}
+                  {selectedRental.amenities && selectedRental.amenities.length > 0 && (
+                    <div className="mb-4">
+                      <h4 className="text-sm font-bold text-slate-300 uppercase mb-2">Équipements</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedRental.amenities.map(a => (
+                          <span key={a} className="px-2 py-1 bg-slate-700 text-slate-300 rounded text-xs">
+                            {a}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="mb-4">
+                    <h4 className="text-sm font-bold text-slate-300 uppercase mb-2">Description</h4>
+                    <p className="text-slate-400 text-sm">{selectedRental.description}</p>
+                  </div>
+
+                  <div className="text-xs text-slate-500 mb-4">
+                    Créée le {new Date(selectedRental.created_at).toLocaleDateString('fr-FR')}
+                  </div>
+
+                  <Button
+                    onClick={() => confirmDelete('rental', selectedRental.id, selectedRental.title)}
+                    variant="outline"
+                    className="w-full border-red-600 text-red-400 hover:bg-red-600 hover:text-white gap-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Supprimer cette location
+                  </Button>
+                </Card>
+              ) : (
+                <Card className="p-8 bg-slate-800 border-slate-700 text-center">
+                  <Building className="h-12 w-12 text-slate-600 mx-auto mb-4" />
+                  <p className="text-slate-400">Sélectionnez une location pour voir ses détails</p>
+                </Card>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Agents Immobilier Tab */}
+        {activeTab === 'agents' && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <h2 className="text-lg font-heading font-bold text-white mb-4">Agents Immobiliers</h2>
+              {agentsImmobilier.length === 0 ? (
+                <Card className="p-8 bg-slate-800 border-slate-700 text-center">
+                  <p className="text-slate-400">Aucun agent immobilier inscrit</p>
+                </Card>
+              ) : (
+                agentsImmobilier.map((agent) => (
+                  <Card 
+                    key={agent.id} 
+                    className={`p-4 bg-slate-800 border-slate-700 cursor-pointer transition-colors ${
+                      selectedAgent?.id === agent.id ? 'border-amber-500' : 'hover:border-slate-600'
+                    }`}
+                    onClick={() => setSelectedAgent(agent)}
+                  >
+                    <div className="flex items-center gap-4">
+                      <Avatar className="h-12 w-12">
+                        <AvatarImage 
+                          src={agent.profile_picture ? `${BACKEND_URL}${agent.profile_picture}` : undefined} 
+                        />
+                        <AvatarFallback className="bg-amber-600 text-white">
+                          {agent.first_name[0]}{agent.last_name[0]}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <h3 className="font-bold text-white">{agent.first_name} {agent.last_name}</h3>
+                        <p className="text-sm text-slate-400">{agent.phone_number}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs text-purple-400">
+                            <Building className="h-3 w-3 inline mr-1" />
+                            {agent.rental_count || 0} annonce(s)
+                          </span>
+                          {agent.online_status && (
+                            <span className="text-xs text-green-400">● En ligne</span>
+                          )}
+                        </div>
+                      </div>
+                      <span className={`px-2 py-1 rounded text-xs font-medium border ${getStatusBadge(agent.verification_status || 'pending')}`}>
+                        {translateStatus(agent.verification_status || 'pending')}
+                      </span>
+                    </div>
+                  </Card>
+                ))
+              )}
+            </div>
+
+            {/* Agent Detail */}
+            <div>
+              <h2 className="text-lg font-heading font-bold text-white mb-4">Détails de l'Agent</h2>
+              {selectedAgent ? (
+                <Card className="p-6 bg-slate-800 border-slate-700">
+                  <div className="flex items-center gap-4 mb-6">
+                    <Avatar className="h-20 w-20">
+                      <AvatarImage 
+                        src={selectedAgent.profile_picture ? `${BACKEND_URL}${selectedAgent.profile_picture}` : undefined} 
+                      />
+                      <AvatarFallback className="bg-amber-600 text-white text-2xl">
+                        {selectedAgent.first_name[0]}{selectedAgent.last_name[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h3 className="text-xl font-bold text-white">{selectedAgent.first_name} {selectedAgent.last_name}</h3>
+                      <p className="text-amber-400">Agent Immobilier</p>
+                      <p className="text-sm text-slate-400">{selectedAgent.phone_number}</p>
+                    </div>
+                  </div>
+
+                  {/* Stats */}
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="p-4 bg-slate-700/50 rounded-lg text-center">
+                      <Building className="h-6 w-6 text-purple-400 mx-auto mb-2" />
+                      <p className="text-2xl font-bold text-white">{selectedAgent.rental_count || 0}</p>
+                      <p className="text-xs text-slate-400">Annonces</p>
+                    </div>
+                    <div className="p-4 bg-slate-700/50 rounded-lg text-center">
+                      <CheckCircle className={`h-6 w-6 mx-auto mb-2 ${selectedAgent.online_status ? 'text-green-400' : 'text-slate-500'}`} />
+                      <p className="text-lg font-bold text-white">{selectedAgent.online_status ? 'En ligne' : 'Hors ligne'}</p>
+                      <p className="text-xs text-slate-400">Statut</p>
+                    </div>
+                  </div>
+
+                  {/* About */}
+                  <div className="mb-6">
+                    <h4 className="text-sm font-bold text-slate-300 uppercase mb-2">À Propos</h4>
+                    <p className="text-slate-400 bg-slate-700/50 p-3 rounded-lg">
+                      {selectedAgent.about_me || 'Aucune description fournie'}
+                    </p>
+                  </div>
+
+                  {/* ID Verification */}
+                  <div className="mb-6">
+                    <h4 className="text-sm font-bold text-slate-300 uppercase mb-2">Pièce d'Identité</h4>
+                    {selectedAgent.id_verification_picture ? (
+                      <img 
+                        src={`${BACKEND_URL}${selectedAgent.id_verification_picture}`}
+                        alt="Pièce d'identité"
+                        className="w-full max-w-md rounded-lg border border-slate-600"
+                      />
+                    ) : (
+                      <div className="flex items-center gap-2 text-orange-400 bg-orange-900/20 p-3 rounded-lg">
+                        <AlertCircle className="h-5 w-5" />
+                        <span>Aucune pièce d'identité fournie</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Listing info */}
+                  <div className="mb-6">
+                    <h4 className="text-sm font-bold text-slate-300 uppercase mb-2">Inscrit le</h4>
+                    <p className="text-slate-400">{new Date(selectedAgent.created_at).toLocaleDateString('fr-FR')}</p>
+                  </div>
+
+                  {/* Actions */}
+                  {(selectedAgent.verification_status === 'pending' || !selectedAgent.verification_status) && (
+                    <div className="flex gap-3 pt-4 border-t border-slate-700 mb-4">
+                      <Button
+                        onClick={() => handleApproveProvider(selectedAgent.id)}
+                        className="flex-1 bg-green-600 hover:bg-green-700 gap-2"
+                      >
+                        <UserCheck className="h-4 w-4" />
+                        Approuver
+                      </Button>
+                      <Button
+                        onClick={() => handleRejectProvider(selectedAgent.id)}
+                        variant="outline"
+                        className="flex-1 border-red-600 text-red-400 hover:bg-red-600 hover:text-white gap-2"
+                      >
+                        <UserX className="h-4 w-4" />
+                        Rejeter
+                      </Button>
+                    </div>
+                  )}
+
+                  <Button
+                    onClick={() => confirmDelete('provider', selectedAgent.id, `${selectedAgent.first_name} ${selectedAgent.last_name}`)}
+                    variant="outline"
+                    className="w-full border-red-600 text-red-400 hover:bg-red-600 hover:text-white gap-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Supprimer cet agent
+                  </Button>
+                </Card>
+              ) : (
+                <Card className="p-8 bg-slate-800 border-slate-700 text-center">
+                  <Home className="h-12 w-12 text-slate-600 mx-auto mb-4" />
+                  <p className="text-slate-400">Sélectionnez un agent pour voir ses détails</p>
+                </Card>
+              )}
+            </div>
           </div>
         )}
       </div>
