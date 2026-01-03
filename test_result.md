@@ -715,6 +715,32 @@ agent_communication:
       
       All new admin rental and agent immobilier management endpoints are fully functional and ready for production use.
   - agent: "testing"
+  - agent: "main"
+    message: |
+      NEW FEATURE IMPLEMENTED - REVIEW RATING RESTRICTION:
+      
+      1. BACKEND CHANGES:
+         - Modified POST /api/reviews endpoint to only allow reviews when job status is "Completed"
+         - Previously allowed reviews for "Accepted" or "Completed" - now only "Completed"
+         - Added new endpoint GET /api/reviews/{provider_id}/can-review?customer_id={id}
+         - Returns { can_review: bool, reason: str } to check if customer can review
+         - Added customer_id field to JobOffer model and job creation
+      
+      2. FRONTEND CHANGES:
+         - Updated ProviderProfile.js to check review eligibility before showing form
+         - Shows "Avis non disponible" message with explanation when can't review
+         - Displays "Demander un Service" button for customers who haven't used the provider
+         
+      3. UI/UX OVERHAUL CONTINUED:
+         - Completely redesigned RentalDetail.js with modern gradient cards, full-width images
+         - Redesigned AuthPage.js (Provider auth) with split-screen layout matching CustomerAuth
+         - Both auth pages now have consistent branding with gradient backgrounds
+      
+      Please test:
+      - Review restriction: Customer without completed service cannot submit review
+      - Can-review endpoint returns correct status and reason
+      - RentalDetail page displays correctly with images and contact section
+      - Provider auth page shows new modern design
     message: |
       🎨 NEW BEAUTIFUL UI TESTING COMPLETE - ALL FEATURES WORKING PERFECTLY ✅
       
