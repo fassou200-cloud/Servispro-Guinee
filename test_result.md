@@ -459,7 +459,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "New Beautiful UI Testing Complete"
+    - "Review Rating Restriction"
+    - "UI/UX Overhaul Continuation"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
