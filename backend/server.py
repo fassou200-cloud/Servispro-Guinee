@@ -1015,12 +1015,19 @@ async def get_admin_stats():
     
     total_customers = await db.customers.count_documents({})
     total_rentals = await db.rental_listings.count_documents({})
+    long_term_rentals = await db.rental_listings.count_documents({'rental_type': 'long_term'})
+    short_term_rentals = await db.rental_listings.count_documents({'rental_type': 'short_term'})
+    available_rentals = await db.rental_listings.count_documents({'is_available': True})
+    
+    # Count Agent Immobilier providers
+    agent_immobilier_count = await db.service_providers.count_documents({'profession': 'AgentImmobilier'})
     
     return {
         'providers': {
             'total': total_providers,
             'pending': pending_providers,
-            'approved': approved_providers
+            'approved': approved_providers,
+            'agent_immobilier': agent_immobilier_count
         },
         'jobs': {
             'total': total_jobs,
@@ -1029,8 +1036,50 @@ async def get_admin_stats():
             'completed': completed_jobs
         },
         'customers': total_customers,
-        'rentals': total_rentals
+        'rentals': {
+            'total': total_rentals,
+            'long_term': long_term_rentals,
+            'short_term': short_term_rentals,
+            'available': available_rentals
+        }
     }
+
+@api_router.get("/admin/rentals")
+async def get_all_rentals_admin():
+    """Get all rental listings for admin dashboard"""
+    rentals = await db.rental_listings.find({}, {'_id': 0}).sort('created_at', -1).to_list(1000)
+    return rentals
+
+@api_router.get("/admin/agents-immobilier")
+async def get_all_agents_immobilier():
+    """Get all Agent Immobilier providers for admin dashboard"""
+    agents = await db.service_providers.find(
+        {'profession': 'AgentImmobilier'}, 
+        {'_id': 0, 'password': 0}
+    ).sort('created_at', -1).to_list(1000)
+    
+    # Add rental count for each agent
+    for agent in agents:
+        rental_count = await db.rental_listings.count_documents({'service_provider_id': agent['id']})
+        agent['rental_count'] = rental_count
+    
+    return agents
+
+@api_router.delete("/admin/rentals/{rental_id}")
+async def delete_rental_admin(rental_id: str):
+    """Delete a rental listing as admin"""
+    rental = await db.rental_listings.find_one({'id': rental_id})
+    if not rental:
+        raise HTTPException(status_code=404, detail="Location non trouvée")
+    
+    # Delete associated chat messages
+    await db.chat_messages.delete_many({'rental_id': rental_id})
+    
+    result = await db.rental_listings.delete_one({'id': rental_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Location non trouvée")
+    
+    return {"message": "Location supprimée avec succès"}
 
 @api_router.get("/admin/customers")
 async def get_all_customers_admin():
