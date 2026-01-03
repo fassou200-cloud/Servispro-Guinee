@@ -73,8 +73,16 @@ const AuthPage = ({ setIsAuthenticated }) => {
 
   return (
     <div className="min-h-screen flex">
-      {/* Left Side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 relative overflow-hidden">
+      {/* Left Side - Branding with Background Image */}
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
+        {/* Background Image */}
+        <img 
+          src="https://images.pexels.com/photos/8482816/pexels-photo-8482816.jpeg"
+          alt="Professional craftsman"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-violet-600/90 via-purple-600/85 to-indigo-700/90" />
         <div className="absolute inset-0 opacity-20">
           <div className="absolute top-20 left-20 w-72 h-72 bg-white rounded-full blur-3xl" />
           <div className="absolute bottom-20 right-20 w-96 h-96 bg-white rounded-full blur-3xl" />
