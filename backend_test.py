@@ -886,6 +886,176 @@ class ServisProAPITester:
                 return False
         return False
 
+    # ==================== NEW ADMIN RENTAL & AGENT IMMOBILIER TESTS ====================
+    
+    def test_admin_get_updated_stats(self):
+        """Test admin getting updated stats with rentals object and agent_immobilier count"""
+        # Use admin token for this request
+        original_token = self.token
+        self.token = getattr(self, 'admin_token', None)
+        
+        success, response = self.run_test(
+            "Admin Get Updated Stats",
+            "GET",
+            "admin/stats",
+            200
+        )
+        
+        # Restore original token
+        self.token = original_token
+        
+        if success and isinstance(response, dict):
+            # Check if stats have expected structure with rentals as object
+            expected_keys = ['providers', 'jobs', 'customers', 'rentals']
+            if all(key in response for key in expected_keys):
+                # Check rentals structure
+                rentals = response.get('rentals', {})
+                if isinstance(rentals, dict):
+                    expected_rental_keys = ['total', 'long_term', 'short_term', 'available']
+                    if all(key in rentals for key in expected_rental_keys):
+                        # Check providers has agent_immobilier count
+                        providers = response.get('providers', {})
+                        if isinstance(providers, dict) and 'agent_immobilier' in providers:
+                            self.log_test("Admin Get Updated Stats", True, "Stats structure correct with rentals object and agent_immobilier count")
+                            return True
+                        else:
+                            self.log_test("Admin Get Updated Stats", False, "Missing agent_immobilier count in providers")
+                            return False
+                    else:
+                        self.log_test("Admin Get Updated Stats", False, f"Missing rental keys: {[k for k in expected_rental_keys if k not in rentals]}")
+                        return False
+                else:
+                    self.log_test("Admin Get Updated Stats", False, "Rentals should be an object, not a number")
+                    return False
+            else:
+                self.log_test("Admin Get Updated Stats", False, f"Missing keys: {[k for k in expected_keys if k not in response]}")
+                return False
+        return success
+
+    def test_admin_get_all_rentals(self):
+        """Test admin getting all rental listings"""
+        # Use admin token for this request
+        original_token = self.token
+        self.token = getattr(self, 'admin_token', None)
+        
+        success, response = self.run_test(
+            "Admin Get All Rentals",
+            "GET",
+            "admin/rentals",
+            200
+        )
+        
+        # Restore original token
+        self.token = original_token
+        
+        if success and isinstance(response, list):
+            # Check if rentals have expected fields
+            if response:
+                rental = response[0]
+                expected_fields = ['id', 'title', 'rental_type', 'price_per_night', 'rental_price', 'is_available', 'provider_name']
+                missing_fields = [field for field in expected_fields if field not in rental]
+                if missing_fields:
+                    self.log_test("Admin Get All Rentals", False, f"Missing fields in rental: {missing_fields}")
+                    return False, response
+                else:
+                    self.log_test("Admin Get All Rentals", True, f"Found {len(response)} rentals with correct structure")
+                    return True, response
+        return success, response
+
+    def test_admin_get_agents_immobilier(self):
+        """Test admin getting all Agent Immobilier providers with rental_count"""
+        # Use admin token for this request
+        original_token = self.token
+        self.token = getattr(self, 'admin_token', None)
+        
+        success, response = self.run_test(
+            "Admin Get Agents Immobilier",
+            "GET",
+            "admin/agents-immobilier",
+            200
+        )
+        
+        # Restore original token
+        self.token = original_token
+        
+        if success and isinstance(response, list):
+            # Check if all returned providers are Agent Immobilier
+            for agent in response:
+                if agent.get('profession') != 'AgentImmobilier':
+                    self.log_test("Admin Get Agents Immobilier", False, f"Found non-Agent Immobilier: {agent.get('profession')}")
+                    return False, response
+                
+                # Check if rental_count is present
+                if 'rental_count' not in agent:
+                    self.log_test("Admin Get Agents Immobilier", False, "Missing rental_count property")
+                    return False, response
+            
+            self.log_test("Admin Get Agents Immobilier", True, f"Found {len(response)} Agent Immobilier providers with rental_count")
+            return True, response
+        return success, response
+
+    def test_admin_delete_rental(self):
+        """Test admin deleting a rental listing"""
+        # First create a test rental to delete
+        test_rental_data = {
+            "property_type": "Apartment",
+            "title": "Test Rental for Admin Deletion",
+            "description": "This rental will be deleted by admin",
+            "location": "Test Location",
+            "rental_price": 300000,
+            "rental_type": "long_term",
+            "is_available": True
+        }
+        
+        # Create rental with provider token
+        create_success, create_response = self.run_test(
+            "Create Test Rental for Admin Deletion",
+            "POST",
+            "rentals",
+            200,
+            data=test_rental_data
+        )
+        
+        if not create_success or 'id' not in create_response:
+            self.log_test("Admin Delete Rental", False, "Could not create test rental")
+            return False
+        
+        test_rental_id = create_response['id']
+        
+        # Now delete it using admin endpoint
+        original_token = self.token
+        self.token = getattr(self, 'admin_token', None)
+        
+        success, response = self.run_test(
+            "Admin Delete Rental",
+            "DELETE",
+            f"admin/rentals/{test_rental_id}",
+            200
+        )
+        
+        # Restore original token
+        self.token = original_token
+        
+        if success:
+            # Verify rental was deleted by trying to get all rentals and checking it's not there
+            verify_success, verify_response = self.run_test(
+                "Verify Rental Deletion",
+                "GET",
+                "rentals",
+                200
+            )
+            
+            if verify_success and isinstance(verify_response, list):
+                rental_ids = [r.get('id') for r in verify_response]
+                if test_rental_id not in rental_ids:
+                    self.log_test("Verify Rental Deletion", True, "Rental successfully removed from listings")
+                    return True
+                else:
+                    self.log_test("Verify Rental Deletion", False, "Rental still exists in listings")
+                    return False
+        
+        return success
+
     # ==================== JOB COMPLETION FLOW TESTS ====================
     
     def test_provider_mark_job_complete(self, job_id):
