@@ -148,6 +148,7 @@ class ServiceProvider(BaseModel):
 class JobOfferCreate(BaseModel):
     service_provider_id: str
     client_name: str
+    customer_id: Optional[str] = None  # ID of the customer making the request
     service_type: str
     description: str
     location: Optional[str] = None
@@ -162,6 +163,7 @@ class JobOffer(BaseModel):
     id: str
     service_provider_id: str
     client_name: str
+    customer_id: Optional[str] = None
     service_type: str
     description: str
     location: Optional[str] = None
