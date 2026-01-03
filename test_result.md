@@ -294,6 +294,18 @@ backend:
         agent: "testing"
         comment: "✅ ADMIN DELETE FUNCTIONALITY TESTING COMPLETE - All APIs working correctly. GET /api/admin/customers returns customer list without password/_id fields. DELETE /api/admin/providers/{id} successfully deletes providers and associated data (jobs, rentals, reviews). DELETE /api/admin/customers/{id} successfully deletes customers. Error handling working - 404 returned for non-existent providers/customers. Verification tests confirm deleted entities are removed from lists. Test Results: 39/40 tests passed (97.5% success rate). Minor: One test expected 401 but got 403 for unauthorized access - not critical."
 
+  - task: "Admin Rental and Agent Immobilier Management"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ ADMIN RENTAL & AGENT IMMOBILIER MANAGEMENT TESTING COMPLETE - All new admin endpoints working perfectly. GET /api/admin/stats returns updated stats with rentals as object containing total, long_term, short_term, available counts and providers.agent_immobilier count. GET /api/admin/rentals returns all rental listings with correct fields (id, title, rental_type, price_per_night, rental_price, is_available, provider_name). GET /api/admin/agents-immobilier returns all Agent Immobilier providers with rental_count property added. DELETE /api/admin/rentals/{rental_id} successfully creates test rental, deletes it, and verifies removal from listings. Test Results: 58/59 tests passed (98.3% success rate). Minor: One test expected 401 but got 403 for unauthorized access - not critical. All admin rental management features fully functional."
+
 frontend:
   - task: "New Improved Service Provider Dashboard"
     implemented: true
