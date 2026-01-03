@@ -404,13 +404,35 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
               <p className="text-blue-100 mt-1">Partagez votre expérience avec ce prestataire</p>
             </div>
             <div className="p-8">
-              <ReviewForm
-                providerId={providerId}
-                onSuccess={() => {
-                  setRefreshReviews(prev => prev + 1);
-                  fetchReviewStats();
-                }}
-              />
+              {canReview.can_review ? (
+                <ReviewForm
+                  providerId={providerId}
+                  onSuccess={() => {
+                    setRefreshReviews(prev => prev + 1);
+                    fetchReviewStats();
+                    checkCanReview(customer.id);
+                  }}
+                />
+              ) : (
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-4">
+                    <Clock className="h-8 w-8 text-amber-600" />
+                  </div>
+                  <h4 className="text-lg font-bold text-gray-900 mb-2">Avis non disponible</h4>
+                  <p className="text-gray-600 max-w-md mx-auto">
+                    {canReview.reason}
+                  </p>
+                  {!canReview.reason.includes('terminé') && (
+                    <Button
+                      onClick={handleRequestService}
+                      className="mt-6 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+                      disabled={!provider?.online_status || provider?.profession === 'AgentImmobilier'}
+                    >
+                      Demander un Service
+                    </Button>
+                  )}
+                </div>
+              )}
             </div>
           </Card>
         )}
