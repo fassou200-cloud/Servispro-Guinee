@@ -459,7 +459,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Admin Rental and Agent Immobilier Management"
+    - "New Beautiful UI Testing Complete"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
