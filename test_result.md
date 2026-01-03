@@ -459,7 +459,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "New Improved Service Provider Dashboard"
+    - "Admin Rental and Agent Immobilier Management"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
