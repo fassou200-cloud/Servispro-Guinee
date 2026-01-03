@@ -507,6 +507,7 @@ async def create_job_offer(job_data: JobOfferCreate):
         'id': job_id,
         'service_provider_id': job_data.service_provider_id,
         'client_name': job_data.client_name,
+        'customer_id': job_data.customer_id,  # Store customer ID for review validation
         'service_type': job_data.service_type,
         'description': job_data.description,
         'location': job_data.location,
