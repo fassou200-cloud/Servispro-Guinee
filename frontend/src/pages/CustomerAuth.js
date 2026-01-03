@@ -68,8 +68,16 @@ const CustomerAuth = ({ setIsCustomerAuthenticated }) => {
 
   return (
     <div className="min-h-screen flex">
-      {/* Left Side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-green-500 via-emerald-500 to-teal-600 relative overflow-hidden">
+      {/* Left Side - Branding with Background Image */}
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
+        {/* Background Image */}
+        <img 
+          src="https://images.pexels.com/photos/8469941/pexels-photo-8469941.jpeg"
+          alt="Customer service satisfaction"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-green-500/90 via-emerald-500/85 to-teal-600/90" />
         <div className="absolute inset-0 opacity-20">
           <div className="absolute top-20 left-20 w-72 h-72 bg-white rounded-full blur-3xl" />
           <div className="absolute bottom-20 right-20 w-96 h-96 bg-white rounded-full blur-3xl" />
