@@ -306,27 +306,39 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
                 </div>
                 
                 {/* Orbiting Cards */}
-                {categories.slice(0, 6).map((cat, index) => {
-                  const Icon = cat.icon;
-                  const angle = (index / 6) * 360;
-                  const isActive = index === activeCategory % 6;
-                  return (
-                    <div
-                      key={cat.name}
-                      className={`absolute w-20 h-20 transition-all duration-500 cursor-pointer ${isActive ? 'scale-125 z-10' : 'scale-100'}`}
-                      style={{
-                        left: '50%',
-                        top: '50%',
-                        transform: `translate(-50%, -50%) rotate(${angle}deg) translateX(180px) rotate(-${angle}deg)`
-                      }}
-                      onClick={() => navigate(cat.link)}
-                    >
-                      <div className={`w-full h-full rounded-2xl bg-gradient-to-br ${cat.color} flex items-center justify-center shadow-lg ${isActive ? 'shadow-2xl' : ''}`}>
-                        <Icon className="h-8 w-8 text-white" />
-                      </div>
-                    </div>
-                  );
-                })}
+                <TooltipProvider delayDuration={100}>
+                  {categories.slice(0, 6).map((cat, index) => {
+                    const Icon = cat.icon;
+                    const angle = (index / 6) * 360;
+                    const isActive = index === activeCategory % 6;
+                    return (
+                      <Tooltip key={cat.name}>
+                        <TooltipTrigger asChild>
+                          <div
+                            className={`absolute w-20 h-20 transition-all duration-500 cursor-pointer ${isActive ? 'scale-125 z-10' : 'scale-100'}`}
+                            style={{
+                              left: '50%',
+                              top: '50%',
+                              transform: `translate(-50%, -50%) rotate(${angle}deg) translateX(180px) rotate(-${angle}deg)`
+                            }}
+                            onClick={() => navigate(cat.link)}
+                          >
+                            <div className={`w-full h-full rounded-2xl bg-gradient-to-br ${cat.color} flex items-center justify-center shadow-lg ${isActive ? 'shadow-2xl' : ''}`}>
+                              <Icon className="h-8 w-8 text-white" />
+                            </div>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent 
+                          side="top" 
+                          className="bg-gray-900 text-white px-3 py-2 rounded-lg shadow-xl border-0"
+                        >
+                          <p className="font-semibold text-sm">{cat.name}</p>
+                          <p className="text-xs text-gray-300 mt-1">{cat.description}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    );
+                  })}
+                </TooltipProvider>
               </div>
             </div>
           </div>
