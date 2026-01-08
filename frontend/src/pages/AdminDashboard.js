@@ -208,9 +208,11 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="p-2 rounded-lg bg-amber-600">
-                <Shield className="h-6 w-6 text-white" />
-              </div>
+              <img 
+                src={require('../image/logo.png')} 
+                alt="ServisPro Logo" 
+                className="h-12 w-12 rounded-lg object-contain"
+              />
               <div>
                 <h1 className="text-xl font-heading font-bold text-white">
                   Administration ServisPro
