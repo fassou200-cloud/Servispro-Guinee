@@ -4,7 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
-import { Shield, ArrowLeft, UserPlus, LogIn } from 'lucide-react';
+import { 
+  Shield, ArrowLeft, UserPlus, LogIn, User, Lock, Eye, EyeOff, 
+  KeyRound, Settings, BarChart3, Users, CheckCircle
+} from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
 
@@ -15,6 +18,7 @@ const AdminAuth = ({ setIsAdminAuthenticated }) => {
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     username: '',
     password: '',
@@ -28,7 +32,6 @@ const AdminAuth = ({ setIsAdminAuthenticated }) => {
 
     try {
       if (isLogin) {
-        // Login
         const response = await axios.post(`${API}/admin/login`, {
           username: formData.username,
           password: formData.password
@@ -44,7 +47,6 @@ const AdminAuth = ({ setIsAdminAuthenticated }) => {
         toast.success(`Bienvenue ${response.data.user.username} !`);
         navigate('/admin/dashboard');
       } else {
-        // Register
         if (formData.password !== formData.confirmPassword) {
           toast.error('Les mots de passe ne correspondent pas');
           setLoading(false);
@@ -74,133 +76,255 @@ const AdminAuth = ({ setIsAdminAuthenticated }) => {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <Button
-          variant="ghost"
-          onClick={() => navigate('/')}
-          className="mb-4 gap-2 text-slate-300 hover:text-white"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Retour à l'Accueil
-        </Button>
+  const features = [
+    { icon: Users, text: 'Gérer les utilisateurs' },
+    { icon: BarChart3, text: 'Tableau de bord complet' },
+    { icon: Settings, text: 'Configuration avancée' }
+  ];
 
-        <Card className="p-8 bg-slate-800 border-slate-700">
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 mb-4">
+  return (
+    <div className="min-h-screen flex">
+      {/* Left Side - Branding */}
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 relative overflow-hidden">
+        <div className="absolute inset-0">
+          <div className="absolute top-20 left-20 w-72 h-72 bg-amber-500/20 rounded-full blur-3xl" />
+          <div className="absolute bottom-20 right-20 w-96 h-96 bg-orange-500/20 rounded-full blur-3xl" />
+          <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-yellow-500/10 rounded-full blur-3xl" />
+        </div>
+        
+        {/* Grid Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="h-full w-full" style={{
+            backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)',
+            backgroundSize: '40px 40px'
+          }} />
+        </div>
+        
+        <div className="relative z-10 flex flex-col justify-center p-12 text-white">
+          <div className="flex items-center gap-3 mb-8 cursor-pointer" onClick={() => navigate('/')}>
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
               <Shield className="h-8 w-8 text-white" />
             </div>
-            <h1 className="text-3xl font-heading font-bold text-white mb-2">
-              Administration
-            </h1>
-            <p className="text-slate-400">
-              {isLogin ? 'Connectez-vous pour accéder au panneau' : 'Créez un compte administrateur'}
-            </p>
+            <div>
+              <h1 className="text-2xl font-heading font-bold">ServisPro</h1>
+              <p className="text-sm text-slate-400">Administration</p>
+            </div>
+          </div>
+          
+          <h2 className="text-4xl font-heading font-bold mb-6">
+            Panneau d'Administration
+          </h2>
+          <p className="text-xl text-slate-400 mb-10 leading-relaxed">
+            Accédez au tableau de bord administrateur pour gérer les prestataires, 
+            clients, demandes de service et locations.
+          </p>
+          
+          <div className="space-y-4">
+            {features.map((feature, index) => {
+              const Icon = feature.icon;
+              return (
+                <div key={index} className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center">
+                    <Icon className="h-6 w-6 text-amber-500" />
+                  </div>
+                  <span className="text-lg text-slate-300">{feature.text}</span>
+                </div>
+              );
+            })}
           </div>
 
-          {/* Toggle Login/Register */}
-          <div className="flex gap-2 mb-6">
-            <Button
-              type="button"
-              variant={isLogin ? 'default' : 'outline'}
-              onClick={() => setIsLogin(true)}
-              className={`flex-1 gap-2 ${isLogin ? 'bg-amber-600 hover:bg-amber-700' : 'border-slate-600 text-slate-300'}`}
-            >
-              <LogIn className="h-4 w-4" />
-              Connexion
-            </Button>
-            <Button
-              type="button"
-              variant={!isLogin ? 'default' : 'outline'}
-              onClick={() => setIsLogin(false)}
-              className={`flex-1 gap-2 ${!isLogin ? 'bg-amber-600 hover:bg-amber-700' : 'border-slate-600 text-slate-300'}`}
-            >
-              <UserPlus className="h-4 w-4" />
-              Inscription
-            </Button>
+          {/* Security Note */}
+          <div className="mt-12 p-6 bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-700">
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+                <Shield className="h-5 w-5 text-amber-500" />
+              </div>
+              <div>
+                <h3 className="font-bold text-white mb-1">Accès Sécurisé</h3>
+                <p className="text-sm text-slate-400">
+                  Cet espace est réservé aux administrateurs autorisés. 
+                  Toutes les actions sont enregistrées.
+                </p>
+              </div>
+            </div>
           </div>
+        </div>
+      </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="username" className="text-slate-300 font-heading text-xs uppercase tracking-wide">
-                Nom d'utilisateur
-              </Label>
-              <Input
-                id="username"
-                name="username"
-                value={formData.username}
-                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                required
-                className="h-12 bg-slate-700 border-slate-600 text-white"
-                placeholder="Entrez votre nom d'utilisateur"
-              />
+      {/* Right Side - Form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 bg-slate-900">
+        <div className="w-full max-w-md">
+          <Button
+            variant="ghost"
+            onClick={() => navigate('/')}
+            className="mb-6 gap-2 text-slate-400 hover:text-white hover:bg-slate-800"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Retour à l'Accueil
+          </Button>
+
+          <Card className="p-8 rounded-3xl shadow-2xl border-slate-700 bg-slate-800">
+            {/* Mobile Logo */}
+            <div className="lg:hidden text-center mb-8">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 mb-4">
+                <Shield className="h-8 w-8 text-white" />
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-slate-300 font-heading text-xs uppercase tracking-wide">
-                Mot de passe
-              </Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                required
-                minLength={6}
-                className="h-12 bg-slate-700 border-slate-600 text-white"
-                placeholder="Minimum 6 caractères"
-              />
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-heading font-bold text-white mb-2">
+                Administration
+              </h1>
+              <p className="text-slate-400">
+                {isLogin ? 'Connectez-vous pour accéder au panneau' : 'Créez un compte administrateur'}
+              </p>
             </div>
 
-            {!isLogin && (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword" className="text-slate-300 font-heading text-xs uppercase tracking-wide">
-                    Confirmer le mot de passe
-                  </Label>
+            {/* Toggle Login/Register */}
+            <div className="flex gap-2 mb-8 p-1 bg-slate-700 rounded-2xl">
+              <button
+                type="button"
+                onClick={() => setIsLogin(true)}
+                className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+                  isLogin 
+                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg' 
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <LogIn className="h-4 w-4" />
+                Connexion
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsLogin(false)}
+                className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+                  !isLogin 
+                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg' 
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <UserPlus className="h-4 w-4" />
+                Inscription
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="username" className="text-slate-300 font-medium text-sm">
+                  Nom d'utilisateur
+                </Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
                   <Input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type="password"
-                    value={formData.confirmPassword}
-                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                    id="username"
+                    name="username"
+                    value={formData.username}
+                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                     required
-                    className="h-12 bg-slate-700 border-slate-600 text-white"
-                    placeholder="Confirmez votre mot de passe"
+                    className="h-12 pl-10 rounded-xl bg-slate-700 border-slate-600 text-white placeholder:text-slate-500"
+                    placeholder="admin"
                   />
                 </div>
+              </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="invite_code" className="text-slate-300 font-heading text-xs uppercase tracking-wide">
-                    Code d'invitation
-                  </Label>
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-slate-300 font-medium text-sm">
+                  Mot de passe
+                </Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
                   <Input
-                    id="invite_code"
-                    name="invite_code"
-                    value={formData.invite_code}
-                    onChange={(e) => setFormData({ ...formData, invite_code: e.target.value })}
+                    id="password"
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     required
-                    className="h-12 bg-slate-700 border-slate-600 text-white"
-                    placeholder="Entrez le code d'invitation"
+                    minLength={6}
+                    className="h-12 pl-10 pr-12 rounded-xl bg-slate-700 border-slate-600 text-white placeholder:text-slate-500"
+                    placeholder="••••••••"
                   />
-                  <p className="text-xs text-slate-500">
-                    Contactez un administrateur pour obtenir le code d'invitation
-                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+                  >
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
                 </div>
-              </>
-            )}
+              </div>
 
-            <Button 
-              type="submit" 
-              className="w-full h-12 font-heading font-bold text-base bg-amber-600 hover:bg-amber-700"
-              disabled={loading}
-            >
-              {loading ? 'Chargement...' : (isLogin ? 'Se Connecter' : 'Créer le Compte')}
-            </Button>
-          </form>
-        </Card>
+              {!isLogin && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword" className="text-slate-300 font-medium text-sm">
+                      Confirmer le mot de passe
+                    </Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
+                      <Input
+                        id="confirmPassword"
+                        name="confirmPassword"
+                        type="password"
+                        value={formData.confirmPassword}
+                        onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                        required
+                        className="h-12 pl-10 rounded-xl bg-slate-700 border-slate-600 text-white placeholder:text-slate-500"
+                        placeholder="••••••••"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="invite_code" className="text-slate-300 font-medium text-sm">
+                      Code d'invitation
+                    </Label>
+                    <div className="relative">
+                      <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
+                      <Input
+                        id="invite_code"
+                        name="invite_code"
+                        value={formData.invite_code}
+                        onChange={(e) => setFormData({ ...formData, invite_code: e.target.value })}
+                        required
+                        className="h-12 pl-10 rounded-xl bg-slate-700 border-slate-600 text-white placeholder:text-slate-500"
+                        placeholder="CODE-ADMIN-XXXX"
+                      />
+                    </div>
+                    <p className="text-xs text-slate-500 flex items-center gap-1">
+                      <Shield className="h-3 w-3" />
+                      Contactez un administrateur pour obtenir le code
+                    </p>
+                  </div>
+                </>
+              )}
+
+              <Button 
+                type="submit" 
+                className="w-full h-12 font-heading font-bold text-base rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 shadow-lg shadow-amber-500/30"
+                disabled={loading}
+              >
+                {loading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Chargement...
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    {isLogin ? <LogIn className="h-5 w-5" /> : <UserPlus className="h-5 w-5" />}
+                    {isLogin ? 'Se Connecter' : 'Créer le Compte'}
+                  </div>
+                )}
+              </Button>
+            </form>
+
+            {/* Security Badge */}
+            <div className="mt-6 flex items-center justify-center gap-2 text-slate-500 text-sm">
+              <Shield className="h-4 w-4" />
+              <span>Connexion sécurisée SSL</span>
+            </div>
+          </Card>
+        </div>
       </div>
     </div>
   );

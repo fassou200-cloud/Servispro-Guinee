@@ -3,7 +3,11 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, MapPin, Home as HomeIcon, User, MessageCircle, Send, Calendar, Users, Moon, CheckCircle, XCircle, Wifi, Wind, Car, Utensils, Tv, Bath } from 'lucide-react';
+import { 
+  ArrowLeft, MapPin, Home as HomeIcon, User, MessageCircle, Send, Calendar, 
+  Users, Moon, CheckCircle, XCircle, Wifi, Wind, Car, Utensils, Tv, Bath,
+  ChevronLeft, ChevronRight, Star, Phone, Mail, Clock, Heart, Share2, Building
+} from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
 
@@ -39,6 +43,7 @@ const RentalDetail = () => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -48,7 +53,6 @@ const RentalDetail = () => {
   useEffect(() => {
     if (showChat) {
       fetchMessages();
-      // Poll for new messages every 5 seconds
       const interval = setInterval(fetchMessages, 5000);
       return () => clearInterval(interval);
     }
@@ -89,7 +93,6 @@ const RentalDetail = () => {
 
     setSendingMessage(true);
     try {
-      // Get customer info if available
       const customer = JSON.parse(localStorage.getItem('customer') || '{}');
       
       await axios.post(`${API}/chat/rental/${rentalId}/message/customer`, {
@@ -107,10 +110,25 @@ const RentalDetail = () => {
     }
   };
 
+  const nextPhoto = () => {
+    if (rental?.photos?.length > 1) {
+      setCurrentPhotoIndex((prev) => (prev + 1) % rental.photos.length);
+    }
+  };
+
+  const prevPhoto = () => {
+    if (rental?.photos?.length > 1) {
+      setCurrentPhotoIndex((prev) => (prev - 1 + rental.photos.length) % rental.photos.length);
+    }
+  };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg">Chargement des détails...</div>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-lg text-slate-600 font-medium">Chargement des détails...</p>
+        </div>
       </div>
     );
   }
@@ -118,148 +136,201 @@ const RentalDetail = () => {
   if (!rental) return null;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Header */}
-      <header className="border-b border-border bg-card">
+      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              data-testid="back-to-rentals-button"
+              onClick={() => navigate('/rentals')}
+              className="gap-2 text-slate-700 hover:text-slate-900 hover:bg-slate-100"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span className="hidden sm:inline">Retour aux Locations</span>
+            </Button>
+            
+            <div className="flex items-center gap-3">
               <Button
-                variant="ghost"
-                data-testid="back-to-rentals-button"
-                onClick={() => navigate('/rentals')}
-                className="gap-2"
+                variant="outline"
+                size="icon"
+                onClick={() => setIsFavorite(!isFavorite)}
+                className={`rounded-full ${isFavorite ? 'text-red-500 border-red-200 bg-red-50' : ''}`}
               >
-                <ArrowLeft className="h-4 w-4" />
-                Retour aux Locations
+                <Heart className={`h-5 w-5 ${isFavorite ? 'fill-current' : ''}`} />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="rounded-full"
+                onClick={() => {
+                  navigator.clipboard.writeText(window.location.href);
+                  toast.success('Lien copié !');
+                }}
+              >
+                <Share2 className="h-5 w-5" />
               </Button>
             </div>
-            <Button
-              variant="outline"
-              onClick={() => navigate('/auth')}
-            >
-              Connexion Prestataire
-            </Button>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <div className="max-w-6xl mx-auto px-4 md:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
         {/* Photo Gallery */}
-        {rental.photos && rental.photos.length > 0 ? (
-          <Card className="mb-8 overflow-hidden">
-            <div className="aspect-video relative bg-muted">
-              <img
-                src={`${BACKEND_URL}${rental.photos[currentPhotoIndex]}`}
-                alt={rental.title}
-                className="w-full h-full object-cover"
-              />
-              {rental.photos.length > 1 && (
-                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
-                  {rental.photos.map((_, index) => (
+        <div className="mb-8">
+          {rental.photos && rental.photos.length > 0 ? (
+            <div className="relative rounded-3xl overflow-hidden shadow-2xl group">
+              <div className="aspect-[16/9] md:aspect-[21/9] relative bg-slate-200">
+                <img
+                  src={`${BACKEND_URL}${rental.photos[currentPhotoIndex]}`}
+                  alt={rental.title}
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+                
+                {/* Gradient Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                
+                {/* Navigation Arrows */}
+                {rental.photos.length > 1 && (
+                  <>
                     <button
-                      key={index}
-                      onClick={() => setCurrentPhotoIndex(index)}
-                      className={`w-2 h-2 rounded-full transition-colors ${
-                        index === currentPhotoIndex
-                          ? 'bg-white'
-                          : 'bg-white/50 hover:bg-white/75'
-                      }`}
-                    />
-                  ))}
+                      onClick={prevPhoto}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
+                    >
+                      <ChevronLeft className="h-6 w-6 text-slate-800" />
+                    </button>
+                    <button
+                      onClick={nextPhoto}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
+                    >
+                      <ChevronRight className="h-6 w-6 text-slate-800" />
+                    </button>
+                  </>
+                )}
+                
+                {/* Photo Counter */}
+                {rental.photos.length > 1 && (
+                  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
+                    {rental.photos.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setCurrentPhotoIndex(index)}
+                        className={`w-2.5 h-2.5 rounded-full transition-all ${
+                          index === currentPhotoIndex
+                            ? 'bg-white w-8'
+                            : 'bg-white/50 hover:bg-white/75'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                )}
+                
+                {/* Price Badge */}
+                <div className="absolute top-6 right-6 bg-white/95 backdrop-blur-sm rounded-2xl px-6 py-3 shadow-lg">
+                  {rental.rental_type === 'short_term' && rental.price_per_night ? (
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-600">
+                        {Number(rental.price_per_night).toLocaleString('fr-FR')} GNF
+                      </div>
+                      <div className="text-sm text-slate-500">par nuit</div>
+                    </div>
+                  ) : (
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-600">
+                        {Number(rental.rental_price).toLocaleString('fr-FR')} GNF
+                      </div>
+                      <div className="text-sm text-slate-500">par mois</div>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
-          </Card>
-        ) : (
-          <Card className="mb-8 aspect-video flex items-center justify-center bg-muted">
-            <HomeIcon className="h-24 w-24 text-muted-foreground" />
-          </Card>
-        )}
+          ) : (
+            <div className="aspect-[16/9] md:aspect-[21/9] rounded-3xl bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center">
+              <div className="text-center">
+                <Building className="h-24 w-24 text-slate-400 mx-auto mb-4" />
+                <p className="text-slate-500">Pas de photos disponibles</p>
+              </div>
+            </div>
+          )}
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Property Details */}
           <div className="lg:col-span-2 space-y-6">
-            <Card className="p-8">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h1 className="text-3xl font-heading font-bold text-foreground mb-2">
-                    {rental.title}
-                  </h1>
-                  <div className="flex flex-wrap gap-2 mb-2">
-                    <span className="inline-block px-3 py-1 rounded-md text-sm font-medium bg-muted text-muted-foreground">
-                      {rental.property_type === 'Apartment' ? 'Appartement' : 'Maison'}
-                    </span>
-                    {/* Rental Type Badge */}
-                    <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-md text-sm font-medium ${
-                      rental.rental_type === 'short_term' 
-                        ? 'bg-purple-100 text-purple-700' 
-                        : 'bg-blue-100 text-blue-700'
-                    }`}>
-                      {rental.rental_type === 'short_term' ? (
-                        <>
-                          <Moon className="h-4 w-4" />
-                          Courte Durée
-                        </>
-                      ) : (
-                        <>
-                          <Calendar className="h-4 w-4" />
-                          Longue Durée
-                        </>
-                      )}
-                    </span>
-                    {/* Availability Badge */}
-                    {rental.is_available !== false ? (
-                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-md text-sm font-medium bg-green-100 text-green-700">
-                        <CheckCircle className="h-4 w-4" />
-                        Disponible
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-md text-sm font-medium bg-red-100 text-red-700">
-                        <XCircle className="h-4 w-4" />
-                        Indisponible
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className="text-right">
-                  {rental.rental_type === 'short_term' && rental.price_per_night ? (
+            {/* Title Card */}
+            <Card className="p-8 rounded-3xl shadow-lg border-0 bg-white">
+              <div className="flex flex-wrap gap-3 mb-4">
+                <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-slate-100 text-slate-700">
+                  <HomeIcon className="h-4 w-4" />
+                  {rental.property_type === 'Apartment' ? 'Appartement' : 'Maison'}
+                </span>
+                <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${
+                  rental.rental_type === 'short_term' 
+                    ? 'bg-purple-100 text-purple-700' 
+                    : 'bg-blue-100 text-blue-700'
+                }`}>
+                  {rental.rental_type === 'short_term' ? (
                     <>
-                      <div className="text-3xl font-heading font-bold text-primary">
-                        {Number(rental.price_per_night).toLocaleString('fr-FR')} GNF
-                      </div>
-                      <div className="text-sm text-muted-foreground">par nuit</div>
+                      <Moon className="h-4 w-4" />
+                      Courte Durée
                     </>
                   ) : (
                     <>
-                      <div className="text-3xl font-heading font-bold text-primary">
-                        {Number(rental.rental_price).toLocaleString('fr-FR')} GNF
-                      </div>
-                      <div className="text-sm text-muted-foreground">par mois</div>
+                      <Calendar className="h-4 w-4" />
+                      Longue Durée
                     </>
                   )}
-                </div>
+                </span>
+                {rental.is_available !== false ? (
+                  <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-green-100 text-green-700">
+                    <CheckCircle className="h-4 w-4" />
+                    Disponible
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-red-100 text-red-700">
+                    <XCircle className="h-4 w-4" />
+                    Indisponible
+                  </span>
+                )}
               </div>
 
-              <div className="flex items-center gap-2 text-muted-foreground mb-6">
-                <MapPin className="h-5 w-5" />
+              <h1 className="text-3xl md:text-4xl font-heading font-bold text-slate-900 mb-4">
+                {rental.title}
+              </h1>
+
+              <div className="flex items-center gap-3 text-slate-600 mb-6">
+                <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                  <MapPin className="h-5 w-5 text-green-600" />
+                </div>
                 <span className="text-lg">{rental.location}</span>
               </div>
 
               {/* Short term rental info */}
               {rental.rental_type === 'short_term' && (
-                <div className="flex flex-wrap gap-4 mb-6 p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                <div className="flex flex-wrap gap-6 mb-6 p-6 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-2xl">
                   {rental.min_nights && rental.min_nights > 1 && (
-                    <div className="flex items-center gap-2">
-                      <Moon className="h-5 w-5 text-purple-600" />
-                      <span className="text-purple-800">Min {rental.min_nights} nuits</span>
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center">
+                        <Moon className="h-6 w-6 text-purple-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-purple-600">Minimum</p>
+                        <p className="text-lg font-bold text-purple-800">{rental.min_nights} nuits</p>
+                      </div>
                     </div>
                   )}
                   {rental.max_guests && (
-                    <div className="flex items-center gap-2">
-                      <Users className="h-5 w-5 text-purple-600" />
-                      <span className="text-purple-800">Max {rental.max_guests} invités</span>
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center">
+                        <Users className="h-6 w-6 text-purple-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-purple-600">Capacité</p>
+                        <p className="text-lg font-bold text-purple-800">{rental.max_guests} invités</p>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -267,136 +338,172 @@ const RentalDetail = () => {
 
               {/* Availability Dates */}
               {(rental.available_from || rental.available_to) && (
-                <div className="mb-6 p-4 bg-muted rounded-lg">
-                  <h3 className="font-heading font-bold text-foreground mb-2 flex items-center gap-2">
-                    <Calendar className="h-5 w-5" />
-                    Disponibilité
+                <div className="mb-6 p-6 bg-slate-50 rounded-2xl">
+                  <h3 className="font-heading font-bold text-slate-900 mb-3 flex items-center gap-2">
+                    <Calendar className="h-5 w-5 text-green-600" />
+                    Période de Disponibilité
                   </h3>
-                  <div className="flex gap-4 text-sm">
+                  <div className="flex flex-wrap gap-4 text-slate-700">
                     {rental.available_from && (
-                      <span>Du <strong>{new Date(rental.available_from).toLocaleDateString('fr-FR')}</strong></span>
+                      <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-sm">
+                        <span className="text-sm text-slate-500">Du</span>
+                        <span className="font-semibold">{new Date(rental.available_from).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                      </div>
                     )}
                     {rental.available_to && (
-                      <span>Au <strong>{new Date(rental.available_to).toLocaleDateString('fr-FR')}</strong></span>
+                      <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-sm">
+                        <span className="text-sm text-slate-500">Au</span>
+                        <span className="font-semibold">{new Date(rental.available_to).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                      </div>
                     )}
                   </div>
                 </div>
               )}
+            </Card>
 
-              {/* Amenities */}
-              {rental.amenities && rental.amenities.length > 0 && (
-                <div className="mb-6">
-                  <h2 className="text-xl font-heading font-bold text-foreground mb-3">
-                    Équipements
-                  </h2>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {rental.amenities.map((amenity) => {
-                      const Icon = AMENITY_ICONS[amenity] || CheckCircle;
-                      const label = AMENITY_LABELS[amenity] || amenity;
-                      return (
-                        <div key={amenity} className="flex items-center gap-2 p-3 bg-muted rounded-lg">
-                          <Icon className="h-5 w-5 text-primary" />
-                          <span className="text-sm font-medium">{label}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              <div>
-                <h2 className="text-xl font-heading font-bold text-foreground mb-3">
-                  Description
+            {/* Amenities */}
+            {rental.amenities && rental.amenities.length > 0 && (
+              <Card className="p-8 rounded-3xl shadow-lg border-0 bg-white">
+                <h2 className="text-2xl font-heading font-bold text-slate-900 mb-6">
+                  Équipements & Services
                 </h2>
-                <p className="text-foreground leading-relaxed whitespace-pre-wrap">
-                  {rental.description}
-                </p>
-              </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {rental.amenities.map((amenity) => {
+                    const Icon = AMENITY_ICONS[amenity] || CheckCircle;
+                    const label = AMENITY_LABELS[amenity] || amenity;
+                    return (
+                      <div key={amenity} className="flex items-center gap-3 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl border border-green-100">
+                        <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
+                          <Icon className="h-5 w-5 text-green-600" />
+                        </div>
+                        <span className="font-medium text-slate-700">{label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </Card>
+            )}
+
+            {/* Description */}
+            <Card className="p-8 rounded-3xl shadow-lg border-0 bg-white">
+              <h2 className="text-2xl font-heading font-bold text-slate-900 mb-4">
+                Description
+              </h2>
+              <p className="text-slate-600 leading-relaxed whitespace-pre-wrap text-lg">
+                {rental.description}
+              </p>
             </Card>
           </div>
 
           {/* Contact Card with Chat */}
           <div className="lg:col-span-1">
-            <Card className="p-6 sticky top-8">
-              <h3 className="text-xl font-heading font-bold text-foreground mb-4">
-                Contacter le Propriétaire
-              </h3>
+            <div className="sticky top-24">
+              <Card className="p-6 rounded-3xl shadow-xl border-0 bg-white overflow-hidden">
+                {/* Decorative Header */}
+                <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-green-500 to-emerald-500" />
+                
+                <h3 className="text-xl font-heading font-bold text-slate-900 mb-6 mt-2">
+                  Contacter le Propriétaire
+                </h3>
 
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <User className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <div className="text-sm text-muted-foreground">Propriétaire</div>
-                  <div className="font-medium text-foreground">{rental.provider_name || 'Agent Immobilier'}</div>
-                </div>
-              </div>
-
-              {!showChat ? (
-                <Button
-                  className="w-full h-12 font-heading font-bold gap-2"
-                  data-testid="start-chat-button"
-                  onClick={() => setShowChat(true)}
-                >
-                  <MessageCircle className="h-5 w-5" />
-                  Démarrer une Conversation
-                </Button>
-              ) : (
-                <div className="space-y-4">
-                  {/* Chat Messages */}
-                  <div className="h-64 overflow-y-auto border rounded-lg p-3 bg-muted/30">
-                    {messages.length === 0 ? (
-                      <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
-                        Aucun message. Commencez la conversation !
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {messages.map((msg) => (
-                          <div
-                            key={msg.id}
-                            className={`flex ${msg.sender_type === 'customer' ? 'justify-end' : 'justify-start'}`}
-                          >
-                            <div
-                              className={`max-w-[80%] px-3 py-2 rounded-lg text-sm ${
-                                msg.sender_type === 'customer'
-                                  ? 'bg-primary text-primary-foreground'
-                                  : 'bg-muted text-foreground'
-                              }`}
-                            >
-                              <p>{msg.message}</p>
-                              <p className={`text-xs mt-1 ${
-                                msg.sender_type === 'customer' ? 'text-primary-foreground/70' : 'text-muted-foreground'
-                              }`}>
-                                {new Date(msg.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                        <div ref={messagesEndRef} />
-                      </div>
-                    )}
+                <div className="flex items-center gap-4 mb-6 p-4 bg-slate-50 rounded-2xl">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-lg">
+                    <User className="h-7 w-7 text-white" />
                   </div>
-
-                  {/* Message Input */}
-                  <form onSubmit={handleSendMessage} className="flex gap-2">
-                    <Input
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      placeholder="Écrivez votre message..."
-                      className="flex-1"
-                      disabled={sendingMessage}
-                    />
-                    <Button 
-                      type="submit" 
-                      size="icon"
-                      disabled={sendingMessage || !newMessage.trim()}
-                    >
-                      <Send className="h-4 w-4" />
-                    </Button>
-                  </form>
+                  <div>
+                    <div className="text-sm text-slate-500">Propriétaire</div>
+                    <div className="font-bold text-slate-900">{rental.provider_name || 'Agent Immobilier'}</div>
+                    <div className="flex items-center gap-1 text-sm text-green-600">
+                      <Clock className="h-3 w-3" />
+                      Répond généralement en 1h
+                    </div>
+                  </div>
                 </div>
-              )}
-            </Card>
+
+                {!showChat ? (
+                  <Button
+                    className="w-full h-14 font-heading font-bold gap-3 rounded-2xl bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-lg shadow-green-500/30 text-base"
+                    data-testid="start-chat-button"
+                    onClick={() => setShowChat(true)}
+                  >
+                    <MessageCircle className="h-5 w-5" />
+                    Démarrer une Conversation
+                  </Button>
+                ) : (
+                  <div className="space-y-4">
+                    {/* Chat Messages */}
+                    <div className="h-72 overflow-y-auto border border-slate-200 rounded-2xl p-4 bg-slate-50">
+                      {messages.length === 0 ? (
+                        <div className="h-full flex flex-col items-center justify-center text-slate-400 text-sm">
+                          <MessageCircle className="h-12 w-12 mb-3 opacity-50" />
+                          <p>Aucun message</p>
+                          <p className="text-xs">Commencez la conversation !</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {messages.map((msg) => (
+                            <div
+                              key={msg.id}
+                              className={`flex ${msg.sender_type === 'customer' ? 'justify-end' : 'justify-start'}`}
+                            >
+                              <div
+                                className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm ${
+                                  msg.sender_type === 'customer'
+                                    ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
+                                    : 'bg-white text-slate-700 shadow-sm border'
+                                }`}
+                              >
+                                <p>{msg.message}</p>
+                                <p className={`text-xs mt-1 ${
+                                  msg.sender_type === 'customer' ? 'text-green-100' : 'text-slate-400'
+                                }`}>
+                                  {new Date(msg.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                          <div ref={messagesEndRef} />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Message Input */}
+                    <form onSubmit={handleSendMessage} className="flex gap-2">
+                      <Input
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        placeholder="Écrivez votre message..."
+                        className="flex-1 h-12 rounded-xl border-slate-200"
+                        disabled={sendingMessage}
+                      />
+                      <Button 
+                        type="submit" 
+                        size="icon"
+                        disabled={sendingMessage || !newMessage.trim()}
+                        className="h-12 w-12 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+                      >
+                        <Send className="h-5 w-5" />
+                      </Button>
+                    </form>
+                  </div>
+                )}
+
+                {/* Quick Contact */}
+                <div className="mt-6 pt-6 border-t border-slate-100">
+                  <p className="text-sm text-slate-500 mb-3">Ou contactez directement</p>
+                  <div className="flex gap-3">
+                    <Button variant="outline" className="flex-1 gap-2 rounded-xl h-11">
+                      <Phone className="h-4 w-4" />
+                      Appeler
+                    </Button>
+                    <Button variant="outline" className="flex-1 gap-2 rounded-xl h-11">
+                      <Mail className="h-4 w-4" />
+                      Email
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            </div>
           </div>
         </div>
       </div>
