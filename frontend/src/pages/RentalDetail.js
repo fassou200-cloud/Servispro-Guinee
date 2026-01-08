@@ -72,7 +72,7 @@ const RentalDetail = () => {
       setRental(response.data);
     } catch (error) {
       toast.error('Échec du chargement des détails');
-      navigate('/rentals');
+      navigate('/rental');
     } finally {
       setLoading(false);
     }
