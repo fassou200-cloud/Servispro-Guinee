@@ -7,21 +7,97 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
-import { Upload, X, Wifi, Wind, Car, Utensils, Tv, Bath } from 'lucide-react';
+import { 
+  Upload, X, Wifi, Wind, Car, Utensils, Tv, Bath, Thermometer, Phone, 
+  Laptop, Shirt, Lock, Coffee, Droplets, ShowerHead, Mountain, Volume2, 
+  Flame, Sofa, Baby, UtensilsCrossed, Sun, Users, ChefHat, Waves,
+  BedDouble, Armchair, Hotel, Refrigerator, Microwave as MicrowaveIcon,
+  CircleDot, CheckCircle
+} from 'lucide-react';
 import axios from 'axios';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-// Available amenities
-const AMENITIES_OPTIONS = [
-  { id: 'wifi', label: 'WiFi', icon: Wifi },
-  { id: 'climatisation', label: 'Climatisation', icon: Wind },
-  { id: 'parking', label: 'Parking', icon: Car },
-  { id: 'cuisine', label: 'Cuisine Équipée', icon: Utensils },
-  { id: 'tv', label: 'Télévision', icon: Tv },
-  { id: 'salle_bain_privee', label: 'Salle de Bain Privée', icon: Bath },
+// Organized amenities by category
+const AMENITIES_CATEGORIES = [
+  {
+    category: "Chambre & Confort",
+    items: [
+      { id: 'climatisation', label: 'Climatisation', icon: Wind },
+      { id: 'chauffage', label: 'Chauffage', icon: Thermometer },
+      { id: 'wifi', label: 'WiFi Gratuit', icon: Wifi },
+      { id: 'tv', label: 'Télévision (Smart TV)', icon: Tv },
+      { id: 'telephone', label: 'Téléphone', icon: Phone },
+      { id: 'bureau', label: 'Bureau & Chaise', icon: Laptop },
+      { id: 'armoire', label: 'Armoire / Penderie', icon: Armchair },
+      { id: 'fer_repasser', label: 'Fer & Planche à Repasser', icon: Shirt },
+      { id: 'seche_cheveux', label: 'Sèche-cheveux', icon: Wind },
+      { id: 'coffre_fort', label: 'Coffre-fort', icon: Lock },
+      { id: 'mini_frigo', label: 'Mini-réfrigérateur', icon: Refrigerator },
+      { id: 'micro_ondes', label: 'Micro-ondes', icon: MicrowaveIcon },
+      { id: 'cafetiere', label: 'Cafetière / Théière', icon: Coffee },
+      { id: 'bouilloire', label: 'Bouilloire Électrique', icon: Coffee },
+      { id: 'eau_bouteille', label: 'Eau en Bouteille', icon: Droplets },
+      { id: 'chaussons', label: 'Chaussons', icon: CircleDot },
+      { id: 'peignoirs', label: 'Peignoirs', icon: Shirt },
+      { id: 'serviettes', label: 'Serviettes & Articles de Toilette', icon: Bath },
+    ]
+  },
+  {
+    category: "Salle de Bain",
+    items: [
+      { id: 'salle_bain_privee', label: 'Salle de Bain Privée', icon: Bath },
+      { id: 'baignoire', label: 'Baignoire', icon: Bath },
+      { id: 'douche', label: 'Douche', icon: ShowerHead },
+    ]
+  },
+  {
+    category: "Extérieur & Vue",
+    items: [
+      { id: 'balcon', label: 'Balcon / Terrasse', icon: Sun },
+      { id: 'vue', label: 'Vue (Océan / Ville / Jardin)', icon: Mountain },
+      { id: 'insonorisation', label: 'Chambres Insonorisées', icon: Volume2 },
+      { id: 'cheminee', label: 'Cheminée', icon: Flame },
+    ]
+  },
+  {
+    category: "Couchage Supplémentaire",
+    items: [
+      { id: 'canape_lit', label: 'Canapé-lit / Lit Extra', icon: Sofa },
+      { id: 'lit_bebe', label: 'Lit Bébé / Berceau', icon: Baby },
+    ]
+  },
+  {
+    category: "Restauration",
+    items: [
+      { id: 'restaurant', label: 'Restaurant (sur place)', icon: UtensilsCrossed },
+      { id: 'diner', label: 'Service Dîner', icon: UtensilsCrossed },
+      { id: 'dejeuner', label: 'Service Déjeuner', icon: UtensilsCrossed },
+      { id: 'petit_dejeuner', label: 'Petit-déjeuner', icon: Coffee },
+      { id: 'petit_dej_gratuit', label: 'Petit-déjeuner Gratuit', icon: Coffee },
+      { id: 'room_service', label: 'Service en Chambre', icon: Hotel },
+      { id: 'bar', label: 'Bar / Lounge', icon: UtensilsCrossed },
+      { id: 'bar_piscine', label: 'Bar Piscine', icon: Waves },
+      { id: 'snack_bar', label: 'Snack Bar', icon: UtensilsCrossed },
+      { id: 'cafe', label: 'Coffee Shop / Café', icon: Coffee },
+      { id: 'cuisine_partagee', label: 'Cuisine Partagée', icon: ChefHat },
+      { id: 'cuisine', label: 'Cuisine Équipée Complète', icon: Utensils },
+      { id: 'bbq', label: 'Barbecue / Grill', icon: Flame },
+    ]
+  },
+  {
+    category: "Autres",
+    items: [
+      { id: 'parking', label: 'Parking', icon: Car },
+      { id: 'piscine', label: 'Piscine', icon: Waves },
+      { id: 'salle_sport', label: 'Salle de Sport', icon: Users },
+    ]
+  }
 ];
+
+// Flat list of all amenities for easy lookup
+const ALL_AMENITIES = AMENITIES_CATEGORIES.flatMap(cat => cat.items);
 
 const RentalListingForm = ({ onSuccess }) => {
   const [formData, setFormData] = useState({
@@ -42,6 +118,7 @@ const RentalListingForm = ({ onSuccess }) => {
   const [saving, setSaving] = useState(false);
   const [selectedPhotos, setSelectedPhotos] = useState([]);
   const [photoPreviewUrls, setPhotoPreviewUrls] = useState([]);
+  const [expandedCategories, setExpandedCategories] = useState(['Chambre & Confort']);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -56,11 +133,18 @@ const RentalListingForm = ({ onSuccess }) => {
     }));
   };
 
+  const toggleCategory = (category) => {
+    setExpandedCategories(prev => 
+      prev.includes(category) 
+        ? prev.filter(c => c !== category)
+        : [...prev, category]
+    );
+  };
+
   const handlePhotoSelect = (e) => {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
 
-    // Validate files - only images and max 5MB each
     const validFiles = files.filter(file => {
       if (!file.type.startsWith('image/')) {
         toast.error(`${file.name} n'est pas une image`);
@@ -75,23 +159,16 @@ const RentalListingForm = ({ onSuccess }) => {
 
     if (validFiles.length === 0) return;
 
-    // Add to selected photos
     setSelectedPhotos([...selectedPhotos, ...validFiles]);
-
-    // Create preview URLs
     const newPreviewUrls = validFiles.map(file => URL.createObjectURL(file));
     setPhotoPreviewUrls([...photoPreviewUrls, ...newPreviewUrls]);
-    
     toast.success(`${validFiles.length} photo(s) ajoutée(s)`);
   };
 
   const removePhoto = (index) => {
     const newPhotos = selectedPhotos.filter((_, i) => i !== index);
     const newPreviews = photoPreviewUrls.filter((_, i) => i !== index);
-    
-    // Revoke the object URL to free memory
     URL.revokeObjectURL(photoPreviewUrls[index]);
-    
     setSelectedPhotos(newPhotos);
     setPhotoPreviewUrls(newPreviews);
   };
@@ -112,14 +189,12 @@ const RentalListingForm = ({ onSuccess }) => {
         available_to: formData.available_to || null
       };
 
-      // Create rental listing
       const response = await axios.post(`${API}/rentals`, payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
       const rentalId = response.data.id;
 
-      // Upload photos if any
       if (selectedPhotos.length > 0) {
         for (const photo of selectedPhotos) {
           const photoFormData = new FormData();
@@ -136,7 +211,6 @@ const RentalListingForm = ({ onSuccess }) => {
 
       toast.success('Annonce de location créée avec succès !');
       
-      // Reset form
       setFormData({
         property_type: 'Apartment',
         title: '',
@@ -185,11 +259,14 @@ const RentalListingForm = ({ onSuccess }) => {
             <SelectContent>
               <SelectItem value="Apartment">Appartement</SelectItem>
               <SelectItem value="House">Maison</SelectItem>
+              <SelectItem value="Villa">Villa</SelectItem>
+              <SelectItem value="Studio">Studio</SelectItem>
+              <SelectItem value="Chambre">Chambre d'Hôtes</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
-        {/* Rental Type - Long Term or Short Term */}
+        {/* Rental Type */}
         <div className="space-y-2">
           <Label className="font-heading text-xs uppercase tracking-wide">
             Type de Location *
@@ -355,23 +432,64 @@ const RentalListingForm = ({ onSuccess }) => {
           </div>
         )}
 
-        {/* Amenities */}
-        <div className="space-y-3">
-          <Label className="font-heading text-xs uppercase tracking-wide">
-            Équipements
-          </Label>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {AMENITIES_OPTIONS.map(({ id, label, icon: Icon }) => (
-              <Button
-                key={id}
-                type="button"
-                variant={formData.amenities.includes(id) ? 'default' : 'outline'}
-                onClick={() => toggleAmenity(id)}
-                className="h-12 justify-start gap-2"
-              >
-                <Icon className="h-4 w-4" />
-                {label}
-              </Button>
+        {/* Amenities - Organized by Category */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <Label className="font-heading text-xs uppercase tracking-wide">
+              Équipements & Services
+            </Label>
+            <span className="text-sm text-muted-foreground">
+              {formData.amenities.length} sélectionné(s)
+            </span>
+          </div>
+          
+          <div className="space-y-3">
+            {AMENITIES_CATEGORIES.map(({ category, items }) => (
+              <div key={category} className="border border-border rounded-lg overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => toggleCategory(category)}
+                  className="w-full px-4 py-3 bg-muted/50 flex items-center justify-between hover:bg-muted transition-colors"
+                >
+                  <span className="font-medium text-sm">{category}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground">
+                      {items.filter(item => formData.amenities.includes(item.id)).length}/{items.length}
+                    </span>
+                    <svg 
+                      className={`w-4 h-4 transition-transform ${expandedCategories.includes(category) ? 'rotate-180' : ''}`}
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </button>
+                
+                {expandedCategories.includes(category) && (
+                  <div className="p-4 grid grid-cols-2 md:grid-cols-3 gap-2">
+                    {items.map(({ id, label, icon: Icon }) => (
+                      <button
+                        key={id}
+                        type="button"
+                        onClick={() => toggleAmenity(id)}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all ${
+                          formData.amenities.includes(id)
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-background border border-border hover:border-primary/50'
+                        }`}
+                      >
+                        <Icon className="h-4 w-4 flex-shrink-0" />
+                        <span className="text-left truncate">{label}</span>
+                        {formData.amenities.includes(id) && (
+                          <CheckCircle className="h-4 w-4 ml-auto flex-shrink-0" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         </div>
