@@ -3,7 +3,13 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
-import { Home, MapPin, Trash2, Moon, Calendar, Users, CheckCircle, XCircle, Wifi, Wind, Car, Utensils, Tv, Bath } from 'lucide-react';
+import { 
+  Home, MapPin, Trash2, Moon, Calendar, Users, CheckCircle, XCircle, 
+  Wifi, Wind, Car, Utensils, Tv, Bath, Thermometer, Phone, Laptop, 
+  Shirt, Lock, Coffee, Droplets, ShowerHead, Mountain, Volume2, 
+  Flame, Sofa, Baby, UtensilsCrossed, Sun, ChefHat, Waves,
+  Armchair, Hotel, Refrigerator, Microwave as MicrowaveIcon, CircleDot
+} from 'lucide-react';
 import axios from 'axios';
 import {
   AlertDialog,
@@ -19,23 +25,98 @@ import {
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-// Amenity icons mapping
+// Complete amenity icons mapping
 const AMENITY_ICONS = {
-  wifi: Wifi,
   climatisation: Wind,
-  parking: Car,
-  cuisine: Utensils,
+  chauffage: Thermometer,
+  wifi: Wifi,
   tv: Tv,
+  telephone: Phone,
+  bureau: Laptop,
+  armoire: Armchair,
+  fer_repasser: Shirt,
+  seche_cheveux: Wind,
+  coffre_fort: Lock,
+  mini_frigo: Refrigerator,
+  micro_ondes: MicrowaveIcon,
+  cafetiere: Coffee,
+  bouilloire: Coffee,
+  eau_bouteille: Droplets,
+  chaussons: CircleDot,
+  peignoirs: Shirt,
+  serviettes: Bath,
   salle_bain_privee: Bath,
+  baignoire: Bath,
+  douche: ShowerHead,
+  balcon: Sun,
+  vue: Mountain,
+  insonorisation: Volume2,
+  cheminee: Flame,
+  canape_lit: Sofa,
+  lit_bebe: Baby,
+  restaurant: UtensilsCrossed,
+  diner: UtensilsCrossed,
+  dejeuner: UtensilsCrossed,
+  petit_dejeuner: Coffee,
+  petit_dej_gratuit: Coffee,
+  room_service: Hotel,
+  bar: UtensilsCrossed,
+  bar_piscine: Waves,
+  snack_bar: UtensilsCrossed,
+  cafe: Coffee,
+  cuisine_partagee: ChefHat,
+  cuisine: Utensils,
+  bbq: Flame,
+  parking: Car,
+  piscine: Waves,
+  salle_sport: Users,
 };
 
+// Short labels for compact display
 const AMENITY_LABELS = {
-  wifi: 'WiFi',
   climatisation: 'Clim',
-  parking: 'Parking',
-  cuisine: 'Cuisine',
+  chauffage: 'Chauff.',
+  wifi: 'WiFi',
   tv: 'TV',
+  telephone: 'Tél',
+  bureau: 'Bureau',
+  armoire: 'Armoire',
+  fer_repasser: 'Fer',
+  seche_cheveux: 'Sèche-ch.',
+  coffre_fort: 'Coffre',
+  mini_frigo: 'Frigo',
+  micro_ondes: 'Micro-on.',
+  cafetiere: 'Café',
+  bouilloire: 'Bouill.',
+  eau_bouteille: 'Eau',
+  chaussons: 'Chauss.',
+  peignoirs: 'Peignoir',
+  serviettes: 'Serv.',
   salle_bain_privee: 'SDB',
+  baignoire: 'Baign.',
+  douche: 'Douche',
+  balcon: 'Balcon',
+  vue: 'Vue',
+  insonorisation: 'Insono.',
+  cheminee: 'Chemin.',
+  canape_lit: 'Canapé',
+  lit_bebe: 'Lit bébé',
+  restaurant: 'Resto',
+  diner: 'Dîner',
+  dejeuner: 'Déj.',
+  petit_dejeuner: 'Petit-déj',
+  petit_dej_gratuit: 'PDJ ✓',
+  room_service: 'Room Serv.',
+  bar: 'Bar',
+  bar_piscine: 'Bar Pisc.',
+  snack_bar: 'Snack',
+  cafe: 'Café',
+  cuisine_partagee: 'Cuis. Part.',
+  cuisine: 'Cuisine',
+  bbq: 'BBQ',
+  parking: 'Parking',
+  piscine: 'Piscine',
+  salle_sport: 'Gym',
 };
 
 const MyRentals = () => {
