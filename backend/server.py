@@ -424,6 +424,148 @@ class VehicleBooking(BaseModel):
     message: Optional[str] = None
     created_at: str
 
+# Company Models
+class CompanySector(str, Enum):
+    CONSTRUCTION = "Construction"
+    TRANSPORT = "Transport"
+    NETTOYAGE = "Nettoyage"
+    SECURITE = "Securite"
+    INFORMATIQUE = "Informatique"
+    RESTAURATION = "Restauration"
+    IMMOBILIER = "Immobilier"
+    COMMERCE = "Commerce"
+    AGRICULTURE = "Agriculture"
+    INDUSTRIE = "Industrie"
+    SERVICES = "Services"
+    AUTRES = "Autres"
+
+class CompanyRegisterInput(BaseModel):
+    company_name: str
+    rccm_number: str  # Registre du Commerce
+    nif_number: Optional[str] = None  # Numéro d'Identification Fiscale
+    sector: str
+    address: str
+    city: str
+    region: str
+    phone_number: str
+    email: Optional[str] = None
+    website: Optional[str] = None
+    description: str
+    password: str
+    contact_person_name: str
+    contact_person_phone: str
+    
+    @field_validator('phone_number')
+    def validate_phone(cls, v):
+        if not v or len(v) < 10:
+            raise ValueError('Phone number must be at least 10 digits')
+        return v
+
+class CompanyLoginInput(BaseModel):
+    rccm_number: str
+    password: str
+
+class Company(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str
+    company_name: str
+    rccm_number: str
+    nif_number: Optional[str] = None
+    sector: str
+    address: str
+    city: str
+    region: str
+    phone_number: str
+    email: Optional[str] = None
+    website: Optional[str] = None
+    description: str
+    contact_person_name: str
+    contact_person_phone: str
+    # Documents
+    logo: Optional[str] = None
+    licence_exploitation: Optional[str] = None
+    rccm_document: Optional[str] = None
+    nif_document: Optional[str] = None
+    attestation_fiscale: Optional[str] = None
+    documents_additionnels: List[str] = []
+    # Status
+    verification_status: str = "pending"  # pending, approved, rejected
+    online_status: bool = False
+    # Timestamps
+    created_at: str
+    updated_at: str
+
+class CompanyProfileUpdate(BaseModel):
+    company_name: Optional[str] = None
+    sector: Optional[str] = None
+    address: Optional[str] = None
+    city: Optional[str] = None
+    region: Optional[str] = None
+    phone_number: Optional[str] = None
+    email: Optional[str] = None
+    website: Optional[str] = None
+    description: Optional[str] = None
+    contact_person_name: Optional[str] = None
+    contact_person_phone: Optional[str] = None
+    online_status: Optional[bool] = None
+
+class CompanyServiceCreate(BaseModel):
+    title: str
+    description: str
+    category: str
+    price_min: Optional[int] = None
+    price_max: Optional[int] = None
+    duration: Optional[str] = None
+    location: str
+    is_available: bool = True
+
+class CompanyService(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str
+    company_id: str
+    company_name: str
+    title: str
+    description: str
+    category: str
+    price_min: Optional[int] = None
+    price_max: Optional[int] = None
+    duration: Optional[str] = None
+    location: str
+    is_available: bool = True
+    created_at: str
+
+class CompanyJobOfferCreate(BaseModel):
+    title: str
+    description: str
+    requirements: str
+    location: str
+    contract_type: str  # CDI, CDD, Stage, Freelance
+    salary_min: Optional[int] = None
+    salary_max: Optional[int] = None
+    deadline: Optional[str] = None
+    is_active: bool = True
+
+class CompanyJobOffer(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str
+    company_id: str
+    company_name: str
+    company_logo: Optional[str] = None
+    title: str
+    description: str
+    requirements: str
+    location: str
+    contract_type: str
+    salary_min: Optional[int] = None
+    salary_max: Optional[int] = None
+    deadline: Optional[str] = None
+    is_active: bool = True
+    applications_count: int = 0
+    created_at: str
+
 # Helper Functions
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
