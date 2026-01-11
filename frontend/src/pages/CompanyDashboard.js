@@ -50,6 +50,8 @@ const CompanyDashboard = () => {
   const [activeTab, setActiveTab] = useState('profile');
   const [services, setServices] = useState([]);
   const [jobOffers, setJobOffers] = useState([]);
+  const [rentals, setRentals] = useState([]);
+  const [sales, setSales] = useState([]);
 
   // Service form state
   const [showServiceForm, setShowServiceForm] = useState(false);
