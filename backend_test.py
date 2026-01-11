@@ -1056,6 +1056,245 @@ class ServisProAPITester:
         
         return success
 
+    # ==================== MESSAGE FILTERING TESTS ====================
+    
+    def test_message_filtering_phone_number(self):
+        """Test that phone numbers are filtered in chat messages"""
+        rental_id = "0f4945d8-ebae-4e13-bc8c-dea3091e52e5"
+        
+        message_data = {
+            "rental_id": rental_id,
+            "message": "Appelez-moi au 620123456"
+        }
+        
+        success, response = self.run_test(
+            "Message Filtering - Phone Number",
+            "POST",
+            f"chat/rental/{rental_id}/message/customer",
+            200,
+            data=message_data
+        )
+        
+        if success:
+            # Check if phone number was filtered
+            filtered_message = response.get('message', '')
+            was_filtered = response.get('was_filtered', False)
+            
+            if '[📵 Numéro masqué - Politique de confidentialité]' in filtered_message and was_filtered:
+                self.log_test("Message Filtering - Phone Number", True, "Phone number correctly filtered")
+                return True
+            else:
+                self.log_test("Message Filtering - Phone Number", False, f"Phone filtering failed. Message: {filtered_message}, was_filtered: {was_filtered}")
+                return False
+        return False
+
+    def test_message_filtering_email(self):
+        """Test that emails are filtered in chat messages"""
+        rental_id = "0f4945d8-ebae-4e13-bc8c-dea3091e52e5"
+        
+        message_data = {
+            "rental_id": rental_id,
+            "message": "Contactez-moi à test@example.com"
+        }
+        
+        success, response = self.run_test(
+            "Message Filtering - Email",
+            "POST",
+            f"chat/rental/{rental_id}/message/customer",
+            200,
+            data=message_data
+        )
+        
+        if success:
+            # Check if email was filtered
+            filtered_message = response.get('message', '')
+            was_filtered = response.get('was_filtered', False)
+            
+            if '[📧 Email masqué - Politique de confidentialité]' in filtered_message and was_filtered:
+                self.log_test("Message Filtering - Email", True, "Email correctly filtered")
+                return True
+            else:
+                self.log_test("Message Filtering - Email", False, f"Email filtering failed. Message: {filtered_message}, was_filtered: {was_filtered}")
+                return False
+        return False
+
+    def test_message_filtering_normal_message(self):
+        """Test that normal messages pass through unchanged"""
+        rental_id = "0f4945d8-ebae-4e13-bc8c-dea3091e52e5"
+        
+        message_data = {
+            "rental_id": rental_id,
+            "message": "Bonjour, je suis intéressé par votre annonce"
+        }
+        
+        success, response = self.run_test(
+            "Message Filtering - Normal Message",
+            "POST",
+            f"chat/rental/{rental_id}/message/customer",
+            200,
+            data=message_data
+        )
+        
+        if success:
+            # Check if message was unchanged
+            filtered_message = response.get('message', '')
+            was_filtered = response.get('was_filtered', True)  # Should be False
+            original_message = message_data['message']
+            
+            if filtered_message == original_message and not was_filtered:
+                self.log_test("Message Filtering - Normal Message", True, "Normal message passed through unchanged")
+                return True
+            else:
+                self.log_test("Message Filtering - Normal Message", False, f"Normal message filtering failed. Message: {filtered_message}, was_filtered: {was_filtered}")
+                return False
+        return False
+
+    def test_message_filtering_mixed_content(self):
+        """Test that messages with both phone and email are filtered"""
+        rental_id = "0f4945d8-ebae-4e13-bc8c-dea3091e52e5"
+        
+        message_data = {
+            "rental_id": rental_id,
+            "message": "Mon tel: 224620000000, email: user@mail.com"
+        }
+        
+        success, response = self.run_test(
+            "Message Filtering - Mixed Content",
+            "POST",
+            f"chat/rental/{rental_id}/message/customer",
+            200,
+            data=message_data
+        )
+        
+        if success:
+            # Check if both phone and email were filtered
+            filtered_message = response.get('message', '')
+            was_filtered = response.get('was_filtered', False)
+            
+            phone_masked = '[📵 Numéro masqué - Politique de confidentialité]' in filtered_message
+            email_masked = '[📧 Email masqué - Politique de confidentialité]' in filtered_message
+            
+            if phone_masked and email_masked and was_filtered:
+                self.log_test("Message Filtering - Mixed Content", True, "Both phone and email correctly filtered")
+                return True
+            else:
+                self.log_test("Message Filtering - Mixed Content", False, f"Mixed content filtering failed. Message: {filtered_message}, phone_masked: {phone_masked}, email_masked: {email_masked}, was_filtered: {was_filtered}")
+                return False
+        return False
+
+    def test_new_vehicle_categories(self):
+        """Test registration with new vehicle categories"""
+        # Test Camionneur
+        test_phone_camionneur = f"224{str(uuid.uuid4())[:8]}"
+        camionneur_data = {
+            "first_name": "Ibrahima",
+            "last_name": "Sow",
+            "phone_number": test_phone_camionneur,
+            "password": "SecurePass123!",
+            "profession": "Camionneur"
+        }
+        
+        success_camionneur, response_camionneur = self.run_test(
+            "New Vehicle Categories - Camionneur",
+            "POST",
+            "auth/register",
+            200,
+            data=camionneur_data
+        )
+        
+        # Test Tracteur
+        test_phone_tracteur = f"224{str(uuid.uuid4())[:8]}"
+        tracteur_data = {
+            "first_name": "Mamadou",
+            "last_name": "Barry",
+            "phone_number": test_phone_tracteur,
+            "password": "SecurePass123!",
+            "profession": "Tracteur"
+        }
+        
+        success_tracteur, response_tracteur = self.run_test(
+            "New Vehicle Categories - Tracteur",
+            "POST",
+            "auth/register",
+            200,
+            data=tracteur_data
+        )
+        
+        # Test Voiture
+        test_phone_voiture = f"224{str(uuid.uuid4())[:8]}"
+        voiture_data = {
+            "first_name": "Fatoumata",
+            "last_name": "Diallo",
+            "phone_number": test_phone_voiture,
+            "password": "SecurePass123!",
+            "profession": "Voiture"
+        }
+        
+        success_voiture, response_voiture = self.run_test(
+            "New Vehicle Categories - Voiture",
+            "POST",
+            "auth/register",
+            200,
+            data=voiture_data
+        )
+        
+        # Verify all professions were accepted
+        if success_camionneur and success_tracteur and success_voiture:
+            # Check if the professions are correctly stored
+            if (response_camionneur.get('user', {}).get('profession') == 'Camionneur' and
+                response_tracteur.get('user', {}).get('profession') == 'Tracteur' and
+                response_voiture.get('user', {}).get('profession') == 'Voiture'):
+                return True
+        
+        return False
+
+    def test_admin_access_original_messages(self):
+        """Test admin endpoint for accessing original unfiltered messages"""
+        rental_id = "0f4945d8-ebae-4e13-bc8c-dea3091e52e5"
+        
+        # First send a filtered message
+        message_data = {
+            "rental_id": rental_id,
+            "message": "Appelez-moi au 620123456 ou écrivez à test@example.com"
+        }
+        
+        # Send message (should be filtered)
+        send_success, send_response = self.run_test(
+            "Send Message for Admin Test",
+            "POST",
+            f"chat/rental/{rental_id}/message/customer",
+            200,
+            data=message_data
+        )
+        
+        if not send_success:
+            self.log_test("Admin Access Original Messages", False, "Could not send test message")
+            return False
+        
+        # Now test admin endpoint to get original messages
+        # Note: Admin endpoint doesn't require authentication in this implementation
+        success, response = self.run_test(
+            "Admin Access Original Messages",
+            "GET",
+            f"admin/chat/rental/{rental_id}/messages",
+            200
+        )
+        
+        if success and isinstance(response, list):
+            # Look for a message with original_message field
+            for message in response:
+                if message.get('original_message'):
+                    # Check if original message contains unfiltered content
+                    original = message.get('original_message', '')
+                    if '620123456' in original and 'test@example.com' in original:
+                        self.log_test("Admin Access Original Messages", True, "Admin can access original unfiltered messages")
+                        return True
+            
+            self.log_test("Admin Access Original Messages", False, "No original_message field found or content not preserved")
+            return False
+        
+        return False
+
     # ==================== JOB COMPLETION FLOW TESTS ====================
     
     def test_provider_mark_job_complete(self, job_id):
