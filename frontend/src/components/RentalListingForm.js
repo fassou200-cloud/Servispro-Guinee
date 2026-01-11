@@ -12,7 +12,7 @@ import {
   Laptop, Shirt, Lock, Coffee, Droplets, ShowerHead, Mountain, Volume2, 
   Flame, Sofa, Baby, UtensilsCrossed, Sun, Users, ChefHat, Waves,
   BedDouble, Armchair, Hotel, Refrigerator, Microwave as MicrowaveIcon,
-  CircleDot, CheckCircle
+  CircleDot, CheckCircle, FileText, Shield, User, Building, AlertTriangle
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -116,9 +116,25 @@ const RentalListingForm = ({ onSuccess }) => {
     available_to: ''
   });
   const [saving, setSaving] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [createdRentalId, setCreatedRentalId] = useState(null);
   const [selectedPhotos, setSelectedPhotos] = useState([]);
   const [photoPreviewUrls, setPhotoPreviewUrls] = useState([]);
   const [expandedCategories, setExpandedCategories] = useState(['Chambre & Confort']);
+  
+  // Documents state
+  const [documents, setDocuments] = useState({
+    titre_foncier: null,
+    registration_ministere: null,
+    seller_id_document: null,
+    documents_additionnels: []
+  });
+  const [documentNames, setDocumentNames] = useState({
+    titre_foncier: '',
+    registration_ministere: '',
+    seller_id_document: '',
+    documents_additionnels: []
+  });
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
