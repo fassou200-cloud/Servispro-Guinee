@@ -1260,6 +1260,635 @@ const CompanyDashboard = () => {
             )}
           </Card>
         )}
+
+        {/* ==================== REAL ESTATE TABS (Immobilier only) ==================== */}
+
+        {/* Rentals List Tab */}
+        {activeTab === 'rentals' && isRealEstateSector && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-2xl font-heading font-bold text-foreground">
+                Mes Locations ({rentals.length})
+              </h3>
+              {isApproved && (
+                <Button onClick={() => setActiveTab('create-rental')} className="gap-2 bg-emerald-600 hover:bg-emerald-700">
+                  <Plus className="h-4 w-4" /> Nouvelle Location
+                </Button>
+              )}
+            </div>
+
+            {rentals.length === 0 ? (
+              <Card className="p-8 text-center">
+                <Home className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">Aucune location publiée</p>
+                {isApproved && (
+                  <Button className="mt-4 bg-emerald-600 hover:bg-emerald-700" onClick={() => setActiveTab('create-rental')}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Créer une annonce
+                  </Button>
+                )}
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {rentals.map(rental => (
+                  <Card key={rental.id} className="overflow-hidden">
+                    {rental.photos && rental.photos.length > 0 && (
+                      <img 
+                        src={`${BACKEND_URL}${rental.photos[0]}`} 
+                        alt={rental.title}
+                        className="w-full h-48 object-cover"
+                      />
+                    )}
+                    <div className="p-6">
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <span className="px-2 py-1 rounded-full text-xs bg-emerald-100 text-emerald-700">
+                            {rental.property_type}
+                          </span>
+                          <h4 className="text-lg font-heading font-bold text-foreground mt-2">{rental.title}</h4>
+                        </div>
+                        <span className={`px-2 py-1 rounded text-xs ${rental.is_available ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                          {rental.is_available ? 'Disponible' : 'Indisponible'}
+                        </span>
+                      </div>
+                      <p className="text-foreground text-sm mb-4 line-clamp-2">{rental.description}</p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground flex items-center gap-1">
+                          <MapPin className="h-4 w-4" />
+                          {rental.location}
+                        </span>
+                        <span className="text-emerald-600 font-bold">
+                          {rental.rental_price?.toLocaleString()} GNF/mois
+                        </span>
+                      </div>
+                      <div className="mt-4 pt-4 border-t flex gap-2">
+                        <Button variant="outline" size="sm" className="flex-1">
+                          <Eye className="h-4 w-4 mr-1" /> Voir
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="text-red-600 hover:bg-red-50"
+                          onClick={() => deleteRental(rental.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Create Rental Tab */}
+        {activeTab === 'create-rental' && isRealEstateSector && (
+          <Card className="p-8">
+            <div className="flex items-center gap-4 mb-8">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center">
+                <Home className="h-7 w-7 text-white" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-heading font-bold text-foreground">
+                  Créer une Annonce de Location
+                </h3>
+                <p className="text-muted-foreground">Étape {rentalStep}/2 - {rentalStep === 1 ? 'Informations' : 'Photos'}</p>
+              </div>
+            </div>
+
+            {!isApproved ? (
+              <div className="text-center py-8">
+                <AlertTriangle className="h-12 w-12 text-amber-500 mx-auto mb-4" />
+                <p className="text-muted-foreground">
+                  Vous devez être approuvé pour publier des locations.
+                </p>
+              </div>
+            ) : rentalStep === 1 ? (
+              <form onSubmit={handleCreateRentalStep1} className="space-y-6">
+                <div className="space-y-2">
+                  <Label>Type de Propriété *</Label>
+                  <Select value={rentalForm.property_type} onValueChange={(v) => setRentalForm({ ...rentalForm, property_type: v })}>
+                    <SelectTrigger data-testid="rental-property-type">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Apartment">Appartement</SelectItem>
+                      <SelectItem value="House">Maison</SelectItem>
+                      <SelectItem value="Villa">Villa</SelectItem>
+                      <SelectItem value="Studio">Studio</SelectItem>
+                      <SelectItem value="Chambre">Chambre d'Hôtes</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Titre de l'Annonce *</Label>
+                  <Input
+                    value={rentalForm.title}
+                    onChange={(e) => setRentalForm({ ...rentalForm, title: e.target.value })}
+                    required
+                    placeholder="Ex: Bel appartement meublé à Kipé"
+                    data-testid="rental-title"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Description *</Label>
+                  <Textarea
+                    value={rentalForm.description}
+                    onChange={(e) => setRentalForm({ ...rentalForm, description: e.target.value })}
+                    required
+                    rows={4}
+                    placeholder="Décrivez votre propriété..."
+                    data-testid="rental-description"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Localisation *</Label>
+                  <Input
+                    value={rentalForm.location}
+                    onChange={(e) => setRentalForm({ ...rentalForm, location: e.target.value })}
+                    required
+                    placeholder="Quartier, Commune, Ville"
+                    data-testid="rental-location"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Type de Location *</Label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Button
+                      type="button"
+                      variant={rentalForm.rental_type === 'long_term' ? 'default' : 'outline'}
+                      onClick={() => setRentalForm({ ...rentalForm, rental_type: 'long_term' })}
+                      className="h-12"
+                    >
+                      Longue Durée
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={rentalForm.rental_type === 'short_term' ? 'default' : 'outline'}
+                      onClick={() => setRentalForm({ ...rentalForm, rental_type: 'short_term' })}
+                      className="h-12"
+                    >
+                      Courte Durée
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Prix Mensuel (GNF) *</Label>
+                    <Input
+                      type="number"
+                      value={rentalForm.rental_price}
+                      onChange={(e) => setRentalForm({ ...rentalForm, rental_price: e.target.value })}
+                      required
+                      placeholder="500000"
+                      data-testid="rental-price"
+                    />
+                  </div>
+                  {rentalForm.rental_type === 'short_term' && (
+                    <div className="space-y-2">
+                      <Label>Prix par Nuit (GNF)</Label>
+                      <Input
+                        type="number"
+                        value={rentalForm.price_per_night}
+                        onChange={(e) => setRentalForm({ ...rentalForm, price_per_night: e.target.value })}
+                        placeholder="50000"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <Button type="submit" className="w-full h-14 bg-emerald-600 hover:bg-emerald-700" data-testid="rental-submit-step1">
+                  Continuer - Photos
+                </Button>
+              </form>
+            ) : (
+              <div className="space-y-6">
+                <div className="space-y-4">
+                  <Label className="font-heading font-bold">Photos de la Propriété</Label>
+                  <input
+                    id="company-rental-photos"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleRentalPhotoSelect}
+                    className="hidden"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => document.getElementById('company-rental-photos').click()}
+                    className="w-full h-14 gap-2 rounded-xl border-dashed border-2"
+                  >
+                    <Upload className="h-5 w-5" />
+                    Ajouter des Photos ({rentalPhotos.length})
+                  </Button>
+                  
+                  {rentalPhotoPreviewUrls.length > 0 && (
+                    <div className="grid grid-cols-4 gap-3">
+                      {rentalPhotoPreviewUrls.map((url, index) => (
+                        <div key={index} className="relative group aspect-square">
+                          <img
+                            src={url}
+                            alt={`Aperçu ${index + 1}`}
+                            className="w-full h-full object-cover rounded-xl"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeRentalPhoto(index)}
+                            className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex gap-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setRentalStep(1)}
+                    className="flex-1 h-14"
+                  >
+                    Retour
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleCreateRentalStep2}
+                    className="flex-1 h-14 bg-emerald-600 hover:bg-emerald-700"
+                    disabled={uploadingRentalFiles}
+                    data-testid="rental-submit-step2"
+                  >
+                    {uploadingRentalFiles ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Publication...
+                      </div>
+                    ) : (
+                      "Publier l'Annonce"
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </Card>
+        )}
+
+        {/* Sales List Tab */}
+        {activeTab === 'sales' && isRealEstateSector && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-2xl font-heading font-bold text-foreground">
+                Mes Ventes ({sales.length})
+              </h3>
+              {isApproved && (
+                <Button onClick={() => setActiveTab('create-sale')} className="gap-2 bg-orange-600 hover:bg-orange-700">
+                  <Plus className="h-4 w-4" /> Nouvelle Vente
+                </Button>
+              )}
+            </div>
+
+            {sales.length === 0 ? (
+              <Card className="p-8 text-center">
+                <Building className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">Aucune propriété en vente</p>
+                {isApproved && (
+                  <Button className="mt-4 bg-orange-600 hover:bg-orange-700" onClick={() => setActiveTab('create-sale')}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Ajouter une propriété
+                  </Button>
+                )}
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {sales.map(sale => (
+                  <Card key={sale.id} className="overflow-hidden">
+                    {sale.photos && sale.photos.length > 0 && (
+                      <img 
+                        src={`${BACKEND_URL}${sale.photos[0]}`} 
+                        alt={sale.title}
+                        className="w-full h-48 object-cover"
+                      />
+                    )}
+                    <div className="p-6">
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <span className="px-2 py-1 rounded-full text-xs bg-orange-100 text-orange-700">
+                            {sale.property_type}
+                          </span>
+                          <h4 className="text-lg font-heading font-bold text-foreground mt-2">{sale.title}</h4>
+                        </div>
+                        <span className={`px-2 py-1 rounded text-xs ${sale.is_available ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                          {sale.is_available ? 'Disponible' : 'Vendu'}
+                        </span>
+                      </div>
+                      <p className="text-foreground text-sm mb-4 line-clamp-2">{sale.description}</p>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm text-muted-foreground flex items-center gap-1">
+                          <MapPin className="h-4 w-4" />
+                          {sale.location}
+                        </span>
+                        <span className="text-orange-600 font-bold">
+                          {sale.sale_price?.toLocaleString()} GNF
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                        {sale.surface_area && <span className="flex items-center gap-1"><Building className="h-3 w-3" /> {sale.surface_area}</span>}
+                        {sale.num_rooms && <span className="flex items-center gap-1"><Home className="h-3 w-3" /> {sale.num_rooms} pièces</span>}
+                        {sale.has_garage && <span className="flex items-center gap-1"><Car className="h-3 w-3" /> Garage</span>}
+                        {sale.has_garden && <span className="flex items-center gap-1"><Trees className="h-3 w-3" /> Jardin</span>}
+                      </div>
+                      <div className="mt-4 pt-4 border-t flex gap-2">
+                        <Button variant="outline" size="sm" className="flex-1">
+                          <Eye className="h-4 w-4 mr-1" /> Voir
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="text-red-600 hover:bg-red-50"
+                          onClick={() => deleteSale(sale.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Create Sale Tab */}
+        {activeTab === 'create-sale' && isRealEstateSector && (
+          <Card className="p-8">
+            <div className="flex items-center gap-4 mb-8">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center">
+                <Building className="h-7 w-7 text-white" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-heading font-bold text-foreground">
+                  Vente Immobilière
+                </h3>
+                <p className="text-muted-foreground">Étape {saleStep}/2 - {saleStep === 1 ? 'Informations' : 'Photos'}</p>
+              </div>
+            </div>
+
+            {!isApproved ? (
+              <div className="text-center py-8">
+                <AlertTriangle className="h-12 w-12 text-amber-500 mx-auto mb-4" />
+                <p className="text-muted-foreground">
+                  Vous devez être approuvé pour publier des ventes.
+                </p>
+              </div>
+            ) : saleStep === 1 ? (
+              <form onSubmit={handleCreateSaleStep1} className="space-y-6">
+                <div className="space-y-2">
+                  <Label>Type de Propriété *</Label>
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { value: 'Maison', label: 'Maison', icon: Home },
+                      { value: 'Terrain', label: 'Terrain', icon: Trees },
+                      { value: 'Appartement', label: 'Appartement', icon: Building },
+                      { value: 'Villa', label: 'Villa', icon: Home },
+                      { value: 'Immeuble', label: 'Immeuble', icon: Building },
+                      { value: 'Bureau', label: 'Bureau/Commerce', icon: Building }
+                    ].map((type) => {
+                      const Icon = type.icon;
+                      return (
+                        <Button
+                          key={type.value}
+                          type="button"
+                          variant={saleForm.property_type === type.value ? 'default' : 'outline'}
+                          onClick={() => setSaleForm({ ...saleForm, property_type: type.value })}
+                          className={`h-16 flex-col gap-1 ${saleForm.property_type === type.value ? 'bg-orange-600 hover:bg-orange-700' : ''}`}
+                        >
+                          <Icon className="h-5 w-5" />
+                          <span className="text-xs">{type.label}</span>
+                        </Button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Titre de l'Annonce *</Label>
+                  <Input
+                    value={saleForm.title}
+                    onChange={(e) => setSaleForm({ ...saleForm, title: e.target.value })}
+                    required
+                    placeholder="Ex: Belle villa avec jardin à Kipé"
+                    data-testid="sale-title"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Description *</Label>
+                  <Textarea
+                    value={saleForm.description}
+                    onChange={(e) => setSaleForm({ ...saleForm, description: e.target.value })}
+                    required
+                    rows={4}
+                    placeholder="Décrivez votre propriété..."
+                    data-testid="sale-description"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Localisation *</Label>
+                  <Input
+                    value={saleForm.location}
+                    onChange={(e) => setSaleForm({ ...saleForm, location: e.target.value })}
+                    required
+                    placeholder="Quartier, Commune, Ville"
+                    data-testid="sale-location"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Prix de Vente (GNF) *</Label>
+                    <Input
+                      type="number"
+                      value={saleForm.sale_price}
+                      onChange={(e) => setSaleForm({ ...saleForm, sale_price: e.target.value })}
+                      required
+                      placeholder="500000000"
+                      data-testid="sale-price"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Surface (m²)</Label>
+                    <Input
+                      value={saleForm.surface_area}
+                      onChange={(e) => setSaleForm({ ...saleForm, surface_area: e.target.value })}
+                      placeholder="150 m²"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label>Nombre de Pièces</Label>
+                    <Input
+                      type="number"
+                      value={saleForm.num_rooms}
+                      onChange={(e) => setSaleForm({ ...saleForm, num_rooms: e.target.value })}
+                      placeholder="4"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Salles de Bain</Label>
+                    <Input
+                      type="number"
+                      value={saleForm.num_bathrooms}
+                      onChange={(e) => setSaleForm({ ...saleForm, num_bathrooms: e.target.value })}
+                      placeholder="2"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Année Construction</Label>
+                    <Input
+                      type="number"
+                      value={saleForm.year_built}
+                      onChange={(e) => setSaleForm({ ...saleForm, year_built: e.target.value })}
+                      placeholder="2020"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Équipements</Label>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant={saleForm.has_garage ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setSaleForm({ ...saleForm, has_garage: !saleForm.has_garage })}
+                      className={saleForm.has_garage ? 'bg-orange-600 hover:bg-orange-700' : ''}
+                    >
+                      <Car className="h-4 w-4 mr-1" /> Garage
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={saleForm.has_garden ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setSaleForm({ ...saleForm, has_garden: !saleForm.has_garden })}
+                      className={saleForm.has_garden ? 'bg-orange-600 hover:bg-orange-700' : ''}
+                    >
+                      <Trees className="h-4 w-4 mr-1" /> Jardin
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={saleForm.has_pool ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setSaleForm({ ...saleForm, has_pool: !saleForm.has_pool })}
+                      className={saleForm.has_pool ? 'bg-orange-600 hover:bg-orange-700' : ''}
+                    >
+                      <Waves className="h-4 w-4 mr-1" /> Piscine
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
+                  <div>
+                    <Label className="font-medium">Prix Négociable</Label>
+                    <p className="text-sm text-muted-foreground">
+                      {saleForm.is_negotiable ? 'Le prix est négociable' : 'Prix ferme'}
+                    </p>
+                  </div>
+                  <Switch
+                    checked={saleForm.is_negotiable}
+                    onCheckedChange={(checked) => setSaleForm({ ...saleForm, is_negotiable: checked })}
+                  />
+                </div>
+
+                <Button type="submit" className="w-full h-14 bg-orange-600 hover:bg-orange-700" data-testid="sale-submit-step1">
+                  Continuer - Photos
+                </Button>
+              </form>
+            ) : (
+              <div className="space-y-6">
+                <div className="space-y-4">
+                  <Label className="font-heading font-bold">Photos de la Propriété</Label>
+                  <input
+                    id="company-sale-photos"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleSalePhotoSelect}
+                    className="hidden"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => document.getElementById('company-sale-photos').click()}
+                    className="w-full h-14 gap-2 rounded-xl border-dashed border-2"
+                  >
+                    <Upload className="h-5 w-5" />
+                    Ajouter des Photos ({salePhotos.length})
+                  </Button>
+                  
+                  {salePhotoPreviewUrls.length > 0 && (
+                    <div className="grid grid-cols-4 gap-3">
+                      {salePhotoPreviewUrls.map((url, index) => (
+                        <div key={index} className="relative group aspect-square">
+                          <img
+                            src={url}
+                            alt={`Aperçu ${index + 1}`}
+                            className="w-full h-full object-cover rounded-xl"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeSalePhoto(index)}
+                            className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex gap-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setSaleStep(1)}
+                    className="flex-1 h-14"
+                  >
+                    Retour
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleCreateSaleStep2}
+                    className="flex-1 h-14 bg-orange-600 hover:bg-orange-700"
+                    disabled={uploadingSaleFiles}
+                    data-testid="sale-submit-step2"
+                  >
+                    {uploadingSaleFiles ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Publication...
+                      </div>
+                    ) : (
+                      "Publier l'Annonce"
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </Card>
+        )}
       </div>
     </div>
   );
