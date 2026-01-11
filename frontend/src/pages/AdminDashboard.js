@@ -294,14 +294,14 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
         {/* Stats Cards */}
         {stats && (
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
             <Card className="p-4 bg-slate-800 border-slate-700">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-blue-600/20">
                   <Users className="h-5 w-5 text-blue-400" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-white">{stats.providers.total}</p>
+                  <p className="text-2xl font-bold text-white">{stats.total_providers || 0}</p>
                   <p className="text-xs text-slate-400">Prestataires</p>
                 </div>
               </div>
@@ -312,7 +312,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                   <Clock className="h-5 w-5 text-orange-400" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-white">{stats.providers.pending}</p>
+                  <p className="text-2xl font-bold text-white">{stats.pending_providers || 0}</p>
                   <p className="text-xs text-slate-400">En attente</p>
                 </div>
               </div>
@@ -323,7 +323,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                   <Briefcase className="h-5 w-5 text-green-400" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-white">{stats.jobs.total}</p>
+                  <p className="text-2xl font-bold text-white">{stats.total_jobs || 0}</p>
                   <p className="text-xs text-slate-400">Demandes</p>
                 </div>
               </div>
@@ -331,22 +331,33 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
             <Card className="p-4 bg-slate-800 border-slate-700">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-purple-600/20">
-                  <Building className="h-5 w-5 text-purple-400" />
+                  <Home className="h-5 w-5 text-purple-400" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-white">{stats.rentals?.total || stats.rentals}</p>
+                  <p className="text-2xl font-bold text-white">{stats.total_rentals || 0}</p>
                   <p className="text-xs text-slate-400">Locations</p>
                 </div>
               </div>
             </Card>
             <Card className="p-4 bg-slate-800 border-slate-700">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-amber-600/20">
-                  <Home className="h-5 w-5 text-amber-400" />
+                <div className="p-2 rounded-lg bg-emerald-600/20">
+                  <DollarSign className="h-5 w-5 text-emerald-400" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-white">{stats.providers.agent_immobilier || 0}</p>
-                  <p className="text-xs text-slate-400">Agents Immo.</p>
+                  <p className="text-2xl font-bold text-white">{stats.total_sales || 0}</p>
+                  <p className="text-xs text-slate-400">Ventes</p>
+                </div>
+              </div>
+            </Card>
+            <Card className="p-4 bg-slate-800 border-slate-700">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-teal-600/20">
+                  <Building className="h-5 w-5 text-teal-400" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-white">{stats.total_companies || 0}</p>
+                  <p className="text-xs text-slate-400">Entreprises</p>
                 </div>
               </div>
             </Card>
