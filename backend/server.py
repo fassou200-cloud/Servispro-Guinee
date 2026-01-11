@@ -708,6 +708,306 @@ async def register_customer(input_data: CustomerRegisterInput):
     
     return AuthResponse(token=token, user=customer_response)
 
+# Company Auth Routes
+@api_router.post("/auth/company/register", response_model=AuthResponse)
+async def register_company(input_data: CompanyRegisterInput):
+    """Register a new company"""
+    # Check if RCCM number already exists
+    existing_company = await db.companies.find_one({'rccm_number': input_data.rccm_number})
+    if existing_company:
+        raise HTTPException(status_code=400, detail="Ce numéro RCCM est déjà enregistré")
+    
+    # Check if phone number already exists
+    existing_phone = await db.companies.find_one({'phone_number': input_data.phone_number})
+    if existing_phone:
+        raise HTTPException(status_code=400, detail="Ce numéro de téléphone est déjà enregistré")
+    
+    # Create company
+    company_id = str(uuid.uuid4())
+    hashed_pwd = hash_password(input_data.password)
+    now = datetime.now(timezone.utc).isoformat()
+    
+    company_doc = {
+        'id': company_id,
+        'company_name': input_data.company_name,
+        'rccm_number': input_data.rccm_number,
+        'nif_number': input_data.nif_number,
+        'sector': input_data.sector,
+        'address': input_data.address,
+        'city': input_data.city,
+        'region': input_data.region,
+        'phone_number': input_data.phone_number,
+        'email': input_data.email,
+        'website': input_data.website,
+        'description': input_data.description,
+        'contact_person_name': input_data.contact_person_name,
+        'contact_person_phone': input_data.contact_person_phone,
+        'password': hashed_pwd,
+        # Documents (to be uploaded later)
+        'logo': None,
+        'licence_exploitation': None,
+        'rccm_document': None,
+        'nif_document': None,
+        'attestation_fiscale': None,
+        'documents_additionnels': [],
+        # Status
+        'verification_status': 'pending',
+        'online_status': False,
+        'created_at': now,
+        'updated_at': now
+    }
+    
+    await db.companies.insert_one(company_doc)
+    
+    # Generate token
+    token = create_token(company_id)
+    
+    # Return company without password and _id
+    company_response = {k: v for k, v in company_doc.items() if k not in ['password', '_id']}
+    company_response['user_type'] = 'company'
+    
+    return AuthResponse(token=token, user=company_response)
+
+@api_router.post("/auth/company/login", response_model=AuthResponse)
+async def login_company(input_data: CompanyLoginInput):
+    """Login for companies using RCCM number"""
+    company = await db.companies.find_one({'rccm_number': input_data.rccm_number})
+    if not company:
+        raise HTTPException(status_code=401, detail="Numéro RCCM ou mot de passe incorrect")
+    
+    if not verify_password(input_data.password, company['password']):
+        raise HTTPException(status_code=401, detail="Numéro RCCM ou mot de passe incorrect")
+    
+    # Generate token
+    token = create_token(company['id'])
+    
+    # Return company without password and _id
+    company_response = {k: v for k, v in company.items() if k not in ['password', '_id']}
+    company_response['user_type'] = 'company'
+    
+    return AuthResponse(token=token, user=company_response)
+
+# Company Profile Routes
+@api_router.get("/company/profile/me")
+async def get_company_profile(current_company: dict = Depends(get_current_company)):
+    """Get current company profile"""
+    return current_company
+
+@api_router.put("/company/profile/me")
+async def update_company_profile(update_data: CompanyProfileUpdate, current_company: dict = Depends(get_current_company)):
+    """Update company profile"""
+    update_dict = {k: v for k, v in update_data.model_dump().items() if v is not None}
+    
+    if update_dict:
+        update_dict['updated_at'] = datetime.now(timezone.utc).isoformat()
+        await db.companies.update_one(
+            {'id': current_company['id']},
+            {'$set': update_dict}
+        )
+    
+    updated_company = await db.companies.find_one({'id': current_company['id']}, {'_id': 0, 'password': 0})
+    return updated_company
+
+@api_router.post("/company/upload-logo")
+async def upload_company_logo(file: UploadFile = File(...), current_company: dict = Depends(get_current_company)):
+    """Upload company logo"""
+    if not file.content_type.startswith('image/'):
+        raise HTTPException(status_code=400, detail="Le fichier doit être une image")
+    
+    file_extension = file.filename.split('.')[-1]
+    filename = f"company_logo_{current_company['id']}_{uuid.uuid4()}.{file_extension}"
+    file_path = UPLOAD_DIR / filename
+    
+    with file_path.open('wb') as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    logo_url = f"/api/uploads/{filename}"
+    await db.companies.update_one(
+        {'id': current_company['id']},
+        {'$set': {'logo': logo_url, 'updated_at': datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    return {'logo': logo_url}
+
+@api_router.post("/company/upload-document/{document_type}")
+async def upload_company_document(
+    document_type: str,
+    file: UploadFile = File(...),
+    current_company: dict = Depends(get_current_company)
+):
+    """Upload company document (licence, rccm, nif, attestation_fiscale, additionnels)"""
+    valid_types = ['licence_exploitation', 'rccm_document', 'nif_document', 'attestation_fiscale', 'documents_additionnels']
+    if document_type not in valid_types:
+        raise HTTPException(status_code=400, detail=f"Type de document invalide. Types acceptés: {', '.join(valid_types)}")
+    
+    # Validate file type
+    allowed_types = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf']
+    if file.content_type not in allowed_types:
+        raise HTTPException(status_code=400, detail="Le fichier doit être une image (JPG, PNG) ou un PDF")
+    
+    # Generate filename
+    file_extension = file.filename.split('.')[-1]
+    filename = f"company_doc_{current_company['id']}_{document_type}_{uuid.uuid4()}.{file_extension}"
+    file_path = UPLOAD_DIR / filename
+    
+    # Save file
+    with file_path.open('wb') as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    document_url = f"/api/uploads/{filename}"
+    
+    # Update company
+    if document_type == 'documents_additionnels':
+        await db.companies.update_one(
+            {'id': current_company['id']},
+            {
+                '$push': {'documents_additionnels': document_url},
+                '$set': {'updated_at': datetime.now(timezone.utc).isoformat()}
+            }
+        )
+    else:
+        await db.companies.update_one(
+            {'id': current_company['id']},
+            {'$set': {document_type: document_url, 'updated_at': datetime.now(timezone.utc).isoformat()}}
+        )
+    
+    return {'document_url': document_url, 'document_type': document_type}
+
+# Company Services Routes
+@api_router.post("/company/services")
+async def create_company_service(
+    service_data: CompanyServiceCreate,
+    current_company: dict = Depends(get_current_company)
+):
+    """Create a new company service"""
+    # Check if company is approved
+    if current_company.get('verification_status') != 'approved':
+        raise HTTPException(status_code=403, detail="Votre entreprise doit être approuvée pour publier des services")
+    
+    service_id = str(uuid.uuid4())
+    
+    service_doc = {
+        'id': service_id,
+        'company_id': current_company['id'],
+        'company_name': current_company['company_name'],
+        **service_data.model_dump(),
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.company_services.insert_one(service_doc)
+    
+    return {k: v for k, v in service_doc.items() if k != '_id'}
+
+@api_router.get("/company/services/my")
+async def get_my_company_services(current_company: dict = Depends(get_current_company)):
+    """Get all services of current company"""
+    services = await db.company_services.find(
+        {'company_id': current_company['id']},
+        {'_id': 0}
+    ).to_list(100)
+    return services
+
+@api_router.get("/company-services")
+async def get_all_company_services(
+    category: Optional[str] = None,
+    location: Optional[str] = None
+):
+    """Get all company services (public)"""
+    query = {}
+    if category:
+        query['category'] = category
+    if location:
+        query['location'] = {'$regex': location, '$options': 'i'}
+    
+    services = await db.company_services.find(query, {'_id': 0}).to_list(100)
+    return services
+
+# Company Job Offers Routes
+@api_router.post("/company/job-offers")
+async def create_company_job_offer(
+    job_data: CompanyJobOfferCreate,
+    current_company: dict = Depends(get_current_company)
+):
+    """Create a new job offer"""
+    # Check if company is approved
+    if current_company.get('verification_status') != 'approved':
+        raise HTTPException(status_code=403, detail="Votre entreprise doit être approuvée pour publier des offres d'emploi")
+    
+    job_id = str(uuid.uuid4())
+    
+    job_doc = {
+        'id': job_id,
+        'company_id': current_company['id'],
+        'company_name': current_company['company_name'],
+        'company_logo': current_company.get('logo'),
+        **job_data.model_dump(),
+        'applications_count': 0,
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.company_job_offers.insert_one(job_doc)
+    
+    return {k: v for k, v in job_doc.items() if k != '_id'}
+
+@api_router.get("/company/job-offers/my")
+async def get_my_company_job_offers(current_company: dict = Depends(get_current_company)):
+    """Get all job offers of current company"""
+    jobs = await db.company_job_offers.find(
+        {'company_id': current_company['id']},
+        {'_id': 0}
+    ).to_list(100)
+    return jobs
+
+@api_router.get("/job-offers")
+async def get_all_job_offers(
+    contract_type: Optional[str] = None,
+    location: Optional[str] = None
+):
+    """Get all active job offers (public)"""
+    query = {'is_active': True}
+    if contract_type:
+        query['contract_type'] = contract_type
+    if location:
+        query['location'] = {'$regex': location, '$options': 'i'}
+    
+    jobs = await db.company_job_offers.find(query, {'_id': 0}).sort('created_at', -1).to_list(100)
+    return jobs
+
+@api_router.get("/job-offers/{job_id}")
+async def get_job_offer(job_id: str):
+    """Get a specific job offer"""
+    job = await db.company_job_offers.find_one({'id': job_id}, {'_id': 0})
+    if not job:
+        raise HTTPException(status_code=404, detail="Offre d'emploi non trouvée")
+    return job
+
+# Public Companies Route
+@api_router.get("/companies")
+async def get_all_companies(
+    sector: Optional[str] = None,
+    region: Optional[str] = None
+):
+    """Get all approved companies (public)"""
+    query = {'verification_status': 'approved'}
+    if sector:
+        query['sector'] = sector
+    if region:
+        query['region'] = region
+    
+    companies = await db.companies.find(query, {'_id': 0, 'password': 0}).to_list(100)
+    return companies
+
+@api_router.get("/companies/{company_id}")
+async def get_company(company_id: str):
+    """Get a specific company (public)"""
+    company = await db.companies.find_one(
+        {'id': company_id, 'verification_status': 'approved'},
+        {'_id': 0, 'password': 0}
+    )
+    if not company:
+        raise HTTPException(status_code=404, detail="Entreprise non trouvée")
+    return company
+
 # Profile Routes
 @api_router.get("/profile/me", response_model=ServiceProvider)
 async def get_my_profile(current_user: dict = Depends(get_current_user)):
