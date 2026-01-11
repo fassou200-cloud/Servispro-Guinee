@@ -1408,6 +1408,287 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
             </div>
           </div>
         )}
+
+        {/* Companies Tab */}
+        {activeTab === 'companies' && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <h2 className="text-lg font-heading font-bold text-white mb-4">
+                Entreprises ({companies.length})
+              </h2>
+              {companies.length === 0 ? (
+                <Card className="p-8 bg-slate-800 border-slate-700 text-center">
+                  <p className="text-slate-400">Aucune entreprise inscrite</p>
+                </Card>
+              ) : (
+                companies.map((company) => (
+                  <Card 
+                    key={company.id} 
+                    className={`p-4 bg-slate-800 border-slate-700 cursor-pointer transition-colors ${
+                      selectedCompany?.id === company.id ? 'border-teal-500' : 'hover:border-slate-600'
+                    }`}
+                    onClick={() => setSelectedCompany(company)}
+                  >
+                    <div className="flex gap-4">
+                      {company.logo ? (
+                        <img 
+                          src={`${BACKEND_URL}${company.logo}`}
+                          alt={company.company_name}
+                          className="w-16 h-16 object-cover rounded-lg"
+                        />
+                      ) : (
+                        <div className="w-16 h-16 bg-slate-700 rounded-lg flex items-center justify-center">
+                          <Building className="h-8 w-8 text-slate-500" />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <h3 className="font-bold text-white truncate">{company.company_name}</h3>
+                          <span className={`flex-shrink-0 px-2 py-1 rounded text-xs font-medium border ${getStatusBadge(company.verification_status)}`}>
+                            {translateStatus(company.verification_status)}
+                          </span>
+                        </div>
+                        <p className="text-sm text-slate-400">{company.sector}</p>
+                        <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
+                          <MapPin className="h-3 w-3" />
+                          {company.city}, {company.region}
+                        </div>
+                        <div className="flex items-center gap-4 mt-2 text-xs">
+                          <span className="text-slate-400">
+                            RCCM: {company.rccm_number}
+                          </span>
+                          {company.online_status && (
+                            <span className="text-green-400">● En ligne</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                ))
+              )}
+            </div>
+
+            {/* Company Detail */}
+            <div>
+              <h2 className="text-lg font-heading font-bold text-white mb-4">Détails de l Entreprise</h2>
+              {selectedCompany ? (
+                <Card className="p-6 bg-slate-800 border-slate-700">
+                  {/* Header with Logo */}
+                  <div className="flex items-center gap-4 mb-6">
+                    {selectedCompany.logo ? (
+                      <img 
+                        src={`${BACKEND_URL}${selectedCompany.logo}`}
+                        alt={selectedCompany.company_name}
+                        className="w-20 h-20 object-cover rounded-xl"
+                      />
+                    ) : (
+                      <div className="w-20 h-20 bg-slate-700 rounded-xl flex items-center justify-center">
+                        <Building className="h-10 w-10 text-slate-500" />
+                      </div>
+                    )}
+                    <div>
+                      <h3 className="text-xl font-bold text-white">{selectedCompany.company_name}</h3>
+                      <p className="text-teal-400">{selectedCompany.sector}</p>
+                      <span className={`inline-flex mt-1 px-2 py-1 rounded text-xs font-medium border ${getStatusBadge(selectedCompany.verification_status)}`}>
+                        {translateStatus(selectedCompany.verification_status)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Company Info */}
+                  <div className="space-y-3 mb-6">
+                    <div className="flex items-center gap-2 text-slate-300">
+                      <MapPin className="h-4 w-4 text-slate-400" />
+                      {selectedCompany.address}, {selectedCompany.city}, {selectedCompany.region}
+                    </div>
+                    <div className="flex items-center gap-2 text-slate-300">
+                      <UserCircle className="h-4 w-4 text-slate-400" />
+                      {selectedCompany.phone_number}
+                    </div>
+                    {selectedCompany.email && (
+                      <div className="flex items-center gap-2 text-slate-300">
+                        <MessageCircle className="h-4 w-4 text-slate-400" />
+                        {selectedCompany.email}
+                      </div>
+                    )}
+                    <div className="grid grid-cols-2 gap-4 p-3 bg-slate-700/50 rounded-lg">
+                      <div>
+                        <p className="text-xs text-slate-400">RCCM</p>
+                        <p className="text-white font-mono">{selectedCompany.rccm_number}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-400">NIF</p>
+                        <p className="text-white font-mono">{selectedCompany.nif_number || '-'}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Contact Person */}
+                  <div className="mb-6 p-4 bg-slate-700/30 rounded-lg">
+                    <h4 className="text-sm font-bold text-slate-300 uppercase mb-2">Personne de Contact</h4>
+                    <p className="text-white">{selectedCompany.contact_person_name}</p>
+                    <p className="text-slate-400">{selectedCompany.contact_person_phone}</p>
+                  </div>
+
+                  {/* Description */}
+                  <div className="mb-6">
+                    <h4 className="text-sm font-bold text-slate-300 uppercase mb-2">Description</h4>
+                    <p className="text-slate-400 text-sm">{selectedCompany.description}</p>
+                  </div>
+
+                  {/* Documents Section */}
+                  <div className="mb-6 p-4 bg-slate-700/50 rounded-lg">
+                    <h4 className="text-sm font-bold text-slate-300 uppercase mb-3 flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      Documents de l Entreprise
+                    </h4>
+                    <div className="space-y-2">
+                      {selectedCompany.licence_exploitation ? (
+                        <a
+                          href={`${BACKEND_URL}${selectedCompany.licence_exploitation}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-between p-2 bg-slate-600/50 rounded hover:bg-slate-600 transition-colors"
+                        >
+                          <span className="flex items-center gap-2 text-sm text-slate-300">
+                            <CheckCircle className="h-4 w-4 text-green-400" />
+                            Licence d Exploitation
+                          </span>
+                          <Eye className="h-4 w-4 text-slate-400" />
+                        </a>
+                      ) : (
+                        <div className="flex items-center gap-2 p-2 text-sm text-slate-500">
+                          <XCircle className="h-4 w-4" />
+                          Licence d Exploitation - Non fournie
+                        </div>
+                      )}
+
+                      {selectedCompany.rccm_document ? (
+                        <a
+                          href={`${BACKEND_URL}${selectedCompany.rccm_document}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-between p-2 bg-slate-600/50 rounded hover:bg-slate-600 transition-colors"
+                        >
+                          <span className="flex items-center gap-2 text-sm text-slate-300">
+                            <CheckCircle className="h-4 w-4 text-green-400" />
+                            Document RCCM
+                          </span>
+                          <Eye className="h-4 w-4 text-slate-400" />
+                        </a>
+                      ) : (
+                        <div className="flex items-center gap-2 p-2 text-sm text-slate-500">
+                          <XCircle className="h-4 w-4" />
+                          Document RCCM - Non fourni
+                        </div>
+                      )}
+
+                      {selectedCompany.nif_document ? (
+                        <a
+                          href={`${BACKEND_URL}${selectedCompany.nif_document}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-between p-2 bg-slate-600/50 rounded hover:bg-slate-600 transition-colors"
+                        >
+                          <span className="flex items-center gap-2 text-sm text-slate-300">
+                            <CheckCircle className="h-4 w-4 text-green-400" />
+                            Document NIF
+                          </span>
+                          <Eye className="h-4 w-4 text-slate-400" />
+                        </a>
+                      ) : (
+                        <div className="flex items-center gap-2 p-2 text-sm text-slate-500">
+                          <XCircle className="h-4 w-4" />
+                          Document NIF - Non fourni
+                        </div>
+                      )}
+
+                      {selectedCompany.attestation_fiscale ? (
+                        <a
+                          href={`${BACKEND_URL}${selectedCompany.attestation_fiscale}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-between p-2 bg-slate-600/50 rounded hover:bg-slate-600 transition-colors"
+                        >
+                          <span className="flex items-center gap-2 text-sm text-slate-300">
+                            <CheckCircle className="h-4 w-4 text-green-400" />
+                            Attestation Fiscale
+                          </span>
+                          <Eye className="h-4 w-4 text-slate-400" />
+                        </a>
+                      ) : (
+                        <div className="flex items-center gap-2 p-2 text-sm text-slate-500">
+                          <XCircle className="h-4 w-4" />
+                          Attestation Fiscale - Non fournie
+                        </div>
+                      )}
+
+                      {selectedCompany.documents_additionnels && selectedCompany.documents_additionnels.length > 0 && (
+                        <div className="pt-2 border-t border-slate-600">
+                          <span className="text-xs text-slate-400 mb-2 block">Documents Additionnels</span>
+                          {selectedCompany.documents_additionnels.map((doc, idx) => (
+                            <a
+                              key={idx}
+                              href={`${BACKEND_URL}${doc}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center justify-between p-2 bg-slate-600/50 rounded hover:bg-slate-600 transition-colors mt-1"
+                            >
+                              <span className="flex items-center gap-2 text-sm text-slate-300">
+                                <FileText className="h-4 w-4 text-blue-400" />
+                                Document {idx + 1}
+                              </span>
+                              <Eye className="h-4 w-4 text-slate-400" />
+                            </a>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="text-xs text-slate-500 mb-4">
+                    Inscrite le {new Date(selectedCompany.created_at).toLocaleDateString('fr-FR')}
+                  </div>
+
+                  {/* Actions */}
+                  {selectedCompany.verification_status === 'pending' && (
+                    <div className="flex gap-3 pt-4 border-t border-slate-700 mb-4">
+                      <Button
+                        onClick={() => handleApproveCompany(selectedCompany.id)}
+                        className="flex-1 bg-green-600 hover:bg-green-700 gap-2"
+                      >
+                        <UserCheck className="h-4 w-4" />
+                        Approuver
+                      </Button>
+                      <Button
+                        onClick={() => handleRejectCompany(selectedCompany.id)}
+                        variant="outline"
+                        className="flex-1 border-red-600 text-red-400 hover:bg-red-600 hover:text-white gap-2"
+                      >
+                        <UserX className="h-4 w-4" />
+                        Rejeter
+                      </Button>
+                    </div>
+                  )}
+
+                  <Button
+                    onClick={() => confirmDelete('company', selectedCompany.id, selectedCompany.company_name)}
+                    variant="outline"
+                    className="w-full border-red-600 text-red-400 hover:bg-red-600 hover:text-white gap-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Supprimer cette entreprise
+                  </Button>
+                </Card>
+              ) : (
+                <Card className="p-8 bg-slate-800 border-slate-700 text-center">
+                  <Building className="h-12 w-12 text-slate-600 mx-auto mb-4" />
+                  <p className="text-slate-400">Sélectionnez une entreprise pour voir ses détails</p>
+                </Card>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
