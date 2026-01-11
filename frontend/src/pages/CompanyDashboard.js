@@ -7,16 +7,41 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import { 
   Building2, LogOut, FileText, Upload, Briefcase, Users, MapPin,
-  CheckCircle, XCircle, Clock, Phone, Mail, Globe, Edit, Plus,
-  Eye, AlertTriangle, Shield, User, ExternalLink, Trash2
+  CheckCircle, XCircle, Clock, Phone, Mail, Globe, Plus, Home,
+  Eye, AlertTriangle, Shield, User, ExternalLink, Trash2, Edit,
+  DollarSign, Calendar
 } from 'lucide-react';
 import axios from 'axios';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
+
+const COMPANY_SECTORS = [
+  { value: 'Construction', label: 'Construction & BTP' },
+  { value: 'Transport', label: 'Transport & Logistique' },
+  { value: 'Nettoyage', label: 'Nettoyage & Entretien' },
+  { value: 'Securite', label: 'Sécurité & Gardiennage' },
+  { value: 'Informatique', label: 'Informatique & Technologie' },
+  { value: 'Restauration', label: 'Restauration & Hôtellerie' },
+  { value: 'Immobilier', label: 'Immobilier' },
+  { value: 'Commerce', label: 'Commerce & Distribution' },
+  { value: 'Agriculture', label: 'Agriculture & Agroalimentaire' },
+  { value: 'Industrie', label: 'Industrie & Manufacture' },
+  { value: 'Services', label: 'Services aux Entreprises' },
+  { value: 'Autres', label: 'Autres' }
+];
+
+const CONTRACT_TYPES = [
+  { value: 'CDI', label: 'CDI - Contrat à Durée Indéterminée' },
+  { value: 'CDD', label: 'CDD - Contrat à Durée Déterminée' },
+  { value: 'Stage', label: 'Stage' },
+  { value: 'Freelance', label: 'Freelance / Consultant' },
+  { value: 'Interim', label: 'Intérim' }
+];
 
 const CompanyDashboard = () => {
   const navigate = useNavigate();
@@ -25,6 +50,31 @@ const CompanyDashboard = () => {
   const [activeTab, setActiveTab] = useState('profile');
   const [services, setServices] = useState([]);
   const [jobOffers, setJobOffers] = useState([]);
+
+  // Service form state
+  const [showServiceForm, setShowServiceForm] = useState(false);
+  const [serviceForm, setServiceForm] = useState({
+    title: '',
+    description: '',
+    category: '',
+    price_min: '',
+    price_max: '',
+    duration: '',
+    location: ''
+  });
+
+  // Job offer form state
+  const [showJobForm, setShowJobForm] = useState(false);
+  const [jobForm, setJobForm] = useState({
+    title: '',
+    description: '',
+    requirements: '',
+    location: '',
+    contract_type: '',
+    salary_min: '',
+    salary_max: '',
+    deadline: ''
+  });
 
   // Fetch company profile
   useEffect(() => {
@@ -82,14 +132,101 @@ const CompanyDashboard = () => {
     navigate('/');
   };
 
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case 'approved':
-        return { color: 'bg-green-500/20 text-green-400 border-green-500/30', icon: CheckCircle, label: 'Approuvée' };
-      case 'rejected':
-        return { color: 'bg-red-500/20 text-red-400 border-red-500/30', icon: XCircle, label: 'Rejetée' };
-      default:
-        return { color: 'bg-amber-500/20 text-amber-400 border-amber-500/30', icon: Clock, label: 'En attente' };
+  const toggleOnlineStatus = async (checked) => {
+    try {
+      const token = localStorage.getItem('companyToken');
+      await axios.put(`${API}/company/profile/me`, 
+        { online_status: checked },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setCompany({ ...company, online_status: checked });
+      toast.success(checked ? 'Vous êtes maintenant en ligne' : 'Vous êtes maintenant hors ligne');
+    } catch (error) {
+      toast.error('Erreur lors de la mise à jour');
+    }
+  };
+
+  const handleDocumentUpload = async (docType, file) => {
+    if (!file) return;
+    
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Fichier trop grand (max 10MB)');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+    const token = localStorage.getItem('companyToken');
+
+    try {
+      if (docType === 'logo') {
+        await axios.post(`${API}/company/upload-logo`, formData, {
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
+        });
+      } else {
+        await axios.post(`${API}/company/upload-document/${docType}`, formData, {
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
+        });
+      }
+      
+      // Refresh profile
+      const res = await axios.get(`${API}/company/profile/me`, { headers: { Authorization: `Bearer ${token}` } });
+      setCompany(res.data);
+      toast.success('Document téléchargé avec succès');
+    } catch (error) {
+      toast.error('Erreur lors du téléchargement');
+    }
+  };
+
+  const handleCreateService = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('companyToken');
+
+    try {
+      await axios.post(`${API}/company/services`, {
+        ...serviceForm,
+        price_min: serviceForm.price_min ? parseInt(serviceForm.price_min) : null,
+        price_max: serviceForm.price_max ? parseInt(serviceForm.price_max) : null,
+        is_available: true
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      toast.success('Service créé avec succès');
+      setShowServiceForm(false);
+      setServiceForm({ title: '', description: '', category: '', price_min: '', price_max: '', duration: '', location: '' });
+      
+      // Refresh services
+      const res = await axios.get(`${API}/company/services/my`, { headers: { Authorization: `Bearer ${token}` } });
+      setServices(res.data);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Erreur lors de la création');
+    }
+  };
+
+  const handleCreateJobOffer = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('companyToken');
+
+    try {
+      await axios.post(`${API}/company/job-offers`, {
+        ...jobForm,
+        salary_min: jobForm.salary_min ? parseInt(jobForm.salary_min) : null,
+        salary_max: jobForm.salary_max ? parseInt(jobForm.salary_max) : null,
+        is_active: true
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      toast.success('Offre publiée avec succès');
+      setShowJobForm(false);
+      setJobForm({ title: '', description: '', requirements: '', location: '', contract_type: '', salary_min: '', salary_max: '', deadline: '' });
+      
+      // Refresh job offers
+      const res = await axios.get(`${API}/company/job-offers/my`, { headers: { Authorization: `Bearer ${token}` } });
+      setJobOffers(res.data);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Erreur lors de la création');
     }
   };
 
@@ -107,82 +244,55 @@ const CompanyDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-slate-400">Chargement...</p>
-        </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-lg">Chargement...</div>
       </div>
     );
   }
 
   if (!company) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-        <Card className="p-8 bg-slate-800 border-slate-700 text-center">
-          <AlertTriangle className="h-12 w-12 text-amber-400 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-white mb-2">Session expirée</h2>
-          <p className="text-slate-400 mb-4">Veuillez vous reconnecter</p>
-          <Button onClick={() => navigate('/company/auth')} className="bg-emerald-600 hover:bg-emerald-700">
-            Se reconnecter
-          </Button>
+      <div className="min-h-screen bg-muted flex items-center justify-center">
+        <Card className="p-8 text-center">
+          <AlertTriangle className="h-12 w-12 text-amber-500 mx-auto mb-4" />
+          <h2 className="text-xl font-bold mb-2">Session expirée</h2>
+          <p className="text-muted-foreground mb-4">Veuillez vous reconnecter</p>
+          <Button onClick={() => navigate('/company/auth')}>Se reconnecter</Button>
         </Card>
       </div>
     );
   }
 
-  const statusBadge = getStatusBadge(company.verification_status);
   const docStatus = getDocumentStatus();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      {/* Header */}
-      <header className="bg-slate-800/80 backdrop-blur border-b border-slate-700 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+    <div className="min-h-screen bg-muted">
+      {/* Header - Same style as Agent Immobilier */}
+      <header className="bg-card border-b border-border sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              {company.logo ? (
-                <img src={`${BACKEND_URL}${company.logo}`} alt="Logo" className="h-12 w-12 rounded-xl object-cover" />
-              ) : (
-                <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-                  <Building2 className="h-6 w-6 text-white" />
-                </div>
-              )}
-              <div>
-                <h1 className="text-xl font-bold text-white">{company.company_name}</h1>
-                <div className="flex items-center gap-2">
-                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium border ${statusBadge.color}`}>
-                    <statusBadge.icon className="h-3 w-3" />
-                    {statusBadge.label}
-                  </span>
-                  <span className="text-xs text-slate-500">{company.sector}</span>
-                </div>
-              </div>
+              <Button variant="ghost" onClick={() => navigate('/')} className="gap-2">
+                <Home className="h-4 w-4" />
+                Accueil
+              </Button>
+              <h1 className="text-2xl font-heading font-bold text-foreground">
+                Espace Entreprise
+              </h1>
             </div>
-
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <span className={`text-sm ${company.online_status ? 'text-green-400' : 'text-slate-400'}`}>
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-3">
+                <Label htmlFor="online-status" className="font-heading text-xs uppercase tracking-wide">
                   {company.online_status ? 'En ligne' : 'Hors ligne'}
-                </span>
+                </Label>
                 <Switch
+                  id="online-status"
                   checked={company.online_status}
-                  onCheckedChange={async (checked) => {
-                    try {
-                      const token = localStorage.getItem('companyToken');
-                      await axios.put(`${API}/company/profile/me`, 
-                        { online_status: checked },
-                        { headers: { Authorization: `Bearer ${token}` } }
-                      );
-                      setCompany({ ...company, online_status: checked });
-                    } catch (error) {
-                      toast.error('Erreur lors de la mise à jour');
-                    }
-                  }}
+                  onCheckedChange={toggleOnlineStatus}
                 />
               </div>
-              <Button variant="outline" onClick={handleLogout} className="border-slate-600 text-slate-300 hover:bg-slate-700">
-                <LogOut className="h-4 w-4 mr-2" />
+              <Button variant="ghost" onClick={handleLogout} className="gap-2">
+                <LogOut className="h-4 w-4" />
                 Déconnexion
               </Button>
             </div>
@@ -192,14 +302,14 @@ const CompanyDashboard = () => {
 
       {/* Pending Verification Banner */}
       {company.verification_status === 'pending' && (
-        <div className="bg-amber-500/10 border-b border-amber-500/30">
-          <div className="max-w-7xl mx-auto px-4 py-3">
+        <div className="bg-amber-50 border-b border-amber-200">
+          <div className="max-w-7xl mx-auto px-4 md:px-8 py-3">
             <div className="flex items-center gap-3">
-              <Clock className="h-5 w-5 text-amber-400" />
+              <Clock className="h-5 w-5 text-amber-600" />
               <div>
-                <p className="text-amber-400 font-medium">Votre entreprise est en attente de validation</p>
-                <p className="text-amber-200/70 text-sm">
-                  Notre équipe vérifie vos documents. Vous pourrez publier des services et offres demploi une fois approuvé.
+                <p className="text-amber-800 font-medium">Votre entreprise est en attente de validation</p>
+                <p className="text-amber-600 text-sm">
+                  Vous pourrez publier des services et offres d'emploi une fois approuvé par notre équipe.
                 </p>
               </div>
             </div>
@@ -207,252 +317,248 @@ const CompanyDashboard = () => {
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Tab Navigation */}
-        <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
-          {[
-            { id: 'profile', label: 'Profil', icon: Building2 },
-            { id: 'documents', label: 'Documents', icon: FileText },
-            { id: 'services', label: 'Services', icon: Briefcase },
-            { id: 'jobs', label: 'Offres Emploi', icon: Users },
-          ].map(tab => (
-            <Button
-              key={tab.id}
-              variant={activeTab === tab.id ? 'default' : 'outline'}
-              onClick={() => setActiveTab(tab.id)}
-              className={activeTab === tab.id 
-                ? 'bg-emerald-600 hover:bg-emerald-700' 
-                : 'border-slate-600 text-slate-300 hover:bg-slate-700'}
-            >
-              <tab.icon className="h-4 w-4 mr-2" />
-              {tab.label}
-            </Button>
-          ))}
+      {company.verification_status === 'rejected' && (
+        <div className="bg-red-50 border-b border-red-200">
+          <div className="max-w-7xl mx-auto px-4 md:px-8 py-3">
+            <div className="flex items-center gap-3">
+              <XCircle className="h-5 w-5 text-red-600" />
+              <div>
+                <p className="text-red-800 font-medium">Votre entreprise a été rejetée</p>
+                <p className="text-red-600 text-sm">
+                  Veuillez vérifier vos documents et contacter le support.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
+        {/* Profile Summary - Same style as Agent Immobilier */}
+        <Card className="p-6 mb-6">
+          <div className="flex items-center gap-6">
+            <Avatar className="h-20 w-20 ring-4 ring-primary/20">
+              <AvatarImage src={company.logo ? `${BACKEND_URL}${company.logo}` : undefined} />
+              <AvatarFallback className="text-2xl font-heading bg-primary text-primary-foreground">
+                <Building2 className="h-8 w-8" />
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
+              <div className="flex items-center gap-3">
+                <h2 className="text-2xl font-heading font-bold text-foreground">
+                  {company.company_name}
+                </h2>
+                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                  company.verification_status === 'approved' 
+                    ? 'bg-green-100 text-green-700' 
+                    : company.verification_status === 'rejected'
+                    ? 'bg-red-100 text-red-700'
+                    : 'bg-amber-100 text-amber-700'
+                }`}>
+                  {company.verification_status === 'approved' ? 'Approuvée' : 
+                   company.verification_status === 'rejected' ? 'Rejetée' : 'En attente'}
+                </span>
+              </div>
+              <p className="text-muted-foreground">{company.sector}</p>
+              <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <MapPin className="h-4 w-4" />
+                  {company.city}, {company.region}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Phone className="h-4 w-4" />
+                  {company.phone_number}
+                </span>
+                {company.email && (
+                  <span className="flex items-center gap-1">
+                    <Mail className="h-4 w-4" />
+                    {company.email}
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-sm text-muted-foreground mb-1">Documents</div>
+              <div className="text-2xl font-bold text-primary">{docStatus.complete}/{docStatus.total}</div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Tabs - Same style as Agent Immobilier */}
+        <div className="flex gap-2 mb-6 flex-wrap">
+          <Button 
+            variant={activeTab === 'profile' ? 'default' : 'outline'} 
+            onClick={() => setActiveTab('profile')} 
+            className="gap-2"
+          >
+            <User className="h-4 w-4" /> Profil
+          </Button>
+          <Button 
+            variant={activeTab === 'documents' ? 'default' : 'outline'} 
+            onClick={() => setActiveTab('documents')} 
+            className="gap-2"
+          >
+            <FileText className="h-4 w-4" /> Documents
+          </Button>
+          <Button 
+            variant={activeTab === 'services' ? 'default' : 'outline'} 
+            onClick={() => setActiveTab('services')} 
+            className="gap-2"
+          >
+            <Briefcase className="h-4 w-4" /> Services
+          </Button>
+          <Button 
+            variant={activeTab === 'create-service' ? 'default' : 'outline'} 
+            onClick={() => setActiveTab('create-service')} 
+            className="gap-2"
+            disabled={company.verification_status !== 'approved'}
+          >
+            <Plus className="h-4 w-4" /> + Service
+          </Button>
+          <Button 
+            variant={activeTab === 'jobs' ? 'default' : 'outline'} 
+            onClick={() => setActiveTab('jobs')} 
+            className="gap-2 bg-blue-50 border-blue-200 hover:bg-blue-100"
+          >
+            <Users className="h-4 w-4 text-blue-600" /> Offres Emploi
+          </Button>
+          <Button 
+            variant={activeTab === 'create-job' ? 'default' : 'outline'} 
+            onClick={() => setActiveTab('create-job')} 
+            className="gap-2 bg-blue-50 border-blue-200 hover:bg-blue-100"
+            disabled={company.verification_status !== 'approved'}
+          >
+            <Plus className="h-4 w-4 text-blue-600" /> + Offre
+          </Button>
         </div>
 
         {/* Profile Tab */}
         {activeTab === 'profile' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Company Info Card */}
-            <Card className="lg:col-span-2 p-6 bg-slate-800/50 border-slate-700">
-              <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                <Building2 className="h-5 w-5 text-emerald-400" />
-                Informations de lentreprise
-              </h2>
+          <Card className="p-8">
+            <h3 className="text-2xl font-heading font-bold text-foreground mb-6">
+              Informations de l'Entreprise
+            </h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <Label className="text-slate-400 text-sm">Nom</Label>
-                  <p className="text-white font-medium">{company.company_name}</p>
-                </div>
-                <div>
-                  <Label className="text-slate-400 text-sm">Secteur</Label>
-                  <p className="text-white">{company.sector}</p>
-                </div>
-                <div>
-                  <Label className="text-slate-400 text-sm">Numéro RCCM</Label>
-                  <p className="text-white font-mono">{company.rccm_number}</p>
-                </div>
-                <div>
-                  <Label className="text-slate-400 text-sm">Numéro NIF</Label>
-                  <p className="text-white font-mono">{company.nif_number || '-'}</p>
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <Label className="text-muted-foreground text-sm">Nom de l'Entreprise</Label>
+                <p className="text-foreground font-medium text-lg">{company.company_name}</p>
+              </div>
+              <div>
+                <Label className="text-muted-foreground text-sm">Secteur d'Activité</Label>
+                <p className="text-foreground font-medium">{company.sector}</p>
+              </div>
+              <div>
+                <Label className="text-muted-foreground text-sm">Numéro RCCM</Label>
+                <p className="text-foreground font-mono">{company.rccm_number}</p>
+              </div>
+              <div>
+                <Label className="text-muted-foreground text-sm">Numéro NIF</Label>
+                <p className="text-foreground font-mono">{company.nif_number || '-'}</p>
+              </div>
+              <div className="md:col-span-2">
+                <Label className="text-muted-foreground text-sm">Adresse</Label>
+                <p className="text-foreground">{company.address}, {company.city}, {company.region}</p>
+              </div>
+              <div>
+                <Label className="text-muted-foreground text-sm">Téléphone</Label>
+                <p className="text-foreground">{company.phone_number}</p>
+              </div>
+              <div>
+                <Label className="text-muted-foreground text-sm">Email</Label>
+                <p className="text-foreground">{company.email || '-'}</p>
+              </div>
+              {company.website && (
                 <div className="md:col-span-2">
-                  <Label className="text-slate-400 text-sm">Adresse</Label>
-                  <p className="text-white flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-emerald-400" />
-                    {company.address}, {company.city}, {company.region}
-                  </p>
+                  <Label className="text-muted-foreground text-sm">Site Web</Label>
+                  <a href={company.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-center gap-1">
+                    {company.website} <ExternalLink className="h-4 w-4" />
+                  </a>
+                </div>
+              )}
+              <div className="md:col-span-2">
+                <Label className="text-muted-foreground text-sm">Description</Label>
+                <p className="text-foreground">{company.description}</p>
+              </div>
+            </div>
+
+            {/* Contact Person */}
+            <div className="mt-8 p-6 bg-muted rounded-xl">
+              <h4 className="font-heading font-bold text-foreground mb-4 flex items-center gap-2">
+                <User className="h-5 w-5 text-primary" />
+                Personne de Contact
+              </h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-muted-foreground text-sm">Nom</Label>
+                  <p className="text-foreground font-medium">{company.contact_person_name}</p>
                 </div>
                 <div>
-                  <Label className="text-slate-400 text-sm">Téléphone</Label>
-                  <p className="text-white flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-emerald-400" />
-                    {company.phone_number}
-                  </p>
-                </div>
-                <div>
-                  <Label className="text-slate-400 text-sm">Email</Label>
-                  <p className="text-white flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-emerald-400" />
-                    {company.email || '-'}
-                  </p>
-                </div>
-                {company.website && (
-                  <div className="md:col-span-2">
-                    <Label className="text-slate-400 text-sm">Site web</Label>
-                    <a href={company.website} target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:text-emerald-300 flex items-center gap-2">
-                      <Globe className="h-4 w-4" />
-                      {company.website}
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
-                  </div>
-                )}
-                <div className="md:col-span-2">
-                  <Label className="text-slate-400 text-sm">Description</Label>
-                  <p className="text-slate-300">{company.description}</p>
+                  <Label className="text-muted-foreground text-sm">Téléphone</Label>
+                  <p className="text-foreground">{company.contact_person_phone}</p>
                 </div>
               </div>
-
-              {/* Contact Person */}
-              <div className="mt-6 p-4 bg-slate-700/30 rounded-xl">
-                <h3 className="text-white font-bold mb-4 flex items-center gap-2">
-                  <User className="h-4 w-4 text-emerald-400" />
-                  Personne de contact
-                </h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-slate-400 text-sm">Nom</Label>
-                    <p className="text-white">{company.contact_person_name}</p>
-                  </div>
-                  <div>
-                    <Label className="text-slate-400 text-sm">Téléphone</Label>
-                    <p className="text-white">{company.contact_person_phone}</p>
-                  </div>
-                </div>
-              </div>
-            </Card>
-
-            {/* Stats Card */}
-            <Card className="p-6 bg-slate-800/50 border-slate-700">
-              <h2 className="text-xl font-bold text-white mb-6">Statistiques</h2>
-              
-              <div className="space-y-4">
-                <div className="p-4 bg-slate-700/50 rounded-xl">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-slate-400">Services publiés</span>
-                    <Briefcase className="h-5 w-5 text-emerald-400" />
-                  </div>
-                  <p className="text-3xl font-bold text-white">{services.length}</p>
-                </div>
-
-                <div className="p-4 bg-slate-700/50 rounded-xl">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-slate-400">Offres demploi</span>
-                    <Users className="h-5 w-5 text-blue-400" />
-                  </div>
-                  <p className="text-3xl font-bold text-white">{jobOffers.length}</p>
-                </div>
-
-                <div className="p-4 bg-slate-700/50 rounded-xl">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-slate-400">Documents</span>
-                    <FileText className="h-5 w-5 text-amber-400" />
-                  </div>
-                  <p className="text-xl font-bold text-white">{docStatus.complete}/{docStatus.total}</p>
-                  <div className="w-full bg-slate-600 rounded-full h-2 mt-2">
-                    <div 
-                      className="bg-emerald-500 h-2 rounded-full transition-all"
-                      style={{ width: `${(docStatus.complete / docStatus.total) * 100}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-            </Card>
-          </div>
+            </div>
+          </Card>
         )}
 
         {/* Documents Tab */}
         {activeTab === 'documents' && (
-          <Card className="p-6 bg-slate-800/50 border-slate-700">
-            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-              <Shield className="h-5 w-5 text-emerald-400" />
-              Documents de lentreprise
-            </h2>
+          <Card className="p-8">
+            <h3 className="text-2xl font-heading font-bold text-foreground mb-6 flex items-center gap-2">
+              <Shield className="h-6 w-6 text-primary" />
+              Documents de l'Entreprise
+            </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Logo */}
-              <DocumentCard
-                title="Logo"
+              <DocumentUploadCard
+                title="Logo de l'Entreprise"
                 document={company.logo}
-                onUpload={async (file) => {
-                  const formData = new FormData();
-                  formData.append('file', file);
-                  const token = localStorage.getItem('companyToken');
-                  await axios.post(`${API}/company/upload-logo`, formData, {
-                    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
-                  });
-                  const res = await axios.get(`${API}/company/profile/me`, { headers: { Authorization: `Bearer ${token}` } });
-                  setCompany(res.data);
-                  toast.success('Logo mis à jour');
-                }}
+                docType="logo"
+                onUpload={handleDocumentUpload}
+                isImage
               />
 
               {/* Licence */}
-              <DocumentCard
-                title="Licence dexploitation"
+              <DocumentUploadCard
+                title="Licence d'Exploitation"
                 document={company.licence_exploitation}
+                docType="licence_exploitation"
+                onUpload={handleDocumentUpload}
                 required
-                onUpload={async (file) => {
-                  const formData = new FormData();
-                  formData.append('file', file);
-                  const token = localStorage.getItem('companyToken');
-                  await axios.post(`${API}/company/upload-document/licence_exploitation`, formData, {
-                    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
-                  });
-                  const res = await axios.get(`${API}/company/profile/me`, { headers: { Authorization: `Bearer ${token}` } });
-                  setCompany(res.data);
-                  toast.success('Document mis à jour');
-                }}
               />
 
               {/* RCCM */}
-              <DocumentCard
+              <DocumentUploadCard
                 title="Document RCCM"
                 document={company.rccm_document}
+                docType="rccm_document"
+                onUpload={handleDocumentUpload}
                 required
-                onUpload={async (file) => {
-                  const formData = new FormData();
-                  formData.append('file', file);
-                  const token = localStorage.getItem('companyToken');
-                  await axios.post(`${API}/company/upload-document/rccm_document`, formData, {
-                    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
-                  });
-                  const res = await axios.get(`${API}/company/profile/me`, { headers: { Authorization: `Bearer ${token}` } });
-                  setCompany(res.data);
-                  toast.success('Document mis à jour');
-                }}
               />
 
               {/* NIF */}
-              <DocumentCard
+              <DocumentUploadCard
                 title="Document NIF"
                 document={company.nif_document}
-                onUpload={async (file) => {
-                  const formData = new FormData();
-                  formData.append('file', file);
-                  const token = localStorage.getItem('companyToken');
-                  await axios.post(`${API}/company/upload-document/nif_document`, formData, {
-                    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
-                  });
-                  const res = await axios.get(`${API}/company/profile/me`, { headers: { Authorization: `Bearer ${token}` } });
-                  setCompany(res.data);
-                  toast.success('Document mis à jour');
-                }}
+                docType="nif_document"
+                onUpload={handleDocumentUpload}
               />
 
               {/* Attestation Fiscale */}
-              <DocumentCard
+              <DocumentUploadCard
                 title="Attestation de Régularité Fiscale"
                 document={company.attestation_fiscale}
-                onUpload={async (file) => {
-                  const formData = new FormData();
-                  formData.append('file', file);
-                  const token = localStorage.getItem('companyToken');
-                  await axios.post(`${API}/company/upload-document/attestation_fiscale`, formData, {
-                    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
-                  });
-                  const res = await axios.get(`${API}/company/profile/me`, { headers: { Authorization: `Bearer ${token}` } });
-                  setCompany(res.data);
-                  toast.success('Document mis à jour');
-                }}
+                docType="attestation_fiscale"
+                onUpload={handleDocumentUpload}
               />
             </div>
 
             {/* Additional Documents */}
             {company.documents_additionnels && company.documents_additionnels.length > 0 && (
-              <div className="mt-6">
-                <h3 className="text-white font-bold mb-4">Autres Documents</h3>
+              <div className="mt-8">
+                <h4 className="font-heading font-bold text-foreground mb-4">Autres Documents</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {company.documents_additionnels.map((doc, idx) => (
                     <a
@@ -460,11 +566,11 @@ const CompanyDashboard = () => {
                       href={`${BACKEND_URL}${doc}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="p-4 bg-slate-700/50 rounded-xl hover:bg-slate-700 transition-colors flex items-center gap-3"
+                      className="p-4 bg-muted rounded-xl hover:bg-muted/80 transition-colors flex items-center gap-3"
                     >
-                      <FileText className="h-5 w-5 text-emerald-400" />
-                      <span className="text-slate-300">Document {idx + 1}</span>
-                      <ExternalLink className="h-4 w-4 text-slate-500 ml-auto" />
+                      <FileText className="h-5 w-5 text-primary" />
+                      <span className="text-foreground">Document {idx + 1}</span>
+                      <ExternalLink className="h-4 w-4 text-muted-foreground ml-auto" />
                     </a>
                   ))}
                 </div>
@@ -475,164 +581,357 @@ const CompanyDashboard = () => {
 
         {/* Services Tab */}
         {activeTab === 'services' && (
-          <div className="space-y-6">
-            {company.verification_status !== 'approved' ? (
-              <Card className="p-8 bg-slate-800/50 border-slate-700 text-center">
-                <AlertTriangle className="h-12 w-12 text-amber-400 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-white mb-2">Fonctionnalité restreinte</h3>
-                <p className="text-slate-400">
-                  Vous pourrez publier des services une fois votre entreprise approuvée par notre équipe.
-                </p>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-2xl font-heading font-bold text-foreground">
+                Mes Services ({services.length})
+              </h3>
+            </div>
+
+            {services.length === 0 ? (
+              <Card className="p-8 text-center">
+                <Briefcase className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">Aucun service publié</p>
+                {company.verification_status === 'approved' && (
+                  <Button className="mt-4" onClick={() => setActiveTab('create-service')}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Créer un service
+                  </Button>
+                )}
               </Card>
             ) : (
-              <>
-                <div className="flex justify-between items-center">
-                  <h2 className="text-xl font-bold text-white">Mes Services</h2>
-                  <Button className="bg-emerald-600 hover:bg-emerald-700">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Ajouter un service
-                  </Button>
-                </div>
-
-                {services.length === 0 ? (
-                  <Card className="p-8 bg-slate-800/50 border-slate-700 text-center">
-                    <Briefcase className="h-12 w-12 text-slate-600 mx-auto mb-4" />
-                    <p className="text-slate-400">Aucun service publié</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {services.map(service => (
+                  <Card key={service.id} className="p-6">
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <h4 className="text-lg font-heading font-bold text-foreground">{service.title}</h4>
+                        <p className="text-sm text-muted-foreground">{service.category}</p>
+                      </div>
+                      <span className={`px-2 py-1 rounded text-xs ${service.is_available ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                        {service.is_available ? 'Disponible' : 'Indisponible'}
+                      </span>
+                    </div>
+                    <p className="text-foreground text-sm mb-4 line-clamp-2">{service.description}</p>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                        <MapPin className="h-4 w-4" />
+                        {service.location}
+                      </div>
+                      <div className="text-primary font-bold">
+                        {service.price_min && service.price_max 
+                          ? `${service.price_min.toLocaleString()} - ${service.price_max.toLocaleString()} GNF`
+                          : 'Prix sur devis'}
+                      </div>
+                    </div>
                   </Card>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {services.map(service => (
-                      <Card key={service.id} className="p-4 bg-slate-800/50 border-slate-700">
-                        <h3 className="text-white font-bold">{service.title}</h3>
-                        <p className="text-slate-400 text-sm mt-1">{service.description}</p>
-                        <div className="flex items-center justify-between mt-4">
-                          <span className="text-emerald-400">
-                            {service.price_min && service.price_max 
-                              ? `${service.price_min.toLocaleString()} - ${service.price_max.toLocaleString()} GNF`
-                              : 'Prix sur devis'}
-                          </span>
-                          <div className="flex gap-2">
-                            <Button variant="ghost" size="sm" className="text-slate-400">
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="sm" className="text-red-400">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </>
+                ))}
+              </div>
             )}
           </div>
         )}
 
+        {/* Create Service Tab */}
+        {activeTab === 'create-service' && (
+          <Card className="p-8">
+            <h3 className="text-2xl font-heading font-bold text-foreground mb-6">
+              Créer un Nouveau Service
+            </h3>
+
+            {company.verification_status !== 'approved' ? (
+              <div className="text-center py-8">
+                <AlertTriangle className="h-12 w-12 text-amber-500 mx-auto mb-4" />
+                <p className="text-muted-foreground">
+                  Vous devez être approuvé pour publier des services.
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleCreateService} className="space-y-6">
+                <div className="space-y-2">
+                  <Label>Titre du Service *</Label>
+                  <Input
+                    value={serviceForm.title}
+                    onChange={(e) => setServiceForm({ ...serviceForm, title: e.target.value })}
+                    required
+                    placeholder="Ex: Construction de bâtiments"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Catégorie *</Label>
+                  <Select value={serviceForm.category} onValueChange={(v) => setServiceForm({ ...serviceForm, category: v })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionnez une catégorie" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {COMPANY_SECTORS.map(s => (
+                        <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Description *</Label>
+                  <Textarea
+                    value={serviceForm.description}
+                    onChange={(e) => setServiceForm({ ...serviceForm, description: e.target.value })}
+                    required
+                    rows={4}
+                    placeholder="Décrivez votre service..."
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Prix Minimum (GNF)</Label>
+                    <Input
+                      type="number"
+                      value={serviceForm.price_min}
+                      onChange={(e) => setServiceForm({ ...serviceForm, price_min: e.target.value })}
+                      placeholder="100000"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Prix Maximum (GNF)</Label>
+                    <Input
+                      type="number"
+                      value={serviceForm.price_max}
+                      onChange={(e) => setServiceForm({ ...serviceForm, price_max: e.target.value })}
+                      placeholder="500000"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Localisation *</Label>
+                  <Input
+                    value={serviceForm.location}
+                    onChange={(e) => setServiceForm({ ...serviceForm, location: e.target.value })}
+                    required
+                    placeholder="Conakry, Guinée"
+                  />
+                </div>
+
+                <Button type="submit" className="w-full">
+                  Créer le Service
+                </Button>
+              </form>
+            )}
+          </Card>
+        )}
+
         {/* Job Offers Tab */}
         {activeTab === 'jobs' && (
-          <div className="space-y-6">
-            {company.verification_status !== 'approved' ? (
-              <Card className="p-8 bg-slate-800/50 border-slate-700 text-center">
-                <AlertTriangle className="h-12 w-12 text-amber-400 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-white mb-2">Fonctionnalité restreinte</h3>
-                <p className="text-slate-400">
-                  Vous pourrez publier des offres demploi une fois votre entreprise approuvée par notre équipe.
-                </p>
-              </Card>
-            ) : (
-              <>
-                <div className="flex justify-between items-center">
-                  <h2 className="text-xl font-bold text-white">Mes Offres dEmploi</h2>
-                  <Button className="bg-blue-600 hover:bg-blue-700">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-2xl font-heading font-bold text-foreground">
+                Mes Offres d'Emploi ({jobOffers.length})
+              </h3>
+            </div>
+
+            {jobOffers.length === 0 ? (
+              <Card className="p-8 text-center">
+                <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">Aucune offre d'emploi publiée</p>
+                {company.verification_status === 'approved' && (
+                  <Button className="mt-4" onClick={() => setActiveTab('create-job')}>
                     <Plus className="h-4 w-4 mr-2" />
                     Publier une offre
                   </Button>
-                </div>
-
-                {jobOffers.length === 0 ? (
-                  <Card className="p-8 bg-slate-800/50 border-slate-700 text-center">
-                    <Users className="h-12 w-12 text-slate-600 mx-auto mb-4" />
-                    <p className="text-slate-400">Aucune offre demploi publiée</p>
-                  </Card>
-                ) : (
-                  <div className="space-y-4">
-                    {jobOffers.map(job => (
-                      <Card key={job.id} className="p-6 bg-slate-800/50 border-slate-700">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h3 className="text-white font-bold text-lg">{job.title}</h3>
-                            <p className="text-slate-400 text-sm mt-1">{job.description}</p>
-                            <div className="flex gap-4 mt-4 text-sm">
-                              <span className="text-slate-500 flex items-center gap-1">
-                                <MapPin className="h-4 w-4" />
-                                {job.location}
-                              </span>
-                              <span className="text-emerald-400">{job.contract_type}</span>
-                              {job.salary_min && job.salary_max && (
-                                <span className="text-slate-400">
-                                  {job.salary_min.toLocaleString()} - {job.salary_max.toLocaleString()} GNF
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex flex-col items-end gap-2">
-                            <span className={`px-3 py-1 rounded text-xs ${job.is_active ? 'bg-green-500/20 text-green-400' : 'bg-slate-500/20 text-slate-400'}`}>
-                              {job.is_active ? 'Active' : 'Inactive'}
-                            </span>
-                            <span className="text-slate-500 text-sm">{job.applications_count} candidature(s)</span>
-                          </div>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
                 )}
-              </>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {jobOffers.map(job => (
+                  <Card key={job.id} className="p-6">
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <h4 className="text-lg font-heading font-bold text-foreground">{job.title}</h4>
+                        <div className="flex items-center gap-3 mt-1">
+                          <span className="text-sm text-primary font-medium">{job.contract_type}</span>
+                          <span className="text-sm text-muted-foreground flex items-center gap-1">
+                            <MapPin className="h-4 w-4" />
+                            {job.location}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className={`px-2 py-1 rounded text-xs ${job.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                          {job.is_active ? 'Active' : 'Inactive'}
+                        </span>
+                        <p className="text-sm text-muted-foreground mt-1">{job.applications_count} candidature(s)</p>
+                      </div>
+                    </div>
+                    <p className="text-foreground text-sm mb-4 line-clamp-2">{job.description}</p>
+                    <div className="flex items-center justify-between">
+                      {job.deadline && (
+                        <span className="text-sm text-muted-foreground flex items-center gap-1">
+                          <Calendar className="h-4 w-4" />
+                          Date limite: {new Date(job.deadline).toLocaleDateString('fr-FR')}
+                        </span>
+                      )}
+                      {job.salary_min && job.salary_max && (
+                        <span className="text-primary font-bold">
+                          {job.salary_min.toLocaleString()} - {job.salary_max.toLocaleString()} GNF
+                        </span>
+                      )}
+                    </div>
+                  </Card>
+                ))}
+              </div>
             )}
           </div>
+        )}
+
+        {/* Create Job Offer Tab */}
+        {activeTab === 'create-job' && (
+          <Card className="p-8">
+            <h3 className="text-2xl font-heading font-bold text-foreground mb-6">
+              Publier une Offre d'Emploi
+            </h3>
+
+            {company.verification_status !== 'approved' ? (
+              <div className="text-center py-8">
+                <AlertTriangle className="h-12 w-12 text-amber-500 mx-auto mb-4" />
+                <p className="text-muted-foreground">
+                  Vous devez être approuvé pour publier des offres d'emploi.
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleCreateJobOffer} className="space-y-6">
+                <div className="space-y-2">
+                  <Label>Titre du Poste *</Label>
+                  <Input
+                    value={jobForm.title}
+                    onChange={(e) => setJobForm({ ...jobForm, title: e.target.value })}
+                    required
+                    placeholder="Ex: Ingénieur Civil"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Type de Contrat *</Label>
+                  <Select value={jobForm.contract_type} onValueChange={(v) => setJobForm({ ...jobForm, contract_type: v })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionnez le type de contrat" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CONTRACT_TYPES.map(c => (
+                        <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Description du Poste *</Label>
+                  <Textarea
+                    value={jobForm.description}
+                    onChange={(e) => setJobForm({ ...jobForm, description: e.target.value })}
+                    required
+                    rows={4}
+                    placeholder="Décrivez les responsabilités et missions..."
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Exigences / Qualifications *</Label>
+                  <Textarea
+                    value={jobForm.requirements}
+                    onChange={(e) => setJobForm({ ...jobForm, requirements: e.target.value })}
+                    required
+                    rows={3}
+                    placeholder="Ex: Bac+5 en génie civil, 3 ans d'expérience..."
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Salaire Minimum (GNF/mois)</Label>
+                    <Input
+                      type="number"
+                      value={jobForm.salary_min}
+                      onChange={(e) => setJobForm({ ...jobForm, salary_min: e.target.value })}
+                      placeholder="3000000"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Salaire Maximum (GNF/mois)</Label>
+                    <Input
+                      type="number"
+                      value={jobForm.salary_max}
+                      onChange={(e) => setJobForm({ ...jobForm, salary_max: e.target.value })}
+                      placeholder="5000000"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Localisation *</Label>
+                    <Input
+                      value={jobForm.location}
+                      onChange={(e) => setJobForm({ ...jobForm, location: e.target.value })}
+                      required
+                      placeholder="Conakry, Guinée"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Date Limite de Candidature</Label>
+                    <Input
+                      type="date"
+                      value={jobForm.deadline}
+                      onChange={(e) => setJobForm({ ...jobForm, deadline: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <Button type="submit" className="w-full">
+                  Publier l'Offre
+                </Button>
+              </form>
+            )}
+          </Card>
         )}
       </div>
     </div>
   );
 };
 
-// Document Card Component
-const DocumentCard = ({ title, document, required, onUpload }) => {
+// Document Upload Card Component
+const DocumentUploadCard = ({ title, document, docType, onUpload, required, isImage }) => {
   const [uploading, setUploading] = useState(false);
 
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error('Fichier trop grand (max 10MB)');
-      return;
-    }
-
     setUploading(true);
-    try {
-      await onUpload(file);
-    } catch (error) {
-      toast.error('Erreur lors du téléchargement');
-    } finally {
-      setUploading(false);
-    }
+    await onUpload(docType, file);
+    setUploading(false);
   };
 
   return (
-    <div className="p-4 bg-slate-700/50 rounded-xl">
-      <div className="flex items-center justify-between mb-3">
+    <div className="p-6 bg-muted rounded-xl">
+      <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <FileText className={`h-5 w-5 ${document ? 'text-emerald-400' : 'text-slate-500'}`} />
-          <span className="text-white font-medium">{title}</span>
-          {required && <span className="text-red-400 text-xs">*</span>}
+          <FileText className={`h-5 w-5 ${document ? 'text-green-600' : 'text-muted-foreground'}`} />
+          <span className="font-medium text-foreground">{title}</span>
+          {required && <span className="text-red-500">*</span>}
         </div>
         {document ? (
-          <CheckCircle className="h-5 w-5 text-emerald-400" />
+          <CheckCircle className="h-5 w-5 text-green-600" />
         ) : (
-          <XCircle className="h-5 w-5 text-slate-500" />
+          <XCircle className="h-5 w-5 text-muted-foreground" />
         )}
       </div>
+
+      {isImage && document && (
+        <div className="mb-4">
+          <img src={`${BACKEND_URL}${document}`} alt={title} className="h-24 w-24 object-cover rounded-lg" />
+        </div>
+      )}
 
       <div className="flex gap-2">
         {document && (
@@ -642,7 +941,7 @@ const DocumentCard = ({ title, document, required, onUpload }) => {
             rel="noopener noreferrer"
             className="flex-1"
           >
-            <Button variant="outline" className="w-full border-slate-600 text-slate-300 hover:bg-slate-600">
+            <Button variant="outline" className="w-full">
               <Eye className="h-4 w-4 mr-2" />
               Voir
             </Button>
@@ -651,15 +950,15 @@ const DocumentCard = ({ title, document, required, onUpload }) => {
         <div className="flex-1">
           <input
             type="file"
-            accept=".pdf,.jpg,.jpeg,.png"
+            accept={isImage ? "image/*" : ".pdf,.jpg,.jpeg,.png"}
             onChange={handleFileChange}
             className="hidden"
-            id={`doc-${title}`}
+            id={`doc-${docType}`}
           />
           <Button
             variant="outline"
-            className="w-full border-slate-600 text-slate-300 hover:bg-slate-600"
-            onClick={() => document.getElementById(`doc-${title}`).click()}
+            className="w-full"
+            onClick={() => document.getElementById(`doc-${docType}`).click()}
             disabled={uploading}
           >
             <Upload className="h-4 w-4 mr-2" />
