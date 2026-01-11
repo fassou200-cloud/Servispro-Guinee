@@ -1108,6 +1108,253 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
             </div>
           </div>
         )}
+
+        {/* Property Sales Tab */}
+        {activeTab === 'sales' && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <h2 className="text-lg font-heading font-bold text-white mb-4">
+                Propriétés à Vendre ({propertySales.length})
+              </h2>
+              {propertySales.length === 0 ? (
+                <Card className="p-8 bg-slate-800 border-slate-700 text-center">
+                  <p className="text-slate-400">Aucune propriété à vendre</p>
+                </Card>
+              ) : (
+                propertySales.map((sale) => (
+                  <Card 
+                    key={sale.id} 
+                    className={`p-4 bg-slate-800 border-slate-700 cursor-pointer transition-colors ${
+                      selectedSale?.id === sale.id ? 'border-emerald-500' : 'hover:border-slate-600'
+                    }`}
+                    onClick={() => setSelectedSale(sale)}
+                  >
+                    <div className="flex gap-4">
+                      {sale.photos && sale.photos.length > 0 ? (
+                        <img 
+                          src={`${BACKEND_URL}${sale.photos[0]}`}
+                          alt={sale.title}
+                          className="w-24 h-20 object-cover rounded-lg"
+                        />
+                      ) : (
+                        <div className="w-24 h-20 bg-slate-700 rounded-lg flex items-center justify-center">
+                          <Home className="h-8 w-8 text-slate-500" />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <h3 className="font-bold text-white truncate">{sale.title}</h3>
+                          <span className="flex-shrink-0 px-2 py-1 rounded text-xs font-medium bg-emerald-600/20 text-emerald-400">
+                            {sale.property_type}
+                          </span>
+                        </div>
+                        <p className="text-sm text-slate-400">{sale.agent_name}</p>
+                        <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
+                          <MapPin className="h-3 w-3" />
+                          {sale.location}
+                        </div>
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className="text-emerald-400 font-bold text-sm">
+                            {Number(sale.sale_price).toLocaleString('fr-FR')} GNF
+                          </span>
+                          {sale.is_available ? (
+                            <span className="px-2 py-0.5 rounded text-xs bg-green-600/20 text-green-400">À Vendre</span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded text-xs bg-red-600/20 text-red-400">Vendu</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                ))
+              )}
+            </div>
+
+            {/* Sale Detail */}
+            <div>
+              <h2 className="text-lg font-heading font-bold text-white mb-4">Détails de la Vente</h2>
+              {selectedSale ? (
+                <Card className="p-6 bg-slate-800 border-slate-700">
+                  {selectedSale.photos && selectedSale.photos.length > 0 && (
+                    <div className="mb-4">
+                      <img 
+                        src={`${BACKEND_URL}${selectedSale.photos[0]}`}
+                        alt={selectedSale.title}
+                        className="w-full h-48 object-cover rounded-lg mb-2"
+                      />
+                      {selectedSale.photos.length > 1 && (
+                        <div className="flex gap-2 overflow-x-auto pb-2">
+                          {selectedSale.photos.slice(1).map((photo, idx) => (
+                            <img 
+                              key={idx}
+                              src={`${BACKEND_URL}${photo}`}
+                              alt={`Photo ${idx + 2}`}
+                              className="w-16 h-16 object-cover rounded flex-shrink-0"
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h3 className="text-xl font-bold text-white">{selectedSale.title}</h3>
+                      <p className="text-emerald-400">{selectedSale.property_type}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-2xl font-bold text-emerald-400">
+                        {Number(selectedSale.sale_price).toLocaleString('fr-FR')} GNF
+                      </p>
+                      {selectedSale.is_negotiable && (
+                        <span className="text-xs text-amber-400">Négociable</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 mb-4">
+                    <div className="flex items-center gap-2 text-slate-300">
+                      <MapPin className="h-4 w-4 text-slate-400" />
+                      {selectedSale.location}
+                    </div>
+                    <div className="flex items-center gap-2 text-slate-300">
+                      <Users className="h-4 w-4 text-slate-400" />
+                      {selectedSale.agent_name} ({selectedSale.agent_phone})
+                    </div>
+                    {selectedSale.surface_area && (
+                      <div className="flex items-center gap-2 text-slate-300">
+                        <Home className="h-4 w-4 text-slate-400" />
+                        Surface: {selectedSale.surface_area}
+                      </div>
+                    )}
+                    {selectedSale.num_rooms && (
+                      <div className="flex items-center gap-2 text-slate-300">
+                        <Building className="h-4 w-4 text-slate-400" />
+                        {selectedSale.num_rooms} pièce(s) • {selectedSale.num_bathrooms || 0} SDB
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Features */}
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {selectedSale.is_available ? (
+                      <span className="px-3 py-1 rounded text-sm bg-green-600/20 text-green-400">À Vendre</span>
+                    ) : (
+                      <span className="px-3 py-1 rounded text-sm bg-red-600/20 text-red-400">Vendu</span>
+                    )}
+                    {selectedSale.has_garage && <span className="px-3 py-1 rounded text-sm bg-slate-700 text-slate-300">Garage</span>}
+                    {selectedSale.has_garden && <span className="px-3 py-1 rounded text-sm bg-slate-700 text-slate-300">Jardin</span>}
+                    {selectedSale.has_pool && <span className="px-3 py-1 rounded text-sm bg-slate-700 text-slate-300">Piscine</span>}
+                  </div>
+
+                  <div className="mb-4">
+                    <h4 className="text-sm font-bold text-slate-300 uppercase mb-2">Description</h4>
+                    <p className="text-slate-400 text-sm">{selectedSale.description}</p>
+                  </div>
+
+                  {/* Documents Section for Admin */}
+                  <div className="mb-4 p-4 bg-slate-700/50 rounded-lg">
+                    <h4 className="text-sm font-bold text-slate-300 uppercase mb-3 flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      Documents Légaux
+                    </h4>
+                    <div className="space-y-2">
+                      {selectedSale.titre_foncier ? (
+                        <a
+                          href={`${BACKEND_URL}${selectedSale.titre_foncier}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-between p-2 bg-slate-600/50 rounded hover:bg-slate-600 transition-colors"
+                        >
+                          <span className="flex items-center gap-2 text-sm text-slate-300">
+                            <CheckCircle className="h-4 w-4 text-green-400" />
+                            Titre Foncier
+                          </span>
+                          <Eye className="h-4 w-4 text-slate-400" />
+                        </a>
+                      ) : (
+                        <div className="flex items-center gap-2 p-2 text-sm text-slate-500">
+                          <XCircle className="h-4 w-4" />
+                          Titre Foncier - Non fourni
+                        </div>
+                      )}
+                      
+                      {selectedSale.seller_id_document ? (
+                        <a
+                          href={`${BACKEND_URL}${selectedSale.seller_id_document}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-between p-2 bg-slate-600/50 rounded hover:bg-slate-600 transition-colors"
+                        >
+                          <span className="flex items-center gap-2 text-sm text-slate-300">
+                            <CheckCircle className="h-4 w-4 text-green-400" />
+                            Pièce d'Identité Vendeur
+                          </span>
+                          <Eye className="h-4 w-4 text-slate-400" />
+                        </a>
+                      ) : (
+                        <div className="flex items-center gap-2 p-2 text-sm text-slate-500">
+                          <XCircle className="h-4 w-4" />
+                          Pièce d'Identité - Non fournie
+                        </div>
+                      )}
+                      
+                      {selectedSale.registration_ministere ? (
+                        <a
+                          href={`${BACKEND_URL}${selectedSale.registration_ministere}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-between p-2 bg-slate-600/50 rounded hover:bg-slate-600 transition-colors"
+                        >
+                          <span className="flex items-center gap-2 text-sm text-slate-300">
+                            <CheckCircle className="h-4 w-4 text-green-400" />
+                            Enregistrement Ministère
+                          </span>
+                          <Eye className="h-4 w-4 text-slate-400" />
+                        </a>
+                      ) : (
+                        <div className="flex items-center gap-2 p-2 text-sm text-slate-500">
+                          <XCircle className="h-4 w-4" />
+                          Enregistrement Ministère - Non fourni
+                        </div>
+                      )}
+                      
+                      {selectedSale.documents_additionnels && selectedSale.documents_additionnels.length > 0 && (
+                        <div className="pt-2 border-t border-slate-600">
+                          <span className="text-xs text-slate-400 mb-2 block">Documents Additionnels</span>
+                          {selectedSale.documents_additionnels.map((doc, idx) => (
+                            <a
+                              key={idx}
+                              href={`${BACKEND_URL}${doc}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center justify-between p-2 bg-slate-600/50 rounded hover:bg-slate-600 transition-colors mt-1"
+                            >
+                              <span className="flex items-center gap-2 text-sm text-slate-300">
+                                <FileText className="h-4 w-4 text-blue-400" />
+                                Document {idx + 1}
+                              </span>
+                              <Eye className="h-4 w-4 text-slate-400" />
+                            </a>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="text-xs text-slate-500 mb-4">
+                    Créée le {new Date(selectedSale.created_at).toLocaleDateString('fr-FR')}
+                  </div>
+                </Card>
+              ) : (
+                <Card className="p-8 bg-slate-800 border-slate-700 text-center">
+                  <Home className="h-12 w-12 text-slate-600 mx-auto mb-4" />
+                  <p className="text-slate-400">Sélectionnez une propriété pour voir ses détails</p>
+                </Card>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
