@@ -981,6 +981,314 @@ async def get_job_offer(job_id: str):
         raise HTTPException(status_code=404, detail="Offre d'emploi non trouvée")
     return job
 
+# ==================== COMPANY PROPERTY LISTINGS (Rentals & Sales) ====================
+
+@api_router.post("/company/rentals")
+async def create_company_rental(
+    listing_data: RentalListingCreate,
+    current_company: dict = Depends(get_current_company)
+):
+    """Create a rental listing for an approved real estate company"""
+    # Check if company is approved
+    if current_company.get('verification_status') != 'approved':
+        raise HTTPException(status_code=403, detail="Votre entreprise doit être approuvée pour publier des annonces")
+    
+    # Check if company is in real estate sector
+    if current_company.get('sector') != 'Immobilier':
+        raise HTTPException(status_code=403, detail="Seules les entreprises du secteur immobilier peuvent publier des locations")
+    
+    listing_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+    
+    listing_doc = {
+        'id': listing_id,
+        'service_provider_id': current_company['id'],  # Using company ID
+        'provider_name': current_company['company_name'],
+        'provider_phone': current_company['phone_number'],
+        'owner_type': 'company',  # Indicate it's a company listing
+        'property_type': listing_data.property_type.value,
+        'title': listing_data.title,
+        'description': listing_data.description,
+        'location': listing_data.location,
+        'rental_price': listing_data.rental_price,
+        'rental_type': listing_data.rental_type,
+        'price_per_night': listing_data.price_per_night,
+        'min_nights': listing_data.min_nights,
+        'max_guests': listing_data.max_guests,
+        'amenities': listing_data.amenities,
+        'is_available': listing_data.is_available,
+        'available_from': listing_data.available_from,
+        'available_to': listing_data.available_to,
+        'photos': [],
+        'titre_foncier': None,
+        'registration_ministere': None,
+        'seller_id_document': None,
+        'documents_additionnels': [],
+        'created_at': now,
+        'updated_at': now
+    }
+    
+    await db.rental_listings.insert_one(listing_doc)
+    return {k: v for k, v in listing_doc.items() if k != '_id'}
+
+@api_router.get("/company/rentals/my")
+async def get_company_rentals(current_company: dict = Depends(get_current_company)):
+    """Get all rental listings for the current company"""
+    rentals = await db.rental_listings.find(
+        {'service_provider_id': current_company['id']},
+        {'_id': 0}
+    ).sort('created_at', -1).to_list(100)
+    return rentals
+
+@api_router.post("/company/rentals/{rental_id}/upload-photo")
+async def upload_company_rental_photo(
+    rental_id: str,
+    file: UploadFile = File(...),
+    current_company: dict = Depends(get_current_company)
+):
+    """Upload a photo for a company rental listing"""
+    rental = await db.rental_listings.find_one({'id': rental_id})
+    if not rental:
+        raise HTTPException(status_code=404, detail="Annonce non trouvée")
+    
+    if rental['service_provider_id'] != current_company['id']:
+        raise HTTPException(status_code=403, detail="Non autorisé")
+    
+    if not file.content_type.startswith('image/'):
+        raise HTTPException(status_code=400, detail="Le fichier doit être une image")
+    
+    file_extension = file.filename.split('.')[-1] if '.' in file.filename else 'jpg'
+    filename = f"company_rental_{rental_id}_{uuid.uuid4()}.{file_extension}"
+    file_path = UPLOAD_DIR / filename
+    
+    with file_path.open('wb') as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    photo_url = f"/api/uploads/{filename}"
+    await db.rental_listings.update_one(
+        {'id': rental_id},
+        {
+            '$push': {'photos': photo_url},
+            '$set': {'updated_at': datetime.now(timezone.utc).isoformat()}
+        }
+    )
+    
+    return {'photo_url': photo_url, 'message': 'Photo uploadée avec succès'}
+
+@api_router.post("/company/rentals/{rental_id}/upload-document/{doc_type}")
+async def upload_company_rental_document(
+    rental_id: str,
+    doc_type: str,
+    file: UploadFile = File(...),
+    current_company: dict = Depends(get_current_company)
+):
+    """Upload a document for a company rental listing"""
+    rental = await db.rental_listings.find_one({'id': rental_id})
+    if not rental:
+        raise HTTPException(status_code=404, detail="Annonce non trouvée")
+    
+    if rental['service_provider_id'] != current_company['id']:
+        raise HTTPException(status_code=403, detail="Non autorisé")
+    
+    valid_doc_types = ['titre_foncier', 'registration_ministere', 'seller_id_document', 'documents_additionnels']
+    if doc_type not in valid_doc_types:
+        raise HTTPException(status_code=400, detail=f"Type de document invalide. Types valides: {valid_doc_types}")
+    
+    file_extension = file.filename.split('.')[-1] if '.' in file.filename else 'pdf'
+    filename = f"company_rental_doc_{rental_id}_{doc_type}_{uuid.uuid4()}.{file_extension}"
+    file_path = UPLOAD_DIR / filename
+    
+    with file_path.open('wb') as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    doc_url = f"/api/uploads/{filename}"
+    
+    if doc_type == 'documents_additionnels':
+        await db.rental_listings.update_one(
+            {'id': rental_id},
+            {
+                '$push': {'documents_additionnels': doc_url},
+                '$set': {'updated_at': datetime.now(timezone.utc).isoformat()}
+            }
+        )
+    else:
+        await db.rental_listings.update_one(
+            {'id': rental_id},
+            {'$set': {doc_type: doc_url, 'updated_at': datetime.now(timezone.utc).isoformat()}}
+        )
+    
+    return {'document_url': doc_url, 'document_type': doc_type, 'message': 'Document uploadé avec succès'}
+
+@api_router.delete("/company/rentals/{rental_id}")
+async def delete_company_rental(
+    rental_id: str,
+    current_company: dict = Depends(get_current_company)
+):
+    """Delete a company rental listing"""
+    rental = await db.rental_listings.find_one({'id': rental_id})
+    if not rental:
+        raise HTTPException(status_code=404, detail="Annonce non trouvée")
+    
+    if rental['service_provider_id'] != current_company['id']:
+        raise HTTPException(status_code=403, detail="Non autorisé")
+    
+    await db.rental_listings.delete_one({'id': rental_id})
+    await db.chat_messages.delete_many({'rental_id': rental_id})
+    
+    return {'message': 'Annonce supprimée avec succès'}
+
+# Company Property Sales Routes
+@api_router.post("/company/property-sales")
+async def create_company_property_sale(
+    sale_data: PropertySaleCreate,
+    current_company: dict = Depends(get_current_company)
+):
+    """Create a property sale listing for an approved real estate company"""
+    if current_company.get('verification_status') != 'approved':
+        raise HTTPException(status_code=403, detail="Votre entreprise doit être approuvée pour publier des ventes")
+    
+    if current_company.get('sector') != 'Immobilier':
+        raise HTTPException(status_code=403, detail="Seules les entreprises du secteur immobilier peuvent publier des ventes")
+    
+    sale_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+    
+    sale_doc = {
+        'id': sale_id,
+        'agent_id': current_company['id'],  # Using company ID
+        'agent_name': current_company['company_name'],
+        'agent_phone': current_company['phone_number'],
+        'owner_type': 'company',  # Indicate it's a company listing
+        'property_type': sale_data.property_type,
+        'title': sale_data.title,
+        'description': sale_data.description,
+        'location': sale_data.location,
+        'sale_price': sale_data.sale_price,
+        'surface_area': sale_data.surface_area,
+        'num_rooms': sale_data.num_rooms,
+        'num_bathrooms': sale_data.num_bathrooms,
+        'has_garage': sale_data.has_garage,
+        'has_garden': sale_data.has_garden,
+        'has_pool': sale_data.has_pool,
+        'year_built': sale_data.year_built,
+        'features': sale_data.features,
+        'is_negotiable': sale_data.is_negotiable,
+        'is_available': True,
+        'photos': [],
+        'titre_foncier': None,
+        'registration_ministere': None,
+        'seller_id_document': None,
+        'documents_additionnels': [],
+        'documents_verified': False,
+        'verification_date': None,
+        'created_at': now,
+        'updated_at': now
+    }
+    
+    await db.property_sales.insert_one(sale_doc)
+    return {k: v for k, v in sale_doc.items() if k != '_id'}
+
+@api_router.get("/company/property-sales/my")
+async def get_company_property_sales(current_company: dict = Depends(get_current_company)):
+    """Get all property sales for the current company"""
+    sales = await db.property_sales.find(
+        {'agent_id': current_company['id']},
+        {'_id': 0}
+    ).sort('created_at', -1).to_list(100)
+    return sales
+
+@api_router.post("/company/property-sales/{sale_id}/upload-photo")
+async def upload_company_sale_photo(
+    sale_id: str,
+    file: UploadFile = File(...),
+    current_company: dict = Depends(get_current_company)
+):
+    """Upload a photo for a company property sale"""
+    sale = await db.property_sales.find_one({'id': sale_id})
+    if not sale:
+        raise HTTPException(status_code=404, detail="Propriété non trouvée")
+    
+    if sale['agent_id'] != current_company['id']:
+        raise HTTPException(status_code=403, detail="Non autorisé")
+    
+    file_extension = file.filename.split('.')[-1] if '.' in file.filename else 'jpg'
+    filename = f"company_sale_{sale_id}_{uuid.uuid4()}.{file_extension}"
+    file_path = UPLOAD_DIR / filename
+    
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    photo_url = f"/api/uploads/{filename}"
+    await db.property_sales.update_one(
+        {'id': sale_id},
+        {
+            '$push': {'photos': photo_url},
+            '$set': {'updated_at': datetime.now(timezone.utc).isoformat()}
+        }
+    )
+    
+    return {"photo_url": photo_url, "message": "Photo uploadée avec succès"}
+
+@api_router.post("/company/property-sales/{sale_id}/upload-document/{doc_type}")
+async def upload_company_sale_document(
+    sale_id: str,
+    doc_type: str,
+    file: UploadFile = File(...),
+    current_company: dict = Depends(get_current_company)
+):
+    """Upload a document for a company property sale"""
+    sale = await db.property_sales.find_one({'id': sale_id})
+    if not sale:
+        raise HTTPException(status_code=404, detail="Propriété non trouvée")
+    
+    if sale['agent_id'] != current_company['id']:
+        raise HTTPException(status_code=403, detail="Non autorisé")
+    
+    valid_doc_types = ['titre_foncier', 'registration_ministere', 'seller_id_document', 'documents_additionnels']
+    if doc_type not in valid_doc_types:
+        raise HTTPException(status_code=400, detail=f"Type de document invalide. Types valides: {valid_doc_types}")
+    
+    file_extension = file.filename.split('.')[-1] if '.' in file.filename else 'pdf'
+    filename = f"company_sale_doc_{sale_id}_{doc_type}_{uuid.uuid4()}.{file_extension}"
+    file_path = UPLOAD_DIR / filename
+    
+    with file_path.open('wb') as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    doc_url = f"/api/uploads/{filename}"
+    
+    if doc_type == 'documents_additionnels':
+        await db.property_sales.update_one(
+            {'id': sale_id},
+            {
+                '$push': {'documents_additionnels': doc_url},
+                '$set': {'updated_at': datetime.now(timezone.utc).isoformat()}
+            }
+        )
+    else:
+        await db.property_sales.update_one(
+            {'id': sale_id},
+            {'$set': {doc_type: doc_url, 'updated_at': datetime.now(timezone.utc).isoformat()}}
+        )
+    
+    return {'document_url': doc_url, 'document_type': doc_type, 'message': 'Document uploadé avec succès'}
+
+@api_router.delete("/company/property-sales/{sale_id}")
+async def delete_company_property_sale(
+    sale_id: str,
+    current_company: dict = Depends(get_current_company)
+):
+    """Delete a company property sale listing"""
+    sale = await db.property_sales.find_one({'id': sale_id})
+    if not sale:
+        raise HTTPException(status_code=404, detail="Propriété non trouvée")
+    
+    if sale['agent_id'] != current_company['id']:
+        raise HTTPException(status_code=403, detail="Non autorisé")
+    
+    await db.property_sales.delete_one({'id': sale_id})
+    return {'message': 'Propriété supprimée avec succès'}
+
 # Public Companies Route
 @api_router.get("/companies")
 async def get_all_companies(
