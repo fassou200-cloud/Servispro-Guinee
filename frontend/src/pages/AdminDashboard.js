@@ -58,6 +58,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
   const [rentals, setRentals] = useState([]);
   const [agentsImmobilier, setAgentsImmobilier] = useState([]);
   const [propertySales, setPropertySales] = useState([]);
+  const [companies, setCompanies] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedProvider, setSelectedProvider] = useState(null);
@@ -65,6 +66,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
   const [selectedRental, setSelectedRental] = useState(null);
   const [selectedAgent, setSelectedAgent] = useState(null);
   const [selectedSale, setSelectedSale] = useState(null);
+  const [selectedCompany, setSelectedCompany] = useState(null);
   const [rentalFilter, setRentalFilter] = useState('all'); // all, long_term, short_term
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, type: null, id: null, name: '' });
 
