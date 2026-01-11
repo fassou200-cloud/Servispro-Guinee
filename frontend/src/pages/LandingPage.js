@@ -100,6 +100,30 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
       image: 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=800&q=80',
       link: '/browse?category=Soudeur',
       color: 'from-red-500 to-red-600'
+    },
+    {
+      name: 'Camionneur',
+      icon: Truck,
+      description: 'Location de camions courte et longue durée',
+      image: 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=800&q=80',
+      link: '/browse?category=Camionneur',
+      color: 'from-slate-500 to-slate-600'
+    },
+    {
+      name: 'Tracteur',
+      icon: Truck,
+      description: 'Location de tracteurs agricoles',
+      image: 'https://images.unsplash.com/photo-1530267981375-f0de937f5f13?w=800&q=80',
+      link: '/browse?category=Tracteur',
+      color: 'from-green-500 to-green-600'
+    },
+    {
+      name: 'Voiture',
+      icon: Truck,
+      description: 'Location de voitures particulières',
+      image: 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=800&q=80',
+      link: '/browse?category=Voiture',
+      color: 'from-indigo-500 to-indigo-600'
     }
   ];
 
