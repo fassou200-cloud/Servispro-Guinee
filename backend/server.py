@@ -249,6 +249,62 @@ class RentalListing(BaseModel):
     available_from: Optional[str] = None
     available_to: Optional[str] = None
     photos: List[str] = []
+    # Document fields for compliance
+    titre_foncier: Optional[str] = None  # Land title document
+    registration_ministere: Optional[str] = None  # Ministry of Housing registration
+    seller_id_document: Optional[str] = None  # Seller's ID/Passport
+    documents_additionnels: List[str] = []  # Additional documents
+    created_at: str
+    updated_at: str
+
+# Property Sale Model (Vente de Maison/Terrain)
+class PropertySaleCreate(BaseModel):
+    property_type: str  # Maison, Terrain, Appartement, Villa, Immeuble
+    title: str
+    description: str
+    location: str
+    sale_price: int  # Prix de vente en GNF
+    surface_area: Optional[str] = None  # Surface en m²
+    num_rooms: Optional[int] = None  # Nombre de pièces (pour maisons)
+    num_bathrooms: Optional[int] = None
+    has_garage: bool = False
+    has_garden: bool = False
+    has_pool: bool = False
+    year_built: Optional[int] = None
+    features: List[str] = []
+    is_negotiable: bool = True
+
+class PropertySale(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str
+    agent_id: str
+    agent_name: str
+    agent_phone: str
+    property_type: str
+    title: str
+    description: str
+    location: str
+    sale_price: int
+    surface_area: Optional[str] = None
+    num_rooms: Optional[int] = None
+    num_bathrooms: Optional[int] = None
+    has_garage: bool = False
+    has_garden: bool = False
+    has_pool: bool = False
+    year_built: Optional[int] = None
+    features: List[str] = []
+    is_negotiable: bool = True
+    is_available: bool = True
+    # Required Documents
+    photos: List[str] = []
+    titre_foncier: Optional[str] = None  # Land title document (required)
+    registration_ministere: Optional[str] = None  # Ministry of Housing registration
+    seller_id_document: Optional[str] = None  # Seller's ID/Passport (required)
+    documents_additionnels: List[str] = []  # Other documents
+    # Document verification status
+    documents_verified: bool = False
+    verification_date: Optional[str] = None
     created_at: str
     updated_at: str
 
