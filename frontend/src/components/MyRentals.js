@@ -73,6 +73,20 @@ const AMENITY_ICONS = {
   salle_sport: Users,
 };
 
+// Document status helper
+const getDocumentStatus = (rental) => {
+  const hasTitle = !!rental.titre_foncier;
+  const hasSellerId = !!rental.seller_id_document;
+  const hasMinistry = !!rental.registration_ministere;
+  const hasAdditional = rental.documents_additionnels && rental.documents_additionnels.length > 0;
+  
+  const totalDocs = [hasTitle, hasSellerId, hasMinistry, hasAdditional].filter(Boolean).length;
+  
+  if (totalDocs === 0) return { status: 'none', label: 'Aucun Document', color: 'text-slate-500 bg-slate-50' };
+  if (totalDocs >= 3) return { status: 'complete', label: 'Documents Complets', color: 'text-green-600 bg-green-50' };
+  return { status: 'partial', label: `${totalDocs} Document(s)`, color: 'text-amber-600 bg-amber-50' };
+};
+
 // Short labels for compact display
 const AMENITY_LABELS = {
   climatisation: 'Clim',
