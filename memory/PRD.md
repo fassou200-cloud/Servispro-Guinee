@@ -147,8 +147,8 @@ Construire une plateforme nommée "ServisPro" pour les prestataires de services 
 ## Tâches Restantes
 
 ### P1 - À Venir
+- [ ] Page publique des offres d'emploi avec filtres (BrowseJobs.js)
 - [ ] WebSockets pour statut en ligne temps réel
-- [ ] Page publique des offres d'emploi avec filtres
 - [ ] Page publique des services d'entreprises
 
 ### P2 - Futur  
@@ -157,5 +157,25 @@ Construire une plateforme nommée "ServisPro" pour les prestataires de services 
 - [ ] Système de candidature aux offres d'emploi
 
 ### Refactoring Suggéré
-- [ ] Diviser Dashboard.js en composants par type de prestataire
+- [ ] Diviser server.py en routers séparés (auth, admin, companies, etc.)
 - [ ] Internationalisation avec i18next
+
+---
+
+## Comptes de Test
+
+### Entreprise Immobilière (approuvée)
+- **RCCM:** RCCM/GC/IMMO001
+- **Mot de passe:** immo123
+- **Secteur:** Immobilier
+- **Statut:** Approuvée
+
+### Entreprise Construction (en attente)
+- **RCCM:** RCCM/GC/TEST001
+- **Mot de passe:** test123
+- **Secteur:** Construction
+- **Statut:** En attente
+
+### Admin
+- **Username:** admin
+- **Mot de passe:** admin123
