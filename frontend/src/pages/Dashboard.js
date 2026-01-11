@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { 
   LogOut, User, Briefcase, ShieldCheck, Home, MessageCircle, 
   Bell, Clock, CheckCircle, XCircle, MapPin, Calendar, CheckCheck,
-  TrendingUp, AlertCircle, Star, Truck, Car, Tractor
+  TrendingUp, AlertCircle, Star, Truck, Car, Tractor, Building, DollarSign
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
@@ -17,6 +17,8 @@ import MyRentals from '@/components/MyRentals';
 import RentalConversations from '@/components/RentalConversations';
 import VehicleListingForm from '@/components/VehicleListingForm';
 import MyVehicles from '@/components/MyVehicles';
+import PropertySaleForm from '@/components/PropertySaleForm';
+import MyPropertySales from '@/components/MyPropertySales';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
