@@ -93,6 +93,10 @@ Construire une plateforme nommée "ServisPro" pour les prestataires de services 
 - `POST /api/company/upload-logo` - Upload logo
 - `POST /api/company/services` - Créer un service
 - `POST /api/company/job-offers` - Créer une offre d'emploi
+- `POST /api/company/rentals` - **NOUVEAU: Créer location (Immobilier seulement)**
+- `GET /api/company/rentals/my` - **NOUVEAU: Mes locations entreprise**
+- `POST /api/company/property-sales` - **NOUVEAU: Créer vente (Immobilier seulement)**
+- `GET /api/company/property-sales/my` - **NOUVEAU: Mes ventes entreprise**
 - `GET /api/admin/companies` - Liste entreprises (admin)
 - `PUT /api/admin/companies/{id}/approve` - Approuver
 - `PUT /api/admin/companies/{id}/reject` - Rejeter
