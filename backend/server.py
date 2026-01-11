@@ -2339,6 +2339,98 @@ async def delete_customer(customer_id: str):
     
     return {"message": "Client supprimé avec succès"}
 
+# Admin Company Routes
+@api_router.get("/admin/companies")
+async def admin_get_all_companies():
+    """Get all companies for admin"""
+    companies = await db.companies.find({}, {'_id': 0, 'password': 0}).sort('created_at', -1).to_list(1000)
+    
+    # Add stats for each company
+    for company in companies:
+        company['services_count'] = await db.company_services.count_documents({'company_id': company['id']})
+        company['job_offers_count'] = await db.company_job_offers.count_documents({'company_id': company['id']})
+    
+    return companies
+
+@api_router.put("/admin/companies/{company_id}/approve")
+async def admin_approve_company(company_id: str):
+    """Approve a company"""
+    company = await db.companies.find_one({'id': company_id})
+    if not company:
+        raise HTTPException(status_code=404, detail="Entreprise non trouvée")
+    
+    await db.companies.update_one(
+        {'id': company_id},
+        {'$set': {
+            'verification_status': 'approved',
+            'updated_at': datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    return {"message": "Entreprise approuvée avec succès"}
+
+@api_router.put("/admin/companies/{company_id}/reject")
+async def admin_reject_company(company_id: str):
+    """Reject a company"""
+    company = await db.companies.find_one({'id': company_id})
+    if not company:
+        raise HTTPException(status_code=404, detail="Entreprise non trouvée")
+    
+    await db.companies.update_one(
+        {'id': company_id},
+        {'$set': {
+            'verification_status': 'rejected',
+            'updated_at': datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    return {"message": "Entreprise rejetée"}
+
+@api_router.delete("/admin/companies/{company_id}")
+async def admin_delete_company(company_id: str):
+    """Delete a company and associated data"""
+    company = await db.companies.find_one({'id': company_id})
+    if not company:
+        raise HTTPException(status_code=404, detail="Entreprise non trouvée")
+    
+    # Delete associated services and job offers
+    await db.company_services.delete_many({'company_id': company_id})
+    await db.company_job_offers.delete_many({'company_id': company_id})
+    
+    # Delete the company
+    await db.companies.delete_one({'id': company_id})
+    
+    return {"message": "Entreprise et données associées supprimées avec succès"}
+
+@api_router.get("/admin/stats")
+async def get_admin_stats():
+    """Get admin dashboard statistics"""
+    providers_count = await db.service_providers.count_documents({})
+    pending_providers = await db.service_providers.count_documents({'verification_status': 'pending'})
+    approved_providers = await db.service_providers.count_documents({'verification_status': 'approved'})
+    customers_count = await db.customers.count_documents({})
+    jobs_count = await db.job_offers.count_documents({})
+    completed_jobs = await db.job_offers.count_documents({'status': 'Completed'})
+    rentals_count = await db.rental_listings.count_documents({})
+    sales_count = await db.property_sales.count_documents({})
+    companies_count = await db.companies.count_documents({})
+    pending_companies = await db.companies.count_documents({'verification_status': 'pending'})
+    approved_companies = await db.companies.count_documents({'verification_status': 'approved'})
+    job_offers_count = await db.company_job_offers.count_documents({})
+    
+    return {
+        'total_providers': providers_count,
+        'pending_providers': pending_providers,
+        'approved_providers': approved_providers,
+        'total_customers': customers_count,
+        'total_jobs': jobs_count,
+        'completed_jobs': completed_jobs,
+        'total_rentals': rentals_count,
+        'total_sales': sales_count,
+        'total_companies': companies_count,
+        'pending_companies': pending_companies,
+        'approved_companies': approved_companies,
+        'total_job_offers': job_offers_count
+    }
+
 # ==================== JOB COMPLETION FLOW ====================
 
 @api_router.put("/jobs/{job_id}/provider-complete")
