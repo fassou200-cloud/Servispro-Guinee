@@ -62,6 +62,21 @@ const isAgentImmobilier = (profession) => {
   return profession === 'AgentImmobilier';
 };
 
+// Check if user is a Vehicle Provider (Camionneur, Tracteur, Voiture)
+const isVehicleProvider = (profession) => {
+  return ['Camionneur', 'Tracteur', 'Voiture'].includes(profession);
+};
+
+// Get vehicle type icon
+const getVehicleIcon = (profession) => {
+  const icons = {
+    'Camionneur': Truck,
+    'Tracteur': Tractor,
+    'Voiture': Car
+  };
+  return icons[profession] || Truck;
+};
+
 const Dashboard = ({ setIsAuthenticated }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
