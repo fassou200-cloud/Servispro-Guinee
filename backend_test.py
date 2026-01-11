@@ -2007,6 +2007,38 @@ class ServisProAPITester:
         # Test customer getting jobs
         self.test_customer_get_jobs()
         
+        # ==================== VEHICLE LISTING TESTS ====================
+        print("\n🚗 Testing Vehicle Listing Features...")
+        
+        # Test login as Camionneur provider
+        camionneur_login_success = self.test_camionneur_login()
+        if camionneur_login_success:
+            # Test creating vehicle listing
+            vehicle_success, vehicle_id = self.test_create_vehicle_listing()
+            
+            # Test getting all vehicles
+            self.test_get_all_vehicles()
+            
+            # Test getting my vehicle listings
+            self.test_get_my_vehicle_listings()
+            
+            if vehicle_success and vehicle_id:
+                # Test toggling vehicle availability
+                self.test_toggle_vehicle_availability(vehicle_id)
+                
+                # Test uploading vehicle photo (skip if PIL not available)
+                try:
+                    self.test_upload_vehicle_photo(vehicle_id)
+                except ImportError:
+                    self.log_test("Upload Vehicle Photo", False, "PIL library not available - skipping photo upload test")
+        
+        # Test profession restrictions
+        self.test_non_vehicle_provider_restriction()
+        self.test_plombier_provider_restriction()
+        
+        # Test vehicle types validation
+        self.test_vehicle_types_validation()
+        
         return self.get_results()
 
     def get_results(self):
