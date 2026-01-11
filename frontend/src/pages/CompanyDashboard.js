@@ -166,6 +166,16 @@ const CompanyDashboard = () => {
         ]);
         setServices(servicesRes.data);
         setJobOffers(jobsRes.data);
+
+        // Fetch rentals and sales for real estate companies
+        if (company?.sector === 'Immobilier') {
+          const [rentalsRes, salesRes] = await Promise.all([
+            axios.get(`${API}/company/rentals/my`, { headers: { Authorization: `Bearer ${token}` } }),
+            axios.get(`${API}/company/property-sales/my`, { headers: { Authorization: `Bearer ${token}` } })
+          ]);
+          setRentals(rentalsRes.data);
+          setSales(salesRes.data);
+        }
       } catch (error) {
         console.error('Error fetching data:', error);
       }
