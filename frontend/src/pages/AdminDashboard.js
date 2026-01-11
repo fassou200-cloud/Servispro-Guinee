@@ -350,6 +350,14 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
             <Home className="h-4 w-4 mr-2" />
             Agents Immobilier ({agentsImmobilier.length})
           </Button>
+          <Button
+            variant={activeTab === 'sales' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('sales')}
+            className={activeTab === 'sales' ? 'bg-emerald-600 hover:bg-emerald-700' : 'border-slate-600 text-slate-300'}
+          >
+            <DollarSign className="h-4 w-4 mr-2" />
+            Ventes ({propertySales.length})
+          </Button>
         </div>
 
         {/* Delete Confirmation Modal */}
