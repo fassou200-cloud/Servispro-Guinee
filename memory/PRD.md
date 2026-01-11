@@ -36,6 +36,8 @@ Construire une plateforme nommée "ServisPro" pour les prestataires de services 
 - ✅ Validation obligatoire par l'admin avant activation
 - ✅ Publication de services (après approbation)
 - ✅ Publication d'offres d'emploi (après approbation)
+- ✅ **Entreprises Immobilières peuvent poster des locations** (comme Agent Immobilier)
+- ✅ **Entreprises Immobilières peuvent poster des ventes** (comme Agent Immobilier)
 
 ### Admin
 - ✅ Vue de tous les documents pour les locations
