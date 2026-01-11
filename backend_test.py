@@ -1349,6 +1349,434 @@ class ServisProAPITester:
         self.token = original_token
         return success, response
 
+    # ==================== VEHICLE LISTING TESTS ====================
+    
+    def test_camionneur_login(self):
+        """Test login as Camionneur provider with specific credentials"""
+        login_data = {
+            "phone_number": "224621000001",
+            "password": "test123",
+            "user_type": "provider"
+        }
+        
+        success, response = self.run_test(
+            "Camionneur Login",
+            "POST",
+            "auth/login",
+            200,
+            data=login_data
+        )
+        
+        if success and 'token' in response:
+            self.token = response['token']
+            self.user_id = response['user']['id']
+            # Verify profession is Camionneur
+            if response['user'].get('profession') == 'Camionneur':
+                return True
+            else:
+                self.log_test("Camionneur Login", False, f"Expected Camionneur profession, got {response['user'].get('profession')}")
+                return False
+        return False
+
+    def test_create_vehicle_listing(self):
+        """Test creating a vehicle listing as Camionneur"""
+        vehicle_data = {
+            "vehicle_type": "Camion",
+            "brand": "Scania",
+            "model": "R450",
+            "year": 2020,
+            "fuel_type": "Diesel",
+            "transmission": "Automatique",
+            "load_capacity": "20 tonnes",
+            "description": "Camion en excellent état, idéal pour transport de marchandises",
+            "location": "Conakry, Kaloum",
+            "price_per_day": 2500000,
+            "price_per_week": 15000000,
+            "price_per_month": 50000000,
+            "is_available": True,
+            "features": ["climatisation", "gps", "hayon"]
+        }
+        
+        success, response = self.run_test(
+            "Create Vehicle Listing",
+            "POST",
+            "vehicles",
+            200,
+            data=vehicle_data
+        )
+        
+        if success and 'id' in response:
+            # Verify all fields are in response
+            expected_fields = ['id', 'owner_id', 'owner_name', 'vehicle_type', 'brand', 'model', 'year', 'fuel_type', 'transmission', 'load_capacity', 'description', 'location', 'price_per_day', 'price_per_week', 'price_per_month', 'is_available', 'features', 'photos', 'created_at']
+            missing_fields = [field for field in expected_fields if field not in response]
+            if missing_fields:
+                self.log_test("Create Vehicle Listing", False, f"Missing fields in response: {missing_fields}")
+                return False, None
+            return True, response['id']
+        return False, None
+
+    def test_get_all_vehicles(self):
+        """Test getting all vehicle listings"""
+        success, response = self.run_test(
+            "Get All Vehicles",
+            "GET",
+            "vehicles",
+            200
+        )
+        
+        if success and isinstance(response, list):
+            # Verify structure of vehicle listings
+            if response:
+                vehicle = response[0]
+                expected_fields = ['id', 'owner_name', 'vehicle_type', 'brand', 'model', 'year', 'price_per_day']
+                missing_fields = [field for field in expected_fields if field not in vehicle]
+                if missing_fields:
+                    self.log_test("Get All Vehicles", False, f"Missing fields in vehicle: {missing_fields}")
+                    return False
+            return True
+        return False
+
+    def test_get_my_vehicle_listings(self):
+        """Test getting authenticated user's vehicle listings"""
+        success, response = self.run_test(
+            "Get My Vehicle Listings",
+            "GET",
+            "vehicles/my-listings",
+            200
+        )
+        
+        if success and isinstance(response, list):
+            # Verify all returned vehicles belong to current user
+            for vehicle in response:
+                if vehicle.get('owner_id') != self.user_id:
+                    self.log_test("Get My Vehicle Listings", False, f"Found vehicle not owned by current user")
+                    return False
+            return True
+        return False
+
+    def test_toggle_vehicle_availability(self, vehicle_id):
+        """Test toggling vehicle availability status"""
+        if not vehicle_id:
+            self.log_test("Toggle Vehicle Availability", False, "No vehicle ID available")
+            return False
+            
+        success, response = self.run_test(
+            "Toggle Vehicle Availability",
+            "PUT",
+            f"vehicles/{vehicle_id}/availability",
+            200
+        )
+        
+        if success and 'is_available' in response:
+            # The endpoint toggles the current status, so we just verify we get a boolean response
+            if isinstance(response['is_available'], bool):
+                return True
+            else:
+                self.log_test("Toggle Vehicle Availability", False, f"Expected boolean is_available, got {type(response['is_available'])}")
+                return False
+        return False
+
+    def test_upload_vehicle_photo(self, vehicle_id):
+        """Test uploading a photo for a vehicle listing"""
+        if not vehicle_id:
+            self.log_test("Upload Vehicle Photo", False, "No vehicle ID available")
+            return False
+        
+        # Create a simple test image file in memory
+        import io
+        from PIL import Image
+        
+        # Create a small test image
+        img = Image.new('RGB', (100, 100), color='red')
+        img_bytes = io.BytesIO()
+        img.save(img_bytes, format='JPEG')
+        img_bytes.seek(0)
+        
+        # Prepare multipart form data
+        files = {'file': ('test_vehicle.jpg', img_bytes, 'image/jpeg')}
+        
+        # Use requests directly for file upload
+        url = f"{self.api_url}/vehicles/{vehicle_id}/upload-photo"
+        headers = {'Authorization': f'Bearer {self.token}'}
+        
+        try:
+            import requests
+            response = requests.post(url, files=files, headers=headers, timeout=10)
+            
+            success = response.status_code == 200
+            details = f"Status: {response.status_code}"
+            
+            if success:
+                try:
+                    response_data = response.json()
+                    if 'photo_url' in response_data:
+                        self.log_test("Upload Vehicle Photo", True, "Photo uploaded successfully")
+                        return True
+                    else:
+                        self.log_test("Upload Vehicle Photo", False, "No photo_url in response")
+                        return False
+                except:
+                    self.log_test("Upload Vehicle Photo", False, "Invalid JSON response")
+                    return False
+            else:
+                try:
+                    error_data = response.json()
+                    details += f" - {error_data.get('detail', 'Unknown error')}"
+                except:
+                    details += f" - {response.text[:100]}"
+                self.log_test("Upload Vehicle Photo", False, details)
+                return False
+                
+        except Exception as e:
+            self.log_test("Upload Vehicle Photo", False, f"Exception: {str(e)}")
+            return False
+
+    def test_non_vehicle_provider_restriction(self):
+        """Test that non-vehicle providers cannot create vehicle listings"""
+        # First register a non-vehicle provider (Agent Immobilier)
+        test_phone = f"224{str(uuid.uuid4())[:8]}"
+        registration_data = {
+            "first_name": "Aminata",
+            "last_name": "Camara",
+            "phone_number": test_phone,
+            "password": "SecurePass123!",
+            "profession": "AgentImmobilier"
+        }
+        
+        reg_success, reg_response = self.run_test(
+            "Register Agent Immobilier for Vehicle Test",
+            "POST",
+            "auth/register",
+            200,
+            data=registration_data
+        )
+        
+        if not reg_success:
+            self.log_test("Non-Vehicle Provider Restriction", False, "Could not register Agent Immobilier")
+            return False
+        
+        # Login as Agent Immobilier
+        login_data = {
+            "phone_number": test_phone,
+            "password": "SecurePass123!",
+            "user_type": "provider"
+        }
+        
+        login_success, login_response = self.run_test(
+            "Login Agent Immobilier for Vehicle Test",
+            "POST",
+            "auth/login",
+            200,
+            data=login_data
+        )
+        
+        if not login_success:
+            self.log_test("Non-Vehicle Provider Restriction", False, "Could not login as Agent Immobilier")
+            return False
+        
+        # Store original token and use Agent Immobilier token
+        original_token = self.token
+        self.token = login_response['token']
+        
+        # Try to create vehicle listing (should fail with 403)
+        vehicle_data = {
+            "vehicle_type": "Camion",
+            "brand": "Test",
+            "model": "Test",
+            "year": 2020,
+            "fuel_type": "Diesel",
+            "transmission": "Manuelle",
+            "description": "Test vehicle",
+            "location": "Test Location",
+            "price_per_day": 100000,
+            "is_available": True,
+            "features": []
+        }
+        
+        success, response = self.run_test(
+            "Non-Vehicle Provider Create Vehicle (Should Fail)",
+            "POST",
+            "vehicles",
+            403,
+            data=vehicle_data
+        )
+        
+        # Restore original token
+        self.token = original_token
+        
+        return success
+
+    def test_plombier_provider_restriction(self):
+        """Test that Plombier providers cannot create vehicle listings"""
+        # First register a Plombier provider
+        test_phone = f"224{str(uuid.uuid4())[:8]}"
+        registration_data = {
+            "first_name": "Mamadou",
+            "last_name": "Diallo",
+            "phone_number": test_phone,
+            "password": "SecurePass123!",
+            "profession": "Plombier"
+        }
+        
+        reg_success, reg_response = self.run_test(
+            "Register Plombier for Vehicle Test",
+            "POST",
+            "auth/register",
+            200,
+            data=registration_data
+        )
+        
+        if not reg_success:
+            self.log_test("Plombier Provider Restriction", False, "Could not register Plombier")
+            return False
+        
+        # Login as Plombier
+        login_data = {
+            "phone_number": test_phone,
+            "password": "SecurePass123!",
+            "user_type": "provider"
+        }
+        
+        login_success, login_response = self.run_test(
+            "Login Plombier for Vehicle Test",
+            "POST",
+            "auth/login",
+            200,
+            data=login_data
+        )
+        
+        if not login_success:
+            self.log_test("Plombier Provider Restriction", False, "Could not login as Plombier")
+            return False
+        
+        # Store original token and use Plombier token
+        original_token = self.token
+        self.token = login_response['token']
+        
+        # Try to create vehicle listing (should fail with 403)
+        vehicle_data = {
+            "vehicle_type": "Voiture",
+            "brand": "Toyota",
+            "model": "Corolla",
+            "year": 2019,
+            "fuel_type": "Essence",
+            "transmission": "Manuelle",
+            "description": "Test vehicle",
+            "location": "Test Location",
+            "price_per_day": 50000,
+            "is_available": True,
+            "features": []
+        }
+        
+        success, response = self.run_test(
+            "Plombier Create Vehicle (Should Fail)",
+            "POST",
+            "vehicles",
+            403,
+            data=vehicle_data
+        )
+        
+        # Restore original token
+        self.token = original_token
+        
+        return success
+
+    def test_vehicle_types_validation(self):
+        """Test creating vehicles with different vehicle types"""
+        # Test creating different vehicle types with appropriate professions
+        vehicle_types = [
+            {"type": "Camion", "profession": "Camionneur"},
+            {"type": "Tracteur", "profession": "Tracteur"},
+            {"type": "Voiture", "profession": "Voiture"}
+        ]
+        
+        all_success = True
+        
+        for vehicle_info in vehicle_types:
+            # Register provider with appropriate profession
+            test_phone = f"224{str(uuid.uuid4())[:8]}"
+            registration_data = {
+                "first_name": "Test",
+                "last_name": f"{vehicle_info['profession']}Provider",
+                "phone_number": test_phone,
+                "password": "SecurePass123!",
+                "profession": vehicle_info['profession']
+            }
+            
+            reg_success, reg_response = self.run_test(
+                f"Register {vehicle_info['profession']} Provider",
+                "POST",
+                "auth/register",
+                200,
+                data=registration_data
+            )
+            
+            if not reg_success:
+                all_success = False
+                continue
+            
+            # Login as the provider
+            login_data = {
+                "phone_number": test_phone,
+                "password": "SecurePass123!",
+                "user_type": "provider"
+            }
+            
+            login_success, login_response = self.run_test(
+                f"Login {vehicle_info['profession']} Provider",
+                "POST",
+                "auth/login",
+                200,
+                data=login_data
+            )
+            
+            if not login_success:
+                all_success = False
+                continue
+            
+            # Store original token and use new provider token
+            original_token = self.token
+            self.token = login_response['token']
+            
+            # Create vehicle listing
+            vehicle_data = {
+                "vehicle_type": vehicle_info['type'],
+                "brand": "Test Brand",
+                "model": "Test Model",
+                "year": 2020,
+                "fuel_type": "Diesel",
+                "transmission": "Manuelle",
+                "description": f"Test {vehicle_info['type']} vehicle",
+                "location": "Test Location",
+                "price_per_day": 100000,
+                "is_available": True,
+                "features": []
+            }
+            
+            # Add specific fields based on vehicle type
+            if vehicle_info['type'] == "Camion":
+                vehicle_data["load_capacity"] = "10 tonnes"
+            elif vehicle_info['type'] == "Tracteur":
+                vehicle_data["engine_power"] = "300 HP"
+            elif vehicle_info['type'] == "Voiture":
+                vehicle_data["seats"] = 5
+            
+            success, response = self.run_test(
+                f"Create {vehicle_info['type']} Vehicle",
+                "POST",
+                "vehicles",
+                200,
+                data=vehicle_data
+            )
+            
+            if not success:
+                all_success = False
+            
+            # Restore original token
+            self.token = original_token
+        
+        return all_success
+
     def run_all_tests(self):
         """Run all API tests"""
         print("🚀 Starting ServisPro API Tests")
