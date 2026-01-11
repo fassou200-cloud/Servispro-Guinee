@@ -451,7 +451,7 @@ class TestAdminCompanyManagement:
         # Create a company to delete
         delete_company_data = TEST_COMPANY_DATA.copy()
         delete_company_data["rccm_number"] = f"RCCM/GC/DEL{uuid.uuid4().hex[:6].upper()}"
-        delete_company_data["phone_number"] = f"64{uuid.uuid4().hex[:7]}"
+        delete_company_data["phone_number"] = f"640{uuid.uuid4().hex[:7]}"  # 10+ digits
         
         reg_response = requests.post(f"{BASE_URL}/api/auth/company/register", json=delete_company_data)
         assert reg_response.status_code == 200
