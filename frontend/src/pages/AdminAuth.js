@@ -274,28 +274,6 @@ const AdminAuth = ({ setIsAdminAuthenticated }) => {
                       />
                     </div>
                   </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="invite_code" className="text-slate-300 font-medium text-sm">
-                      Code d'invitation
-                    </Label>
-                    <div className="relative">
-                      <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
-                      <Input
-                        id="invite_code"
-                        name="invite_code"
-                        value={formData.invite_code}
-                        onChange={(e) => setFormData({ ...formData, invite_code: e.target.value })}
-                        required
-                        className="h-12 pl-10 rounded-xl bg-slate-700 border-slate-600 text-white placeholder:text-slate-500"
-                        placeholder="CODE-ADMIN-XXXX"
-                      />
-                    </div>
-                    <p className="text-xs text-slate-500 flex items-center gap-1">
-                      <Shield className="h-3 w-3" />
-                      Contactez un administrateur pour obtenir le code
-                    </p>
-                  </div>
                 </>
               )}
 
