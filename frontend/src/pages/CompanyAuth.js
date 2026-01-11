@@ -13,7 +13,7 @@ import {
   Briefcase, Shield, Lock
 } from 'lucide-react';
 import axios from 'axios';
-import { guineaLocations } from '../data/guineaLocations';
+import { GUINEA_LOCATIONS, getVillesByRegion } from '../data/guineaLocations';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
