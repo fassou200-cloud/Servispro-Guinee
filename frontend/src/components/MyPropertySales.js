@@ -5,7 +5,8 @@ import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { 
   Home, Building, MapPin, Trash2, Trees, Car, Waves, Ruler, 
-  CheckCircle, XCircle, FileText, Shield, Eye, BedDouble, Bath
+  CheckCircle, XCircle, FileText, Shield, Eye, BedDouble, Bath,
+  ExternalLink, User
 } from 'lucide-react';
 import axios from 'axios';
 import {
