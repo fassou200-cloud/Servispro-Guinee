@@ -522,6 +522,13 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
             >
               Devenir Prestataire
             </Button>
+            <Button
+              variant="outline"
+              onClick={() => navigate('/company/auth')}
+              className="h-14 px-10 text-lg font-bold border-2 border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10 rounded-xl"
+            >
+              Espace Entreprise
+            </Button>
           </div>
         </div>
       </section>
