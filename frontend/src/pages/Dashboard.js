@@ -269,10 +269,16 @@ const Dashboard = ({ setIsAuthenticated }) => {
               <User className="h-4 w-4" /> Profil
             </Button>
             <Button variant={activeTab === 'rentals' ? 'default' : 'outline'} onClick={() => setActiveTab('rentals')} className="gap-2">
-              <Home className="h-4 w-4" /> Mes Locations
+              <Home className="h-4 w-4" /> Locations
             </Button>
             <Button variant={activeTab === 'create-rental' ? 'default' : 'outline'} onClick={() => setActiveTab('create-rental')} className="gap-2">
-              <Home className="h-4 w-4" /> + Ajouter Location
+              <Home className="h-4 w-4" /> + Location
+            </Button>
+            <Button variant={activeTab === 'sales' ? 'default' : 'outline'} onClick={() => setActiveTab('sales')} className="gap-2 bg-emerald-50 border-emerald-200 hover:bg-emerald-100">
+              <DollarSign className="h-4 w-4 text-emerald-600" /> Ventes
+            </Button>
+            <Button variant={activeTab === 'create-sale' ? 'default' : 'outline'} onClick={() => setActiveTab('create-sale')} className="gap-2 bg-emerald-50 border-emerald-200 hover:bg-emerald-100">
+              <Building className="h-4 w-4 text-emerald-600" /> + Vendre
             </Button>
             <Button variant={activeTab === 'messages' ? 'default' : 'outline'} onClick={() => setActiveTab('messages')} className="gap-2">
               <MessageCircle className="h-4 w-4" /> Messages
@@ -282,6 +288,8 @@ const Dashboard = ({ setIsAuthenticated }) => {
           {activeTab === 'profile' && <ProfileForm user={user} setUser={setUser} onUpdate={fetchProfile} />}
           {activeTab === 'rentals' && <MyRentals />}
           {activeTab === 'create-rental' && <RentalListingForm onSuccess={() => setActiveTab('rentals')} />}
+          {activeTab === 'sales' && <MyPropertySales />}
+          {activeTab === 'create-sale' && <PropertySaleForm onSuccess={() => setActiveTab('sales')} />}
           {activeTab === 'messages' && <RentalConversations />}
         </div>
       </div>
