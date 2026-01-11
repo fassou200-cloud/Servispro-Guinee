@@ -20,13 +20,13 @@ TEST_COMPANY_DATA = {
     "address": "Quartier Almamya, Rue KA-001",
     "city": "Conakry",
     "region": "Conakry",
-    "phone_number": f"62{uuid.uuid4().hex[:7]}",
+    "phone_number": f"620{uuid.uuid4().hex[:7]}",  # 10+ digits
     "email": "test@entreprise.com",
     "website": "https://www.testentreprise.com",
     "description": "Entreprise de construction et BTP spécialisée dans les travaux publics",
     "password": TEST_COMPANY_PASSWORD,
     "contact_person_name": "Mamadou Diallo",
-    "contact_person_phone": "620123456"
+    "contact_person_phone": "6201234567"  # 10 digits
 }
 
 # Store created company data for cleanup
