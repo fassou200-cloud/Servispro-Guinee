@@ -559,6 +559,7 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
               <ul className="space-y-3">
                 <li><button onClick={() => navigate('/browse')} className="text-gray-400 hover:text-white transition-colors">Tous les Services</button></li>
                 <li><button onClick={() => navigate('/rentals')} className="text-gray-400 hover:text-white transition-colors">Locations</button></li>
+                <li><button onClick={() => navigate('/jobs')} className="text-gray-400 hover:text-white transition-colors">Offres d'Emploi</button></li>
                 <li><button onClick={() => navigate('/auth')} className="text-gray-400 hover:text-white transition-colors">Devenir Prestataire</button></li>
                 <li><button onClick={() => navigate('/company/auth')} className="text-gray-400 hover:text-white transition-colors">Espace Entreprise</button></li>
               </ul>
