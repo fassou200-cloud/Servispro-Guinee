@@ -459,8 +459,8 @@ const CompanyAuth = () => {
                       <SelectValue placeholder="Sélectionnez" />
                     </SelectTrigger>
                     <SelectContent>
-                      {GUINEA_LOCATIONS.map(region => (
-                        <SelectItem key={region.name} value={region.name}>{region.name}</SelectItem>
+                      {getRegions().map(region => (
+                        <SelectItem key={region} value={region}>{region}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
