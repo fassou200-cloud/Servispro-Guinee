@@ -255,6 +255,61 @@ const MyPropertySales = () => {
                     {docStatus.label}
                   </div>
 
+                  {/* Document Links */}
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {property.titre_foncier && (
+                      <a
+                        href={`${BACKEND_URL}${property.titre_foncier}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
+                      >
+                        <FileText className="h-3 w-3" />
+                        Titre Foncier
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    )}
+                    {property.seller_id_document && (
+                      <a
+                        href={`${BACKEND_URL}${property.seller_id_document}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium bg-green-50 text-green-600 hover:bg-green-100 transition-colors"
+                      >
+                        <User className="h-3 w-3" />
+                        Pièce ID Vendeur
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    )}
+                    {property.registration_ministere && (
+                      <a
+                        href={`${BACKEND_URL}${property.registration_ministere}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors"
+                      >
+                        <Home className="h-3 w-3" />
+                        Enreg. Ministère
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    )}
+                    {property.documents_additionnels && property.documents_additionnels.length > 0 && (
+                      property.documents_additionnels.map((doc, idx) => (
+                        <a
+                          key={idx}
+                          href={`${BACKEND_URL}${doc}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors"
+                        >
+                          <FileText className="h-3 w-3" />
+                          Document {idx + 1}
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      ))
+                    )}
+                  </div>
+
                   {/* Pricing & Actions */}
                   <div className="flex items-center justify-between pt-4 border-t border-slate-100">
                     <div className="flex items-baseline gap-2">
