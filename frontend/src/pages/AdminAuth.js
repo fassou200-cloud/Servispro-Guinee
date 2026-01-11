@@ -55,8 +55,7 @@ const AdminAuth = ({ setIsAdminAuthenticated }) => {
 
         const response = await axios.post(`${API}/admin/register`, {
           username: formData.username,
-          password: formData.password,
-          invite_code: formData.invite_code
+          password: formData.password
         });
         
         localStorage.setItem('adminToken', response.data.token);
