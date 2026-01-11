@@ -833,6 +833,96 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                     Créée le {new Date(selectedRental.created_at).toLocaleDateString('fr-FR')}
                   </div>
 
+                  {/* Documents Section for Admin */}
+                  <div className="mb-4 p-4 bg-slate-700/50 rounded-lg">
+                    <h4 className="text-sm font-bold text-slate-300 uppercase mb-3 flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      Documents Légaux
+                    </h4>
+                    <div className="space-y-2">
+                      {selectedRental.titre_foncier ? (
+                        <a
+                          href={`${BACKEND_URL}${selectedRental.titre_foncier}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-between p-2 bg-slate-600/50 rounded hover:bg-slate-600 transition-colors"
+                        >
+                          <span className="flex items-center gap-2 text-sm text-slate-300">
+                            <CheckCircle className="h-4 w-4 text-green-400" />
+                            Titre Foncier
+                          </span>
+                          <Eye className="h-4 w-4 text-slate-400" />
+                        </a>
+                      ) : (
+                        <div className="flex items-center gap-2 p-2 text-sm text-slate-500">
+                          <XCircle className="h-4 w-4" />
+                          Titre Foncier - Non fourni
+                        </div>
+                      )}
+                      
+                      {selectedRental.seller_id_document ? (
+                        <a
+                          href={`${BACKEND_URL}${selectedRental.seller_id_document}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-between p-2 bg-slate-600/50 rounded hover:bg-slate-600 transition-colors"
+                        >
+                          <span className="flex items-center gap-2 text-sm text-slate-300">
+                            <CheckCircle className="h-4 w-4 text-green-400" />
+                            Pièce d'Identité Propriétaire
+                          </span>
+                          <Eye className="h-4 w-4 text-slate-400" />
+                        </a>
+                      ) : (
+                        <div className="flex items-center gap-2 p-2 text-sm text-slate-500">
+                          <XCircle className="h-4 w-4" />
+                          Pièce d'Identité - Non fournie
+                        </div>
+                      )}
+                      
+                      {selectedRental.registration_ministere ? (
+                        <a
+                          href={`${BACKEND_URL}${selectedRental.registration_ministere}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-between p-2 bg-slate-600/50 rounded hover:bg-slate-600 transition-colors"
+                        >
+                          <span className="flex items-center gap-2 text-sm text-slate-300">
+                            <CheckCircle className="h-4 w-4 text-green-400" />
+                            Enregistrement Ministère
+                          </span>
+                          <Eye className="h-4 w-4 text-slate-400" />
+                        </a>
+                      ) : (
+                        <div className="flex items-center gap-2 p-2 text-sm text-slate-500">
+                          <XCircle className="h-4 w-4" />
+                          Enregistrement Ministère - Non fourni
+                        </div>
+                      )}
+                      
+                      {selectedRental.documents_additionnels && selectedRental.documents_additionnels.length > 0 && (
+                        <div className="pt-2 border-t border-slate-600">
+                          <span className="text-xs text-slate-400 mb-2 block">Documents Additionnels</span>
+                          {selectedRental.documents_additionnels.map((doc, idx) => (
+                            <a
+                              key={idx}
+                              href={`${BACKEND_URL}${doc}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center justify-between p-2 bg-slate-600/50 rounded hover:bg-slate-600 transition-colors mt-1"
+                            >
+                              <span className="flex items-center gap-2 text-sm text-slate-300">
+                                <FileText className="h-4 w-4 text-blue-400" />
+                                Document {idx + 1}
+                              </span>
+                              <Eye className="h-4 w-4 text-slate-400" />
+                            </a>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
                   <Button
                     onClick={() => confirmDelete('rental', selectedRental.id, selectedRental.title)}
                     variant="outline"
