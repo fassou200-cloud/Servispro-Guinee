@@ -22,8 +22,7 @@ const AdminAuth = ({ setIsAdminAuthenticated }) => {
   const [formData, setFormData] = useState({
     username: '',
     password: '',
-    confirmPassword: '',
-    invite_code: ''
+    confirmPassword: ''
   });
 
   const handleSubmit = async (e) => {
