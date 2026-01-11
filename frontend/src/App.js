@@ -49,6 +49,7 @@ function App() {
           <Route path="/browse" element={<BrowseProviders isCustomerAuthenticated={isCustomerAuthenticated} />} />
           <Route path="/provider/:providerId" element={<ProviderProfile isCustomerAuthenticated={isCustomerAuthenticated} />} />
           <Route path="/rentals" element={<BrowseRentals isCustomerAuthenticated={isCustomerAuthenticated} />} />
+          <Route path="/jobs" element={<BrowseJobs />} />
           <Route path="/rental/:rentalId" element={<RentalDetail />} />
           
           {/* Customer Routes */}
