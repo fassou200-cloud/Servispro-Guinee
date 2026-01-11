@@ -12,21 +12,26 @@ import AuthPage from '@/pages/AuthPage';
 import Dashboard from '@/pages/Dashboard';
 import AdminAuth from '@/pages/AdminAuth';
 import AdminDashboard from '@/pages/AdminDashboard';
+import CompanyAuth from '@/pages/CompanyAuth';
+import CompanyDashboard from '@/pages/CompanyDashboard';
 import { Toaster } from '@/components/ui/sonner';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isCustomerAuthenticated, setIsCustomerAuthenticated] = useState(false);
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
+  const [isCompanyAuthenticated, setIsCompanyAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     const customerToken = localStorage.getItem('customerToken');
     const adminToken = localStorage.getItem('adminToken');
+    const companyToken = localStorage.getItem('companyToken');
     setIsAuthenticated(!!token);
     setIsCustomerAuthenticated(!!customerToken);
     setIsAdminAuthenticated(!!adminToken);
+    setIsCompanyAuthenticated(!!companyToken);
     setLoading(false);
   }, []);
 
@@ -63,6 +68,16 @@ function App() {
           <Route 
             path="/dashboard" 
             element={isAuthenticated ? <Dashboard setIsAuthenticated={setIsAuthenticated} /> : <Navigate to="/auth" />} 
+          />
+
+          {/* Company Routes */}
+          <Route 
+            path="/company/auth" 
+            element={isCompanyAuthenticated ? <Navigate to="/company/dashboard" /> : <CompanyAuth />} 
+          />
+          <Route 
+            path="/company/dashboard" 
+            element={isCompanyAuthenticated ? <CompanyDashboard /> : <Navigate to="/company/auth" />} 
           />
 
           {/* Admin Routes */}
