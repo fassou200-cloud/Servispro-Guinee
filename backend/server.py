@@ -886,6 +886,268 @@ async def get_provider_rating_stats(provider_id: str):
         'rating_distribution': distribution
     }
 
+# ==================== VEHICLE LISTING ROUTES ====================
+
+@api_router.post("/vehicles", response_model=VehicleListing)
+async def create_vehicle_listing(vehicle_data: VehicleListingCreate, current_user: dict = Depends(get_current_user)):
+    """Create a new vehicle listing (for Camionneur, Tracteur, Voiture providers)"""
+    # Verify user is a vehicle provider
+    allowed_professions = ['Camionneur', 'Tracteur', 'Voiture']
+    if current_user.get('profession') not in allowed_professions:
+        raise HTTPException(
+            status_code=403, 
+            detail="Seuls les prestataires de véhicules (Camionneur, Tracteur, Voiture) peuvent publier des annonces de véhicules"
+        )
+    
+    vehicle_id = str(uuid.uuid4())
+    vehicle_doc = {
+        'id': vehicle_id,
+        'owner_id': current_user['id'],
+        'owner_name': f"{current_user['first_name']} {current_user['last_name']}",
+        'vehicle_type': vehicle_data.vehicle_type,
+        'brand': vehicle_data.brand,
+        'model': vehicle_data.model,
+        'year': vehicle_data.year,
+        'fuel_type': vehicle_data.fuel_type,
+        'transmission': vehicle_data.transmission,
+        'seats': vehicle_data.seats,
+        'load_capacity': vehicle_data.load_capacity,
+        'engine_power': vehicle_data.engine_power,
+        'description': vehicle_data.description,
+        'location': vehicle_data.location,
+        'price_per_day': vehicle_data.price_per_day,
+        'price_per_week': vehicle_data.price_per_week,
+        'price_per_month': vehicle_data.price_per_month,
+        'is_available': vehicle_data.is_available,
+        'features': vehicle_data.features,
+        'photos': [],
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.vehicle_listings.insert_one(vehicle_doc)
+    return {k: v for k, v in vehicle_doc.items() if k != '_id'}
+
+@api_router.get("/vehicles", response_model=List[VehicleListing])
+async def get_all_vehicles(
+    vehicle_type: Optional[str] = None,
+    location: Optional[str] = None,
+    min_price: Optional[int] = None,
+    max_price: Optional[int] = None,
+    available_only: bool = True
+):
+    """Get all vehicle listings with optional filters"""
+    query = {}
+    
+    if vehicle_type:
+        query['vehicle_type'] = vehicle_type
+    if location:
+        query['location'] = {'$regex': location, '$options': 'i'}
+    if available_only:
+        query['is_available'] = True
+    if min_price:
+        query['price_per_day'] = {'$gte': min_price}
+    if max_price:
+        if 'price_per_day' in query:
+            query['price_per_day']['$lte'] = max_price
+        else:
+            query['price_per_day'] = {'$lte': max_price}
+    
+    vehicles = await db.vehicle_listings.find(query, {'_id': 0}).sort('created_at', -1).to_list(100)
+    return vehicles
+
+@api_router.get("/vehicles/my-listings", response_model=List[VehicleListing])
+async def get_my_vehicle_listings(current_user: dict = Depends(get_current_user)):
+    """Get all vehicle listings for the current user"""
+    vehicles = await db.vehicle_listings.find(
+        {'owner_id': current_user['id']},
+        {'_id': 0}
+    ).sort('created_at', -1).to_list(100)
+    return vehicles
+
+@api_router.get("/vehicles/{vehicle_id}", response_model=VehicleListing)
+async def get_vehicle_by_id(vehicle_id: str):
+    """Get a specific vehicle listing by ID"""
+    vehicle = await db.vehicle_listings.find_one({'id': vehicle_id}, {'_id': 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Véhicule non trouvé")
+    return vehicle
+
+@api_router.put("/vehicles/{vehicle_id}")
+async def update_vehicle_listing(vehicle_id: str, vehicle_data: VehicleListingCreate, current_user: dict = Depends(get_current_user)):
+    """Update a vehicle listing"""
+    vehicle = await db.vehicle_listings.find_one({'id': vehicle_id}, {'_id': 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Véhicule non trouvé")
+    
+    if vehicle['owner_id'] != current_user['id']:
+        raise HTTPException(status_code=403, detail="Non autorisé")
+    
+    update_data = vehicle_data.model_dump(exclude_unset=True)
+    await db.vehicle_listings.update_one(
+        {'id': vehicle_id},
+        {'$set': update_data}
+    )
+    
+    updated = await db.vehicle_listings.find_one({'id': vehicle_id}, {'_id': 0})
+    return updated
+
+@api_router.delete("/vehicles/{vehicle_id}")
+async def delete_vehicle_listing(vehicle_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete a vehicle listing"""
+    vehicle = await db.vehicle_listings.find_one({'id': vehicle_id}, {'_id': 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Véhicule non trouvé")
+    
+    if vehicle['owner_id'] != current_user['id']:
+        raise HTTPException(status_code=403, detail="Non autorisé")
+    
+    await db.vehicle_listings.delete_one({'id': vehicle_id})
+    return {"message": "Véhicule supprimé avec succès"}
+
+@api_router.put("/vehicles/{vehicle_id}/availability")
+async def toggle_vehicle_availability(vehicle_id: str, current_user: dict = Depends(get_current_user)):
+    """Toggle vehicle availability status"""
+    vehicle = await db.vehicle_listings.find_one({'id': vehicle_id}, {'_id': 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Véhicule non trouvé")
+    
+    if vehicle['owner_id'] != current_user['id']:
+        raise HTTPException(status_code=403, detail="Non autorisé")
+    
+    new_status = not vehicle.get('is_available', True)
+    await db.vehicle_listings.update_one(
+        {'id': vehicle_id},
+        {'$set': {'is_available': new_status}}
+    )
+    
+    return {"is_available": new_status}
+
+@api_router.post("/vehicles/{vehicle_id}/upload-photo")
+async def upload_vehicle_photo(vehicle_id: str, file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):
+    """Upload a photo for a vehicle listing"""
+    vehicle = await db.vehicle_listings.find_one({'id': vehicle_id}, {'_id': 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Véhicule non trouvé")
+    
+    if vehicle['owner_id'] != current_user['id']:
+        raise HTTPException(status_code=403, detail="Non autorisé")
+    
+    # Save file
+    file_extension = file.filename.split('.')[-1] if '.' in file.filename else 'jpg'
+    filename = f"vehicle_{vehicle_id}_{uuid.uuid4()}.{file_extension}"
+    file_path = UPLOAD_DIR / filename
+    
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    # Update vehicle with new photo
+    photo_url = f"/api/uploads/{filename}"
+    await db.vehicle_listings.update_one(
+        {'id': vehicle_id},
+        {'$push': {'photos': photo_url}}
+    )
+    
+    return {"photo_url": photo_url, "message": "Photo uploadée avec succès"}
+
+@api_router.delete("/vehicles/{vehicle_id}/photo")
+async def delete_vehicle_photo(vehicle_id: str, photo_url: str, current_user: dict = Depends(get_current_user)):
+    """Delete a photo from a vehicle listing"""
+    vehicle = await db.vehicle_listings.find_one({'id': vehicle_id}, {'_id': 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Véhicule non trouvé")
+    
+    if vehicle['owner_id'] != current_user['id']:
+        raise HTTPException(status_code=403, detail="Non autorisé")
+    
+    await db.vehicle_listings.update_one(
+        {'id': vehicle_id},
+        {'$pull': {'photos': photo_url}}
+    )
+    
+    return {"message": "Photo supprimée avec succès"}
+
+# Vehicle Booking Routes
+@api_router.post("/vehicles/{vehicle_id}/book")
+async def create_vehicle_booking(vehicle_id: str, booking_data: VehicleBookingCreate):
+    """Create a booking request for a vehicle"""
+    vehicle = await db.vehicle_listings.find_one({'id': vehicle_id}, {'_id': 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Véhicule non trouvé")
+    
+    if not vehicle.get('is_available', True):
+        raise HTTPException(status_code=400, detail="Ce véhicule n'est pas disponible actuellement")
+    
+    # Calculate total price based on duration
+    start = datetime.fromisoformat(booking_data.start_date)
+    end = datetime.fromisoformat(booking_data.end_date)
+    days = (end - start).days + 1
+    
+    total_price = days * vehicle['price_per_day']
+    
+    # Apply weekly/monthly rates if applicable
+    if days >= 30 and vehicle.get('price_per_month'):
+        months = days // 30
+        remaining_days = days % 30
+        total_price = (months * vehicle['price_per_month']) + (remaining_days * vehicle['price_per_day'])
+    elif days >= 7 and vehicle.get('price_per_week'):
+        weeks = days // 7
+        remaining_days = days % 7
+        total_price = (weeks * vehicle['price_per_week']) + (remaining_days * vehicle['price_per_day'])
+    
+    # Filter contact info from message
+    filtered_message = None
+    if booking_data.message:
+        filtered_message, _ = filter_contact_info(booking_data.message)
+    
+    booking_id = str(uuid.uuid4())
+    booking_doc = {
+        'id': booking_id,
+        'vehicle_id': vehicle_id,
+        'vehicle_title': f"{vehicle['brand']} {vehicle['model']} ({vehicle['year']})",
+        'customer_id': 'anonymous',  # Would be from token if authenticated
+        'customer_name': 'Client',
+        'customer_phone': '',
+        'owner_id': vehicle['owner_id'],
+        'start_date': booking_data.start_date,
+        'end_date': booking_data.end_date,
+        'total_price': total_price,
+        'status': 'pending',
+        'message': filtered_message,
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.vehicle_bookings.insert_one(booking_doc)
+    return {k: v for k, v in booking_doc.items() if k != '_id'}
+
+@api_router.get("/vehicles/bookings/my-requests")
+async def get_my_vehicle_booking_requests(current_user: dict = Depends(get_current_user)):
+    """Get all booking requests for the vehicle owner"""
+    bookings = await db.vehicle_bookings.find(
+        {'owner_id': current_user['id']},
+        {'_id': 0}
+    ).sort('created_at', -1).to_list(100)
+    return bookings
+
+@api_router.put("/vehicles/bookings/{booking_id}/status")
+async def update_vehicle_booking_status(booking_id: str, status: str, current_user: dict = Depends(get_current_user)):
+    """Update booking status (accept/reject)"""
+    booking = await db.vehicle_bookings.find_one({'id': booking_id}, {'_id': 0})
+    if not booking:
+        raise HTTPException(status_code=404, detail="Réservation non trouvée")
+    
+    if booking['owner_id'] != current_user['id']:
+        raise HTTPException(status_code=403, detail="Non autorisé")
+    
+    if status not in ['accepted', 'rejected', 'completed']:
+        raise HTTPException(status_code=400, detail="Statut invalide")
+    
+    await db.vehicle_bookings.update_one(
+        {'id': booking_id},
+        {'$set': {'status': status}}
+    )
+    
+    return {"status": status, "message": f"Réservation {status}"}
+
 # ==================== CHAT ROUTES (Rental Listings) ====================
 
 @api_router.post("/chat/rental/{rental_id}/message")
