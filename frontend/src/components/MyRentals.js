@@ -8,7 +8,8 @@ import {
   Wifi, Wind, Car, Utensils, Tv, Bath, Thermometer, Phone, Laptop, 
   Shirt, Lock, Coffee, Droplets, ShowerHead, Mountain, Volume2, 
   Flame, Sofa, Baby, UtensilsCrossed, Sun, ChefHat, Waves,
-  Armchair, Hotel, Refrigerator, Microwave as MicrowaveIcon, CircleDot
+  Armchair, Hotel, Refrigerator, Microwave as MicrowaveIcon, CircleDot,
+  FileText, Shield, Eye, ExternalLink
 } from 'lucide-react';
 import axios from 'axios';
 import {
