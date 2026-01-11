@@ -102,6 +102,7 @@ const CompanyAuth = ({ setIsCompanyAuthenticated }) => {
       localStorage.setItem('companyToken', response.data.token);
       localStorage.setItem('company', JSON.stringify(response.data.user));
       toast.success('Connexion réussie !');
+      if (setIsCompanyAuthenticated) setIsCompanyAuthenticated(true);
       navigate('/company/dashboard');
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Échec de la connexion');
