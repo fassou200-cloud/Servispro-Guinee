@@ -33,7 +33,7 @@ const COMPANY_SECTORS = [
   { value: 'Autres', label: 'Autres' }
 ];
 
-const CompanyAuth = () => {
+const CompanyAuth = ({ setIsCompanyAuthenticated }) => {
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
