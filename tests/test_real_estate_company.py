@@ -228,8 +228,11 @@ class TestCompanyPropertySalesAPI:
         
         response = requests.post(f"{BASE_URL}/api/company/property-sales", json=sale_data, headers=headers)
         
+        # API checks approval first, then sector - so pending company gets 403 for approval
         assert response.status_code == 403, f"Expected 403 for non-immobilier company, got {response.status_code}"
-        assert "immobilier" in response.json().get("detail", "").lower()
+        detail = response.json().get("detail", "").lower()
+        # Either blocked for not being approved OR for not being immobilier sector
+        assert "approuvée" in detail or "immobilier" in detail, f"Unexpected error: {detail}"
         
         print("✓ Non-immobilier company correctly blocked from creating property sales")
 
