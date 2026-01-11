@@ -898,11 +898,38 @@ async def send_owner_message(rental_id: str, message_data: ChatMessageCreate, cu
 
 @api_router.get("/chat/rental/{rental_id}/messages")
 async def get_rental_chat_messages(rental_id: str):
-    """Get all chat messages for a rental listing"""
+    """Get all chat messages for a rental listing (filtered for users)"""
     messages = await db.chat_messages.find(
         {'rental_id': rental_id}, 
-        {'_id': 0}
+        {'_id': 0, 'original_message': 0}  # Exclude original message from user view
     ).sort('created_at', 1).to_list(100)
+    return messages
+
+@api_router.get("/admin/chat/rental/{rental_id}/messages")
+async def get_rental_chat_messages_admin(rental_id: str):
+    """Get all chat messages for a rental listing (full access for admin - includes original messages)"""
+    messages = await db.chat_messages.find(
+        {'rental_id': rental_id}, 
+        {'_id': 0}  # Admin can see original_message
+    ).sort('created_at', 1).to_list(100)
+    return messages
+
+@api_router.get("/admin/chat/all-messages")
+async def get_all_chat_messages_admin():
+    """Get all chat messages across all rentals (admin only)"""
+    messages = await db.chat_messages.find(
+        {}, 
+        {'_id': 0}
+    ).sort('created_at', -1).to_list(500)
+    
+    # Add rental info to each message
+    for msg in messages:
+        rental = await db.rental_listings.find_one(
+            {'id': msg.get('rental_id')}, 
+            {'_id': 0, 'title': 1}
+        )
+        msg['rental_title'] = rental.get('title') if rental else 'Annonce supprimée'
+    
     return messages
 
 @api_router.get("/chat/my-conversations")
