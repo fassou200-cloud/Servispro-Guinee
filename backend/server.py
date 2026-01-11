@@ -2214,49 +2214,6 @@ async def get_all_jobs_admin():
     
     return jobs
 
-@api_router.get("/admin/stats")
-async def get_admin_stats():
-    """Get statistics for admin dashboard"""
-    total_providers = await db.service_providers.count_documents({})
-    pending_providers = await db.service_providers.count_documents({'verification_status': 'pending'})
-    approved_providers = await db.service_providers.count_documents({'verification_status': 'approved'})
-    
-    total_jobs = await db.job_offers.count_documents({})
-    pending_jobs = await db.job_offers.count_documents({'status': 'Pending'})
-    accepted_jobs = await db.job_offers.count_documents({'status': 'Accepted'})
-    completed_jobs = await db.job_offers.count_documents({'status': 'Completed'})
-    
-    total_customers = await db.customers.count_documents({})
-    total_rentals = await db.rental_listings.count_documents({})
-    long_term_rentals = await db.rental_listings.count_documents({'rental_type': 'long_term'})
-    short_term_rentals = await db.rental_listings.count_documents({'rental_type': 'short_term'})
-    available_rentals = await db.rental_listings.count_documents({'is_available': True})
-    
-    # Count Agent Immobilier providers
-    agent_immobilier_count = await db.service_providers.count_documents({'profession': 'AgentImmobilier'})
-    
-    return {
-        'providers': {
-            'total': total_providers,
-            'pending': pending_providers,
-            'approved': approved_providers,
-            'agent_immobilier': agent_immobilier_count
-        },
-        'jobs': {
-            'total': total_jobs,
-            'pending': pending_jobs,
-            'accepted': accepted_jobs,
-            'completed': completed_jobs
-        },
-        'customers': total_customers,
-        'rentals': {
-            'total': total_rentals,
-            'long_term': long_term_rentals,
-            'short_term': short_term_rentals,
-            'available': available_rentals
-        }
-    }
-
 @api_router.get("/admin/rentals")
 async def get_all_rentals_admin():
     """Get all rental listings for admin dashboard"""
