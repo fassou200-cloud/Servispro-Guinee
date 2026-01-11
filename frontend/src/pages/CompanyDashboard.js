@@ -289,6 +289,266 @@ const CompanyDashboard = () => {
     }
   };
 
+  // ==================== RENTAL FUNCTIONS (for real estate companies) ====================
+  
+  const handleRentalPhotoSelect = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    const validFiles = files.filter(file => {
+      if (!file.type.startsWith('image/')) {
+        toast.error(`${file.name} n'est pas une image`);
+        return false;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error(`${file.name} est trop grande (max 5MB)`);
+        return false;
+      }
+      return true;
+    });
+
+    if (validFiles.length === 0) return;
+
+    setRentalPhotos([...rentalPhotos, ...validFiles]);
+    const newPreviewUrls = validFiles.map(file => URL.createObjectURL(file));
+    setRentalPhotoPreviewUrls([...rentalPhotoPreviewUrls, ...newPreviewUrls]);
+    toast.success(`${validFiles.length} photo(s) ajoutée(s)`);
+  };
+
+  const removeRentalPhoto = (index) => {
+    const newPhotos = rentalPhotos.filter((_, i) => i !== index);
+    const newPreviews = rentalPhotoPreviewUrls.filter((_, i) => i !== index);
+    URL.revokeObjectURL(rentalPhotoPreviewUrls[index]);
+    setRentalPhotos(newPhotos);
+    setRentalPhotoPreviewUrls(newPreviews);
+  };
+
+  const handleCreateRentalStep1 = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('companyToken');
+
+    try {
+      const response = await axios.post(`${API}/company/rentals`, {
+        ...rentalForm,
+        rental_price: parseFloat(rentalForm.rental_price) || 0,
+        price_per_night: rentalForm.rental_type === 'short_term' ? parseFloat(rentalForm.price_per_night) : null,
+        min_nights: rentalForm.rental_type === 'short_term' ? parseInt(rentalForm.min_nights) : 1,
+        max_guests: rentalForm.max_guests ? parseInt(rentalForm.max_guests) : null
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setCreatedRentalId(response.data.id);
+      toast.success('Annonce créée ! Ajoutez maintenant les photos.');
+      setRentalStep(2);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Erreur lors de la création');
+    }
+  };
+
+  const handleCreateRentalStep2 = async () => {
+    if (!createdRentalId) return;
+    
+    setUploadingRentalFiles(true);
+    const token = localStorage.getItem('companyToken');
+
+    try {
+      // Upload photos
+      for (const photo of rentalPhotos) {
+        const photoFormData = new FormData();
+        photoFormData.append('file', photo);
+
+        await axios.post(`${API}/company/rentals/${createdRentalId}/upload-photo`, photoFormData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+      }
+
+      toast.success('Location publiée avec succès !');
+      
+      // Reset form
+      setRentalForm({
+        property_type: 'Apartment',
+        title: '',
+        description: '',
+        location: '',
+        rental_price: '',
+        rental_type: 'long_term',
+        price_per_night: '',
+        min_nights: '1',
+        max_guests: '',
+        amenities: [],
+        is_available: true
+      });
+      setRentalPhotos([]);
+      setRentalPhotoPreviewUrls([]);
+      setRentalStep(1);
+      setCreatedRentalId(null);
+      setActiveTab('rentals');
+      
+      // Refresh rentals
+      const res = await axios.get(`${API}/company/rentals/my`, { headers: { Authorization: `Bearer ${token}` } });
+      setRentals(res.data);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Erreur lors de l\'upload des photos');
+    } finally {
+      setUploadingRentalFiles(false);
+    }
+  };
+
+  const deleteRental = async (rentalId) => {
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer cette annonce ?')) return;
+    
+    const token = localStorage.getItem('companyToken');
+    try {
+      await axios.delete(`${API}/company/rentals/${rentalId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Annonce supprimée');
+      setRentals(rentals.filter(r => r.id !== rentalId));
+    } catch (error) {
+      toast.error('Erreur lors de la suppression');
+    }
+  };
+
+  // ==================== SALE FUNCTIONS (for real estate companies) ====================
+  
+  const handleSalePhotoSelect = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    const validFiles = files.filter(file => {
+      if (!file.type.startsWith('image/')) {
+        toast.error(`${file.name} n'est pas une image`);
+        return false;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error(`${file.name} est trop grande (max 5MB)`);
+        return false;
+      }
+      return true;
+    });
+
+    if (validFiles.length === 0) return;
+
+    setSalePhotos([...salePhotos, ...validFiles]);
+    const newPreviewUrls = validFiles.map(file => URL.createObjectURL(file));
+    setSalePhotoPreviewUrls([...salePhotoPreviewUrls, ...newPreviewUrls]);
+    toast.success(`${validFiles.length} photo(s) ajoutée(s)`);
+  };
+
+  const removeSalePhoto = (index) => {
+    const newPhotos = salePhotos.filter((_, i) => i !== index);
+    const newPreviews = salePhotoPreviewUrls.filter((_, i) => i !== index);
+    URL.revokeObjectURL(salePhotoPreviewUrls[index]);
+    setSalePhotos(newPhotos);
+    setSalePhotoPreviewUrls(newPreviews);
+  };
+
+  const toggleSaleFeature = (featureId) => {
+    setSaleForm(prev => ({
+      ...prev,
+      features: prev.features.includes(featureId)
+        ? prev.features.filter(f => f !== featureId)
+        : [...prev.features, featureId]
+    }));
+  };
+
+  const handleCreateSaleStep1 = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('companyToken');
+
+    try {
+      const response = await axios.post(`${API}/company/property-sales`, {
+        ...saleForm,
+        sale_price: parseInt(saleForm.sale_price) || 0,
+        num_rooms: saleForm.num_rooms ? parseInt(saleForm.num_rooms) : null,
+        num_bathrooms: saleForm.num_bathrooms ? parseInt(saleForm.num_bathrooms) : null,
+        year_built: saleForm.year_built ? parseInt(saleForm.year_built) : null
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setCreatedSaleId(response.data.id);
+      toast.success('Propriété créée ! Ajoutez maintenant les photos.');
+      setSaleStep(2);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Erreur lors de la création');
+    }
+  };
+
+  const handleCreateSaleStep2 = async () => {
+    if (!createdSaleId) return;
+    
+    setUploadingSaleFiles(true);
+    const token = localStorage.getItem('companyToken');
+
+    try {
+      // Upload photos
+      for (const photo of salePhotos) {
+        const photoFormData = new FormData();
+        photoFormData.append('file', photo);
+
+        await axios.post(`${API}/company/property-sales/${createdSaleId}/upload-photo`, photoFormData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+      }
+
+      toast.success('Propriété publiée avec succès !');
+      
+      // Reset form
+      setSaleForm({
+        property_type: 'Maison',
+        title: '',
+        description: '',
+        location: '',
+        sale_price: '',
+        surface_area: '',
+        num_rooms: '',
+        num_bathrooms: '',
+        has_garage: false,
+        has_garden: false,
+        has_pool: false,
+        year_built: '',
+        features: [],
+        is_negotiable: true
+      });
+      setSalePhotos([]);
+      setSalePhotoPreviewUrls([]);
+      setSaleStep(1);
+      setCreatedSaleId(null);
+      setActiveTab('sales');
+      
+      // Refresh sales
+      const res = await axios.get(`${API}/company/property-sales/my`, { headers: { Authorization: `Bearer ${token}` } });
+      setSales(res.data);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Erreur lors de l\'upload des photos');
+    } finally {
+      setUploadingSaleFiles(false);
+    }
+  };
+
+  const deleteSale = async (saleId) => {
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer cette propriété ?')) return;
+    
+    const token = localStorage.getItem('companyToken');
+    try {
+      await axios.delete(`${API}/company/property-sales/${saleId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Propriété supprimée');
+      setSales(sales.filter(s => s.id !== saleId));
+    } catch (error) {
+      toast.error('Erreur lors de la suppression');
+    }
+  };
+
   const getDocumentStatus = () => {
     if (!company) return { complete: 0, total: 4 };
     const docs = [
