@@ -362,6 +362,14 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
             <DollarSign className="h-4 w-4 mr-2" />
             Ventes ({propertySales.length})
           </Button>
+          <Button
+            variant={activeTab === 'companies' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('companies')}
+            className={activeTab === 'companies' ? 'bg-teal-600 hover:bg-teal-700' : 'border-slate-600 text-slate-300'}
+          >
+            <Building className="h-4 w-4 mr-2" />
+            Entreprises ({companies.length})
+          </Button>
         </div>
 
         {/* Delete Confirmation Modal */}
