@@ -459,7 +459,7 @@ const CompanyAuth = () => {
                       <SelectValue placeholder="Sélectionnez" />
                     </SelectTrigger>
                     <SelectContent>
-                      {guineaLocations.map(region => (
+                      {GUINEA_LOCATIONS.map(region => (
                         <SelectItem key={region.name} value={region.name}>{region.name}</SelectItem>
                       ))}
                     </SelectContent>
