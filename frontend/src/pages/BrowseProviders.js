@@ -25,6 +25,9 @@ const translateProfession = (profession) => {
     'Menuisier': 'Menuisier',
     'AgentImmobilier': 'Agent Immobilier',
     'Soudeur': 'Soudeur',
+    'Camionneur': 'Camionneur (Location)',
+    'Tracteur': 'Tracteur (Location)',
+    'Voiture': 'Voiture (Location)',
     'Autres': 'Autres Métiers',
     'Electrician': 'Électricien',
     'Mechanic': 'Mécanicien',
@@ -44,6 +47,9 @@ const categoryIcons = {
   'Menuisier': Hammer,
   'AgentImmobilier': Building,
   'Soudeur': Flame,
+  'Camionneur': Truck,
+  'Tracteur': Truck,
+  'Voiture': Truck,
   'Autres': MoreHorizontal
 };
 
@@ -56,6 +62,9 @@ const categoryColors = {
   'Menuisier': 'from-yellow-500 to-yellow-600',
   'AgentImmobilier': 'from-emerald-500 to-emerald-600',
   'Soudeur': 'from-red-500 to-red-600',
+  'Camionneur': 'from-slate-500 to-slate-600',
+  'Tracteur': 'from-green-500 to-green-600',
+  'Voiture': 'from-indigo-500 to-indigo-600',
   'Autres': 'from-gray-500 to-gray-600'
 };
 
@@ -69,6 +78,9 @@ const categories = [
   { value: 'Menuisier', label: 'Menuisier', icon: Hammer },
   { value: 'AgentImmobilier', label: 'Agent Immobilier', icon: Building },
   { value: 'Soudeur', label: 'Soudeur', icon: Flame },
+  { value: 'Camionneur', label: 'Camionneur', icon: Truck },
+  { value: 'Tracteur', label: 'Tracteur', icon: Truck },
+  { value: 'Voiture', label: 'Voiture', icon: Truck },
   { value: 'Autres', label: 'Autres', icon: MoreHorizontal }
 ];
 
