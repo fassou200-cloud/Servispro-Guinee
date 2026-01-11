@@ -422,7 +422,7 @@ class TestAdminCompanyManagement:
         # First create another company to reject
         new_company_data = TEST_COMPANY_DATA.copy()
         new_company_data["rccm_number"] = f"RCCM/GC/REJ{uuid.uuid4().hex[:6].upper()}"
-        new_company_data["phone_number"] = f"63{uuid.uuid4().hex[:7]}"
+        new_company_data["phone_number"] = f"630{uuid.uuid4().hex[:7]}"  # 10+ digits
         
         reg_response = requests.post(f"{BASE_URL}/api/auth/company/register", json=new_company_data)
         assert reg_response.status_code == 200
