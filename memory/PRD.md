@@ -1,43 +1,47 @@
 # ServisPro - Plateforme de Services en Guinée
 
 ## Énoncé du Problème Original
-Construire une plateforme nommée "ServisPro" pour les prestataires de services et clients en Guinée. La plateforme nécessite des rôles utilisateurs distincts (Prestataire, Client, Admin), la gestion des profils, la vérification d'identité, les annonces de location, les demandes de service et un système de notation.
+Construire une plateforme nommée "ServisPro" pour les prestataires de services et clients en Guinée. La plateforme nécessite des rôles utilisateurs distincts (Prestataire, Client, Admin, Entreprise), la gestion des profils, la vérification d'identité et de documents, les annonces de location et vente, les demandes de service et un système de notation.
 
 ## Personas Utilisateurs
 1. **Prestataires de Services** - Professionnels offrant divers services
 2. **Agents Immobiliers** - Gestion des locations et ventes de propriétés
 3. **Prestataires Véhicules** (Camionneur, Tracteur, Voiture) - Location de véhicules
 4. **Clients** - Recherche et réservation de services
-5. **Administrateurs** - Gestion de la plateforme
+5. **Entreprises** - Sociétés avec documents légaux (RCCM, NIF, Licence)
+6. **Administrateurs** - Gestion de la plateforme
 
 ## Exigences Principales
 
 ### Authentification et Rôles
-- ✅ Authentification JWT séparée pour Admin, Prestataire, Client
+- ✅ Authentification JWT séparée pour Admin, Prestataire, Client, **Entreprise**
 - ✅ Inscription avec dropdowns en cascade pour les régions guinéennes
 
 ### Tableaux de Bord
-- ✅ Dashboard Admin avec tous les onglets (Prestataires, Clients, Demandes, Locations, Agents, Ventes)
+- ✅ Dashboard Admin avec onglets : Prestataires, Clients, Demandes, Locations, Agents, Ventes, **Entreprises**
 - ✅ Dashboard Prestataire conditionnel (Standard, Agent Immobilier, Véhicules)
 - ✅ Dashboard Client
+- ✅ **Dashboard Entreprise** (Profil, Documents, Services, Offres d'Emploi)
 
 ### Fonctionnalités Agent Immobilier
 - ✅ Gestion des locations (longue/courte durée) avec équipements
 - ✅ Ventes de propriétés (Maison, Terrain, Villa, Immeuble, Bureau/Commerce)
 - ✅ Upload de documents légaux (titre foncier, pièce d'identité vendeur, enregistrement ministère)
 - ✅ Photos de propriétés
-- ✅ Statut en ligne/hors ligne
 
-### Fonctionnalités Véhicules
-- ✅ Listing véhicules pour Camionneurs, Tracteurs, Voitures
-
-### Chat
-- ✅ Système de messagerie avec masquage automatique des numéros de téléphone et emails
+### Fonctionnalités Entreprise (NOUVEAU)
+- ✅ Inscription en 2 étapes (informations + documents)
+- ✅ Connexion via numéro RCCM + mot de passe
+- ✅ Upload de documents : Licence d'exploitation, RCCM, NIF, Attestation fiscale, Logo
+- ✅ Validation obligatoire par l'admin avant activation
+- ✅ Publication de services (après approbation)
+- ✅ Publication d'offres d'emploi (après approbation)
 
 ### Admin
 - ✅ Vue de tous les documents pour les locations
 - ✅ Vue de tous les documents pour les ventes
-- ✅ Gestion des agents immobiliers
+- ✅ Vue de tous les documents des entreprises
+- ✅ Approbation/Rejet des entreprises
 
 ---
 
@@ -59,46 +63,60 @@ Construire une plateforme nommée "ServisPro" pour les prestataires de services 
         ├── components/
         │   ├── PropertySaleForm.js    # Formulaire vente 2 étapes
         │   ├── RentalListingForm.js   # Formulaire location 2 étapes  
-        │   ├── MyPropertySales.js     # Liste ventes agent
-        │   ├── MyRentals.js           # Liste locations agent
-        │   ├── MyVehicles.js          # Liste véhicules
-        │   └── VehicleListingForm.js  # Formulaire véhicule
+        │   └── ...
         ├── pages/
-        │   ├── AdminDashboard.js      # Dashboard admin
+        │   ├── AdminDashboard.js      # Dashboard admin (+ Entreprises)
+        │   ├── CompanyAuth.js         # NOUVEAU: Auth entreprise
+        │   ├── CompanyDashboard.js    # NOUVEAU: Dashboard entreprise
         │   ├── Dashboard.js           # Dashboard prestataire
-        │   ├── CustomerDashboard.js   # Dashboard client
         │   └── ...
         └── data/
             └── guineaLocations.js     # Données régions/villes
 ```
 
 ### Schéma Base de Données
-- **users:** profession inclut AgentImmobilier, Camionneur, Tracteur, Voiture
-- **rentals:** documents optionnels (titre_foncier, seller_id_document, registration_ministere, documents_additionnels)
-- **sales:** documents légaux requis
-- **vehicles:** pour les prestataires véhicules
-- **chat_messages:** filtrage du contenu
+- **users:** Prestataires individuels
+- **customers:** Clients
+- **companies:** Entreprises avec documents (NOUVEAU)
+- **company_services:** Services des entreprises (NOUVEAU)
+- **company_job_offers:** Offres d'emploi des entreprises (NOUVEAU)
+- **rentals:** Locations avec documents
+- **sales:** Ventes de propriétés avec documents
 
-### Endpoints API Clés
-- `POST/GET /api/property-sales` - CRUD ventes
-- `POST /api/property-sales/{id}/upload-document/{type}` - Upload documents vente
-- `POST /api/rentals/{id}/upload-document/{type}` - Upload documents location
-- `GET /api/admin/rentals` - Locations avec documents (admin)
-- `GET /api/property-sales` - Ventes avec documents
+### Endpoints API Clés - Entreprises (NOUVEAU)
+- `POST /api/auth/company/register` - Inscription entreprise
+- `POST /api/auth/company/login` - Connexion par RCCM
+- `GET /api/company/profile/me` - Profil entreprise
+- `POST /api/company/upload-document/{type}` - Upload documents
+- `POST /api/company/upload-logo` - Upload logo
+- `POST /api/company/services` - Créer un service
+- `POST /api/company/job-offers` - Créer une offre d'emploi
+- `GET /api/admin/companies` - Liste entreprises (admin)
+- `PUT /api/admin/companies/{id}/approve` - Approuver
+- `PUT /api/admin/companies/{id}/reject` - Rejeter
+- `DELETE /api/admin/companies/{id}` - Supprimer
 
 ---
 
 ## Changelog
 
+### 2026-01-11 - Espace Entreprise
+- ✅ Créé formulaire inscription entreprise en 2 étapes (CompanyAuth.js)
+- ✅ Ajouté connexion par numéro RCCM + mot de passe
+- ✅ Créé dashboard entreprise avec onglets Profil/Documents/Services/Offres (CompanyDashboard.js)
+- ✅ Upload documents : Licence, RCCM, NIF, Attestation fiscale, Logo, Additionnels
+- ✅ Admin Dashboard : nouvel onglet Entreprises
+- ✅ Admin peut voir tous les documents des entreprises
+- ✅ Admin peut approuver/rejeter/supprimer les entreprises
+- ✅ Entreprises ne peuvent publier services/offres que si approuvées
+- ✅ Stats admin mises à jour avec compteur entreprises
+- ✅ Tests : 24 tests backend + tests UI - 100% passés
+
 ### 2026-01-11 - Ventes et Documents
-- ✅ Implémenté formulaire de vente 2 étapes (PropertySaleForm.js)
-- ✅ Ajouté section documents au formulaire de location (RentalListingForm.js) 
-- ✅ MyPropertySales affiche liens vers documents
-- ✅ MyRentals affiche liens vers documents
-- ✅ Admin Dashboard: nouvel onglet Ventes avec détails et documents légaux
-- ✅ Admin peut voir tous les documents des locations et ventes
-- ✅ Tests backend (20 tests - 100% passés)
-- ✅ Tests frontend UI validés
+- ✅ Formulaire vente propriétés 2 étapes avec documents
+- ✅ Formulaire location avec section documents étape 2
+- ✅ Affichage documents dans MyPropertySales et MyRentals
+- ✅ Admin peut voir documents des ventes et locations
 
 ### Sessions Précédentes
 - Authentification et rôles complets
@@ -114,10 +132,13 @@ Construire une plateforme nommée "ServisPro" pour les prestataires de services 
 
 ### P1 - À Venir
 - [ ] WebSockets pour statut en ligne temps réel
+- [ ] Page publique des offres d'emploi avec filtres
+- [ ] Page publique des services d'entreprises
 
 ### P2 - Futur  
 - [ ] Flux OTP simulé
 - [ ] Intégration Mobile Money
+- [ ] Système de candidature aux offres d'emploi
 
 ### Refactoring Suggéré
 - [ ] Diviser Dashboard.js en composants par type de prestataire
