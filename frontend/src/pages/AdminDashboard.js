@@ -218,6 +218,8 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
       handleDeleteCustomer(deleteConfirm.id);
     } else if (deleteConfirm.type === 'rental') {
       handleDeleteRental(deleteConfirm.id);
+    } else if (deleteConfirm.type === 'company') {
+      handleDeleteCompany(deleteConfirm.id);
     }
   };
 
