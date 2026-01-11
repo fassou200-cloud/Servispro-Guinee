@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { 
   LogOut, User, Briefcase, ShieldCheck, Home, MessageCircle, 
   Bell, Clock, CheckCircle, XCircle, MapPin, Calendar, CheckCheck,
-  TrendingUp, AlertCircle, Star
+  TrendingUp, AlertCircle, Star, Truck, Car, Tractor
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
@@ -15,6 +15,8 @@ import ProfileForm from '@/components/ProfileForm';
 import RentalListingForm from '@/components/RentalListingForm';
 import MyRentals from '@/components/MyRentals';
 import RentalConversations from '@/components/RentalConversations';
+import VehicleListingForm from '@/components/VehicleListingForm';
+import MyVehicles from '@/components/MyVehicles';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -30,6 +32,9 @@ const translateProfession = (profession) => {
     'Menuisier': 'Menuisier',
     'AgentImmobilier': 'Agent Immobilier',
     'Soudeur': 'Soudeur',
+    'Camionneur': 'Camionneur (Location)',
+    'Tracteur': 'Tracteur (Location)',
+    'Voiture': 'Voiture (Location)',
     'Autres': 'Autres Métiers',
     'Electrician': 'Électricien',
     'Mechanic': 'Mécanicien',
