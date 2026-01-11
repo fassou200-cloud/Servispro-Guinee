@@ -73,11 +73,11 @@ function App() {
           {/* Company Routes */}
           <Route 
             path="/company/auth" 
-            element={isCompanyAuthenticated ? <Navigate to="/company/dashboard" /> : <CompanyAuth />} 
+            element={isCompanyAuthenticated ? <Navigate to="/company/dashboard" /> : <CompanyAuth setIsCompanyAuthenticated={setIsCompanyAuthenticated} />} 
           />
           <Route 
             path="/company/dashboard" 
-            element={isCompanyAuthenticated ? <CompanyDashboard /> : <Navigate to="/company/auth" />} 
+            element={isCompanyAuthenticated ? <CompanyDashboard setIsCompanyAuthenticated={setIsCompanyAuthenticated} /> : <Navigate to="/company/auth" />} 
           />
 
           {/* Admin Routes */}
