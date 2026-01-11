@@ -106,6 +106,16 @@ Construire une plateforme nommée "ServisPro" pour les prestataires de services 
 
 ## Changelog
 
+### 2026-01-11 - Entreprises Immobilières (NOUVEAU)
+- ✅ Ajouté possibilité pour entreprises du secteur "Immobilier" de poster des locations
+- ✅ Ajouté possibilité pour entreprises du secteur "Immobilier" de poster des ventes
+- ✅ Nouveaux endpoints : `/api/company/rentals`, `/api/company/property-sales`
+- ✅ Onglets conditionnels "Locations", "+ Location", "Ventes", "+ Vendre" dans CompanyDashboard
+- ✅ Formulaires création location en 2 étapes (Infos → Photos)
+- ✅ Formulaires création vente en 2 étapes (Infos → Photos)
+- ✅ Les entreprises non-immobilières ne voient pas ces onglets
+- ✅ Tests : 12 tests backend + tests UI - 100% passés
+
 ### 2026-01-11 - Espace Entreprise
 - ✅ Créé formulaire inscription entreprise en 2 étapes (CompanyAuth.js)
 - ✅ Ajouté connexion par numéro RCCM + mot de passe
