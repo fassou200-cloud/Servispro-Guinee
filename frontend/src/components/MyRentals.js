@@ -236,7 +236,10 @@ const MyRentals = () => {
         </h3>
       </div>
 
-      {rentals.map((rental) => (
+      {rentals.map((rental) => {
+        const docStatus = getDocumentStatus(rental);
+        
+        return (
         <Card key={rental.id} className="p-6" data-testid={`rental-card-${rental.id}`}>
           <div className="flex gap-6">
             {/* Photo */}
@@ -339,8 +342,8 @@ const MyRentals = () => {
 
               {/* Amenities */}
               {rental.amenities && rental.amenities.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {rental.amenities.map((amenity) => {
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {rental.amenities.slice(0, 6).map((amenity) => {
                     const Icon = AMENITY_ICONS[amenity] || CheckCircle;
                     const label = AMENITY_LABELS[amenity] || amenity;
                     return (
@@ -350,8 +353,71 @@ const MyRentals = () => {
                       </span>
                     );
                   })}
+                  {rental.amenities.length > 6 && (
+                    <span className="inline-flex items-center px-2 py-1 bg-muted rounded text-xs text-muted-foreground">
+                      +{rental.amenities.length - 6} autres
+                    </span>
+                  )}
                 </div>
               )}
+
+              {/* Documents Status */}
+              <div className="flex flex-wrap gap-2 mb-3">
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium ${docStatus.color}`}>
+                  {docStatus.status === 'complete' ? (
+                    <CheckCircle className="h-3.5 w-3.5" />
+                  ) : docStatus.status === 'partial' ? (
+                    <FileText className="h-3.5 w-3.5" />
+                  ) : (
+                    <XCircle className="h-3.5 w-3.5" />
+                  )}
+                  {docStatus.label}
+                </span>
+                
+                {/* Show individual documents if any exist */}
+                {rental.titre_foncier && (
+                  <a
+                    href={`${BACKEND_URL}${rental.titre_foncier}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
+                  >
+                    <FileText className="h-3 w-3" />
+                    Titre Foncier
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                )}
+                {rental.seller_id_document && (
+                  <a
+                    href={`${BACKEND_URL}${rental.seller_id_document}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium bg-green-50 text-green-600 hover:bg-green-100 transition-colors"
+                  >
+                    <Shield className="h-3 w-3" />
+                    Pièce ID
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                )}
+                {rental.registration_ministere && (
+                  <a
+                    href={`${BACKEND_URL}${rental.registration_ministere}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors"
+                  >
+                    <Home className="h-3 w-3" />
+                    Ministère
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                )}
+                {rental.documents_additionnels && rental.documents_additionnels.length > 0 && (
+                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-600">
+                    <FileText className="h-3 w-3" />
+                    +{rental.documents_additionnels.length} autre(s)
+                  </span>
+                )}
+              </div>
 
               {/* Availability Dates */}
               {(rental.available_from || rental.available_to) && (
@@ -367,7 +433,7 @@ const MyRentals = () => {
             </div>
           </div>
         </Card>
-      ))}
+      )})}
 
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
