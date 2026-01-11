@@ -290,6 +290,84 @@ class ChatMessage(BaseModel):
     message: str
     created_at: str
 
+# Vehicle Listing Models
+class VehicleType(str, Enum):
+    CAMION = "Camion"
+    TRACTEUR = "Tracteur"
+    VOITURE = "Voiture"
+
+class FuelType(str, Enum):
+    ESSENCE = "Essence"
+    DIESEL = "Diesel"
+    ELECTRIQUE = "Electrique"
+    HYBRIDE = "Hybride"
+
+class VehicleListingCreate(BaseModel):
+    vehicle_type: str  # Camion, Tracteur, Voiture
+    brand: str  # Marque
+    model: str  # Modèle
+    year: int  # Année
+    fuel_type: str  # Type de carburant
+    transmission: str = "Manuelle"  # Manuelle ou Automatique
+    seats: Optional[int] = None  # Nombre de places (pour voitures)
+    load_capacity: Optional[str] = None  # Capacité de charge (pour camions)
+    engine_power: Optional[str] = None  # Puissance moteur (pour tracteurs)
+    description: str
+    location: str
+    price_per_day: int  # Prix par jour en GNF
+    price_per_week: Optional[int] = None  # Prix par semaine
+    price_per_month: Optional[int] = None  # Prix par mois
+    is_available: bool = True
+    features: List[str] = []  # Climatisation, GPS, etc.
+
+class VehicleListing(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str
+    owner_id: str
+    owner_name: str
+    vehicle_type: str
+    brand: str
+    model: str
+    year: int
+    fuel_type: str
+    transmission: str
+    seats: Optional[int] = None
+    load_capacity: Optional[str] = None
+    engine_power: Optional[str] = None
+    description: str
+    location: str
+    price_per_day: int
+    price_per_week: Optional[int] = None
+    price_per_month: Optional[int] = None
+    is_available: bool
+    features: List[str] = []
+    photos: List[str] = []
+    created_at: str
+
+class VehicleBookingCreate(BaseModel):
+    vehicle_id: str
+    start_date: str
+    end_date: str
+    message: Optional[str] = None
+
+class VehicleBooking(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str
+    vehicle_id: str
+    vehicle_title: str
+    customer_id: str
+    customer_name: str
+    customer_phone: str
+    owner_id: str
+    start_date: str
+    end_date: str
+    total_price: int
+    status: str  # pending, accepted, rejected, completed
+    message: Optional[str] = None
+    created_at: str
+
 # Helper Functions
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
