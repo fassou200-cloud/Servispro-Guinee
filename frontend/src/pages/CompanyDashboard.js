@@ -709,6 +709,7 @@ const CompanyDashboard = () => {
             variant={activeTab === 'profile' ? 'default' : 'outline'} 
             onClick={() => setActiveTab('profile')} 
             className="gap-2"
+            data-testid="tab-profile"
           >
             <User className="h-4 w-4" /> Profil
           </Button>
@@ -716,13 +717,56 @@ const CompanyDashboard = () => {
             variant={activeTab === 'documents' ? 'default' : 'outline'} 
             onClick={() => setActiveTab('documents')} 
             className="gap-2"
+            data-testid="tab-documents"
           >
             <FileText className="h-4 w-4" /> Documents
           </Button>
+          
+          {/* Real Estate Company Tabs - Only for Immobilier sector */}
+          {isRealEstateSector && (
+            <>
+              <Button 
+                variant={activeTab === 'rentals' ? 'default' : 'outline'} 
+                onClick={() => setActiveTab('rentals')} 
+                className="gap-2 bg-emerald-50 border-emerald-200 hover:bg-emerald-100"
+                data-testid="tab-rentals"
+              >
+                <Home className="h-4 w-4 text-emerald-600" /> Locations ({rentals.length})
+              </Button>
+              <Button 
+                variant={activeTab === 'create-rental' ? 'default' : 'outline'} 
+                onClick={() => { setActiveTab('create-rental'); setRentalStep(1); }}
+                className="gap-2 bg-emerald-50 border-emerald-200 hover:bg-emerald-100"
+                disabled={!isApproved}
+                data-testid="tab-create-rental"
+              >
+                <Plus className="h-4 w-4 text-emerald-600" /> + Location
+              </Button>
+              <Button 
+                variant={activeTab === 'sales' ? 'default' : 'outline'} 
+                onClick={() => setActiveTab('sales')} 
+                className="gap-2 bg-orange-50 border-orange-200 hover:bg-orange-100"
+                data-testid="tab-sales"
+              >
+                <Building className="h-4 w-4 text-orange-600" /> Ventes ({sales.length})
+              </Button>
+              <Button 
+                variant={activeTab === 'create-sale' ? 'default' : 'outline'} 
+                onClick={() => { setActiveTab('create-sale'); setSaleStep(1); }}
+                className="gap-2 bg-orange-50 border-orange-200 hover:bg-orange-100"
+                disabled={!isApproved}
+                data-testid="tab-create-sale"
+              >
+                <Plus className="h-4 w-4 text-orange-600" /> + Vendre
+              </Button>
+            </>
+          )}
+          
           <Button 
             variant={activeTab === 'services' ? 'default' : 'outline'} 
             onClick={() => setActiveTab('services')} 
             className="gap-2"
+            data-testid="tab-services"
           >
             <Briefcase className="h-4 w-4" /> Services
           </Button>
@@ -730,7 +774,8 @@ const CompanyDashboard = () => {
             variant={activeTab === 'create-service' ? 'default' : 'outline'} 
             onClick={() => setActiveTab('create-service')} 
             className="gap-2"
-            disabled={company.verification_status !== 'approved'}
+            disabled={!isApproved}
+            data-testid="tab-create-service"
           >
             <Plus className="h-4 w-4" /> + Service
           </Button>
@@ -738,6 +783,7 @@ const CompanyDashboard = () => {
             variant={activeTab === 'jobs' ? 'default' : 'outline'} 
             onClick={() => setActiveTab('jobs')} 
             className="gap-2 bg-blue-50 border-blue-200 hover:bg-blue-100"
+            data-testid="tab-jobs"
           >
             <Users className="h-4 w-4 text-blue-600" /> Offres Emploi
           </Button>
@@ -745,7 +791,8 @@ const CompanyDashboard = () => {
             variant={activeTab === 'create-job' ? 'default' : 'outline'} 
             onClick={() => setActiveTab('create-job')} 
             className="gap-2 bg-blue-50 border-blue-200 hover:bg-blue-100"
-            disabled={company.verification_status !== 'approved'}
+            disabled={!isApproved}
+            data-testid="tab-create-job"
           >
             <Plus className="h-4 w-4 text-blue-600" /> + Offre
           </Button>
