@@ -2108,15 +2108,10 @@ class AdminLoginInput(BaseModel):
 class AdminRegisterInput(BaseModel):
     username: str = Field(..., min_length=3, max_length=50)
     password: str = Field(..., min_length=6)
-    invite_code: str
 
 @api_router.post("/admin/register")
 async def admin_register(input_data: AdminRegisterInput):
-    """Register a new admin with invitation code"""
-    # Verify invitation code
-    if input_data.invite_code != ADMIN_INVITE_CODE:
-        raise HTTPException(status_code=403, detail="Code d'invitation invalide")
-    
+    """Register a new admin"""
     # Check if username already exists
     existing_admin = await db.admins.find_one({'username': input_data.username})
     if existing_admin:
