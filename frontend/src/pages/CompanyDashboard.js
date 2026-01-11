@@ -13,7 +13,7 @@ import {
   Building2, LogOut, FileText, Upload, Briefcase, Users, MapPin,
   CheckCircle, XCircle, Clock, Phone, Mail, Globe, Plus, Home,
   Eye, AlertTriangle, Shield, User, ExternalLink, Trash2, Edit,
-  DollarSign, Calendar
+  DollarSign, Calendar, Building, Bath, Car, Trees, Waves, X
 } from 'lucide-react';
 import axios from 'axios';
 
