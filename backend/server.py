@@ -5,6 +5,7 @@ from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
+import re
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict, field_validator
 from typing import List, Optional
@@ -38,6 +39,38 @@ ADMIN_INVITE_CODE = "SERVISPRO2024"
 # File upload configuration
 UPLOAD_DIR = Path("/app/backend/uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
+
+# Contact filtering for messages - blocks phone numbers and emails
+def filter_contact_info(message: str) -> tuple[str, bool]:
+    """
+    Filter out phone numbers and email addresses from messages.
+    Returns tuple of (filtered_message, was_filtered)
+    """
+    original = message
+    
+    # Phone number patterns (international and local formats)
+    phone_patterns = [
+        r'\+?\d{1,3}[-.\s]?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}',  # International format
+        r'\b\d{3}[-.\s]?\d{3}[-.\s]?\d{3,4}\b',  # Local format 620 00 00 00
+        r'\b\d{9,12}\b',  # Continuous digits
+        r'\b(?:224|00224)\s*\d{9}\b',  # Guinea specific
+        r'\b6[0-9]{8}\b',  # Guinea mobile starting with 6
+    ]
+    
+    # Email pattern
+    email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+    
+    # Replace phone numbers
+    for pattern in phone_patterns:
+        message = re.sub(pattern, '[📵 Numéro masqué - Politique de confidentialité]', message, flags=re.IGNORECASE)
+    
+    # Replace emails
+    message = re.sub(email_pattern, '[📧 Email masqué - Politique de confidentialité]', message, flags=re.IGNORECASE)
+    
+    # Check if message was modified
+    was_filtered = message != original
+    
+    return message, was_filtered
 
 # Create the main app
 app = FastAPI()
