@@ -87,7 +87,10 @@ const CompanyAuth = () => {
   // Get cities based on region
   const getCities = () => {
     if (!formData.region) return [];
-    return getVillesByRegion(formData.region);
+    // Find the region by name to get its id
+    const regionObj = getRegions().find(r => r.name === formData.region);
+    if (!regionObj) return [];
+    return getVillesByRegion(regionObj.id);
   };
 
   const handleLogin = async (e) => {
