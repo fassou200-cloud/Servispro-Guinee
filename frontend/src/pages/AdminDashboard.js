@@ -76,14 +76,15 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
 
   const fetchData = async () => {
     try {
-      const [providersRes, customersRes, jobsRes, statsRes, rentalsRes, agentsRes, salesRes] = await Promise.all([
+      const [providersRes, customersRes, jobsRes, statsRes, rentalsRes, agentsRes, salesRes, companiesRes] = await Promise.all([
         axios.get(`${API}/admin/providers`),
         axios.get(`${API}/admin/customers`),
         axios.get(`${API}/admin/jobs`),
         axios.get(`${API}/admin/stats`),
         axios.get(`${API}/admin/rentals`),
         axios.get(`${API}/admin/agents-immobilier`),
-        axios.get(`${API}/property-sales?available_only=false`).catch(() => ({ data: [] }))
+        axios.get(`${API}/property-sales?available_only=false`).catch(() => ({ data: [] })),
+        axios.get(`${API}/admin/companies`).catch(() => ({ data: [] }))
       ]);
       setProviders(providersRes.data);
       setCustomers(customersRes.data);
@@ -92,6 +93,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
       setRentals(rentalsRes.data);
       setAgentsImmobilier(agentsRes.data);
       setPropertySales(salesRes.data);
+      setCompanies(companiesRes.data);
     } catch (error) {
       toast.error('Erreur lors du chargement des données');
     } finally {
