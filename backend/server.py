@@ -867,6 +867,290 @@ async def delete_rental_listing(rental_id: str, current_user: dict = Depends(get
     await db.rental_listings.delete_one({'id': rental_id})
     return {'message': 'Rental listing deleted successfully'}
 
+# Document Upload Routes for Rentals
+@api_router.post("/rentals/{rental_id}/upload-document/{doc_type}")
+async def upload_rental_document(
+    rental_id: str, 
+    doc_type: str,  # titre_foncier, registration_ministere, seller_id_document, documents_additionnels
+    file: UploadFile = File(...), 
+    current_user: dict = Depends(get_current_user)
+):
+    """Upload required documents for a rental listing"""
+    rental = await db.rental_listings.find_one({'id': rental_id})
+    if not rental:
+        raise HTTPException(status_code=404, detail="Annonce non trouvée")
+    
+    if rental['service_provider_id'] != current_user['id']:
+        raise HTTPException(status_code=403, detail="Non autorisé")
+    
+    valid_doc_types = ['titre_foncier', 'registration_ministere', 'seller_id_document', 'documents_additionnels']
+    if doc_type not in valid_doc_types:
+        raise HTTPException(status_code=400, detail=f"Type de document invalide. Types valides: {valid_doc_types}")
+    
+    # Generate unique filename
+    file_extension = file.filename.split('.')[-1] if '.' in file.filename else 'pdf'
+    filename = f"rental_doc_{rental_id}_{doc_type}_{uuid.uuid4()}.{file_extension}"
+    file_path = UPLOAD_DIR / filename
+    
+    # Save file
+    with file_path.open('wb') as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    doc_url = f"/api/uploads/{filename}"
+    
+    # Update based on document type
+    if doc_type == 'documents_additionnels':
+        await db.rental_listings.update_one(
+            {'id': rental_id},
+            {
+                '$push': {'documents_additionnels': doc_url},
+                '$set': {'updated_at': datetime.now(timezone.utc).isoformat()}
+            }
+        )
+    else:
+        await db.rental_listings.update_one(
+            {'id': rental_id},
+            {
+                '$set': {
+                    doc_type: doc_url,
+                    'updated_at': datetime.now(timezone.utc).isoformat()
+                }
+            }
+        )
+    
+    return {'document_url': doc_url, 'document_type': doc_type, 'message': 'Document uploadé avec succès'}
+
+# ==================== PROPERTY SALE ROUTES (Vente Immobilière) ====================
+
+@api_router.post("/property-sales")
+async def create_property_sale(sale_data: PropertySaleCreate, current_user: dict = Depends(get_current_user)):
+    """Create a new property sale listing (Agent Immobilier only)"""
+    if current_user.get('profession') != 'AgentImmobilier':
+        raise HTTPException(
+            status_code=403, 
+            detail="Seuls les agents immobiliers peuvent publier des ventes"
+        )
+    
+    sale_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+    
+    sale_doc = {
+        'id': sale_id,
+        'agent_id': current_user['id'],
+        'agent_name': f"{current_user['first_name']} {current_user['last_name']}",
+        'agent_phone': current_user.get('phone_number', ''),
+        'property_type': sale_data.property_type,
+        'title': sale_data.title,
+        'description': sale_data.description,
+        'location': sale_data.location,
+        'sale_price': sale_data.sale_price,
+        'surface_area': sale_data.surface_area,
+        'num_rooms': sale_data.num_rooms,
+        'num_bathrooms': sale_data.num_bathrooms,
+        'has_garage': sale_data.has_garage,
+        'has_garden': sale_data.has_garden,
+        'has_pool': sale_data.has_pool,
+        'year_built': sale_data.year_built,
+        'features': sale_data.features,
+        'is_negotiable': sale_data.is_negotiable,
+        'is_available': True,
+        'photos': [],
+        'titre_foncier': None,
+        'registration_ministere': None,
+        'seller_id_document': None,
+        'documents_additionnels': [],
+        'documents_verified': False,
+        'verification_date': None,
+        'created_at': now,
+        'updated_at': now
+    }
+    
+    await db.property_sales.insert_one(sale_doc)
+    return {k: v for k, v in sale_doc.items() if k != '_id'}
+
+@api_router.get("/property-sales")
+async def get_all_property_sales(
+    property_type: Optional[str] = None,
+    location: Optional[str] = None,
+    min_price: Optional[int] = None,
+    max_price: Optional[int] = None,
+    available_only: bool = True
+):
+    """Get all property sales with optional filters"""
+    query = {}
+    
+    if property_type:
+        query['property_type'] = property_type
+    if location:
+        query['location'] = {'$regex': location, '$options': 'i'}
+    if available_only:
+        query['is_available'] = True
+    if min_price:
+        query['sale_price'] = {'$gte': min_price}
+    if max_price:
+        if 'sale_price' in query:
+            query['sale_price']['$lte'] = max_price
+        else:
+            query['sale_price'] = {'$lte': max_price}
+    
+    sales = await db.property_sales.find(query, {'_id': 0}).sort('created_at', -1).to_list(100)
+    return sales
+
+@api_router.get("/property-sales/my-listings")
+async def get_my_property_sales(current_user: dict = Depends(get_current_user)):
+    """Get all property sales for the current agent"""
+    sales = await db.property_sales.find(
+        {'agent_id': current_user['id']},
+        {'_id': 0}
+    ).sort('created_at', -1).to_list(100)
+    return sales
+
+@api_router.get("/property-sales/{sale_id}")
+async def get_property_sale_by_id(sale_id: str):
+    """Get a specific property sale by ID"""
+    sale = await db.property_sales.find_one({'id': sale_id}, {'_id': 0})
+    if not sale:
+        raise HTTPException(status_code=404, detail="Propriété non trouvée")
+    return sale
+
+@api_router.put("/property-sales/{sale_id}")
+async def update_property_sale(sale_id: str, sale_data: PropertySaleCreate, current_user: dict = Depends(get_current_user)):
+    """Update a property sale listing"""
+    sale = await db.property_sales.find_one({'id': sale_id}, {'_id': 0})
+    if not sale:
+        raise HTTPException(status_code=404, detail="Propriété non trouvée")
+    
+    if sale['agent_id'] != current_user['id']:
+        raise HTTPException(status_code=403, detail="Non autorisé")
+    
+    update_data = sale_data.model_dump(exclude_unset=True)
+    update_data['updated_at'] = datetime.now(timezone.utc).isoformat()
+    
+    await db.property_sales.update_one({'id': sale_id}, {'$set': update_data})
+    
+    updated = await db.property_sales.find_one({'id': sale_id}, {'_id': 0})
+    return updated
+
+@api_router.delete("/property-sales/{sale_id}")
+async def delete_property_sale(sale_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete a property sale listing"""
+    sale = await db.property_sales.find_one({'id': sale_id}, {'_id': 0})
+    if not sale:
+        raise HTTPException(status_code=404, detail="Propriété non trouvée")
+    
+    if sale['agent_id'] != current_user['id']:
+        raise HTTPException(status_code=403, detail="Non autorisé")
+    
+    await db.property_sales.delete_one({'id': sale_id})
+    return {"message": "Propriété supprimée avec succès"}
+
+@api_router.put("/property-sales/{sale_id}/availability")
+async def toggle_property_sale_availability(sale_id: str, current_user: dict = Depends(get_current_user)):
+    """Toggle property sale availability status"""
+    sale = await db.property_sales.find_one({'id': sale_id}, {'_id': 0})
+    if not sale:
+        raise HTTPException(status_code=404, detail="Propriété non trouvée")
+    
+    if sale['agent_id'] != current_user['id']:
+        raise HTTPException(status_code=403, detail="Non autorisé")
+    
+    new_status = not sale.get('is_available', True)
+    await db.property_sales.update_one(
+        {'id': sale_id},
+        {'$set': {'is_available': new_status, 'updated_at': datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    return {"is_available": new_status}
+
+@api_router.post("/property-sales/{sale_id}/upload-photo")
+async def upload_property_sale_photo(sale_id: str, file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):
+    """Upload a photo for a property sale"""
+    sale = await db.property_sales.find_one({'id': sale_id}, {'_id': 0})
+    if not sale:
+        raise HTTPException(status_code=404, detail="Propriété non trouvée")
+    
+    if sale['agent_id'] != current_user['id']:
+        raise HTTPException(status_code=403, detail="Non autorisé")
+    
+    file_extension = file.filename.split('.')[-1] if '.' in file.filename else 'jpg'
+    filename = f"sale_{sale_id}_{uuid.uuid4()}.{file_extension}"
+    file_path = UPLOAD_DIR / filename
+    
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    photo_url = f"/api/uploads/{filename}"
+    await db.property_sales.update_one(
+        {'id': sale_id},
+        {
+            '$push': {'photos': photo_url},
+            '$set': {'updated_at': datetime.now(timezone.utc).isoformat()}
+        }
+    )
+    
+    return {"photo_url": photo_url, "message": "Photo uploadée avec succès"}
+
+@api_router.post("/property-sales/{sale_id}/upload-document/{doc_type}")
+async def upload_property_sale_document(
+    sale_id: str, 
+    doc_type: str,
+    file: UploadFile = File(...), 
+    current_user: dict = Depends(get_current_user)
+):
+    """Upload required documents for a property sale (titre_foncier, registration_ministere, seller_id_document, documents_additionnels)"""
+    sale = await db.property_sales.find_one({'id': sale_id})
+    if not sale:
+        raise HTTPException(status_code=404, detail="Propriété non trouvée")
+    
+    if sale['agent_id'] != current_user['id']:
+        raise HTTPException(status_code=403, detail="Non autorisé")
+    
+    valid_doc_types = ['titre_foncier', 'registration_ministere', 'seller_id_document', 'documents_additionnels']
+    if doc_type not in valid_doc_types:
+        raise HTTPException(status_code=400, detail=f"Type de document invalide. Types valides: {valid_doc_types}")
+    
+    file_extension = file.filename.split('.')[-1] if '.' in file.filename else 'pdf'
+    filename = f"sale_doc_{sale_id}_{doc_type}_{uuid.uuid4()}.{file_extension}"
+    file_path = UPLOAD_DIR / filename
+    
+    with file_path.open('wb') as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    doc_url = f"/api/uploads/{filename}"
+    
+    if doc_type == 'documents_additionnels':
+        await db.property_sales.update_one(
+            {'id': sale_id},
+            {
+                '$push': {'documents_additionnels': doc_url},
+                '$set': {'updated_at': datetime.now(timezone.utc).isoformat()}
+            }
+        )
+    else:
+        await db.property_sales.update_one(
+            {'id': sale_id},
+            {
+                '$set': {
+                    doc_type: doc_url,
+                    'updated_at': datetime.now(timezone.utc).isoformat()
+                }
+            }
+        )
+    
+    doc_labels = {
+        'titre_foncier': 'Titre Foncier',
+        'registration_ministere': 'Enregistrement Ministère de l\'Habitat',
+        'seller_id_document': 'Pièce d\'Identité du Vendeur',
+        'documents_additionnels': 'Document Additionnel'
+    }
+    
+    return {
+        'document_url': doc_url, 
+        'document_type': doc_type, 
+        'document_label': doc_labels.get(doc_type, doc_type),
+        'message': 'Document uploadé avec succès'
+    }
+
 # Review Routes
 @api_router.post("/reviews", response_model=Review)
 async def create_review(review_data: ReviewCreate):
