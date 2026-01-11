@@ -87,8 +87,7 @@ const CompanyAuth = () => {
   // Get cities based on region
   const getCities = () => {
     if (!formData.region) return [];
-    const region = guineaLocations.find(r => r.name === formData.region);
-    return region ? region.cities.map(c => c.name) : [];
+    return getVillesByRegion(formData.region);
   };
 
   const handleLogin = async (e) => {
