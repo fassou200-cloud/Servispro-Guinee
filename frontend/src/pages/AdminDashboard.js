@@ -168,6 +168,45 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
     }
   };
 
+  // Company management functions
+  const handleApproveCompany = async (companyId) => {
+    try {
+      await axios.put(`${API}/admin/companies/${companyId}/approve`);
+      toast.success('Entreprise approuvée avec succès');
+      fetchData();
+      if (selectedCompany?.id === companyId) {
+        setSelectedCompany({ ...selectedCompany, verification_status: 'approved' });
+      }
+    } catch (error) {
+      toast.error('Erreur lors de approbation');
+    }
+  };
+
+  const handleRejectCompany = async (companyId) => {
+    try {
+      await axios.put(`${API}/admin/companies/${companyId}/reject`);
+      toast.success('Entreprise rejetée');
+      fetchData();
+      if (selectedCompany?.id === companyId) {
+        setSelectedCompany({ ...selectedCompany, verification_status: 'rejected' });
+      }
+    } catch (error) {
+      toast.error('Erreur lors du rejet');
+    }
+  };
+
+  const handleDeleteCompany = async (companyId) => {
+    try {
+      await axios.delete(`${API}/admin/companies/${companyId}`);
+      toast.success('Entreprise supprimée avec succès');
+      fetchData();
+      setSelectedCompany(null);
+      setDeleteConfirm({ show: false, type: null, id: null, name: '' });
+    } catch (error) {
+      toast.error('Erreur lors de la suppression');
+    }
+  };
+
   const confirmDelete = (type, id, name) => {
     setDeleteConfirm({ show: true, type, id, name });
   };
