@@ -78,6 +78,53 @@ const CompanyDashboard = () => {
     deadline: ''
   });
 
+  // Rental form state (for real estate companies)
+  const [rentalForm, setRentalForm] = useState({
+    property_type: 'Apartment',
+    title: '',
+    description: '',
+    location: '',
+    rental_price: '',
+    rental_type: 'long_term',
+    price_per_night: '',
+    min_nights: '1',
+    max_guests: '',
+    amenities: [],
+    is_available: true
+  });
+  const [rentalStep, setRentalStep] = useState(1);
+  const [createdRentalId, setCreatedRentalId] = useState(null);
+  const [rentalPhotos, setRentalPhotos] = useState([]);
+  const [rentalPhotoPreviewUrls, setRentalPhotoPreviewUrls] = useState([]);
+  const [uploadingRentalFiles, setUploadingRentalFiles] = useState(false);
+
+  // Sale form state (for real estate companies)
+  const [saleForm, setSaleForm] = useState({
+    property_type: 'Maison',
+    title: '',
+    description: '',
+    location: '',
+    sale_price: '',
+    surface_area: '',
+    num_rooms: '',
+    num_bathrooms: '',
+    has_garage: false,
+    has_garden: false,
+    has_pool: false,
+    year_built: '',
+    features: [],
+    is_negotiable: true
+  });
+  const [saleStep, setSaleStep] = useState(1);
+  const [createdSaleId, setCreatedSaleId] = useState(null);
+  const [salePhotos, setSalePhotos] = useState([]);
+  const [salePhotoPreviewUrls, setSalePhotoPreviewUrls] = useState([]);
+  const [uploadingSaleFiles, setUploadingSaleFiles] = useState(false);
+
+  // Check if company is in real estate sector
+  const isRealEstateSector = company?.sector === 'Immobilier';
+  const isApproved = company?.verification_status === 'approved';
+
   // Fetch company profile
   useEffect(() => {
     const fetchCompanyProfile = async () => {
