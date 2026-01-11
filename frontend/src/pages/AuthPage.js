@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,10 +7,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card } from '@/components/ui/card';
 import { 
   ArrowLeft, User, Phone, Lock, Eye, EyeOff, Briefcase, Shield, 
-  CheckCircle, Sparkles, Wrench, Truck, Home, Zap, Settings
+  Sparkles, Wrench, Truck, Home, Zap, Settings, MapPin
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
+import { getRegions, getVillesByRegion, getCommunesByVille, getQuartiersByCommune } from '@/data/guineaLocations';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -25,8 +26,44 @@ const AuthPage = ({ setIsAuthenticated }) => {
     last_name: '',
     phone_number: '',
     password: '',
-    profession: ''
+    profession: '',
+    region: '',
+    ville: '',
+    commune: '',
+    quartier: ''
   });
+
+  // Location options based on selections
+  const [villes, setVilles] = useState([]);
+  const [communes, setCommunes] = useState([]);
+  const [quartiers, setQuartiers] = useState([]);
+
+  // Update villes when region changes
+  useEffect(() => {
+    if (formData.region) {
+      setVilles(getVillesByRegion(formData.region));
+      setFormData(prev => ({ ...prev, ville: '', commune: '', quartier: '' }));
+      setCommunes([]);
+      setQuartiers([]);
+    }
+  }, [formData.region]);
+
+  // Update communes when ville changes
+  useEffect(() => {
+    if (formData.region && formData.ville) {
+      setCommunes(getCommunesByVille(formData.region, formData.ville));
+      setFormData(prev => ({ ...prev, commune: '', quartier: '' }));
+      setQuartiers([]);
+    }
+  }, [formData.ville]);
+
+  // Update quartiers when commune changes
+  useEffect(() => {
+    if (formData.region && formData.ville && formData.commune) {
+      setQuartiers(getQuartiersByCommune(formData.region, formData.ville, formData.commune));
+      setFormData(prev => ({ ...prev, quartier: '' }));
+    }
+  }, [formData.commune]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,9 +71,37 @@ const AuthPage = ({ setIsAuthenticated }) => {
 
     try {
       const endpoint = isLogin ? `${API}/auth/login` : `${API}/auth/register`;
+      
+      // Build location string for registration
+      const locationParts = [];
+      if (formData.quartier) locationParts.push(formData.quartier);
+      if (formData.commune) {
+        const communeObj = communes.find(c => c.id === formData.commune);
+        if (communeObj) locationParts.push(communeObj.name);
+      }
+      if (formData.ville) {
+        const villeObj = villes.find(v => v.id === formData.ville);
+        if (villeObj) locationParts.push(villeObj.name);
+      }
+      if (formData.region) {
+        const regionObj = getRegions().find(r => r.id === formData.region);
+        if (regionObj) locationParts.push(regionObj.name);
+      }
+      
       const payload = isLogin 
         ? { phone_number: formData.phone_number, password: formData.password, user_type: 'provider' }
-        : formData;
+        : {
+            first_name: formData.first_name,
+            last_name: formData.last_name,
+            phone_number: formData.phone_number,
+            password: formData.password,
+            profession: formData.profession,
+            location: locationParts.join(', '),
+            region: formData.region,
+            ville: formData.ville,
+            commune: formData.commune,
+            quartier: formData.quartier
+          };
 
       const response = await axios.post(endpoint, payload);
       
@@ -73,6 +138,8 @@ const AuthPage = ({ setIsAuthenticated }) => {
     { icon: Shield, text: 'Profil professionnel vérifié' },
     { icon: Sparkles, text: 'Augmentez votre visibilité' }
   ];
+
+  const regions = getRegions();
 
   return (
     <div className="min-h-screen flex">
@@ -136,8 +203,8 @@ const AuthPage = ({ setIsAuthenticated }) => {
       </div>
 
       {/* Right Side - Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 bg-slate-50">
-        <div className="w-full max-w-md">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 bg-slate-50 overflow-y-auto">
+        <div className="w-full max-w-md my-8">
           <Button
             variant="ghost"
             onClick={() => navigate('/')}
@@ -193,13 +260,13 @@ const AuthPage = ({ setIsAuthenticated }) => {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-4">
               {!isLogin && (
                 <>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="first_name" className="text-slate-700 font-medium text-sm">
-                        Prénom
+                        Prénom *
                       </Label>
                       <div className="relative">
                         <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
@@ -218,7 +285,7 @@ const AuthPage = ({ setIsAuthenticated }) => {
 
                     <div className="space-y-2">
                       <Label htmlFor="last_name" className="text-slate-700 font-medium text-sm">
-                        Nom
+                        Nom *
                       </Label>
                       <div className="relative">
                         <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
@@ -238,7 +305,7 @@ const AuthPage = ({ setIsAuthenticated }) => {
 
                   <div className="space-y-2">
                     <Label htmlFor="profession" className="text-slate-700 font-medium text-sm">
-                      Profession
+                      Profession *
                     </Label>
                     <Select
                       value={formData.profession}
@@ -266,12 +333,108 @@ const AuthPage = ({ setIsAuthenticated }) => {
                       </SelectContent>
                     </Select>
                   </div>
+
+                  {/* Location Section */}
+                  <div className="space-y-3 p-4 bg-slate-50 rounded-xl">
+                    <div className="flex items-center gap-2 text-slate-700 font-medium text-sm mb-2">
+                      <MapPin className="h-4 w-4 text-orange-500" />
+                      Localisation
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                      {/* Region */}
+                      <div className="space-y-1">
+                        <Label className="text-xs text-slate-500">Région *</Label>
+                        <Select
+                          value={formData.region}
+                          onValueChange={(value) => setFormData({ ...formData, region: value })}
+                          required={!isLogin}
+                        >
+                          <SelectTrigger className="h-10 rounded-lg border-slate-200 text-sm">
+                            <SelectValue placeholder="Région" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {regions.map((region) => (
+                              <SelectItem key={region.id} value={region.id}>
+                                {region.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Ville */}
+                      <div className="space-y-1">
+                        <Label className="text-xs text-slate-500">Ville *</Label>
+                        <Select
+                          value={formData.ville}
+                          onValueChange={(value) => setFormData({ ...formData, ville: value })}
+                          disabled={!formData.region}
+                          required={!isLogin}
+                        >
+                          <SelectTrigger className="h-10 rounded-lg border-slate-200 text-sm">
+                            <SelectValue placeholder="Ville" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {villes.map((ville) => (
+                              <SelectItem key={ville.id} value={ville.id}>
+                                {ville.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Commune */}
+                      <div className="space-y-1">
+                        <Label className="text-xs text-slate-500">Commune *</Label>
+                        <Select
+                          value={formData.commune}
+                          onValueChange={(value) => setFormData({ ...formData, commune: value })}
+                          disabled={!formData.ville}
+                          required={!isLogin}
+                        >
+                          <SelectTrigger className="h-10 rounded-lg border-slate-200 text-sm">
+                            <SelectValue placeholder="Commune" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {communes.map((commune) => (
+                              <SelectItem key={commune.id} value={commune.id}>
+                                {commune.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Quartier */}
+                      <div className="space-y-1">
+                        <Label className="text-xs text-slate-500">Quartier</Label>
+                        <Select
+                          value={formData.quartier}
+                          onValueChange={(value) => setFormData({ ...formData, quartier: value })}
+                          disabled={!formData.commune}
+                        >
+                          <SelectTrigger className="h-10 rounded-lg border-slate-200 text-sm">
+                            <SelectValue placeholder="Quartier" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {quartiers.map((quartier) => (
+                              <SelectItem key={quartier} value={quartier}>
+                                {quartier}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
                 </>
               )}
 
               <div className="space-y-2">
                 <Label htmlFor="phone_number" className="text-slate-700 font-medium text-sm">
-                  Numéro de Téléphone
+                  Numéro de Téléphone *
                 </Label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
@@ -290,7 +453,7 @@ const AuthPage = ({ setIsAuthenticated }) => {
 
               <div className="space-y-2">
                 <Label htmlFor="password" className="text-slate-700 font-medium text-sm">
-                  Mot de Passe
+                  Mot de Passe *
                 </Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
@@ -340,7 +503,7 @@ const AuthPage = ({ setIsAuthenticated }) => {
                   data-testid="auth-toggle-button"
                   onClick={() => {
                     setIsLogin(!isLogin);
-                    setFormData({ first_name: '', last_name: '', phone_number: '', password: '', profession: '' });
+                    setFormData({ first_name: '', last_name: '', phone_number: '', password: '', profession: '', region: '', ville: '', commune: '', quartier: '' });
                   }}
                   className="ml-1 text-orange-600 hover:text-orange-700 font-medium"
                 >
