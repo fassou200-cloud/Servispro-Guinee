@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   Shield, LogOut, Users, Briefcase, CheckCircle, XCircle, 
   Clock, Eye, Home, Building, UserCheck, UserX, AlertCircle, Trash2, UserCircle,
-  MapPin, Calendar, Moon, DollarSign, Star, MessageCircle
+  MapPin, Calendar, Moon, DollarSign, Star, MessageCircle, FileText, ExternalLink
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
