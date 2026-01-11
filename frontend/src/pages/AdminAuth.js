@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { 
   Shield, ArrowLeft, UserPlus, LogIn, User, Lock, Eye, EyeOff, 
-  KeyRound, Settings, BarChart3, Users, CheckCircle
+  Settings, BarChart3, Users, CheckCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
