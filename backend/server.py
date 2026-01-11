@@ -818,8 +818,8 @@ async def send_chat_message(rental_id: str, message_data: ChatMessageCreate):
     if not rental:
         raise HTTPException(status_code=404, detail="Annonce non trouvée")
     
-    # Get sender info from request (customer or owner)
-    sender_id = message_data.message  # We'll pass sender info in the message for now
+    # Filter contact information from message
+    filtered_message, was_filtered = filter_contact_info(message_data.message)
     
     message_id = str(uuid.uuid4())
     message_doc = {
@@ -828,12 +828,14 @@ async def send_chat_message(rental_id: str, message_data: ChatMessageCreate):
         'sender_id': 'customer',
         'sender_name': 'Client',
         'sender_type': 'customer',
-        'message': message_data.message,
+        'message': filtered_message,
+        'original_message': message_data.message if was_filtered else None,  # Store original for admin
+        'was_filtered': was_filtered,
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     
     await db.chat_messages.insert_one(message_doc)
-    return {k: v for k, v in message_doc.items() if k != '_id'}
+    return {k: v for k, v in message_doc.items() if k != '_id' and k != 'original_message'}
 
 @api_router.post("/chat/rental/{rental_id}/message/customer")
 async def send_customer_message(rental_id: str, message_data: ChatMessageCreate):
@@ -842,9 +844,12 @@ async def send_customer_message(rental_id: str, message_data: ChatMessageCreate)
     if not rental:
         raise HTTPException(status_code=404, detail="Annonce non trouvée")
     
+    # Filter contact information from message
+    filtered_message, was_filtered = filter_contact_info(message_data.message)
+    
     # Get customer info if logged in
-    customer_name = "Client Anonyme"
-    customer_id = "anonymous"
+    customer_name = message_data.sender_name if hasattr(message_data, 'sender_name') and message_data.sender_name else "Client"
+    customer_id = "customer"
     
     message_id = str(uuid.uuid4())
     message_doc = {
@@ -853,12 +858,14 @@ async def send_customer_message(rental_id: str, message_data: ChatMessageCreate)
         'sender_id': customer_id,
         'sender_name': customer_name,
         'sender_type': 'customer',
-        'message': message_data.message,
+        'message': filtered_message,
+        'original_message': message_data.message if was_filtered else None,  # Store original for admin
+        'was_filtered': was_filtered,
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     
     await db.chat_messages.insert_one(message_doc)
-    return {k: v for k, v in message_doc.items() if k != '_id'}
+    return {k: v for k, v in message_doc.items() if k != '_id' and k != 'original_message'}
 
 @api_router.post("/chat/rental/{rental_id}/message/owner")
 async def send_owner_message(rental_id: str, message_data: ChatMessageCreate, current_user: dict = Depends(get_current_user)):
@@ -870,6 +877,9 @@ async def send_owner_message(rental_id: str, message_data: ChatMessageCreate, cu
     if rental.get('service_provider_id') != current_user['id']:
         raise HTTPException(status_code=403, detail="Non autorisé")
     
+    # Filter contact information from message
+    filtered_message, was_filtered = filter_contact_info(message_data.message)
+    
     message_id = str(uuid.uuid4())
     message_doc = {
         'id': message_id,
@@ -877,12 +887,14 @@ async def send_owner_message(rental_id: str, message_data: ChatMessageCreate, cu
         'sender_id': current_user['id'],
         'sender_name': f"{current_user['first_name']} {current_user['last_name']}",
         'sender_type': 'owner',
-        'message': message_data.message,
+        'message': filtered_message,
+        'original_message': message_data.message if was_filtered else None,  # Store original for admin
+        'was_filtered': was_filtered,
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     
     await db.chat_messages.insert_one(message_doc)
-    return {k: v for k, v in message_doc.items() if k != '_id'}
+    return {k: v for k, v in message_doc.items() if k != '_id' and k != 'original_message'}
 
 @api_router.get("/chat/rental/{rental_id}/messages")
 async def get_rental_chat_messages(rental_id: str):
