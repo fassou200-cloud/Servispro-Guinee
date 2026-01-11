@@ -235,6 +235,7 @@ const CompanyAuth = ({ setIsCompanyAuthenticated }) => {
       }
 
       toast.success('Documents téléchargés avec succès !');
+      if (setIsCompanyAuthenticated) setIsCompanyAuthenticated(true);
       navigate('/company/dashboard');
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Échec du téléchargement');
@@ -245,6 +246,7 @@ const CompanyAuth = ({ setIsCompanyAuthenticated }) => {
 
   const handleSkipDocuments = () => {
     toast.info('Vous pourrez ajouter vos documents plus tard dans votre profil.');
+    if (setIsCompanyAuthenticated) setIsCompanyAuthenticated(true);
     navigate('/company/dashboard');
   };
 
