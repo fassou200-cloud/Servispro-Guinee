@@ -189,6 +189,168 @@ const RentalListingForm = ({ onSuccess }) => {
     setPhotoPreviewUrls(newPreviews);
   };
 
+  const handleDocumentSelect = (docType, e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Le fichier est trop grand (max 10MB)');
+      return;
+    }
+
+    if (docType === 'documents_additionnels') {
+      setDocuments(prev => ({
+        ...prev,
+        documents_additionnels: [...prev.documents_additionnels, file]
+      }));
+      setDocumentNames(prev => ({
+        ...prev,
+        documents_additionnels: [...prev.documents_additionnels, file.name]
+      }));
+    } else {
+      setDocuments(prev => ({ ...prev, [docType]: file }));
+      setDocumentNames(prev => ({ ...prev, [docType]: file.name }));
+    }
+    
+    toast.success('Document ajouté');
+  };
+
+  const removeDocument = (docType, index = null) => {
+    if (docType === 'documents_additionnels' && index !== null) {
+      setDocuments(prev => ({
+        ...prev,
+        documents_additionnels: prev.documents_additionnels.filter((_, i) => i !== index)
+      }));
+      setDocumentNames(prev => ({
+        ...prev,
+        documents_additionnels: prev.documents_additionnels.filter((_, i) => i !== index)
+      }));
+    } else {
+      setDocuments(prev => ({ ...prev, [docType]: null }));
+      setDocumentNames(prev => ({ ...prev, [docType]: '' }));
+    }
+  };
+
+  const handleSubmitStep1 = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+
+    try {
+      const token = localStorage.getItem('token');
+      const payload = {
+        ...formData,
+        rental_price: parseFloat(formData.rental_price) || 0,
+        price_per_night: formData.rental_type === 'short_term' ? parseFloat(formData.price_per_night) : null,
+        min_nights: formData.rental_type === 'short_term' ? parseInt(formData.min_nights) : 1,
+        max_guests: formData.max_guests ? parseInt(formData.max_guests) : null,
+        available_from: formData.available_from || null,
+        available_to: formData.available_to || null
+      };
+
+      const response = await axios.post(`${API}/rentals`, payload, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setCreatedRentalId(response.data.id);
+      toast.success('Annonce créée ! Ajoutez maintenant les photos et documents.');
+      setCurrentStep(2);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Échec de la création');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSubmitStep2 = async () => {
+    if (!createdRentalId) return;
+    
+    setSaving(true);
+    const token = localStorage.getItem('token');
+
+    try {
+      // Upload photos
+      for (const photo of selectedPhotos) {
+        const photoFormData = new FormData();
+        photoFormData.append('file', photo);
+
+        await axios.post(`${API}/rentals/${createdRentalId}/upload-photo`, photoFormData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+      }
+
+      // Upload documents
+      for (const [docType, file] of Object.entries(documents)) {
+        if (docType === 'documents_additionnels') {
+          for (const additionalFile of file) {
+            const docFormData = new FormData();
+            docFormData.append('file', additionalFile);
+            
+            await axios.post(`${API}/rentals/${createdRentalId}/upload-document/${docType}`, docFormData, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'multipart/form-data'
+              }
+            });
+          }
+        } else if (file) {
+          const docFormData = new FormData();
+          docFormData.append('file', file);
+          
+          await axios.post(`${API}/rentals/${createdRentalId}/upload-document/${docType}`, docFormData, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'multipart/form-data'
+            }
+          });
+        }
+      }
+
+      toast.success('Annonce publiée avec succès !');
+      
+      // Reset form
+      setFormData({
+        property_type: 'Apartment',
+        title: '',
+        description: '',
+        location: '',
+        rental_price: '',
+        rental_type: 'long_term',
+        price_per_night: '',
+        min_nights: '1',
+        max_guests: '',
+        amenities: [],
+        is_available: true,
+        available_from: '',
+        available_to: ''
+      });
+      setSelectedPhotos([]);
+      setPhotoPreviewUrls([]);
+      setDocuments({
+        titre_foncier: null,
+        registration_ministere: null,
+        seller_id_document: null,
+        documents_additionnels: []
+      });
+      setDocumentNames({
+        titre_foncier: '',
+        registration_ministere: '',
+        seller_id_document: '',
+        documents_additionnels: []
+      });
+      setCurrentStep(1);
+      setCreatedRentalId(null);
+      
+      if (onSuccess) onSuccess();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Échec de l\'upload des fichiers');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
