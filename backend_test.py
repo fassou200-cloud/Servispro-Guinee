@@ -1354,6 +1354,24 @@ class ServisProAPITester:
         print("🚀 Starting ServisPro API Tests")
         print("=" * 50)
         
+        # ==================== MESSAGE FILTERING & NEW CATEGORIES TESTS ====================
+        print("\n📱 Testing Message Filtering & New Vehicle Categories...")
+        
+        # Test message filtering features
+        self.test_message_filtering_phone_number()
+        self.test_message_filtering_email()
+        self.test_message_filtering_normal_message()
+        self.test_message_filtering_mixed_content()
+        
+        # Test new vehicle categories
+        self.test_new_vehicle_categories()
+        
+        # Test admin access to original messages
+        self.test_admin_access_original_messages()
+        
+        # ==================== EXISTING TESTS ====================
+        print("\n🔧 Running Existing API Tests...")
+        
         # Test provider registration and login
         provider_reg_success, provider_phone = self.test_provider_registration()
         if not provider_reg_success:
@@ -1382,7 +1400,7 @@ class ServisProAPITester:
         rental_success, rental_id = self.test_create_rental_listing()
         self.test_get_all_rentals()
         
-        # ==================== NEW SHORT-TERM RENTAL TESTS ====================
+        # ==================== SHORT-TERM RENTAL TESTS ====================
         print("\n🏠 Testing Short-Term Rental Features...")
         
         # Test specific provider login for short-term rental testing
@@ -1437,8 +1455,8 @@ class ServisProAPITester:
             # Test admin statistics
             self.test_admin_get_stats()
             
-            # ==================== NEW ADMIN RENTAL & AGENT IMMOBILIER TESTS ====================
-            print("\n🏠 Testing New Admin Rental & Agent Immobilier Management...")
+            # ==================== ADMIN RENTAL & AGENT IMMOBILIER TESTS ====================
+            print("\n🏠 Testing Admin Rental & Agent Immobilier Management...")
             
             # Test updated admin stats with rentals object and agent_immobilier count
             self.test_admin_get_updated_stats()
