@@ -1,12 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, User, Phone, Lock, Eye, EyeOff, Sparkles, Shield, CheckCircle } from 'lucide-react';
+import { ArrowLeft, User, Phone, Lock, Eye, EyeOff, Sparkles, Shield, CheckCircle, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { getRegions, getVillesByRegion, getCommunesByVille, getQuartiersByCommune } from '@/data/guineaLocations';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -20,8 +22,44 @@ const CustomerAuth = ({ setIsCustomerAuthenticated }) => {
     first_name: '',
     last_name: '',
     phone_number: '',
-    password: ''
+    password: '',
+    region: '',
+    ville: '',
+    commune: '',
+    quartier: ''
   });
+
+  // Location options based on selections
+  const [villes, setVilles] = useState([]);
+  const [communes, setCommunes] = useState([]);
+  const [quartiers, setQuartiers] = useState([]);
+
+  // Update villes when region changes
+  useEffect(() => {
+    if (formData.region) {
+      setVilles(getVillesByRegion(formData.region));
+      setFormData(prev => ({ ...prev, ville: '', commune: '', quartier: '' }));
+      setCommunes([]);
+      setQuartiers([]);
+    }
+  }, [formData.region]);
+
+  // Update communes when ville changes
+  useEffect(() => {
+    if (formData.region && formData.ville) {
+      setCommunes(getCommunesByVille(formData.region, formData.ville));
+      setFormData(prev => ({ ...prev, commune: '', quartier: '' }));
+      setQuartiers([]);
+    }
+  }, [formData.ville]);
+
+  // Update quartiers when commune changes
+  useEffect(() => {
+    if (formData.region && formData.ville && formData.commune) {
+      setQuartiers(getQuartiersByCommune(formData.region, formData.ville, formData.commune));
+      setFormData(prev => ({ ...prev, quartier: '' }));
+    }
+  }, [formData.commune]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -37,7 +75,33 @@ const CustomerAuth = ({ setIsCustomerAuthenticated }) => {
           user_type: 'customer'
         });
       } else {
-        response = await axios.post(`${API}/auth/customer/register`, formData);
+        // Build location string for registration
+        const locationParts = [];
+        if (formData.quartier) locationParts.push(formData.quartier);
+        if (formData.commune) {
+          const communeObj = communes.find(c => c.id === formData.commune);
+          if (communeObj) locationParts.push(communeObj.name);
+        }
+        if (formData.ville) {
+          const villeObj = villes.find(v => v.id === formData.ville);
+          if (villeObj) locationParts.push(villeObj.name);
+        }
+        if (formData.region) {
+          const regionObj = getRegions().find(r => r.id === formData.region);
+          if (regionObj) locationParts.push(regionObj.name);
+        }
+
+        response = await axios.post(`${API}/auth/customer/register`, {
+          first_name: formData.first_name,
+          last_name: formData.last_name,
+          phone_number: formData.phone_number,
+          password: formData.password,
+          location: locationParts.join(', '),
+          region: formData.region,
+          ville: formData.ville,
+          commune: formData.commune,
+          quartier: formData.quartier
+        });
       }
       
       localStorage.setItem('customerToken', response.data.token);
@@ -65,6 +129,8 @@ const CustomerAuth = ({ setIsCustomerAuthenticated }) => {
     { icon: CheckCircle, text: 'Service garanti' },
     { icon: Sparkles, text: 'Réponse rapide' }
   ];
+
+  const regions = getRegions();
 
   return (
     <div className="min-h-screen flex">
@@ -127,8 +193,8 @@ const CustomerAuth = ({ setIsCustomerAuthenticated }) => {
           </div>
         </div>
 
-        <div className="flex-1 flex items-center justify-center p-6">
-          <div className="w-full max-w-md">
+        <div className="flex-1 flex items-center justify-center p-6 overflow-y-auto">
+          <div className="w-full max-w-md my-8">
             <div className="hidden lg:block mb-8">
               <Button variant="ghost" onClick={() => navigate('/')} className="gap-2 text-gray-600 mb-6">
                 <ArrowLeft className="h-4 w-4" />
@@ -146,49 +212,147 @@ const CustomerAuth = ({ setIsCustomerAuthenticated }) => {
                 </p>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-5">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 {!isLogin && (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="first_name" className="text-sm font-medium text-gray-700">
-                        Prénom
-                      </Label>
-                      <div className="relative">
-                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                        <Input
-                          id="first_name"
-                          name="first_name"
-                          value={formData.first_name}
-                          onChange={handleChange}
-                          required={!isLogin}
-                          className="pl-10 h-12 rounded-xl border-gray-200 focus:border-green-500 focus:ring-green-500"
-                          placeholder="Jean"
-                        />
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="first_name" className="text-sm font-medium text-gray-700">
+                          Prénom *
+                        </Label>
+                        <div className="relative">
+                          <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                          <Input
+                            id="first_name"
+                            name="first_name"
+                            value={formData.first_name}
+                            onChange={handleChange}
+                            required={!isLogin}
+                            className="pl-10 h-12 rounded-xl border-gray-200 focus:border-green-500 focus:ring-green-500"
+                            placeholder="Jean"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="last_name" className="text-sm font-medium text-gray-700">
+                          Nom *
+                        </Label>
+                        <div className="relative">
+                          <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                          <Input
+                            id="last_name"
+                            name="last_name"
+                            value={formData.last_name}
+                            onChange={handleChange}
+                            required={!isLogin}
+                            className="pl-10 h-12 rounded-xl border-gray-200 focus:border-green-500 focus:ring-green-500"
+                            placeholder="Dupont"
+                          />
+                        </div>
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="last_name" className="text-sm font-medium text-gray-700">
-                        Nom
-                      </Label>
-                      <div className="relative">
-                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                        <Input
-                          id="last_name"
-                          name="last_name"
-                          value={formData.last_name}
-                          onChange={handleChange}
-                          required={!isLogin}
-                          className="pl-10 h-12 rounded-xl border-gray-200 focus:border-green-500 focus:ring-green-500"
-                          placeholder="Dupont"
-                        />
+
+                    {/* Location Section */}
+                    <div className="space-y-3 p-4 bg-gray-50 rounded-xl">
+                      <div className="flex items-center gap-2 text-gray-700 font-medium text-sm mb-2">
+                        <MapPin className="h-4 w-4 text-green-500" />
+                        Localisation
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-3">
+                        {/* Region */}
+                        <div className="space-y-1">
+                          <Label className="text-xs text-gray-500">Région *</Label>
+                          <Select
+                            value={formData.region}
+                            onValueChange={(value) => setFormData({ ...formData, region: value })}
+                            required={!isLogin}
+                          >
+                            <SelectTrigger className="h-10 rounded-lg border-gray-200 text-sm">
+                              <SelectValue placeholder="Région" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {regions.map((region) => (
+                                <SelectItem key={region.id} value={region.id}>
+                                  {region.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Ville */}
+                        <div className="space-y-1">
+                          <Label className="text-xs text-gray-500">Ville *</Label>
+                          <Select
+                            value={formData.ville}
+                            onValueChange={(value) => setFormData({ ...formData, ville: value })}
+                            disabled={!formData.region}
+                            required={!isLogin}
+                          >
+                            <SelectTrigger className="h-10 rounded-lg border-gray-200 text-sm">
+                              <SelectValue placeholder="Ville" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {villes.map((ville) => (
+                                <SelectItem key={ville.id} value={ville.id}>
+                                  {ville.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Commune */}
+                        <div className="space-y-1">
+                          <Label className="text-xs text-gray-500">Commune *</Label>
+                          <Select
+                            value={formData.commune}
+                            onValueChange={(value) => setFormData({ ...formData, commune: value })}
+                            disabled={!formData.ville}
+                            required={!isLogin}
+                          >
+                            <SelectTrigger className="h-10 rounded-lg border-gray-200 text-sm">
+                              <SelectValue placeholder="Commune" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {communes.map((commune) => (
+                                <SelectItem key={commune.id} value={commune.id}>
+                                  {commune.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Quartier */}
+                        <div className="space-y-1">
+                          <Label className="text-xs text-gray-500">Quartier</Label>
+                          <Select
+                            value={formData.quartier}
+                            onValueChange={(value) => setFormData({ ...formData, quartier: value })}
+                            disabled={!formData.commune}
+                          >
+                            <SelectTrigger className="h-10 rounded-lg border-gray-200 text-sm">
+                              <SelectValue placeholder="Quartier" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {quartiers.map((quartier) => (
+                                <SelectItem key={quartier} value={quartier}>
+                                  {quartier}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  </>
                 )}
 
                 <div className="space-y-2">
                   <Label htmlFor="phone_number" className="text-sm font-medium text-gray-700">
-                    Numéro de téléphone
+                    Numéro de téléphone *
                   </Label>
                   <div className="relative">
                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -207,7 +371,7 @@ const CustomerAuth = ({ setIsCustomerAuthenticated }) => {
 
                 <div className="space-y-2">
                   <Label htmlFor="password" className="text-sm font-medium text-gray-700">
-                    Mot de passe
+                    Mot de passe *
                   </Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -249,26 +413,30 @@ const CustomerAuth = ({ setIsCustomerAuthenticated }) => {
                   {isLogin ? "Pas encore de compte ?" : "Déjà un compte ?"}
                   <button
                     type="button"
-                    onClick={() => setIsLogin(!isLogin)}
-                    className="ml-2 text-green-600 font-semibold hover:text-green-700 transition-colors"
+                    onClick={() => {
+                      setIsLogin(!isLogin);
+                      setFormData({ first_name: '', last_name: '', phone_number: '', password: '', region: '', ville: '', commune: '', quartier: '' });
+                    }}
+                    className="ml-1 text-green-600 hover:text-green-700 font-semibold"
                   >
-                    {isLogin ? "Inscrivez-vous" : "Connectez-vous"}
+                    {isLogin ? "Créez-en un" : "Connectez-vous"}
                   </button>
                 </p>
               </div>
 
-              {isLogin && (
-                <div className="mt-6 pt-6 border-t border-gray-100 text-center">
-                  <p className="text-sm text-gray-500 mb-3">Vous êtes prestataire ?</p>
-                  <Button
-                    variant="outline"
+              {/* Link to Provider Auth */}
+              <div className="mt-6 pt-6 border-t border-gray-100 text-center">
+                <p className="text-sm text-gray-500">
+                  Vous êtes un prestataire ?
+                  <button
+                    type="button"
                     onClick={() => navigate('/auth')}
-                    className="w-full rounded-xl border-2"
+                    className="ml-1 text-amber-600 hover:text-amber-700 font-medium"
                   >
                     Espace Prestataire
-                  </Button>
-                </div>
-              )}
+                  </button>
+                </p>
+              </div>
             </Card>
           </div>
         </div>
