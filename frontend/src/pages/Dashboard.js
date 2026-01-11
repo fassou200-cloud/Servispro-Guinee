@@ -286,6 +286,128 @@ const Dashboard = ({ setIsAuthenticated }) => {
     );
   }
 
+  // Vehicle Provider Dashboard (Camionneur, Tracteur, Voiture)
+  if (isVehicleProvider(user.profession)) {
+    const VehicleIcon = getVehicleIcon(user.profession);
+    
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50">
+        {/* Header */}
+        <header className="bg-white/80 backdrop-blur-lg border-b border-slate-200 sticky top-0 z-10">
+          <div className="max-w-7xl mx-auto px-4 md:px-8 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <Button variant="ghost" onClick={() => window.location.href = '/'} className="gap-2">
+                  <Home className="h-4 w-4" />
+                  Accueil
+                </Button>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                    <VehicleIcon className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <h1 className="text-lg font-heading font-bold text-slate-900">
+                      Espace {translateProfession(user.profession)}
+                    </h1>
+                    <p className="text-xs text-slate-500">Location de véhicules</p>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <span className={`text-sm font-medium ${user.online_status ? 'text-green-600' : 'text-slate-500'}`}>
+                    {user.online_status ? '🟢 Disponible' : '⚫ Indisponible'}
+                  </span>
+                  <Switch
+                    checked={user.online_status}
+                    onCheckedChange={toggleOnlineStatus}
+                  />
+                </div>
+                <Button variant="ghost" onClick={handleLogout} className="gap-2">
+                  <LogOut className="h-4 w-4" />
+                  Déconnexion
+                </Button>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <div className="max-w-7xl mx-auto px-4 md:px-8 py-6">
+          {/* Profile Banner */}
+          <Card className="p-6 mb-6 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-3xl">
+            <div className="flex items-center gap-6">
+              <Avatar className="h-20 w-20 ring-4 ring-white/30">
+                <AvatarImage src={user.profile_picture ? `${BACKEND_URL}${user.profile_picture}` : undefined} />
+                <AvatarFallback className="text-2xl font-bold bg-white/20">
+                  {user.first_name[0]}{user.last_name[0]}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <h2 className="text-2xl font-heading font-bold">{user.first_name} {user.last_name}</h2>
+                <p className="text-indigo-200 flex items-center gap-2">
+                  <VehicleIcon className="h-4 w-4" />
+                  {translateProfession(user.profession)}
+                </p>
+                {user.location && (
+                  <p className="text-indigo-200 flex items-center gap-2 mt-1">
+                    <MapPin className="h-4 w-4" />
+                    {user.location}
+                  </p>
+                )}
+              </div>
+              {user.id_verification_picture && (
+                <div className="ml-auto">
+                  <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/20 rounded-full text-sm">
+                    <ShieldCheck className="h-4 w-4" />
+                    Vérifié
+                  </span>
+                </div>
+              )}
+            </div>
+          </Card>
+
+          {/* Navigation Tabs */}
+          <div className="flex gap-2 mb-6 flex-wrap">
+            <Button
+              variant={activeTab === 'vehicles' ? 'default' : 'outline'}
+              onClick={() => setActiveTab('vehicles')}
+              className={`gap-2 ${activeTab === 'vehicles' ? 'bg-indigo-600 hover:bg-indigo-700' : ''}`}
+            >
+              <VehicleIcon className="h-4 w-4" />
+              Mes Véhicules
+            </Button>
+            <Button
+              variant={activeTab === 'create-vehicle' ? 'default' : 'outline'}
+              onClick={() => setActiveTab('create-vehicle')}
+              className={`gap-2 ${activeTab === 'create-vehicle' ? 'bg-indigo-600 hover:bg-indigo-700' : ''}`}
+            >
+              <TrendingUp className="h-4 w-4" />
+              + Ajouter Véhicule
+            </Button>
+            <Button
+              variant={activeTab === 'profile' ? 'default' : 'outline'}
+              onClick={() => setActiveTab('profile')}
+              className="gap-2"
+            >
+              <User className="h-4 w-4" />
+              Mon Profil
+            </Button>
+          </div>
+
+          {/* Content */}
+          {activeTab === 'vehicles' && <MyVehicles />}
+          {activeTab === 'create-vehicle' && (
+            <VehicleListingForm 
+              onSuccess={() => setActiveTab('vehicles')} 
+              userProfession={user.profession}
+            />
+          )}
+          {activeTab === 'profile' && <ProfileForm user={user} setUser={setUser} onUpdate={fetchProfile} />}
+        </div>
+      </div>
+    );
+  }
+
   // Regular Service Provider Dashboard
   return (
     <div className="min-h-screen bg-muted">
