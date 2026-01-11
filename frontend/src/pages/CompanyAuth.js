@@ -460,7 +460,7 @@ const CompanyAuth = () => {
                     </SelectTrigger>
                     <SelectContent>
                       {getRegions().map(region => (
-                        <SelectItem key={region} value={region}>{region}</SelectItem>
+                        <SelectItem key={region.id} value={region.name}>{region.name}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
