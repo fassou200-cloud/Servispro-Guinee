@@ -319,6 +319,7 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
               <ServiceRequestForm
                 providerId={provider.id}
                 providerName={`${provider.first_name} ${provider.last_name}`}
+                provider={provider}
                 onSuccess={() => {
                   setShowRequestForm(false);
                   toast.success('Demande de service envoyée avec succès !');
