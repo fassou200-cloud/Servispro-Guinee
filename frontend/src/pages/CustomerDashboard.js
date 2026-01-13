@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { getErrorMessage } from '@/utils/helpers';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -86,7 +87,7 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
       toast.success('Service confirmé comme terminé ! Merci.');
       fetchJobs();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Erreur lors de la confirmation');
+      toast.error(getErrorMessage(error, 'Erreur lors de la confirmation');
     }
   };
 

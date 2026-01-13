@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { getErrorMessage } from '@/utils/helpers';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -182,7 +183,7 @@ const Dashboard = ({ setIsAuthenticated }) => {
       toast.success('Travail marqué comme terminé !');
       fetchJobs();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Échec de l\'opération');
+      toast.error(getErrorMessage(error, 'Échec de l\'opération');
     }
   };
 

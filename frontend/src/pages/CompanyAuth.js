@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { getErrorMessage } from '@/utils/helpers';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -105,7 +106,7 @@ const CompanyAuth = ({ setIsCompanyAuthenticated }) => {
       if (setIsCompanyAuthenticated) setIsCompanyAuthenticated(true);
       navigate('/company/dashboard');
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Échec de la connexion');
+      toast.error(getErrorMessage(error, 'Échec de la connexion');
     } finally {
       setLoading(false);
     }
@@ -151,7 +152,7 @@ const CompanyAuth = ({ setIsCompanyAuthenticated }) => {
       toast.success('Entreprise créée ! Veuillez télécharger vos documents.');
       setCurrentStep(2);
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Échec de inscription');
+      toast.error(getErrorMessage(error, 'Échec de inscription');
     } finally {
       setLoading(false);
     }
@@ -238,7 +239,7 @@ const CompanyAuth = ({ setIsCompanyAuthenticated }) => {
       if (setIsCompanyAuthenticated) setIsCompanyAuthenticated(true);
       navigate('/company/dashboard');
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Échec du téléchargement');
+      toast.error(getErrorMessage(error, 'Échec du téléchargement');
     } finally {
       setLoading(false);
     }

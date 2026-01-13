@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { getErrorMessage } from '@/utils/helpers';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -114,7 +115,7 @@ const CustomerAuth = ({ setIsCustomerAuthenticated }) => {
       toast.success(isLogin ? `Bienvenue ${response.data.user.first_name} !` : `Compte créé avec succès, bienvenue ${response.data.user.first_name} !`);
       navigate('/customer/dashboard');
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Une erreur est survenue');
+      toast.error(getErrorMessage(error, 'Une erreur est survenue');
     } finally {
       setLoading(false);
     }

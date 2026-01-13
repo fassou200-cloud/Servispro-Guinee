@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { getErrorMessage } from '@/utils/helpers';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -68,7 +69,7 @@ const AdminAuth = ({ setIsAdminAuthenticated }) => {
         navigate('/admin/dashboard');
       }
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Une erreur est survenue');
+      toast.error(getErrorMessage(error, 'Une erreur est survenue');
     } finally {
       setLoading(false);
     }
