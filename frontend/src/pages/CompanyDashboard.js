@@ -1308,11 +1308,45 @@ const CompanyDashboard = () => {
                           </span>
                           <h4 className="text-lg font-heading font-bold text-foreground mt-2">{rental.title}</h4>
                         </div>
-                        <span className={`px-2 py-1 rounded text-xs ${rental.is_available ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                          {rental.is_available ? 'Disponible' : 'Indisponible'}
-                        </span>
+                        <div className="flex flex-col gap-1 items-end">
+                          {/* Approval Status Badge */}
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${
+                            rental.approval_status === 'approved' 
+                              ? 'bg-green-100 text-green-700' 
+                              : rental.approval_status === 'rejected'
+                              ? 'bg-red-100 text-red-700'
+                              : 'bg-orange-100 text-orange-700'
+                          }`}>
+                            {rental.approval_status === 'approved' ? (
+                              <span className="flex items-center gap-1"><CheckCircle className="h-3 w-3" /> Approuvée</span>
+                            ) : rental.approval_status === 'rejected' ? (
+                              <span className="flex items-center gap-1"><XCircle className="h-3 w-3" /> Rejetée</span>
+                            ) : (
+                              <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> En attente</span>
+                            )}
+                          </span>
+                          <span className={`px-2 py-1 rounded text-xs ${rental.is_available ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-700'}`}>
+                            {rental.is_available ? 'Disponible' : 'Indisponible'}
+                          </span>
+                        </div>
                       </div>
                       <p className="text-foreground text-sm mb-4 line-clamp-2">{rental.description}</p>
+                      
+                      {/* Rejection Reason if rejected */}
+                      {rental.approval_status === 'rejected' && rental.rejection_reason && (
+                        <div className="mb-4 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+                          <strong>Raison:</strong> {rental.rejection_reason}
+                        </div>
+                      )}
+                      
+                      {/* Pending notice */}
+                      {(!rental.approval_status || rental.approval_status === 'pending') && (
+                        <div className="mb-4 p-2 bg-orange-50 border border-orange-200 rounded text-xs text-orange-700 flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          En attente d'approbation admin
+                        </div>
+                      )}
+                      
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-muted-foreground flex items-center gap-1">
                           <MapPin className="h-4 w-4" />
