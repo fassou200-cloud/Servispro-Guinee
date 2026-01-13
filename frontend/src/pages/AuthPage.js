@@ -112,7 +112,7 @@ const AuthPage = ({ setIsAuthenticated }) => {
       toast.success(isLogin ? `Bienvenue ${response.data.user.first_name} !` : 'Inscription réussie !');
       setIsAuthenticated(true);
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Une erreur est survenue');
+      toast.error(getErrorMessage(error, 'Une erreur est survenue'));
     } finally {
       setLoading(false);
     }
