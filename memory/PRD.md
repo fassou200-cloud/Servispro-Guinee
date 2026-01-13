@@ -111,9 +111,30 @@ Construire une plateforme nommée "ServisPro" pour les prestataires de services 
 - `PUT /api/admin/companies/{id}/reject` - Rejeter
 - `DELETE /api/admin/companies/{id}` - Supprimer
 
+### Endpoints API Clés - Paiements & Notifications (NOUVEAU)
+- `POST /api/payments/initiate` - Initier un paiement Mobile Money
+- `POST /api/payments/{id}/confirm` - Confirmer un paiement (webhook)
+- `GET /api/payments/{id}/status` - Statut d'un paiement
+- `GET /api/provider/{id}/investigation-fee` - Tarif d'investigation d'un prestataire
+- `GET /api/notifications/provider` - Notifications du prestataire
+- `GET /api/notifications/customer` - Notifications du client
+- `GET /api/notifications/unread-count/provider` - Nombre de notifications non lues
+- `PUT /api/notifications/{id}/read` - Marquer comme lu
+- `PUT /api/notifications/mark-all-read/provider` - Tout marquer comme lu
+
 ---
 
 ## Changelog
+
+### 2026-01-13 - Système de Paiement & Notifications
+- ✅ Remplacé "transport_fee" par "investigation_fee" (Tarif d'Investigation)
+- ✅ Créé popup de paiement avec bannière professionnelle
+- ✅ Conditions de remboursement clairement affichées
+- ✅ Intégration Orange Money et MTN MoMo (MODE SIMULATION)
+- ✅ Système de notifications avec icône 🔔 et badge
+- ✅ Notifications de paiement reçu pour les prestataires
+- ✅ Nouveaux composants : InvestigationFeePopup.js, NotificationBell.js
+- ✅ Nouveaux endpoints backend pour paiements et notifications
 
 ### 2026-01-11 - Entreprises Immobilières (NOUVEAU)
 - ✅ Ajouté possibilité pour entreprises du secteur "Immobilier" de poster des locations
