@@ -236,6 +236,7 @@ const Dashboard = ({ setIsAuthenticated }) => {
                     onCheckedChange={toggleOnlineStatus}
                   />
                 </div>
+                <NotificationBell userType="provider" />
                 <Button variant="ghost" onClick={handleLogout} className="gap-2">
                   <LogOut className="h-4 w-4" />
                   Déconnexion
