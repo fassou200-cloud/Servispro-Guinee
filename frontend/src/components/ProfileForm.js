@@ -113,13 +113,21 @@ const ProfileForm = ({ user, setUser, onUpdate }) => {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`${API}/profile/me`, formData, {
+      
+      // Prepare data with proper type conversion
+      const submitData = {
+        ...formData,
+        investigation_fee: formData.investigation_fee ? parseInt(formData.investigation_fee, 10) : null
+      };
+      
+      await axios.put(`${API}/profile/me`, submitData, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
       toast.success('Profil mis à jour avec succès');
       onUpdate();
     } catch (error) {
+      console.error('Profile update error:', error);
       toast.error('Échec de la mise à jour du profil');
     } finally {
       setSaving(false);
