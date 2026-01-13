@@ -19,7 +19,7 @@ const ProfileForm = ({ user, setUser, onUpdate }) => {
     profession: user.profession,
     about_me: user.about_me || '',
     price: user.price || '',
-    transport_fee: user.transport_fee || ''
+    investigation_fee: user.investigation_fee || ''
   });
   const [uploading, setUploading] = useState(false);
   const [uploadingId, setUploadingId] = useState(false);
