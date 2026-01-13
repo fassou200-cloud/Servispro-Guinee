@@ -360,7 +360,7 @@ const RentalListingForm = ({ onSuccess }) => {
       
       if (onSuccess) onSuccess();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Échec de l\'upload des fichiers');
+      toast.error(getErrorMessage(error, "Échec de l'upload des fichiers"));
     } finally {
       setSaving(false);
     }
