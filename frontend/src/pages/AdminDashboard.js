@@ -207,6 +207,33 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
     }
   };
 
+  // Rental approval functions
+  const handleApproveRental = async (rentalId) => {
+    try {
+      await axios.put(`${API}/admin/rentals/${rentalId}/approve`);
+      toast.success('Annonce approuvée avec succès !');
+      fetchData();
+      if (selectedRental?.id === rentalId) {
+        setSelectedRental({ ...selectedRental, approval_status: 'approved' });
+      }
+    } catch (error) {
+      toast.error('Erreur lors de l\'approbation');
+    }
+  };
+
+  const handleRejectRental = async (rentalId) => {
+    try {
+      await axios.put(`${API}/admin/rentals/${rentalId}/reject`);
+      toast.success('Annonce rejetée');
+      fetchData();
+      if (selectedRental?.id === rentalId) {
+        setSelectedRental({ ...selectedRental, approval_status: 'rejected' });
+      }
+    } catch (error) {
+      toast.error('Erreur lors du rejet');
+    }
+  };
+
   const confirmDelete = (type, id, name) => {
     setDeleteConfirm({ show: true, type, id, name });
   };
@@ -800,11 +827,10 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                               : `${Number(rental.rental_price).toLocaleString('fr-FR')} GNF/mois`
                             }
                           </span>
-                          {rental.is_available !== false ? (
-                            <span className="px-2 py-0.5 rounded text-xs bg-green-600/20 text-green-400">Disponible</span>
-                          ) : (
-                            <span className="px-2 py-0.5 rounded text-xs bg-red-600/20 text-red-400">Indisponible</span>
-                          )}
+                          {/* Approval Status Badge */}
+                          <span className={`px-2 py-0.5 rounded text-xs font-medium border ${getStatusBadge(rental.approval_status || 'pending')}`}>
+                            {translateStatus(rental.approval_status || 'pending')}
+                          </span>
                         </div>
                       </div>
                     </div>
