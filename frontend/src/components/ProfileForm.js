@@ -309,7 +309,7 @@ const ProfileForm = ({ user, setUser, onUpdate }) => {
 
             <div className="space-y-2">
               <Label htmlFor="investigation_fee" className="font-heading text-xs uppercase tracking-wide">
-                Frais d'Enquête (GNF)
+                Tarif d'Investigation (GNF)
               </Label>
               <div className="relative">
                 <Input
@@ -327,7 +327,7 @@ const ProfileForm = ({ user, setUser, onUpdate }) => {
                 </span>
               </div>
               <p className="text-xs text-muted-foreground">
-                Frais pour les enquêtes immobilières
+                Ce tarif sera demandé au client avant chaque demande de service
               </p>
             </div>
           </div>
