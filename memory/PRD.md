@@ -200,18 +200,20 @@ Construire une plateforme nommée "ServisPro" pour les prestataires de services 
 
 ## Tâches Restantes
 
+### P0 - Terminé
+- [x] **Approbation Admin des locations** - TERMINÉ 2026-01-13
+
 ### P1 - À Venir
 - [ ] Page publique des offres d'emploi avec filtres (BrowseJobs.js)
 - [ ] WebSockets pour statut en ligne temps réel
 - [ ] Page publique des services d'entreprises
 
 ### P2 - Futur  
-- [ ] Flux OTP simulé
-- [ ] Intégration Mobile Money
+- [ ] Intégration réelle Mobile Money (Orange Money / MTN) - requiert clés API
 - [ ] Système de candidature aux offres d'emploi
 
 ### Refactoring Suggéré
-- [ ] Diviser server.py en routers séparés (auth, admin, companies, etc.)
+- [ ] Diviser server.py en routers séparés (auth, admin, companies, rentals, etc.)
 - [ ] Internationalisation avec i18next
 
 ---
