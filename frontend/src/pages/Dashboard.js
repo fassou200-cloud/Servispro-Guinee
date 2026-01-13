@@ -444,6 +444,7 @@ const Dashboard = ({ setIsAuthenticated }) => {
                   <span className="font-bold">{stats.pending} nouvelle{stats.pending > 1 ? 's' : ''} demande{stats.pending > 1 ? 's' : ''}</span>
                 </div>
               )}
+              <NotificationBell userType="provider" />
               <div className="flex items-center gap-3">
                 <Label htmlFor="online-status" className={`font-heading text-xs uppercase tracking-wide ${user.online_status ? 'text-green-600' : 'text-slate-500'}`}>
                   {user.online_status ? '🟢 En ligne' : '⚫ Hors ligne'}
