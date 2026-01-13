@@ -2780,6 +2780,200 @@ async def get_customer_jobs():
     
     return jobs
 
+# ==================== NOTIFICATIONS SYSTEM ====================
+
+@api_router.post("/notifications")
+async def create_notification(notification: NotificationCreate):
+    """Create a new notification"""
+    notification_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+    
+    notification_doc = {
+        'id': notification_id,
+        'user_id': notification.user_id,
+        'user_type': notification.user_type,
+        'title': notification.title,
+        'message': notification.message,
+        'notification_type': notification.notification_type.value,
+        'related_id': notification.related_id,
+        'is_read': False,
+        'created_at': now
+    }
+    
+    await db.notifications.insert_one(notification_doc)
+    return {k: v for k, v in notification_doc.items() if k != '_id'}
+
+@api_router.get("/notifications/provider")
+async def get_provider_notifications(current_user: dict = Depends(get_current_user)):
+    """Get all notifications for the current provider"""
+    notifications = await db.notifications.find(
+        {'user_id': current_user['id'], 'user_type': 'provider'},
+        {'_id': 0}
+    ).sort('created_at', -1).to_list(50)
+    return notifications
+
+@api_router.get("/notifications/customer")
+async def get_customer_notifications(current_customer: dict = Depends(get_current_customer)):
+    """Get all notifications for the current customer"""
+    notifications = await db.notifications.find(
+        {'user_id': current_customer['id'], 'user_type': 'customer'},
+        {'_id': 0}
+    ).sort('created_at', -1).to_list(50)
+    return notifications
+
+@api_router.get("/notifications/unread-count/provider")
+async def get_provider_unread_count(current_user: dict = Depends(get_current_user)):
+    """Get count of unread notifications for provider"""
+    count = await db.notifications.count_documents({
+        'user_id': current_user['id'],
+        'user_type': 'provider',
+        'is_read': False
+    })
+    return {'unread_count': count}
+
+@api_router.get("/notifications/unread-count/customer")
+async def get_customer_unread_count(current_customer: dict = Depends(get_current_customer)):
+    """Get count of unread notifications for customer"""
+    count = await db.notifications.count_documents({
+        'user_id': current_customer['id'],
+        'user_type': 'customer',
+        'is_read': False
+    })
+    return {'unread_count': count}
+
+@api_router.put("/notifications/{notification_id}/read")
+async def mark_notification_read(notification_id: str):
+    """Mark a notification as read"""
+    await db.notifications.update_one(
+        {'id': notification_id},
+        {'$set': {'is_read': True}}
+    )
+    return {'message': 'Notification marquée comme lue'}
+
+@api_router.put("/notifications/mark-all-read/provider")
+async def mark_all_provider_notifications_read(current_user: dict = Depends(get_current_user)):
+    """Mark all provider notifications as read"""
+    await db.notifications.update_many(
+        {'user_id': current_user['id'], 'user_type': 'provider'},
+        {'$set': {'is_read': True}}
+    )
+    return {'message': 'Toutes les notifications marquées comme lues'}
+
+@api_router.put("/notifications/mark-all-read/customer")
+async def mark_all_customer_notifications_read(current_customer: dict = Depends(get_current_customer)):
+    """Mark all customer notifications as read"""
+    await db.notifications.update_many(
+        {'user_id': current_customer['id'], 'user_type': 'customer'},
+        {'$set': {'is_read': True}}
+    )
+    return {'message': 'Toutes les notifications marquées comme lues'}
+
+# ==================== PAYMENT SYSTEM (MOCK) ====================
+
+@api_router.post("/payments/initiate")
+async def initiate_payment(payment: PaymentCreate):
+    """
+    Initiate a payment for investigation fee.
+    This is a MOCK implementation - in production, integrate with Orange Money / MTN MoMo
+    """
+    payment_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Get provider info
+    provider = await db.service_providers.find_one({'id': payment.provider_id}, {'_id': 0})
+    if not provider:
+        raise HTTPException(status_code=404, detail="Prestataire non trouvé")
+    
+    payment_doc = {
+        'id': payment_id,
+        'job_id': payment.job_id,
+        'provider_id': payment.provider_id,
+        'provider_name': f"{provider['first_name']} {provider['last_name']}",
+        'customer_phone': payment.customer_phone,
+        'customer_name': payment.customer_name,
+        'amount': payment.amount,
+        'payment_method': payment.payment_method,
+        'status': PaymentStatus.PENDING.value,
+        'created_at': now,
+        'updated_at': now
+    }
+    
+    await db.payments.insert_one(payment_doc)
+    
+    # In a real implementation, this would call Orange Money or MTN MoMo API
+    # For now, we simulate an immediate successful payment
+    
+    return {
+        'payment_id': payment_id,
+        'status': 'pending',
+        'message': 'Paiement initié. Veuillez confirmer sur votre téléphone.',
+        'amount': payment.amount,
+        'payment_method': payment.payment_method
+    }
+
+@api_router.post("/payments/{payment_id}/confirm")
+async def confirm_payment(payment_id: str):
+    """
+    Confirm a payment (MOCK - simulates successful payment).
+    In production, this would be called by a webhook from the payment provider.
+    """
+    payment = await db.payments.find_one({'id': payment_id})
+    if not payment:
+        raise HTTPException(status_code=404, detail="Paiement non trouvé")
+    
+    if payment['status'] != PaymentStatus.PENDING.value:
+        raise HTTPException(status_code=400, detail="Ce paiement a déjà été traité")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Update payment status
+    await db.payments.update_one(
+        {'id': payment_id},
+        {'$set': {'status': PaymentStatus.COMPLETED.value, 'updated_at': now}}
+    )
+    
+    # Create notification for provider
+    notification_id = str(uuid.uuid4())
+    await db.notifications.insert_one({
+        'id': notification_id,
+        'user_id': payment['provider_id'],
+        'user_type': 'provider',
+        'title': 'Nouveau paiement reçu',
+        'message': f"Vous avez reçu un paiement de {payment['amount']} GNF de {payment['customer_name']} pour le tarif d'investigation.",
+        'notification_type': 'payment_received',
+        'related_id': payment_id,
+        'is_read': False,
+        'created_at': now
+    })
+    
+    return {
+        'payment_id': payment_id,
+        'status': 'completed',
+        'message': 'Paiement confirmé avec succès!'
+    }
+
+@api_router.get("/payments/{payment_id}/status")
+async def get_payment_status(payment_id: str):
+    """Get the status of a payment"""
+    payment = await db.payments.find_one({'id': payment_id}, {'_id': 0})
+    if not payment:
+        raise HTTPException(status_code=404, detail="Paiement non trouvé")
+    return payment
+
+@api_router.get("/provider/{provider_id}/investigation-fee")
+async def get_provider_investigation_fee(provider_id: str):
+    """Get the investigation fee for a provider"""
+    provider = await db.service_providers.find_one({'id': provider_id}, {'_id': 0})
+    if not provider:
+        raise HTTPException(status_code=404, detail="Prestataire non trouvé")
+    
+    return {
+        'provider_id': provider_id,
+        'provider_name': f"{provider['first_name']} {provider['last_name']}",
+        'investigation_fee': provider.get('investigation_fee', 0),
+        'price': provider.get('price', 0)
+    }
+
 # Include router
 app.include_router(api_router)
 
