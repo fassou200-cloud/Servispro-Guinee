@@ -260,7 +260,7 @@ const CompanyDashboard = () => {
       const res = await axios.get(`${API}/company/services/my`, { headers: { Authorization: `Bearer ${token}` } });
       setServices(res.data);
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Erreur lors de la création');
+      toast.error(getErrorMessage(error, 'Erreur lors de la création');
     }
   };
 
@@ -286,7 +286,7 @@ const CompanyDashboard = () => {
       const res = await axios.get(`${API}/company/job-offers/my`, { headers: { Authorization: `Bearer ${token}` } });
       setJobOffers(res.data);
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Erreur lors de la création');
+      toast.error(getErrorMessage(error, 'Erreur lors de la création');
     }
   };
 
@@ -343,7 +343,7 @@ const CompanyDashboard = () => {
       toast.success('Annonce créée ! Ajoutez maintenant les photos.');
       setRentalStep(2);
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Erreur lors de la création');
+      toast.error(getErrorMessage(error, 'Erreur lors de la création');
     }
   };
 
@@ -393,7 +393,7 @@ const CompanyDashboard = () => {
       const res = await axios.get(`${API}/company/rentals/my`, { headers: { Authorization: `Bearer ${token}` } });
       setRentals(res.data);
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Erreur lors de l\'upload des photos');
+      toast.error(getErrorMessage(error, 'Erreur lors de l\'upload des photos');
     } finally {
       setUploadingRentalFiles(false);
     }
@@ -476,7 +476,7 @@ const CompanyDashboard = () => {
       toast.success('Propriété créée ! Ajoutez maintenant les photos.');
       setSaleStep(2);
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Erreur lors de la création');
+      toast.error(getErrorMessage(error, 'Erreur lors de la création');
     }
   };
 
@@ -529,7 +529,7 @@ const CompanyDashboard = () => {
       const res = await axios.get(`${API}/company/property-sales/my`, { headers: { Authorization: `Bearer ${token}` } });
       setSales(res.data);
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Erreur lors de l\'upload des photos');
+      toast.error(getErrorMessage(error, 'Erreur lors de l\'upload des photos');
     } finally {
       setUploadingSaleFiles(false);
     }
