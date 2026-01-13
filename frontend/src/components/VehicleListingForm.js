@@ -189,7 +189,7 @@ const VehicleListingForm = ({ onSuccess, userProfession }) => {
       
       if (onSuccess) onSuccess();
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Échec de la publication');
+      toast.error(getErrorMessage(error, 'Échec de la publication'));
     } finally {
       setSaving(false);
     }
