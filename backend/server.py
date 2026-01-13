@@ -163,7 +163,7 @@ class ProfileUpdate(BaseModel):
     about_me: Optional[str] = None
     online_status: Optional[bool] = None
     price: Optional[int] = None
-    transport_fee: Optional[int] = None
+    investigation_fee: Optional[int] = None
 
 class ServiceProvider(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -178,8 +178,39 @@ class ServiceProvider(BaseModel):
     id_verification_picture: Optional[str] = None
     online_status: bool = False
     price: Optional[int] = None
-    transport_fee: Optional[int] = None
+    investigation_fee: Optional[int] = None
     created_at: str
+
+# Notification Models
+class NotificationType(str, Enum):
+    SERVICE_REQUEST = "service_request"
+    PAYMENT_RECEIVED = "payment_received"
+    JOB_ACCEPTED = "job_accepted"
+    JOB_REJECTED = "job_rejected"
+    JOB_COMPLETED = "job_completed"
+    SYSTEM = "system"
+
+class NotificationCreate(BaseModel):
+    user_id: str
+    user_type: str  # 'provider', 'customer', 'company'
+    title: str
+    message: str
+    notification_type: NotificationType
+    related_id: Optional[str] = None  # job_id, payment_id, etc.
+
+class PaymentStatus(str, Enum):
+    PENDING = "pending"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    REFUNDED = "refunded"
+
+class PaymentCreate(BaseModel):
+    job_id: str
+    provider_id: str
+    customer_phone: str
+    customer_name: str
+    amount: int
+    payment_method: str  # 'orange_money', 'mtn_momo'
 
 class JobOfferCreate(BaseModel):
     service_provider_id: str
