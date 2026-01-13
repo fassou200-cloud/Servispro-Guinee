@@ -45,8 +45,23 @@ const ServiceRequestForm = ({ providerId, providerName, provider, onSuccess }) =
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // Check if provider requires payment
+  const requiresPayment = provider?.investigation_fee && provider.investigation_fee > 0;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // If payment is required and not completed, show payment popup
+    if (requiresPayment && !paymentCompleted) {
+      setShowPaymentPopup(true);
+      return;
+    }
+
+    // Submit the service request
+    await submitServiceRequest();
+  };
+
+  const submitServiceRequest = async () => {
     setLoading(true);
 
     try {
@@ -75,6 +90,7 @@ const ServiceRequestForm = ({ providerId, providerName, provider, onSuccess }) =
         preferred_date: '',
         preferred_time: ''
       });
+      setPaymentCompleted(false);
       
       if (onSuccess) onSuccess();
     } catch (error) {
@@ -82,6 +98,14 @@ const ServiceRequestForm = ({ providerId, providerName, provider, onSuccess }) =
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePaymentSuccess = () => {
+    setPaymentCompleted(true);
+    setShowPaymentPopup(false);
+    toast.success('Paiement effectué ! Envoi de votre demande...');
+    // Automatically submit the request after payment
+    submitServiceRequest();
   };
 
   return (
