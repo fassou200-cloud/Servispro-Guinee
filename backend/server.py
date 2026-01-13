@@ -241,7 +241,7 @@ class RentalListingCreate(BaseModel):
     title: str
     description: str
     location: str
-    rental_price: float
+    rental_price: Optional[float] = None  # For long-term rentals (monthly)
     # New fields for short-term rentals (Airbnb-style)
     rental_type: str = "long_term"  # "long_term" or "short_term"
     price_per_night: Optional[float] = None  # For short-term rentals
@@ -252,11 +252,16 @@ class RentalListingCreate(BaseModel):
     available_from: Optional[str] = None  # Available from date
     available_to: Optional[str] = None  # Available to date
     
-    @field_validator('rental_price')
-    def validate_price(cls, v):
-        if v <= 0:
-            raise ValueError('Rental price must be greater than 0')
-        return v
+    @model_validator(mode='after')
+    def validate_prices(self):
+        """Validate that appropriate price is set based on rental type"""
+        if self.rental_type == 'long_term':
+            if not self.rental_price or self.rental_price <= 0:
+                raise ValueError('Le prix mensuel doit être supérieur à 0 pour les locations longue durée')
+        elif self.rental_type == 'short_term':
+            if not self.price_per_night or self.price_per_night <= 0:
+                raise ValueError('Le prix par nuit doit être supérieur à 0 pour les locations courte durée')
+        return self
 
 class RentalListing(BaseModel):
     model_config = ConfigDict(extra="ignore")
