@@ -15,24 +15,10 @@ import {
   CircleDot, CheckCircle, FileText, Shield, User, Building, AlertTriangle
 } from 'lucide-react';
 import axios from 'axios';
+import { getErrorMessage } from '@/utils/helpers';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
-
-// Helper function to extract error message from API response
-const getErrorMessage = (error, defaultMessage = 'Une erreur est survenue') => {
-  const detail = error.response?.data?.detail;
-  if (!detail) return defaultMessage;
-  if (typeof detail === 'string') return detail;
-  if (Array.isArray(detail) && detail.length > 0) {
-    // Pydantic validation error format
-    return detail.map(err => err.msg || err.message || JSON.stringify(err)).join(', ');
-  }
-  if (typeof detail === 'object') {
-    return detail.msg || detail.message || JSON.stringify(detail);
-  }
-  return defaultMessage;
-};
 
 // Organized amenities by category
 const AMENITIES_CATEGORIES = [
