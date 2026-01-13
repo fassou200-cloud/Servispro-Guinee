@@ -233,7 +233,7 @@ const PropertySaleForm = ({ onSuccess }) => {
       toast.success('Propriété publiée avec succès !');
       if (onSuccess) onSuccess();
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Échec de l\'upload des fichiers');
+      toast.error(getErrorMessage(error, 'Échec de l\'upload des fichiers'));
     } finally {
       setSaving(false);
     }
