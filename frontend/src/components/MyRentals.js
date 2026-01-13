@@ -446,6 +446,26 @@ const MyRentals = () => {
                   )}
                 </div>
               )}
+
+              {/* Rejection Reason */}
+              {rental.approval_status === 'rejected' && rental.rejection_reason && (
+                <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-700 flex items-start gap-2">
+                    <XCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                    <span><strong>Raison du rejet:</strong> {rental.rejection_reason}</span>
+                  </p>
+                </div>
+              )}
+
+              {/* Pending Approval Notice */}
+              {(!rental.approval_status || rental.approval_status === 'pending') && (
+                <div className="mt-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                  <p className="text-sm text-orange-700 flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    Cette annonce est en attente d'approbation par l'administration.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </Card>
