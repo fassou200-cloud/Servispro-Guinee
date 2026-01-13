@@ -130,9 +130,15 @@ Construire une plateforme nommée "ServisPro" pour les prestataires de services 
 - ✅ Remplacé "transport_fee" par "investigation_fee" (Tarif d'Investigation)
 - ✅ Créé popup de paiement avec bannière professionnelle
 - ✅ Conditions de remboursement clairement affichées
-- ✅ Intégration Orange Money et MTN MoMo (MODE SIMULATION)
+- ✅ **Simulation Améliorée Orange Money / MTN MoMo** :
+  - Flux complet en 5 étapes (Formulaire → Envoi OTP → Saisie OTP → Traitement → Reçu)
+  - Design différencié Orange (orange) vs MTN (jaune)
+  - Code OTP simulé avec countdown 60s
+  - Référence de transaction unique (ex: OM808297217557)
+  - Reçu de transaction complet avec copie de référence
+  - Historique des paiements sauvegardé en base
 - ✅ Système de notifications avec icône 🔔 et badge
-- ✅ Notifications de paiement reçu pour les prestataires
+- ✅ Notifications de paiement reçu automatiques
 - ✅ Nouveaux composants : InvestigationFeePopup.js, NotificationBell.js
 - ✅ Nouveaux endpoints backend pour paiements et notifications
 
