@@ -39,6 +39,15 @@ Construire une plateforme nommée "ServisPro" pour les prestataires de services 
 - ✅ **Entreprises Immobilières peuvent poster des locations** (comme Agent Immobilier)
 - ✅ **Entreprises Immobilières peuvent poster des ventes** (comme Agent Immobilier)
 
+### Système de Paiement & Notifications (NOUVEAU)
+- ✅ **Tarif d'Investigation** remplace "Frais de Transport"
+- ✅ **Popup de paiement** avant demande de service avec bannière et conditions
+- ✅ **Conditions affichées** : Non remboursable si prestataire présent, 100% remboursé sinon
+- ✅ **Paiement Mobile Money** (Orange Money, MTN MoMo) - MODE SIMULATION
+- ✅ **Système de Notifications** dans l'application
+- ✅ Icône 🔔 avec badge pour notifications non lues
+- ✅ Types de notifications : paiement reçu, demande de service, etc.
+
 ### Admin
 - ✅ Vue de tous les documents pour les locations
 - ✅ Vue de tous les documents pour les ventes
