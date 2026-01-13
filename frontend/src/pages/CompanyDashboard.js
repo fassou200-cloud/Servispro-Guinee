@@ -529,7 +529,7 @@ const CompanyDashboard = () => {
       const res = await axios.get(`${API}/company/property-sales/my`, { headers: { Authorization: `Bearer ${token}` } });
       setSales(res.data);
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Erreur lors de l\'upload des photos');
+      toast.error(getErrorMessage(error, 'Erreur lors de l\'upload des photos'));
     } finally {
       setUploadingSaleFiles(false);
     }
