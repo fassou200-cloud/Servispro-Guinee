@@ -127,6 +127,23 @@ Construire une plateforme nommée "ServisPro" pour les prestataires de services 
 
 ## Changelog
 
+### 2026-01-13 - Approbation Admin des Locations (NOUVEAU)
+- ✅ **Champ `approval_status`** ajouté aux locations : `pending`, `approved`, `rejected`
+- ✅ **Nouvelles locations automatiquement en statut `pending`**
+- ✅ **Endpoint public `/api/rentals`** ne retourne que les locations `approved`
+- ✅ **Admin Dashboard** : 
+  - Badge de statut coloré (orange=En attente, vert=Approuvé, rouge=Rejeté)
+  - Boutons "Approuver" / "Rejeter" pour les locations en attente
+  - Notification automatique au prestataire lors de l'approbation/rejet
+- ✅ **Dashboard Prestataire (MyRentals.js)** :
+  - Badge de statut d'approbation pour chaque location
+  - Message d'information pour les locations en attente
+  - Affichage de la raison de rejet si applicable
+- ✅ **Dashboard Entreprise (CompanyDashboard.js)** :
+  - Badge de statut d'approbation pour chaque location
+  - Message d'information pour les locations en attente/rejetées
+- ✅ Migration des locations existantes vers le statut `approved`
+
 ### 2026-01-13 - Système de Paiement & Notifications
 - ✅ Remplacé "transport_fee" par "investigation_fee" (Tarif d'Investigation)
 - ✅ Créé popup de paiement avec bannière professionnelle
