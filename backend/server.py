@@ -1086,6 +1086,11 @@ async def create_company_rental(
         'registration_ministere': None,
         'seller_id_document': None,
         'documents_additionnels': [],
+        # Admin approval fields
+        'approval_status': ListingApprovalStatus.PENDING.value,
+        'rejection_reason': None,
+        'approved_at': None,
+        'approved_by': None,
         'created_at': now,
         'updated_at': now
     }
