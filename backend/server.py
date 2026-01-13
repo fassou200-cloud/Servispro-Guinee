@@ -2884,15 +2884,23 @@ async def mark_all_customer_notifications_read(current_customer: dict = Depends(
     )
     return {'message': 'Toutes les notifications marquées comme lues'}
 
-# ==================== PAYMENT SYSTEM (MOCK) ====================
+# ==================== PAYMENT SYSTEM (SIMULATION) ====================
+
+def generate_transaction_reference(method: str) -> str:
+    """Generate a realistic transaction reference"""
+    prefix = 'OM' if method == 'orange_money' else 'MTN'
+    timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+    random_suffix = str(uuid.uuid4().hex[:6]).upper()
+    return f"{prefix}{timestamp}{random_suffix}"
 
 @api_router.post("/payments/initiate")
 async def initiate_payment(payment: PaymentCreate):
     """
     Initiate a payment for investigation fee.
-    This is a MOCK implementation - in production, integrate with Orange Money / MTN MoMo
+    SIMULATION MODE - Mimics Orange Money / MTN MoMo flow
     """
     payment_id = str(uuid.uuid4())
+    transaction_ref = generate_transaction_reference(payment.payment_method)
     now = datetime.now(timezone.utc).isoformat()
     
     # Get provider info
@@ -2902,36 +2910,40 @@ async def initiate_payment(payment: PaymentCreate):
     
     payment_doc = {
         'id': payment_id,
+        'transaction_ref': transaction_ref,
         'job_id': payment.job_id,
         'provider_id': payment.provider_id,
         'provider_name': f"{provider['first_name']} {provider['last_name']}",
         'customer_phone': payment.customer_phone,
         'customer_name': payment.customer_name,
         'amount': payment.amount,
+        'currency': 'GNF',
         'payment_method': payment.payment_method,
+        'payment_type': 'investigation_fee',
         'status': PaymentStatus.PENDING.value,
+        'otp_sent': True,
+        'otp_verified': False,
         'created_at': now,
         'updated_at': now
     }
     
     await db.payments.insert_one(payment_doc)
     
-    # In a real implementation, this would call Orange Money or MTN MoMo API
-    # For now, we simulate an immediate successful payment
-    
     return {
         'payment_id': payment_id,
+        'transaction_ref': transaction_ref,
         'status': 'pending',
-        'message': 'Paiement initié. Veuillez confirmer sur votre téléphone.',
+        'message': 'Paiement initié. Un code de confirmation a été envoyé.',
         'amount': payment.amount,
+        'currency': 'GNF',
         'payment_method': payment.payment_method
     }
 
 @api_router.post("/payments/{payment_id}/confirm")
 async def confirm_payment(payment_id: str):
     """
-    Confirm a payment (MOCK - simulates successful payment).
-    In production, this would be called by a webhook from the payment provider.
+    Confirm a payment after OTP verification.
+    SIMULATION MODE - In production, this would be called by a webhook.
     """
     payment = await db.payments.find_one({'id': payment_id})
     if not payment:
@@ -2945,7 +2957,14 @@ async def confirm_payment(payment_id: str):
     # Update payment status
     await db.payments.update_one(
         {'id': payment_id},
-        {'$set': {'status': PaymentStatus.COMPLETED.value, 'updated_at': now}}
+        {
+            '$set': {
+                'status': PaymentStatus.COMPLETED.value,
+                'otp_verified': True,
+                'completed_at': now,
+                'updated_at': now
+            }
+        }
     )
     
     # Create notification for provider
