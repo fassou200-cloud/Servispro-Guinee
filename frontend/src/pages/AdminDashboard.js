@@ -910,6 +910,10 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                     ) : (
                       <span className="px-3 py-1 rounded text-sm bg-red-600/20 text-red-400">Indisponible</span>
                     )}
+                    {/* Approval Status Badge */}
+                    <span className={`px-3 py-1 rounded text-sm font-medium border ${getStatusBadge(selectedRental.approval_status || 'pending')}`}>
+                      {translateStatus(selectedRental.approval_status || 'pending')}
+                    </span>
                   </div>
 
                   {/* Amenities */}
