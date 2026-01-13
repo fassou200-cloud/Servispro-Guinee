@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { 
-  Home, MapPin, Trash2, Moon, Calendar, Users, CheckCircle, XCircle, 
+  Home, MapPin, Trash2, Moon, Calendar, Users, CheckCircle, XCircle, Clock,
   Wifi, Wind, Car, Utensils, Tv, Bath, Thermometer, Phone, Laptop, 
   Shirt, Lock, Coffee, Droplets, ShowerHead, Mountain, Volume2, 
   Flame, Sofa, Baby, UtensilsCrossed, Sun, ChefHat, Waves,
