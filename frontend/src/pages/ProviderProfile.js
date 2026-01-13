@@ -244,10 +244,10 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
                       <span className="font-bold text-amber-900">{Number(provider.price).toLocaleString('fr-FR')} GNF</span>
                     </div>
                   )}
-                  {provider.profession !== 'AgentImmobilier' && provider.transport_fee && (
+                  {provider.profession !== 'AgentImmobilier' && provider.investigation_fee && (
                     <div className="px-4 py-2 rounded-xl bg-amber-50 border border-amber-200">
-                      <span className="text-amber-700 text-sm">Transport: </span>
-                      <span className="font-bold text-amber-900">{Number(provider.transport_fee).toLocaleString('fr-FR')} GNF</span>
+                      <span className="text-amber-700 text-sm">Tarif d'investigation: </span>
+                      <span className="font-bold text-amber-900">{Number(provider.investigation_fee).toLocaleString('fr-FR')} GNF</span>
                     </div>
                   )}
                 </div>
