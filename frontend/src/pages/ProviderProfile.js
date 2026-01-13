@@ -418,6 +418,16 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
           </Card>
         )}
       </div>
+
+      {/* Investigation Fee Payment Popup */}
+      <InvestigationFeePopup
+        isOpen={showPaymentPopup}
+        onClose={() => setShowPaymentPopup(false)}
+        provider={provider}
+        onPaymentSuccess={handlePaymentSuccess}
+        customerName={customer ? `${customer.first_name} ${customer.last_name}` : ''}
+        customerPhone={customer?.phone_number || ''}
+      />
     </div>
   );
 };
