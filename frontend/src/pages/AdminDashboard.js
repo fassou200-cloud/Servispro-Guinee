@@ -1029,6 +1029,49 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                     </div>
                   </div>
 
+                  {/* Approval Actions */}
+                  {(selectedRental.approval_status === 'pending' || !selectedRental.approval_status) && (
+                    <div className="flex gap-3 pt-4 border-t border-slate-700 mb-4">
+                      <Button
+                        onClick={() => handleApproveRental(selectedRental.id)}
+                        className="flex-1 bg-green-600 hover:bg-green-700 gap-2"
+                        data-testid="approve-rental-btn"
+                      >
+                        <CheckCircle className="h-4 w-4" />
+                        Approuver
+                      </Button>
+                      <Button
+                        onClick={() => handleRejectRental(selectedRental.id)}
+                        variant="outline"
+                        className="flex-1 border-red-600 text-red-400 hover:bg-red-600 hover:text-white gap-2"
+                        data-testid="reject-rental-btn"
+                      >
+                        <XCircle className="h-4 w-4" />
+                        Rejeter
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Show rejection reason if rejected */}
+                  {selectedRental.approval_status === 'rejected' && selectedRental.rejection_reason && (
+                    <div className="mb-4 p-3 bg-red-900/20 border border-red-700/50 rounded-lg">
+                      <p className="text-sm text-red-400 flex items-start gap-2">
+                        <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                        <span><strong>Raison du rejet:</strong> {selectedRental.rejection_reason}</span>
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Show approval info if approved */}
+                  {selectedRental.approval_status === 'approved' && selectedRental.approved_at && (
+                    <div className="mb-4 p-3 bg-green-900/20 border border-green-700/50 rounded-lg">
+                      <p className="text-sm text-green-400 flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4" />
+                        Approuvée le {new Date(selectedRental.approved_at).toLocaleDateString('fr-FR')}
+                      </p>
+                    </div>
+                  )}
+
                   <Button
                     onClick={() => confirmDelete('rental', selectedRental.id, selectedRental.title)}
                     variant="outline"
