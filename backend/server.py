@@ -2995,6 +2995,24 @@ async def get_payment_status(payment_id: str):
         raise HTTPException(status_code=404, detail="Paiement non trouvé")
     return payment
 
+@api_router.get("/payments/history/provider")
+async def get_provider_payment_history(current_user: dict = Depends(get_current_user)):
+    """Get payment history for the current provider"""
+    payments = await db.payments.find(
+        {'provider_id': current_user['id'], 'status': PaymentStatus.COMPLETED.value},
+        {'_id': 0}
+    ).sort('created_at', -1).to_list(100)
+    return payments
+
+@api_router.get("/payments/history/customer/{phone}")
+async def get_customer_payment_history(phone: str):
+    """Get payment history for a customer by phone"""
+    payments = await db.payments.find(
+        {'customer_phone': phone},
+        {'_id': 0}
+    ).sort('created_at', -1).to_list(50)
+    return payments
+
 @api_router.get("/provider/{provider_id}/investigation-fee")
 async def get_provider_investigation_fee(provider_id: str):
     """Get the investigation fee for a provider"""
