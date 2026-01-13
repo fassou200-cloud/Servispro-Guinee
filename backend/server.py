@@ -668,7 +668,7 @@ async def register(input_data: RegisterInput):
         'online_status': False,
         'verification_status': ProviderStatus.PENDING.value,
         'price': None,  # Tarif en GNF
-        'transport_fee': None,  # Frais de transport en GNF
+        'investigation_fee': None,  # Tarif d'investigation en GNF
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     
