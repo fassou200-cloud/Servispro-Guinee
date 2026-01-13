@@ -6,13 +6,17 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import axios from 'axios';
+import InvestigationFeePopup from '@/components/InvestigationFeePopup';
+import { CreditCard } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-const ServiceRequestForm = ({ providerId, providerName, onSuccess }) => {
+const ServiceRequestForm = ({ providerId, providerName, provider, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [customer, setCustomer] = useState(null);
+  const [showPaymentPopup, setShowPaymentPopup] = useState(false);
+  const [paymentCompleted, setPaymentCompleted] = useState(false);
   const [formData, setFormData] = useState({
     client_name: '',
     phone_number: '',
