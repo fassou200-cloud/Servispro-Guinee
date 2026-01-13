@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { getErrorMessage } from '@/utils/helpers';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -118,7 +119,7 @@ const InvestigationFeePopup = ({
       }, 2000);
 
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Erreur lors de l\'initiation du paiement');
+      toast.error(getErrorMessage(error, 'Erreur lors de l\'initiation du paiement');
       setStep(1);
     } finally {
       setLoading(false);

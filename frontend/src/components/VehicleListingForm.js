@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { getErrorMessage } from '@/utils/helpers';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -188,7 +189,7 @@ const VehicleListingForm = ({ onSuccess, userProfession }) => {
       
       if (onSuccess) onSuccess();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Échec de la publication');
+      toast.error(getErrorMessage(error, 'Échec de la publication');
     } finally {
       setSaving(false);
     }

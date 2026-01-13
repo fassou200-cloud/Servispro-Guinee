@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { getErrorMessage } from '@/utils/helpers';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
@@ -71,7 +72,7 @@ const JobsList = () => {
       toast.success('Travail marqué comme terminé ! En attente de confirmation du client.');
       fetchJobs();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Échec de l\'opération');
+      toast.error(getErrorMessage(error, 'Échec de l\'opération');
     }
   };
 

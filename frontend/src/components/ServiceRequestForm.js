@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { getErrorMessage } from '@/utils/helpers';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -73,7 +74,7 @@ const ServiceRequestForm = ({ providerId, providerName, onSuccess }) => {
       
       if (onSuccess) onSuccess();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Échec de l\'envoi de la demande');
+      toast.error(getErrorMessage(error, 'Échec de l\'envoi de la demande');
     } finally {
       setLoading(false);
     }

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { getErrorMessage } from '@/utils/helpers';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -176,7 +177,7 @@ const PropertySaleForm = ({ onSuccess }) => {
       toast.success('Propriété créée ! Ajoutez maintenant les photos et documents.');
       setCurrentStep(2);
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Échec de la création');
+      toast.error(getErrorMessage(error, 'Échec de la création');
     } finally {
       setSaving(false);
     }
@@ -232,7 +233,7 @@ const PropertySaleForm = ({ onSuccess }) => {
       toast.success('Propriété publiée avec succès !');
       if (onSuccess) onSuccess();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Échec de l\'upload des fichiers');
+      toast.error(getErrorMessage(error, 'Échec de l\'upload des fichiers');
     } finally {
       setSaving(false);
     }
