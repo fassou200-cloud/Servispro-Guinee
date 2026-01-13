@@ -74,7 +74,7 @@ const ServiceRequestForm = ({ providerId, providerName, onSuccess }) => {
       
       if (onSuccess) onSuccess();
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Échec de l\'envoi de la demande');
+      toast.error(getErrorMessage(error, 'Échec de l\'envoi de la demande'));
     } finally {
       setLoading(false);
     }
