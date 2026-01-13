@@ -270,7 +270,7 @@ const RentalListingForm = ({ onSuccess }) => {
       toast.success('Annonce créée ! Ajoutez maintenant les photos et documents.');
       setCurrentStep(2);
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Échec de la création');
+      toast.error(getErrorMessage(error, 'Échec de la création'));
     } finally {
       setSaving(false);
     }
