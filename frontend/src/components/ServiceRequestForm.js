@@ -117,6 +117,23 @@ const ServiceRequestForm = ({ providerId, providerName, provider, onSuccess }) =
         Remplissez le formulaire ci-dessous pour envoyer une demande de service
       </p>
 
+      {/* Investigation Fee Notice */}
+      {requiresPayment && (
+        <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+          <div className="flex items-center gap-3">
+            <CreditCard className="h-5 w-5 text-amber-600" />
+            <div>
+              <p className="font-semibold text-amber-800">Tarif d'Investigation Requis</p>
+              <p className="text-sm text-amber-700">
+                Ce prestataire demande un tarif d'investigation de{' '}
+                <span className="font-bold">{Number(provider.investigation_fee).toLocaleString('fr-FR')} GNF</span>{' '}
+                avant de traiter votre demande.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
