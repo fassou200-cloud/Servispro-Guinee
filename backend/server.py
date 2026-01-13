@@ -1565,6 +1565,16 @@ async def create_rental_listing(listing_data: RentalListingCreate, current_user:
         'available_from': listing_data.available_from,
         'available_to': listing_data.available_to,
         'photos': [],
+        # Document fields
+        'titre_foncier': None,
+        'registration_ministere': None,
+        'seller_id_document': None,
+        'documents_additionnels': [],
+        # Admin approval - starts as pending
+        'approval_status': ListingApprovalStatus.PENDING.value,
+        'rejection_reason': None,
+        'approved_at': None,
+        'approved_by': None,
         'created_at': now,
         'updated_at': now
     }
@@ -1576,8 +1586,8 @@ async def create_rental_listing(listing_data: RentalListingCreate, current_user:
 
 @api_router.get("/rentals", response_model=List[RentalListing])
 async def get_all_rentals(rental_type: Optional[str] = None, is_available: Optional[bool] = None):
-    """Get all rentals with optional filters"""
-    query = {}
+    """Get all APPROVED rentals with optional filters (public endpoint)"""
+    query = {'approval_status': ListingApprovalStatus.APPROVED.value}  # Only show approved listings
     if rental_type:
         query['rental_type'] = rental_type
     if is_available is not None:
@@ -1588,6 +1598,7 @@ async def get_all_rentals(rental_type: Optional[str] = None, is_available: Optio
 
 @api_router.get("/rentals/my-listings", response_model=List[RentalListing])
 async def get_my_rental_listings(current_user: dict = Depends(get_current_user)):
+    """Get all rental listings for the current provider (including pending/rejected)"""
     rentals = await db.rental_listings.find({'service_provider_id': current_user['id']}, {'_id': 0}).to_list(100)
     return [RentalListing(**r) for r in rentals]
 
