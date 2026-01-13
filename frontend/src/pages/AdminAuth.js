@@ -69,7 +69,7 @@ const AdminAuth = ({ setIsAdminAuthenticated }) => {
         navigate('/admin/dashboard');
       }
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Une erreur est survenue');
+      toast.error(getErrorMessage(error, 'Une erreur est survenue'));
     } finally {
       setLoading(false);
     }

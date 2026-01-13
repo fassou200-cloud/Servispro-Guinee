@@ -260,7 +260,7 @@ const CompanyDashboard = () => {
       const res = await axios.get(`${API}/company/services/my`, { headers: { Authorization: `Bearer ${token}` } });
       setServices(res.data);
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Erreur lors de la création');
+      toast.error(getErrorMessage(error, 'Erreur lors de la création'));
     }
   };
 
@@ -286,7 +286,7 @@ const CompanyDashboard = () => {
       const res = await axios.get(`${API}/company/job-offers/my`, { headers: { Authorization: `Bearer ${token}` } });
       setJobOffers(res.data);
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Erreur lors de la création');
+      toast.error(getErrorMessage(error, 'Erreur lors de la création'));
     }
   };
 
@@ -343,7 +343,7 @@ const CompanyDashboard = () => {
       toast.success('Annonce créée ! Ajoutez maintenant les photos.');
       setRentalStep(2);
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Erreur lors de la création');
+      toast.error(getErrorMessage(error, 'Erreur lors de la création'));
     }
   };
 
@@ -476,7 +476,7 @@ const CompanyDashboard = () => {
       toast.success('Propriété créée ! Ajoutez maintenant les photos.');
       setSaleStep(2);
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Erreur lors de la création');
+      toast.error(getErrorMessage(error, 'Erreur lors de la création'));
     }
   };
 

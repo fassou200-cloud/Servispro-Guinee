@@ -115,7 +115,7 @@ const CustomerAuth = ({ setIsCustomerAuthenticated }) => {
       toast.success(isLogin ? `Bienvenue ${response.data.user.first_name} !` : `Compte créé avec succès, bienvenue ${response.data.user.first_name} !`);
       navigate('/customer/dashboard');
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Une erreur est survenue');
+      toast.error(getErrorMessage(error, 'Une erreur est survenue'));
     } finally {
       setLoading(false);
     }

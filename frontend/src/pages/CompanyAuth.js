@@ -106,7 +106,7 @@ const CompanyAuth = ({ setIsCompanyAuthenticated }) => {
       if (setIsCompanyAuthenticated) setIsCompanyAuthenticated(true);
       navigate('/company/dashboard');
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Échec de la connexion');
+      toast.error(getErrorMessage(error, 'Échec de la connexion'));
     } finally {
       setLoading(false);
     }
@@ -152,7 +152,7 @@ const CompanyAuth = ({ setIsCompanyAuthenticated }) => {
       toast.success('Entreprise créée ! Veuillez télécharger vos documents.');
       setCurrentStep(2);
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Échec de inscription');
+      toast.error(getErrorMessage(error, 'Échec de inscription'));
     } finally {
       setLoading(false);
     }
@@ -239,7 +239,7 @@ const CompanyAuth = ({ setIsCompanyAuthenticated }) => {
       if (setIsCompanyAuthenticated) setIsCompanyAuthenticated(true);
       navigate('/company/dashboard');
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Échec du téléchargement');
+      toast.error(getErrorMessage(error, 'Échec du téléchargement'));
     } finally {
       setLoading(false);
     }

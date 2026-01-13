@@ -87,7 +87,7 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
       toast.success('Service confirmé comme terminé ! Merci.');
       fetchJobs();
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Erreur lors de la confirmation');
+      toast.error(getErrorMessage(error, 'Erreur lors de la confirmation'));
     }
   };
 
