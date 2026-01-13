@@ -119,7 +119,7 @@ const InvestigationFeePopup = ({
       }, 2000);
 
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Erreur lors de l\'initiation du paiement');
+      toast.error(getErrorMessage(error, 'Erreur lors de l\'initiation du paiement'));
       setStep(1);
     } finally {
       setLoading(false);
