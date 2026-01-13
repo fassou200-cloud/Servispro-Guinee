@@ -2596,6 +2596,89 @@ async def get_all_rentals_admin():
     rentals = await db.rental_listings.find({}, {'_id': 0}).sort('created_at', -1).to_list(1000)
     return rentals
 
+@api_router.get("/admin/rentals/pending")
+async def get_pending_rentals_admin():
+    """Get all pending rental listings for admin approval"""
+    rentals = await db.rental_listings.find(
+        {'approval_status': ListingApprovalStatus.PENDING.value}, 
+        {'_id': 0}
+    ).sort('created_at', -1).to_list(1000)
+    return rentals
+
+@api_router.put("/admin/rentals/{rental_id}/approve")
+async def approve_rental_admin(rental_id: str):
+    """Approve a rental listing"""
+    rental = await db.rental_listings.find_one({'id': rental_id})
+    if not rental:
+        raise HTTPException(status_code=404, detail="Location non trouvée")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    await db.rental_listings.update_one(
+        {'id': rental_id},
+        {
+            '$set': {
+                'approval_status': ListingApprovalStatus.APPROVED.value,
+                'approved_at': now,
+                'approved_by': 'admin',
+                'rejection_reason': None,
+                'updated_at': now
+            }
+        }
+    )
+    
+    # Create notification for the provider
+    notification_id = str(uuid.uuid4())
+    await db.notifications.insert_one({
+        'id': notification_id,
+        'user_id': rental['service_provider_id'],
+        'user_type': 'provider',
+        'title': 'Annonce approuvée',
+        'message': f'Votre annonce "{rental["title"]}" a été approuvée et est maintenant visible au public.',
+        'notification_type': 'system',
+        'related_id': rental_id,
+        'is_read': False,
+        'created_at': now
+    })
+    
+    return {"message": "Location approuvée avec succès", "rental_id": rental_id}
+
+@api_router.put("/admin/rentals/{rental_id}/reject")
+async def reject_rental_admin(rental_id: str, reason: Optional[str] = None):
+    """Reject a rental listing"""
+    rental = await db.rental_listings.find_one({'id': rental_id})
+    if not rental:
+        raise HTTPException(status_code=404, detail="Location non trouvée")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    await db.rental_listings.update_one(
+        {'id': rental_id},
+        {
+            '$set': {
+                'approval_status': ListingApprovalStatus.REJECTED.value,
+                'rejection_reason': reason or 'Annonce non conforme aux conditions d\'utilisation',
+                'approved_at': None,
+                'approved_by': None,
+                'updated_at': now
+            }
+        }
+    )
+    
+    # Create notification for the provider
+    notification_id = str(uuid.uuid4())
+    await db.notifications.insert_one({
+        'id': notification_id,
+        'user_id': rental['service_provider_id'],
+        'user_type': 'provider',
+        'title': 'Annonce rejetée',
+        'message': f'Votre annonce "{rental["title"]}" a été rejetée. Raison: {reason or "Non conforme aux conditions"}',
+        'notification_type': 'system',
+        'related_id': rental_id,
+        'is_read': False,
+        'created_at': now
+    })
+
 @api_router.get("/admin/agents-immobilier")
 async def get_all_agents_immobilier():
     """Get all Agent Immobilier providers for admin dashboard"""
