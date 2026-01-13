@@ -290,8 +290,18 @@ class RentalListing(BaseModel):
     registration_ministere: Optional[str] = None  # Ministry of Housing registration
     seller_id_document: Optional[str] = None  # Seller's ID/Passport
     documents_additionnels: List[str] = []  # Additional documents
+    # Admin approval fields
+    approval_status: str = "pending"  # pending, approved, rejected
+    rejection_reason: Optional[str] = None
+    approved_at: Optional[str] = None
+    approved_by: Optional[str] = None
     created_at: str
     updated_at: str
+
+class ListingApprovalStatus(str, Enum):
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
 
 # Property Sale Model (Vente de Maison/Terrain)
 class PropertySaleCreate(BaseModel):
