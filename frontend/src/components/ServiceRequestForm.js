@@ -257,9 +257,23 @@ const ServiceRequestForm = ({ providerId, providerName, provider, onSuccess }) =
           className="w-full h-12 font-heading font-bold text-base"
           disabled={loading}
         >
-          {loading ? 'Envoi en cours...' : 'Envoyer la Demande'}
+          {loading ? 'Envoi en cours...' : (
+            requiresPayment && !paymentCompleted 
+              ? `Payer ${Number(provider.investigation_fee).toLocaleString('fr-FR')} GNF et Envoyer`
+              : 'Envoyer la Demande'
+          )}
         </Button>
       </form>
+
+      {/* Payment Popup */}
+      <InvestigationFeePopup
+        isOpen={showPaymentPopup}
+        onClose={() => setShowPaymentPopup(false)}
+        provider={provider}
+        onPaymentSuccess={handlePaymentSuccess}
+        customerName={formData.client_name}
+        customerPhone={formData.phone_number}
+      />
     </div>
   );
 };
