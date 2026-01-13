@@ -72,6 +72,8 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
   const [refreshReviews, setRefreshReviews] = useState(0);
   const [customer, setCustomer] = useState(null);
   const [reviewStats, setReviewStats] = useState(null);
+  const [showPaymentPopup, setShowPaymentPopup] = useState(false);
+  const [paymentCompleted, setPaymentCompleted] = useState(false);
 
   useEffect(() => {
     fetchProvider();
@@ -119,7 +121,21 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
       navigate('/customer/auth');
       return;
     }
+
+    // Check if provider has investigation fee and payment not yet completed
+    if (provider?.investigation_fee && provider.investigation_fee > 0 && !paymentCompleted) {
+      setShowPaymentPopup(true);
+      return;
+    }
+    
     setShowRequestForm(!showRequestForm);
+  };
+
+  const handlePaymentSuccess = () => {
+    setPaymentCompleted(true);
+    setShowPaymentPopup(false);
+    setShowRequestForm(true);
+    toast.success('Paiement réussi ! Vous pouvez maintenant envoyer votre demande.');
   };
 
   if (loading) {
