@@ -287,6 +287,22 @@ const MyRentals = () => {
                         {rental.max_guests} invités
                       </span>
                     )}
+                    {/* Approval Status Badge */}
+                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium ${
+                      rental.approval_status === 'approved' 
+                        ? 'bg-green-100 text-green-700' 
+                        : rental.approval_status === 'rejected'
+                        ? 'bg-red-100 text-red-700'
+                        : 'bg-orange-100 text-orange-700'
+                    }`}>
+                      {rental.approval_status === 'approved' ? (
+                        <><CheckCircle className="h-3 w-3" /> Approuvée</>
+                      ) : rental.approval_status === 'rejected' ? (
+                        <><XCircle className="h-3 w-3" /> Rejetée</>
+                      ) : (
+                        <><Clock className="h-3 w-3" /> En attente</>
+                      )}
+                    </span>
                   </div>
                 </div>
                 
