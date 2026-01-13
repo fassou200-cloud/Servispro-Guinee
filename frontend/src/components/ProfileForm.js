@@ -308,16 +308,16 @@ const ProfileForm = ({ user, setUser, onUpdate }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="transport_fee" className="font-heading text-xs uppercase tracking-wide">
-                Frais de Transport (GNF)
+              <Label htmlFor="investigation_fee" className="font-heading text-xs uppercase tracking-wide">
+                Frais d'Enquête (GNF)
               </Label>
               <div className="relative">
                 <Input
-                  id="transport_fee"
-                  name="transport_fee"
+                  id="investigation_fee"
+                  name="investigation_fee"
                   type="number"
-                  data-testid="profile-transport-fee-input"
-                  value={formData.transport_fee}
+                  data-testid="profile-investigation-fee-input"
+                  value={formData.investigation_fee}
                   onChange={handleChange}
                   placeholder="Ex: 10000"
                   className="h-12 pr-16"
@@ -327,7 +327,7 @@ const ProfileForm = ({ user, setUser, onUpdate }) => {
                 </span>
               </div>
               <p className="text-xs text-muted-foreground">
-                Frais de déplacement à domicile
+                Frais pour les enquêtes immobilières
               </p>
             </div>
           </div>
