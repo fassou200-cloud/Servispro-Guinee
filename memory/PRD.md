@@ -53,6 +53,7 @@ Construire une plateforme nommée "ServisPro" pour les prestataires de services 
 - ✅ Vue de tous les documents pour les ventes
 - ✅ Vue de tous les documents des entreprises
 - ✅ Approbation/Rejet des entreprises
+- ✅ **Approbation/Rejet des annonces de location** (NOUVEAU)
 
 ---
 
