@@ -274,7 +274,7 @@ class RentalListing(BaseModel):
     title: str
     description: str
     location: str
-    rental_price: float
+    rental_price: Optional[float] = None  # Optional for short-term rentals
     # New fields for short-term rentals
     rental_type: str = "long_term"
     price_per_night: Optional[float] = None
