@@ -643,6 +643,22 @@ async def get_current_company(credentials: HTTPAuthorizationCredentials = Depend
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
+async def get_current_customer(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get current authenticated customer"""
+    try:
+        token = credentials.credentials
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        customer_id = payload.get('user_id')
+        
+        customer = await db.customers.find_one({'id': customer_id}, {'_id': 0, 'password': 0})
+        if not customer:
+            raise HTTPException(status_code=401, detail="Customer not found")
+        return customer
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
 # Auth Routes
 @api_router.post("/auth/register", response_model=AuthResponse)
 async def register(input_data: RegisterInput):
