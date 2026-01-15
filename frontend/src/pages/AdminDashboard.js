@@ -1902,6 +1902,193 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
             </div>
           </div>
         )}
+
+        {/* Settings Tab */}
+        {activeTab === 'settings' && (
+          <div className="space-y-6">
+            {tabLoading && !loadedTabs['settings'] ? (
+              <Card className="p-8 bg-slate-800 border-slate-700 text-center">
+                <Loader2 className="h-8 w-8 animate-spin text-purple-500 mx-auto mb-2" />
+                <p className="text-slate-400">Chargement des paramètres...</p>
+              </Card>
+            ) : (
+              <>
+                {/* Commission Revenue Card */}
+                <Card className="p-6 bg-gradient-to-r from-purple-900/50 to-indigo-900/50 border-purple-700">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-heading font-bold text-white flex items-center gap-2">
+                      <TrendingUp className="h-6 w-6 text-purple-400" />
+                      Revenus de Commission
+                    </h2>
+                    <span className="text-sm text-purple-300 bg-purple-800/50 px-3 py-1 rounded-full">
+                      {commissionRevenue?.period || '30 derniers jours'}
+                    </span>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="bg-slate-800/50 p-4 rounded-lg">
+                      <p className="text-sm text-slate-400 mb-1">Total Transactions</p>
+                      <p className="text-2xl font-bold text-white">
+                        {commissionRevenue?.total_transactions || 0}
+                      </p>
+                    </div>
+                    <div className="bg-slate-800/50 p-4 rounded-lg">
+                      <p className="text-sm text-slate-400 mb-1">Volume Total</p>
+                      <p className="text-2xl font-bold text-white">
+                        {(commissionRevenue?.total_volume || 0).toLocaleString('fr-FR')} <span className="text-sm text-slate-400">GNF</span>
+                      </p>
+                    </div>
+                    <div className="bg-slate-800/50 p-4 rounded-lg">
+                      <p className="text-sm text-slate-400 mb-1">Commission Visite</p>
+                      <p className="text-2xl font-bold text-green-400">
+                        {(commissionRevenue?.commission_breakdown?.visite || 0).toLocaleString('fr-FR')} <span className="text-sm text-slate-400">GNF</span>
+                      </p>
+                    </div>
+                    <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-4 rounded-lg">
+                      <p className="text-sm text-purple-200 mb-1">Total Commission</p>
+                      <p className="text-2xl font-bold text-white">
+                        {(commissionRevenue?.total_commission || 0).toLocaleString('fr-FR')} <span className="text-sm text-purple-200">GNF</span>
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Commission Breakdown */}
+                  <div className="mt-4 pt-4 border-t border-purple-700/50">
+                    <p className="text-sm text-slate-400 mb-2">Répartition des commissions:</p>
+                    <div className="flex gap-4 text-sm">
+                      <span className="text-slate-300">
+                        Proprio: <span className="text-purple-400 font-semibold">{(commissionRevenue?.commission_breakdown?.proprio || 0).toLocaleString('fr-FR')} GNF</span>
+                      </span>
+                      <span className="text-slate-300">
+                        Visite: <span className="text-green-400 font-semibold">{(commissionRevenue?.commission_breakdown?.visite || 0).toLocaleString('fr-FR')} GNF</span>
+                      </span>
+                      <span className="text-slate-300">
+                        Prestation: <span className="text-blue-400 font-semibold">{(commissionRevenue?.commission_breakdown?.prestation || 0).toLocaleString('fr-FR')} GNF</span>
+                      </span>
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Settings Form */}
+                <Card className="p-6 bg-slate-800 border-slate-700">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-heading font-bold text-white flex items-center gap-2">
+                      <Settings className="h-6 w-6 text-purple-400" />
+                      Paramètres des Commissions
+                    </h2>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => refreshTabData('settings')}
+                      disabled={tabLoading}
+                      className="text-slate-400 hover:text-white"
+                    >
+                      <RefreshCw className={`h-4 w-4 ${tabLoading ? 'animate-spin' : ''}`} />
+                    </Button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Commission Proprio */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-slate-300 flex items-center gap-2">
+                        <Percent className="h-4 w-4 text-purple-400" />
+                        Commission Propriétaire
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.5"
+                          value={settings.commission_proprio}
+                          onChange={(e) => setSettings({...settings, commission_proprio: e.target.value})}
+                          className="w-full h-12 px-4 pr-12 bg-slate-700 border border-slate-600 rounded-lg text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+                        />
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">%</span>
+                      </div>
+                      <p className="text-xs text-slate-500">Commission sur les transactions immobilières</p>
+                    </div>
+
+                    {/* Commission Visite */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-slate-300 flex items-center gap-2">
+                        <Percent className="h-4 w-4 text-green-400" />
+                        Commission Frais de Visite
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.5"
+                          value={settings.commission_visite}
+                          onChange={(e) => setSettings({...settings, commission_visite: e.target.value})}
+                          className="w-full h-12 px-4 pr-12 bg-slate-700 border border-slate-600 rounded-lg text-white focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                        />
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">%</span>
+                      </div>
+                      <p className="text-xs text-slate-500">Commission sur les frais de visite (investigation)</p>
+                    </div>
+
+                    {/* Commission Prestation */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-slate-300 flex items-center gap-2">
+                        <Percent className="h-4 w-4 text-blue-400" />
+                        Commission Prestation
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.5"
+                          value={settings.commission_prestation}
+                          onChange={(e) => setSettings({...settings, commission_prestation: e.target.value})}
+                          className="w-full h-12 px-4 pr-12 bg-slate-700 border border-slate-600 rounded-lg text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        />
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">%</span>
+                      </div>
+                      <p className="text-xs text-slate-500">Commission sur les prestations de services</p>
+                    </div>
+                  </div>
+
+                  {/* Save Button */}
+                  <div className="mt-6 pt-6 border-t border-slate-700 flex justify-end">
+                    <Button
+                      onClick={handleSaveSettings}
+                      disabled={savingSettings}
+                      className="bg-purple-600 hover:bg-purple-700 gap-2 px-6"
+                    >
+                      {savingSettings ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Enregistrement...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="h-4 w-4" />
+                          Enregistrer les Paramètres
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </Card>
+
+                {/* Current Rates Summary */}
+                <Card className="p-4 bg-slate-800/50 border-slate-700">
+                  <div className="flex items-center gap-2 text-sm text-slate-400">
+                    <AlertCircle className="h-4 w-4" />
+                    <span>
+                      Taux actuels appliqués: Proprio <span className="text-purple-400 font-semibold">{commissionRevenue?.rates?.commission_proprio || settings.commission_proprio}%</span> | 
+                      Visite <span className="text-green-400 font-semibold">{commissionRevenue?.rates?.commission_visite || settings.commission_visite}%</span> | 
+                      Prestation <span className="text-blue-400 font-semibold">{commissionRevenue?.rates?.commission_prestation || settings.commission_prestation}%</span>
+                    </span>
+                  </div>
+                </Card>
+              </>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
