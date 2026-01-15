@@ -75,12 +75,13 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
   const [loadedTabs, setLoadedTabs] = useState({});
   const [tabLoading, setTabLoading] = useState(false);
   
-  // Settings state
+  // Settings state - Commissions par domaine en pourcentage
   const [settings, setSettings] = useState({
-    commission_vente: 5,         // pourcentage
-    commission_proprio: 50000,   // montant fixe
-    commission_visite: 10000,    // montant fixe
-    commission_prestation: 25000, // montant fixe
+    commission_prestation: 10,        // Prestation de services (%)
+    commission_location_courte: 10,   // Location courte durée (%)
+    commission_location_longue: 5,    // Location longue durée (%)
+    commission_vente: 3,              // Vente immobilière (%)
+    commission_location_vehicule: 10, // Location véhicule (%)
     devise: 'GNF'
   });
   const [commissionRevenue, setCommissionRevenue] = useState(null);
@@ -200,10 +201,11 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
     setSavingSettings(true);
     try {
       await axios.put(`${API}/admin/settings`, {
-        commission_vente: parseFloat(settings.commission_vente) || 0,
-        commission_proprio: parseFloat(settings.commission_proprio) || 0,
-        commission_visite: parseFloat(settings.commission_visite) || 0,
-        commission_prestation: parseFloat(settings.commission_prestation) || 0,
+        commission_prestation: parseFloat(settings.commission_prestation) || 10,
+        commission_location_courte: parseFloat(settings.commission_location_courte) || 10,
+        commission_location_longue: parseFloat(settings.commission_location_longue) || 5,
+        commission_vente: parseFloat(settings.commission_vente) || 3,
+        commission_location_vehicule: parseFloat(settings.commission_location_vehicule) || 10,
         devise: settings.devise || 'GNF'
       });
       toast.success('Paramètres enregistrés avec succès !');
