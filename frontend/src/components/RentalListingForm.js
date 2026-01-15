@@ -238,17 +238,40 @@ const RentalListingForm = ({ onSuccess }) => {
 
     try {
       const token = localStorage.getItem('token');
+      
+      // Parse and validate prices
+      const rentalPrice = formData.rental_price ? parseFloat(formData.rental_price) : null;
+      const pricePerNight = formData.price_per_night ? parseFloat(formData.price_per_night) : null;
+      
+      // Validation
+      if (formData.rental_type === 'long_term' && (!rentalPrice || rentalPrice <= 0)) {
+        toast.error('Veuillez entrer un prix mensuel valide');
+        setSaving(false);
+        return;
+      }
+      if (formData.rental_type === 'short_term' && (!pricePerNight || pricePerNight <= 0)) {
+        toast.error('Veuillez entrer un prix par nuit valide');
+        setSaving(false);
+        return;
+      }
+      
       const payload = {
-        ...formData,
-        // For long_term: use rental_price, for short_term: set to null
-        rental_price: formData.rental_type === 'long_term' ? (parseFloat(formData.rental_price) || null) : null,
-        // For short_term: use price_per_night, for long_term: set to null
-        price_per_night: formData.rental_type === 'short_term' ? (parseFloat(formData.price_per_night) || null) : null,
-        min_nights: formData.rental_type === 'short_term' ? parseInt(formData.min_nights) : 1,
+        property_type: formData.property_type,
+        rental_type: formData.rental_type,
+        title: formData.title,
+        description: formData.description,
+        location: formData.location,
+        rental_price: formData.rental_type === 'long_term' ? rentalPrice : null,
+        price_per_night: formData.rental_type === 'short_term' ? pricePerNight : null,
+        min_nights: formData.rental_type === 'short_term' ? (parseInt(formData.min_nights) || 1) : 1,
         max_guests: formData.max_guests ? parseInt(formData.max_guests) : null,
+        amenities: formData.amenities || [],
+        is_available: formData.is_available !== false,
         available_from: formData.available_from || null,
         available_to: formData.available_to || null
       };
+
+      console.log('Creating rental with payload:', payload);
 
       const response = await axios.post(`${API}/rentals`, payload, {
         headers: { Authorization: `Bearer ${token}` }
@@ -258,6 +281,7 @@ const RentalListingForm = ({ onSuccess }) => {
       toast.success('Annonce créée ! Ajoutez maintenant les photos et documents.');
       setCurrentStep(2);
     } catch (error) {
+      console.error('Rental creation error:', error.response?.data || error);
       toast.error(getErrorMessage(error, 'Échec de la création'));
     } finally {
       setSaving(false);
