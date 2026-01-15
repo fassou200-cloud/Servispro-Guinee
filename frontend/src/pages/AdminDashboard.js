@@ -69,35 +69,101 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [rentalFilter, setRentalFilter] = useState('all'); // all, long_term, short_term
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, type: null, id: null, name: '' });
+  
+  // Track which tabs have been loaded (for lazy loading)
+  const [loadedTabs, setLoadedTabs] = useState({});
+  const [tabLoading, setTabLoading] = useState(false);
 
+  // Initial load - only stats (fast)
   useEffect(() => {
-    fetchData();
+    loadInitialData();
   }, []);
 
-  const fetchData = async () => {
+  // Lazy load data when tab changes
+  useEffect(() => {
+    if (!loadedTabs[activeTab]) {
+      loadTabData(activeTab);
+    }
+  }, [activeTab]);
+
+  const loadInitialData = async () => {
     try {
-      const [providersRes, customersRes, jobsRes, statsRes, rentalsRes, agentsRes, salesRes, companiesRes] = await Promise.all([
-        axios.get(`${API}/admin/providers`),
-        axios.get(`${API}/admin/customers`),
-        axios.get(`${API}/admin/jobs`),
-        axios.get(`${API}/admin/stats`),
-        axios.get(`${API}/admin/rentals`),
-        axios.get(`${API}/admin/agents-immobilier`),
-        axios.get(`${API}/property-sales?available_only=false`).catch(() => ({ data: [] })),
-        axios.get(`${API}/admin/companies`).catch(() => ({ data: [] }))
-      ]);
-      setProviders(providersRes.data);
-      setCustomers(customersRes.data);
-      setJobs(jobsRes.data);
+      // Load only stats initially (very fast)
+      const statsRes = await axios.get(`${API}/admin/stats`);
       setStats(statsRes.data);
-      setRentals(rentalsRes.data);
-      setAgentsImmobilier(agentsRes.data);
-      setPropertySales(salesRes.data);
-      setCompanies(companiesRes.data);
+      
+      // Pre-load the first tab (providers) in background
+      loadTabData('providers');
     } catch (error) {
-      toast.error('Erreur lors du chargement des données');
+      console.error('Error loading initial data:', error);
+      toast.error('Erreur lors du chargement des statistiques');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadTabData = async (tab) => {
+    if (loadedTabs[tab]) return; // Already loaded
+    
+    setTabLoading(true);
+    try {
+      switch (tab) {
+        case 'providers':
+          const providersRes = await axios.get(`${API}/admin/providers`);
+          setProviders(providersRes.data);
+          break;
+        case 'customers':
+          const customersRes = await axios.get(`${API}/admin/customers`);
+          setCustomers(customersRes.data);
+          break;
+        case 'jobs':
+          const jobsRes = await axios.get(`${API}/admin/jobs`);
+          setJobs(jobsRes.data);
+          break;
+        case 'rentals':
+          const rentalsRes = await axios.get(`${API}/admin/rentals`);
+          setRentals(rentalsRes.data);
+          break;
+        case 'agents':
+          const agentsRes = await axios.get(`${API}/admin/agents-immobilier`);
+          setAgentsImmobilier(agentsRes.data);
+          break;
+        case 'sales':
+          const salesRes = await axios.get(`${API}/property-sales?available_only=false`).catch(() => ({ data: [] }));
+          setPropertySales(salesRes.data);
+          break;
+        case 'companies':
+          const companiesRes = await axios.get(`${API}/admin/companies`).catch(() => ({ data: [] }));
+          setCompanies(companiesRes.data);
+          break;
+        default:
+          break;
+      }
+      setLoadedTabs(prev => ({ ...prev, [tab]: true }));
+    } catch (error) {
+      console.error(`Error loading ${tab} data:`, error);
+      toast.error(`Erreur lors du chargement des ${tab}`);
+    } finally {
+      setTabLoading(false);
+    }
+  };
+
+  // Refresh specific tab data
+  const refreshTabData = (tab) => {
+    setLoadedTabs(prev => ({ ...prev, [tab]: false }));
+    loadTabData(tab);
+  };
+
+  // Legacy fetchData for actions that need full refresh
+  const fetchData = async () => {
+    // Refresh current tab
+    refreshTabData(activeTab);
+    // Also refresh stats
+    try {
+      const statsRes = await axios.get(`${API}/admin/stats`);
+      setStats(statsRes.data);
+    } catch (error) {
+      console.error('Error refreshing stats:', error);
     }
   };
 
