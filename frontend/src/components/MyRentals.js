@@ -402,15 +402,26 @@ const MyRentals = () => {
                       data-testid={`availability-toggle-${rental.id}`}
                     />
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    data-testid={`delete-rental-${rental.id}`}
-                    onClick={() => setDeleteId(rental.id)}
-                    className="text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      data-testid={`edit-rental-${rental.id}`}
+                      onClick={() => openEditDialog(rental)}
+                      className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      data-testid={`delete-rental-${rental.id}`}
+                      onClick={() => setDeleteId(rental.id)}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
 
