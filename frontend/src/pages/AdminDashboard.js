@@ -266,7 +266,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
     try {
       await axios.delete(`${API}/admin/companies/${companyId}`);
       toast.success('Entreprise supprimée avec succès');
-      fetchData();
+      refreshTabData('companies');
       setSelectedCompany(null);
       setDeleteConfirm({ show: false, type: null, id: null, name: '' });
     } catch (error) {
@@ -279,7 +279,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
     try {
       await axios.put(`${API}/admin/rentals/${rentalId}/approve`);
       toast.success('Annonce approuvée avec succès !');
-      fetchData();
+      refreshTabData('rentals');
       if (selectedRental?.id === rentalId) {
         setSelectedRental({ ...selectedRental, approval_status: 'approved' });
       }
@@ -292,7 +292,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
     try {
       await axios.put(`${API}/admin/rentals/${rentalId}/reject`);
       toast.success('Annonce rejetée');
-      fetchData();
+      refreshTabData('rentals');
       if (selectedRental?.id === rentalId) {
         setSelectedRental({ ...selectedRental, approval_status: 'rejected' });
       }
