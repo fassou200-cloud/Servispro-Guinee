@@ -579,6 +579,176 @@ const MyRentals = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={!!editingRental} onOpenChange={() => setEditingRental(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Edit className="h-5 w-5" />
+              Modifier l'Annonce
+            </DialogTitle>
+          </DialogHeader>
+          
+          <form onSubmit={handleEditSubmit} className="space-y-4 mt-4">
+            {/* Property Type */}
+            <div className="space-y-2">
+              <Label htmlFor="property_type">Type de Propriété</Label>
+              <Select
+                value={editForm.property_type}
+                onValueChange={(value) => setEditForm(prev => ({ ...prev, property_type: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Apartment">Appartement</SelectItem>
+                  <SelectItem value="House">Maison</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Rental Type */}
+            <div className="space-y-2">
+              <Label htmlFor="rental_type">Type de Location</Label>
+              <Select
+                value={editForm.rental_type}
+                onValueChange={(value) => setEditForm(prev => ({ ...prev, rental_type: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="long_term">Longue Durée (Mensuel)</SelectItem>
+                  <SelectItem value="short_term">Courte Durée (Nuitée)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Title */}
+            <div className="space-y-2">
+              <Label htmlFor="title">Titre</Label>
+              <Input
+                id="title"
+                name="title"
+                value={editForm.title}
+                onChange={handleEditChange}
+                required
+                placeholder="Ex: Bel appartement au centre-ville"
+              />
+            </div>
+
+            {/* Description */}
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                name="description"
+                value={editForm.description}
+                onChange={handleEditChange}
+                required
+                rows={4}
+                placeholder="Décrivez votre propriété..."
+              />
+            </div>
+
+            {/* Location */}
+            <div className="space-y-2">
+              <Label htmlFor="location">Localisation</Label>
+              <Input
+                id="location"
+                name="location"
+                value={editForm.location}
+                onChange={handleEditChange}
+                required
+                placeholder="Ex: Kaloum, Conakry"
+              />
+            </div>
+
+            {/* Price based on rental type */}
+            {editForm.rental_type === 'long_term' ? (
+              <div className="space-y-2">
+                <Label htmlFor="rental_price">Prix Mensuel (GNF)</Label>
+                <Input
+                  id="rental_price"
+                  name="rental_price"
+                  type="number"
+                  value={editForm.rental_price}
+                  onChange={handleEditChange}
+                  required
+                  placeholder="Ex: 500000"
+                />
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="price_per_night">Prix par Nuit (GNF)</Label>
+                  <Input
+                    id="price_per_night"
+                    name="price_per_night"
+                    type="number"
+                    value={editForm.price_per_night}
+                    onChange={handleEditChange}
+                    required
+                    placeholder="Ex: 150000"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="min_nights">Nuits Minimum</Label>
+                  <Input
+                    id="min_nights"
+                    name="min_nights"
+                    type="number"
+                    min="1"
+                    value={editForm.min_nights}
+                    onChange={handleEditChange}
+                    placeholder="1"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Max Guests for short-term */}
+            {editForm.rental_type === 'short_term' && (
+              <div className="space-y-2">
+                <Label htmlFor="max_guests">Nombre Maximum d'Invités</Label>
+                <Input
+                  id="max_guests"
+                  name="max_guests"
+                  type="number"
+                  min="1"
+                  value={editForm.max_guests}
+                  onChange={handleEditChange}
+                  placeholder="Ex: 4"
+                />
+              </div>
+            )}
+
+            {/* Buttons */}
+            <div className="flex justify-end gap-3 pt-4 border-t">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setEditingRental(null)}
+                disabled={saving}
+              >
+                Annuler
+              </Button>
+              <Button
+                type="submit"
+                disabled={saving}
+                className="gap-2"
+              >
+                {saving ? (
+                  <>Enregistrement...</>
+                ) : (
+                  <><Save className="h-4 w-4" /> Enregistrer</>
+                )}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
