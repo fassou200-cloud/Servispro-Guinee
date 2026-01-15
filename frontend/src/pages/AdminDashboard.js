@@ -200,9 +200,11 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
     setSavingSettings(true);
     try {
       await axios.put(`${API}/admin/settings`, {
+        commission_vente: parseFloat(settings.commission_vente) || 0,
         commission_proprio: parseFloat(settings.commission_proprio) || 0,
         commission_visite: parseFloat(settings.commission_visite) || 0,
-        commission_prestation: parseFloat(settings.commission_prestation) || 0
+        commission_prestation: parseFloat(settings.commission_prestation) || 0,
+        devise: settings.devise || 'GNF'
       });
       toast.success('Paramètres enregistrés avec succès !');
       // Refresh commission revenue with new rates
