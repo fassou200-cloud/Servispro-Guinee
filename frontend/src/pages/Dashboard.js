@@ -351,6 +351,11 @@ const Dashboard = ({ setIsAuthenticated }) => {
         </header>
 
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-6">
+          {/* Commission Rates Info */}
+          <div className="mb-6">
+            <CommissionRatesCard profession={user.profession} />
+          </div>
+
           {/* Profile Banner */}
           <Card className="p-6 mb-6 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-3xl">
             <div className="flex items-center gap-6">
