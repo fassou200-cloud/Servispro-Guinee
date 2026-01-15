@@ -3144,11 +3144,13 @@ async def get_provider_investigation_fee(provider_id: str):
 # ==================== ADMIN SETTINGS ====================
 
 class AdminSettingsUpdate(BaseModel):
-    commission_vente: Optional[float] = None      # Commission vente (%) - pourcentage
-    commission_proprio: Optional[float] = None    # Commission propriétaire (montant fixe)
-    commission_visite: Optional[float] = None     # Commission frais de visite (montant fixe)
-    commission_prestation: Optional[float] = None # Commission prestation (montant fixe)
-    devise: Optional[str] = None                  # Devise (GNF, USD, EUR)
+    # Commissions par domaine en pourcentage
+    commission_prestation: Optional[float] = None      # Prestation de services (%)
+    commission_location_courte: Optional[float] = None # Location courte durée (%)
+    commission_location_longue: Optional[float] = None # Location longue durée (%)
+    commission_vente: Optional[float] = None           # Vente immobilière (%)
+    commission_location_vehicule: Optional[float] = None # Location véhicule (%)
+    devise: Optional[str] = None                       # Devise (GNF, USD, EUR)
 
 @api_router.get("/admin/settings")
 async def get_admin_settings():
@@ -3156,19 +3158,28 @@ async def get_admin_settings():
     settings = await db.admin_settings.find_one({'type': 'platform_settings'}, {'_id': 0})
     
     if not settings:
-        # Return default settings if none exist
+        # Return default settings if none exist - All commissions are percentages by domain
         default_settings = {
             'type': 'platform_settings',
-            'commission_vente': 5.0,        # 5% par défaut (pourcentage)
-            'commission_proprio': 50000,    # 50,000 GNF par défaut (montant fixe)
-            'commission_visite': 10000,     # 10,000 GNF par défaut (montant fixe)
-            'commission_prestation': 25000, # 25,000 GNF par défaut (montant fixe)
-            'devise': 'GNF',                # Devise par défaut
+            'commission_prestation': 10.0,        # 10% Prestation de services
+            'commission_location_courte': 10.0,   # 10% Location courte durée
+            'commission_location_longue': 5.0,    # 5% Location longue durée
+            'commission_vente': 3.0,              # 3% Vente immobilière
+            'commission_location_vehicule': 10.0, # 10% Location véhicule
+            'devise': 'GNF',                      # Devise par défaut
             'created_at': datetime.now(timezone.utc).isoformat(),
             'updated_at': datetime.now(timezone.utc).isoformat()
         }
         await db.admin_settings.insert_one(default_settings)
         return {k: v for k, v in default_settings.items() if k != '_id'}
+    
+    # Migrate old settings format to new format if needed
+    if 'commission_location_courte' not in settings:
+        settings['commission_prestation'] = settings.get('commission_prestation', 10.0) if settings.get('commission_prestation', 0) > 100 else settings.get('commission_prestation', 10.0)
+        settings['commission_location_courte'] = 10.0
+        settings['commission_location_longue'] = 5.0
+        settings['commission_vente'] = settings.get('commission_vente', 3.0)
+        settings['commission_location_vehicule'] = 10.0
     
     return settings
 
@@ -3179,14 +3190,16 @@ async def update_admin_settings(settings: AdminSettingsUpdate):
         'updated_at': datetime.now(timezone.utc).isoformat()
     }
     
-    if settings.commission_vente is not None:
-        update_data['commission_vente'] = settings.commission_vente
-    if settings.commission_proprio is not None:
-        update_data['commission_proprio'] = settings.commission_proprio
-    if settings.commission_visite is not None:
-        update_data['commission_visite'] = settings.commission_visite
     if settings.commission_prestation is not None:
         update_data['commission_prestation'] = settings.commission_prestation
+    if settings.commission_location_courte is not None:
+        update_data['commission_location_courte'] = settings.commission_location_courte
+    if settings.commission_location_longue is not None:
+        update_data['commission_location_longue'] = settings.commission_location_longue
+    if settings.commission_vente is not None:
+        update_data['commission_vente'] = settings.commission_vente
+    if settings.commission_location_vehicule is not None:
+        update_data['commission_location_vehicule'] = settings.commission_location_vehicule
     if settings.devise is not None:
         update_data['devise'] = settings.devise
     
@@ -3202,17 +3215,18 @@ async def update_admin_settings(settings: AdminSettingsUpdate):
 
 @api_router.get("/admin/commission-revenue")
 async def get_commission_revenue():
-    """Calculate commission revenue for the last 30 days"""
+    """Calculate commission revenue for the last 30 days by domain"""
     from datetime import timedelta
     
     # Get settings
     settings = await db.admin_settings.find_one({'type': 'platform_settings'}, {'_id': 0})
     if not settings:
         settings = {
-            'commission_vente': 5.0,        # pourcentage
-            'commission_proprio': 50000,    # montant fixe
-            'commission_visite': 10000,     # montant fixe
-            'commission_prestation': 25000, # montant fixe
+            'commission_prestation': 10.0,        # 10%
+            'commission_location_courte': 10.0,   # 10%
+            'commission_location_longue': 5.0,    # 5%
+            'commission_vente': 3.0,              # 3%
+            'commission_location_vehicule': 10.0, # 10%
             'devise': 'GNF'
         }
     
@@ -3231,29 +3245,51 @@ async def get_commission_revenue():
         'sold_at': {'$gte': thirty_days_ago}
     }, {'_id': 0}).to_list(1000)
     
-    # Calculate commissions
+    # Get rentals for location calculations
+    rentals = await db.rentals.find({
+        'status': 'approved',
+        'created_at': {'$gte': thirty_days_ago}
+    }, {'_id': 0}).to_list(1000)
+    
+    # Calculate totals
     total_payments = len(payments)
     total_sales = len(sales)
+    total_rentals = len(rentals)
     total_payment_amount = sum(p.get('amount', 0) for p in payments)
     total_sales_amount = sum(s.get('price', 0) for s in sales)
     
-    # Commission breakdown
-    # Vente: pourcentage sur le montant de vente
-    commission_vente = total_sales_amount * (settings.get('commission_vente', 5) / 100)
+    # Commission breakdown by domain (all percentages)
+    # 1. Prestation de services
+    prestation_amount = sum(p.get('amount', 0) for p in payments if p.get('payment_type') == 'prestation')
+    commission_prestation = prestation_amount * (settings.get('commission_prestation', 10.0) / 100)
+    prestation_count = sum(1 for p in payments if p.get('payment_type') == 'prestation')
     
-    # Autres: montant fixe par transaction
-    commission_visite_count = sum(1 for p in payments if p.get('payment_type', 'visite') == 'visite')
-    commission_prestation_count = sum(1 for p in payments if p.get('payment_type') == 'prestation')
-    commission_proprio_count = sum(1 for p in payments if p.get('payment_type') == 'proprio')
+    # 2. Location courte durée
+    location_courte_amount = sum(r.get('price_per_night', 0) * 30 for r in rentals if r.get('listing_type') == 'short_term')
+    commission_location_courte = location_courte_amount * (settings.get('commission_location_courte', 10.0) / 100)
+    location_courte_count = sum(1 for r in rentals if r.get('listing_type') == 'short_term')
     
-    # Si pas de type défini, considérer comme visite
-    commission_visite_count += sum(1 for p in payments if not p.get('payment_type'))
+    # 3. Location longue durée
+    location_longue_amount = sum(r.get('price_per_month', 0) for r in rentals if r.get('listing_type') == 'long_term')
+    commission_location_longue = location_longue_amount * (settings.get('commission_location_longue', 5.0) / 100)
+    location_longue_count = sum(1 for r in rentals if r.get('listing_type') == 'long_term')
     
-    commission_visite = commission_visite_count * settings.get('commission_visite', 10000)
-    commission_prestation = commission_prestation_count * settings.get('commission_prestation', 25000)
-    commission_proprio = commission_proprio_count * settings.get('commission_proprio', 50000)
+    # 4. Vente immobilière
+    commission_vente = total_sales_amount * (settings.get('commission_vente', 3.0) / 100)
     
-    total_commission = commission_vente + commission_visite + commission_prestation + commission_proprio
+    # 5. Location véhicule
+    vehicule_amount = sum(r.get('price_per_day', 0) * 30 for r in rentals if r.get('listing_type') == 'vehicle')
+    commission_location_vehicule = vehicule_amount * (settings.get('commission_location_vehicule', 10.0) / 100)
+    vehicule_count = sum(1 for r in rentals if r.get('listing_type') == 'vehicle')
+    
+    # Also include visite payments (frais d'investigation) under prestation
+    visite_amount = sum(p.get('amount', 0) for p in payments if p.get('payment_type', 'visite') == 'visite' or not p.get('payment_type'))
+    commission_visite = visite_amount * (settings.get('commission_prestation', 10.0) / 100)
+    visite_count = sum(1 for p in payments if p.get('payment_type', 'visite') == 'visite' or not p.get('payment_type'))
+    
+    total_commission = (commission_prestation + commission_location_courte + 
+                       commission_location_longue + commission_vente + 
+                       commission_location_vehicule + commission_visite)
     
     devise = settings.get('devise', 'GNF')
     
@@ -3261,27 +3297,38 @@ async def get_commission_revenue():
         'period': '30 derniers jours',
         'total_transactions': total_payments,
         'total_sales': total_sales,
+        'total_rentals': total_rentals,
         'total_volume_payments': total_payment_amount,
         'total_volume_sales': total_sales_amount,
         'commission_breakdown': {
+            'prestation': round(commission_prestation + commission_visite, 0),
+            'location_courte': round(commission_location_courte, 0),
+            'location_longue': round(commission_location_longue, 0),
             'vente': round(commission_vente, 0),
-            'visite': round(commission_visite, 0),
-            'prestation': round(commission_prestation, 0),
-            'proprio': round(commission_proprio, 0)
+            'location_vehicule': round(commission_location_vehicule, 0)
+        },
+        'volume_breakdown': {
+            'prestation': round(prestation_amount + visite_amount, 0),
+            'location_courte': round(location_courte_amount, 0),
+            'location_longue': round(location_longue_amount, 0),
+            'vente': round(total_sales_amount, 0),
+            'location_vehicule': round(vehicule_amount, 0)
         },
         'transaction_counts': {
+            'prestation': prestation_count + visite_count,
+            'location_courte': location_courte_count,
+            'location_longue': location_longue_count,
             'vente': total_sales,
-            'visite': commission_visite_count,
-            'prestation': commission_prestation_count,
-            'proprio': commission_proprio_count
+            'location_vehicule': vehicule_count
         },
         'total_commission': round(total_commission, 0),
         'devise': devise,
         'rates': {
-            'commission_vente': settings.get('commission_vente', 5),
-            'commission_proprio': settings.get('commission_proprio', 50000),
-            'commission_visite': settings.get('commission_visite', 10000),
-            'commission_prestation': settings.get('commission_prestation', 25000)
+            'commission_prestation': settings.get('commission_prestation', 10.0),
+            'commission_location_courte': settings.get('commission_location_courte', 10.0),
+            'commission_location_longue': settings.get('commission_location_longue', 5.0),
+            'commission_vente': settings.get('commission_vente', 3.0),
+            'commission_location_vehicule': settings.get('commission_location_vehicule', 10.0)
         }
     }
 
