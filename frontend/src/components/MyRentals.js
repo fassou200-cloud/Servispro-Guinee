@@ -224,6 +224,60 @@ const MyRentals = () => {
     }
   };
 
+  // Edit functions
+  const openEditDialog = (rental) => {
+    setEditForm({
+      title: rental.title || '',
+      description: rental.description || '',
+      location: rental.location || '',
+      rental_price: rental.rental_price || '',
+      price_per_night: rental.price_per_night || '',
+      rental_type: rental.rental_type || 'long_term',
+      min_nights: rental.min_nights || 1,
+      max_guests: rental.max_guests || '',
+      property_type: rental.property_type || 'Apartment',
+      is_available: rental.is_available !== false
+    });
+    setEditingRental(rental);
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    if (!editingRental) return;
+    
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      
+      const payload = {
+        ...editForm,
+        property_type: editForm.property_type,
+        rental_price: editForm.rental_type === 'long_term' ? (parseFloat(editForm.rental_price) || null) : null,
+        price_per_night: editForm.rental_type === 'short_term' ? (parseFloat(editForm.price_per_night) || null) : null,
+        min_nights: editForm.rental_type === 'short_term' ? parseInt(editForm.min_nights) : 1,
+        max_guests: editForm.max_guests ? parseInt(editForm.max_guests) : null,
+        amenities: editingRental.amenities || []
+      };
+
+      await axios.put(`${API}/rentals/${editingRental.id}`, payload, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      toast.success('Annonce mise à jour avec succès !');
+      setEditingRental(null);
+      fetchRentals();
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Échec de la mise à jour'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const formatPrice = (rental) => {
     if (rental.rental_type === 'short_term' && rental.price_per_night) {
       return `${Number(rental.price_per_night).toLocaleString('fr-FR')} GNF/nuit`;
