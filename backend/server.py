@@ -256,10 +256,10 @@ class RentalListingCreate(BaseModel):
     def validate_prices(self):
         """Validate that appropriate price is set based on rental type"""
         if self.rental_type == 'long_term':
-            if not self.rental_price or self.rental_price <= 0:
+            if self.rental_price is None or self.rental_price <= 0:
                 raise ValueError('Le prix mensuel doit être supérieur à 0 pour les locations longue durée')
         elif self.rental_type == 'short_term':
-            if not self.price_per_night or self.price_per_night <= 0:
+            if self.price_per_night is None or self.price_per_night <= 0:
                 raise ValueError('Le prix par nuit doit être supérieur à 0 pour les locations courte durée')
         return self
 
