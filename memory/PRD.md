@@ -127,6 +127,19 @@ Construire une plateforme nommée "ServisPro" pour les prestataires de services 
 
 ## Changelog
 
+### 2026-01-15 - Paramètres Admin: Commissions par Domaine (NOUVEAU)
+- ✅ **Nouvelle structure de commissions par domaine** (tous en pourcentage) :
+  - Prestation de services : 10%
+  - Location courte durée : 10%
+  - Location longue durée : 5%
+  - Vente immobilière : 3%
+  - Location véhicule : 10%
+- ✅ **Backend mis à jour** : Nouveaux champs dans `admin_settings`
+- ✅ **Interface Admin Settings** : 5 champs de pourcentage avec icônes colorées
+- ✅ **Répartition des revenus par domaine** dans le dashboard admin
+- ✅ **Calcul automatique des commissions** basé sur le type de transaction
+- ✅ **Migration automatique** des anciens paramètres vers la nouvelle structure
+
 ### 2026-01-13 - Approbation Admin des Locations (NOUVEAU)
 - ✅ **Champ `approval_status`** ajouté aux locations : `pending`, `approved`, `rejected`
 - ✅ **Nouvelles locations automatiquement en statut `pending`**
