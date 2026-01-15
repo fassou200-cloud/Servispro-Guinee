@@ -3141,6 +3141,122 @@ async def get_provider_investigation_fee(provider_id: str):
         'price': provider.get('price', 0)
     }
 
+# ==================== ADMIN SETTINGS ====================
+
+class AdminSettingsUpdate(BaseModel):
+    commission_proprio: Optional[float] = None  # Commission propriétaire (%)
+    commission_visite: Optional[float] = None   # Commission frais de visite (%)
+    commission_prestation: Optional[float] = None  # Commission prestation (%)
+
+@api_router.get("/admin/settings")
+async def get_admin_settings():
+    """Get admin platform settings"""
+    settings = await db.admin_settings.find_one({'type': 'platform_settings'}, {'_id': 0})
+    
+    if not settings:
+        # Return default settings if none exist
+        default_settings = {
+            'type': 'platform_settings',
+            'commission_proprio': 5.0,      # 5% par défaut
+            'commission_visite': 10.0,      # 10% par défaut
+            'commission_prestation': 15.0,  # 15% par défaut
+            'created_at': datetime.now(timezone.utc).isoformat(),
+            'updated_at': datetime.now(timezone.utc).isoformat()
+        }
+        await db.admin_settings.insert_one(default_settings)
+        return {k: v for k, v in default_settings.items() if k != '_id'}
+    
+    return settings
+
+@api_router.put("/admin/settings")
+async def update_admin_settings(settings: AdminSettingsUpdate):
+    """Update admin platform settings"""
+    update_data = {
+        'updated_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    if settings.commission_proprio is not None:
+        update_data['commission_proprio'] = settings.commission_proprio
+    if settings.commission_visite is not None:
+        update_data['commission_visite'] = settings.commission_visite
+    if settings.commission_prestation is not None:
+        update_data['commission_prestation'] = settings.commission_prestation
+    
+    result = await db.admin_settings.update_one(
+        {'type': 'platform_settings'},
+        {'$set': update_data},
+        upsert=True
+    )
+    
+    # Return updated settings
+    settings = await db.admin_settings.find_one({'type': 'platform_settings'}, {'_id': 0})
+    return settings
+
+@api_router.get("/admin/commission-revenue")
+async def get_commission_revenue():
+    """Calculate commission revenue for the last 30 days"""
+    from datetime import timedelta
+    
+    # Get settings
+    settings = await db.admin_settings.find_one({'type': 'platform_settings'}, {'_id': 0})
+    if not settings:
+        settings = {
+            'commission_proprio': 5.0,
+            'commission_visite': 10.0,
+            'commission_prestation': 15.0
+        }
+    
+    # Calculate date 30 days ago
+    thirty_days_ago = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
+    
+    # Get successful payments from the last 30 days
+    payments = await db.payments.find({
+        'status': 'completed',
+        'created_at': {'$gte': thirty_days_ago}
+    }, {'_id': 0}).to_list(1000)
+    
+    # Calculate commissions
+    total_payments = len(payments)
+    total_amount = sum(p.get('amount', 0) for p in payments)
+    
+    # Commission breakdown (based on payment types)
+    commission_visite = 0
+    commission_prestation = 0
+    commission_proprio = 0
+    
+    for payment in payments:
+        amount = payment.get('amount', 0)
+        payment_type = payment.get('payment_type', 'visite')  # Default to visite
+        
+        if payment_type == 'visite':
+            commission_visite += amount * (settings['commission_visite'] / 100)
+        elif payment_type == 'prestation':
+            commission_prestation += amount * (settings['commission_prestation'] / 100)
+        elif payment_type == 'proprio':
+            commission_proprio += amount * (settings['commission_proprio'] / 100)
+        else:
+            # Default: apply visite commission
+            commission_visite += amount * (settings['commission_visite'] / 100)
+    
+    total_commission = commission_visite + commission_prestation + commission_proprio
+    
+    return {
+        'period': '30 derniers jours',
+        'total_transactions': total_payments,
+        'total_volume': total_amount,
+        'commission_breakdown': {
+            'visite': round(commission_visite, 0),
+            'prestation': round(commission_prestation, 0),
+            'proprio': round(commission_proprio, 0)
+        },
+        'total_commission': round(total_commission, 0),
+        'rates': {
+            'commission_proprio': settings['commission_proprio'],
+            'commission_visite': settings['commission_visite'],
+            'commission_prestation': settings['commission_prestation']
+        }
+    }
+
 # Include router
 app.include_router(api_router)
 
