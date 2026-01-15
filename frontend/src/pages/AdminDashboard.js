@@ -77,12 +77,22 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
   
   // Settings state
   const [settings, setSettings] = useState({
-    commission_proprio: 5,
-    commission_visite: 10,
-    commission_prestation: 15
+    commission_vente: 5,         // pourcentage
+    commission_proprio: 50000,   // montant fixe
+    commission_visite: 10000,    // montant fixe
+    commission_prestation: 25000, // montant fixe
+    devise: 'GNF'
   });
   const [commissionRevenue, setCommissionRevenue] = useState(null);
   const [savingSettings, setSavingSettings] = useState(false);
+
+  // Currency options
+  const deviseOptions = [
+    { value: 'GNF', label: 'Franc Guinéen (GNF)', symbol: 'GNF' },
+    { value: 'USD', label: 'Dollar US (USD)', symbol: '$' },
+    { value: 'EUR', label: 'Euro (EUR)', symbol: '€' },
+    { value: 'XOF', label: 'Franc CFA (XOF)', symbol: 'XOF' }
+  ];
 
   // Initial load - only stats (fast)
   useEffect(() => {
