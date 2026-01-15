@@ -150,6 +150,22 @@ const MyRentals = () => {
   const [loading, setLoading] = useState(true);
   const [deleteId, setDeleteId] = useState(null);
   const [updatingAvailability, setUpdatingAvailability] = useState(null);
+  
+  // Edit state
+  const [editingRental, setEditingRental] = useState(null);
+  const [editForm, setEditForm] = useState({
+    title: '',
+    description: '',
+    location: '',
+    rental_price: '',
+    price_per_night: '',
+    rental_type: 'long_term',
+    min_nights: 1,
+    max_guests: '',
+    property_type: 'Apartment',
+    is_available: true
+  });
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     fetchRentals();
