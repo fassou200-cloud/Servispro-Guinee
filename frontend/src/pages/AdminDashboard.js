@@ -201,7 +201,8 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
     try {
       await axios.delete(`${API}/admin/providers/${providerId}`);
       toast.success('Prestataire supprimé avec succès');
-      fetchData();
+      refreshTabData('providers');
+      refreshTabData('agents');
       setSelectedProvider(null);
       setSelectedAgent(null);
       setDeleteConfirm({ show: false, type: null, id: null, name: '' });
@@ -214,7 +215,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
     try {
       await axios.delete(`${API}/admin/customers/${customerId}`);
       toast.success('Client supprimé avec succès');
-      fetchData();
+      refreshTabData('customers');
       setSelectedCustomer(null);
       setDeleteConfirm({ show: false, type: null, id: null, name: '' });
     } catch (error) {
@@ -226,7 +227,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
     try {
       await axios.delete(`${API}/admin/rentals/${rentalId}`);
       toast.success('Location supprimée avec succès');
-      fetchData();
+      refreshTabData('rentals');
       setSelectedRental(null);
       setDeleteConfirm({ show: false, type: null, id: null, name: '' });
     } catch (error) {
@@ -239,7 +240,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
     try {
       await axios.put(`${API}/admin/companies/${companyId}/approve`);
       toast.success('Entreprise approuvée avec succès');
-      fetchData();
+      refreshTabData('companies');
       if (selectedCompany?.id === companyId) {
         setSelectedCompany({ ...selectedCompany, verification_status: 'approved' });
       }
@@ -252,7 +253,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
     try {
       await axios.put(`${API}/admin/companies/${companyId}/reject`);
       toast.success('Entreprise rejetée');
-      fetchData();
+      refreshTabData('companies');
       if (selectedCompany?.id === companyId) {
         setSelectedCompany({ ...selectedCompany, verification_status: 'rejected' });
       }
