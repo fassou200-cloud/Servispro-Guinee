@@ -240,8 +240,10 @@ const RentalListingForm = ({ onSuccess }) => {
       const token = localStorage.getItem('token');
       const payload = {
         ...formData,
-        rental_price: parseFloat(formData.rental_price) || 0,
-        price_per_night: formData.rental_type === 'short_term' ? parseFloat(formData.price_per_night) : null,
+        // For long_term: use rental_price, for short_term: set to null
+        rental_price: formData.rental_type === 'long_term' ? (parseFloat(formData.rental_price) || null) : null,
+        // For short_term: use price_per_night, for long_term: set to null
+        price_per_night: formData.rental_type === 'short_term' ? (parseFloat(formData.price_per_night) || null) : null,
         min_nights: formData.rental_type === 'short_term' ? parseInt(formData.min_nights) : 1,
         max_guests: formData.max_guests ? parseInt(formData.max_guests) : null,
         available_from: formData.available_from || null,
