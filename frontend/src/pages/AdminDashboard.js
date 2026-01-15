@@ -2046,12 +2046,75 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {/* Commission Vente (pourcentage) */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                    {/* Commission Prestation de services (%) */}
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-slate-300 flex items-center gap-2">
-                        <Percent className="h-4 w-4 text-amber-400" />
-                        Commission Vente
+                        <Briefcase className="h-4 w-4 text-orange-400" />
+                        Prestation de services
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.5"
+                          value={settings.commission_prestation}
+                          onChange={(e) => setSettings({...settings, commission_prestation: e.target.value})}
+                          className="w-full h-12 px-4 pr-12 bg-slate-700 border border-slate-600 rounded-lg text-white focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                        />
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-orange-400 font-bold">%</span>
+                      </div>
+                      <p className="text-xs text-slate-500">Commission sur les prestations</p>
+                    </div>
+
+                    {/* Commission Location courte durée (%) */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-slate-300 flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-cyan-400" />
+                        Location courte durée
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.5"
+                          value={settings.commission_location_courte}
+                          onChange={(e) => setSettings({...settings, commission_location_courte: e.target.value})}
+                          className="w-full h-12 px-4 pr-12 bg-slate-700 border border-slate-600 rounded-lg text-white focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                        />
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-cyan-400 font-bold">%</span>
+                      </div>
+                      <p className="text-xs text-slate-500">Location journalière/hebdo</p>
+                    </div>
+
+                    {/* Commission Location longue durée (%) */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-slate-300 flex items-center gap-2">
+                        <Home className="h-4 w-4 text-green-400" />
+                        Location longue durée
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.5"
+                          value={settings.commission_location_longue}
+                          onChange={(e) => setSettings({...settings, commission_location_longue: e.target.value})}
+                          className="w-full h-12 px-4 pr-12 bg-slate-700 border border-slate-600 rounded-lg text-white focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                        />
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-green-400 font-bold">%</span>
+                      </div>
+                      <p className="text-xs text-slate-500">Location mensuelle/annuelle</p>
+                    </div>
+
+                    {/* Commission Vente immobilière (%) */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-slate-300 flex items-center gap-2">
+                        <Building className="h-4 w-4 text-amber-400" />
+                        Vente immobilière
                       </label>
                       <div className="relative">
                         <input
@@ -2065,67 +2128,28 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                         />
                         <span className="absolute right-4 top-1/2 -translate-y-1/2 text-amber-400 font-bold">%</span>
                       </div>
-                      <p className="text-xs text-slate-500">Pourcentage sur les ventes immobilières</p>
+                      <p className="text-xs text-slate-500">Commission sur les ventes</p>
                     </div>
 
-                    {/* Commission Proprio (montant fixe) */}
+                    {/* Commission Location véhicule (%) */}
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-slate-300 flex items-center gap-2">
-                        <Home className="h-4 w-4 text-purple-400" />
-                        Commission Propriétaire
+                        <MapPin className="h-4 w-4 text-purple-400" />
+                        Location véhicule
                       </label>
                       <div className="relative">
                         <input
                           type="number"
                           min="0"
-                          step="1000"
-                          value={settings.commission_proprio}
-                          onChange={(e) => setSettings({...settings, commission_proprio: e.target.value})}
-                          className="w-full h-12 px-4 pr-16 bg-slate-700 border border-slate-600 rounded-lg text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+                          max="100"
+                          step="0.5"
+                          value={settings.commission_location_vehicule}
+                          onChange={(e) => setSettings({...settings, commission_location_vehicule: e.target.value})}
+                          className="w-full h-12 px-4 pr-12 bg-slate-700 border border-slate-600 rounded-lg text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                         />
-                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm">{settings.devise}</span>
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-purple-400 font-bold">%</span>
                       </div>
-                      <p className="text-xs text-slate-500">Montant fixe par transaction</p>
-                    </div>
-
-                    {/* Commission Visite (montant fixe) */}
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-slate-300 flex items-center gap-2">
-                        <Eye className="h-4 w-4 text-green-400" />
-                        Commission Frais de Visite
-                      </label>
-                      <div className="relative">
-                        <input
-                          type="number"
-                          min="0"
-                          step="1000"
-                          value={settings.commission_visite}
-                          onChange={(e) => setSettings({...settings, commission_visite: e.target.value})}
-                          className="w-full h-12 px-4 pr-16 bg-slate-700 border border-slate-600 rounded-lg text-white focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                        />
-                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm">{settings.devise}</span>
-                      </div>
-                      <p className="text-xs text-slate-500">Montant fixe par visite (investigation)</p>
-                    </div>
-
-                    {/* Commission Prestation (montant fixe) */}
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-slate-300 flex items-center gap-2">
-                        <Briefcase className="h-4 w-4 text-blue-400" />
-                        Commission Prestation
-                      </label>
-                      <div className="relative">
-                        <input
-                          type="number"
-                          min="0"
-                          step="1000"
-                          value={settings.commission_prestation}
-                          onChange={(e) => setSettings({...settings, commission_prestation: e.target.value})}
-                          className="w-full h-12 px-4 pr-16 bg-slate-700 border border-slate-600 rounded-lg text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                        />
-                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm">{settings.devise}</span>
-                      </div>
-                      <p className="text-xs text-slate-500">Montant fixe par prestation</p>
+                      <p className="text-xs text-slate-500">Location de véhicules</p>
                     </div>
                   </div>
 
