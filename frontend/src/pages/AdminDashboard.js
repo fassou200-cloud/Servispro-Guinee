@@ -7,7 +7,7 @@ import {
   Shield, LogOut, Users, Briefcase, CheckCircle, XCircle, 
   Clock, Eye, Home, Building, UserCheck, UserX, AlertCircle, Trash2, UserCircle,
   MapPin, Calendar, Moon, DollarSign, Star, MessageCircle, FileText, ExternalLink,
-  Loader2, RefreshCw
+  Loader2, RefreshCw, Settings, Percent, TrendingUp, Save
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
