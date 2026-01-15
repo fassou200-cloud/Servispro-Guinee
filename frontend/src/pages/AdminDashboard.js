@@ -2180,10 +2180,12 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                   <div className="flex items-center gap-2 text-sm text-slate-400">
                     <AlertCircle className="h-4 w-4" />
                     <span>
-                      Taux actuels: Vente <span className="text-amber-400 font-semibold">{commissionRevenue?.rates?.commission_vente || settings.commission_vente}%</span> | 
-                      Proprio <span className="text-purple-400 font-semibold">{(commissionRevenue?.rates?.commission_proprio || settings.commission_proprio).toLocaleString('fr-FR')} {settings.devise}</span> | 
-                      Visite <span className="text-green-400 font-semibold">{(commissionRevenue?.rates?.commission_visite || settings.commission_visite).toLocaleString('fr-FR')} {settings.devise}</span> | 
-                      Prestation <span className="text-blue-400 font-semibold">{(commissionRevenue?.rates?.commission_prestation || settings.commission_prestation).toLocaleString('fr-FR')} {settings.devise}</span>
+                      Taux actuels: 
+                      Prestation <span className="text-orange-400 font-semibold">{commissionRevenue?.rates?.commission_prestation || settings.commission_prestation}%</span> | 
+                      Loc. Courte <span className="text-cyan-400 font-semibold">{commissionRevenue?.rates?.commission_location_courte || settings.commission_location_courte}%</span> | 
+                      Loc. Longue <span className="text-green-400 font-semibold">{commissionRevenue?.rates?.commission_location_longue || settings.commission_location_longue}%</span> | 
+                      Vente <span className="text-amber-400 font-semibold">{commissionRevenue?.rates?.commission_vente || settings.commission_vente}%</span> | 
+                      Véhicule <span className="text-purple-400 font-semibold">{commissionRevenue?.rates?.commission_location_vehicule || settings.commission_location_vehicule}%</span>
                     </span>
                   </div>
                 </Card>
