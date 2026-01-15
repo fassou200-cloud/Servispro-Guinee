@@ -554,6 +554,14 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
             <Building className="h-4 w-4 mr-2" />
             Entreprises ({companies.length})
           </Button>
+          <Button
+            variant={activeTab === 'settings' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('settings')}
+            className={activeTab === 'settings' ? 'bg-purple-600 hover:bg-purple-700' : 'border-slate-600 text-slate-300'}
+          >
+            <Settings className="h-4 w-4 mr-2" />
+            Paramètres
+          </Button>
         </div>
 
         {/* Delete Confirmation Modal */}
