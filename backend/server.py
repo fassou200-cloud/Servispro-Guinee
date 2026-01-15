@@ -3152,6 +3152,53 @@ class AdminSettingsUpdate(BaseModel):
     commission_location_vehicule: Optional[float] = None # Location véhicule (%)
     devise: Optional[str] = None                       # Devise (GNF, USD, EUR)
 
+# Public endpoint to get commission rates (visible to all users)
+@api_router.get("/commission-rates")
+async def get_public_commission_rates():
+    """Get public commission rates for all domains"""
+    settings = await db.admin_settings.find_one({'type': 'platform_settings'}, {'_id': 0})
+    
+    if not settings:
+        settings = {
+            'commission_prestation': 10.0,
+            'commission_location_courte': 10.0,
+            'commission_location_longue': 5.0,
+            'commission_vente': 3.0,
+            'commission_location_vehicule': 10.0,
+            'devise': 'GNF'
+        }
+    
+    return {
+        'rates': {
+            'prestation': {
+                'label': 'Prestation de services',
+                'rate': settings.get('commission_prestation', 10.0),
+                'type': 'percentage'
+            },
+            'location_courte': {
+                'label': 'Location courte durée',
+                'rate': settings.get('commission_location_courte', 10.0),
+                'type': 'percentage'
+            },
+            'location_longue': {
+                'label': 'Location longue durée',
+                'rate': settings.get('commission_location_longue', 5.0),
+                'type': 'percentage'
+            },
+            'vente': {
+                'label': 'Vente immobilière',
+                'rate': settings.get('commission_vente', 3.0),
+                'type': 'percentage'
+            },
+            'location_vehicule': {
+                'label': 'Location de véhicule',
+                'rate': settings.get('commission_location_vehicule', 10.0),
+                'type': 'percentage'
+            }
+        },
+        'devise': settings.get('devise', 'GNF')
+    }
+
 @api_router.get("/admin/settings")
 async def get_admin_settings():
     """Get admin platform settings"""
