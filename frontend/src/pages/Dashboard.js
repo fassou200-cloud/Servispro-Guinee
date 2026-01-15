@@ -20,6 +20,7 @@ import VehicleListingForm from '@/components/VehicleListingForm';
 import MyVehicles from '@/components/MyVehicles';
 import PropertySaleForm from '@/components/PropertySaleForm';
 import MyPropertySales from '@/components/MyPropertySales';
+import NotificationBell from '@/components/NotificationBell';
 import CommissionRatesCard from '@/components/CommissionRatesCard';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
