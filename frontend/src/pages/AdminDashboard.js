@@ -146,6 +146,14 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
           const companiesRes = await axios.get(`${API}/admin/companies`).catch(() => ({ data: [] }));
           setCompanies(companiesRes.data);
           break;
+        case 'settings':
+          const [settingsRes, revenueRes] = await Promise.all([
+            axios.get(`${API}/admin/settings`),
+            axios.get(`${API}/admin/commission-revenue`)
+          ]);
+          setSettings(settingsRes.data);
+          setCommissionRevenue(revenueRes.data);
+          break;
         default:
           break;
       }
