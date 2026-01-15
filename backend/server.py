@@ -3144,9 +3144,11 @@ async def get_provider_investigation_fee(provider_id: str):
 # ==================== ADMIN SETTINGS ====================
 
 class AdminSettingsUpdate(BaseModel):
-    commission_proprio: Optional[float] = None  # Commission propriétaire (%)
-    commission_visite: Optional[float] = None   # Commission frais de visite (%)
-    commission_prestation: Optional[float] = None  # Commission prestation (%)
+    commission_vente: Optional[float] = None      # Commission vente (%) - pourcentage
+    commission_proprio: Optional[float] = None    # Commission propriétaire (montant fixe)
+    commission_visite: Optional[float] = None     # Commission frais de visite (montant fixe)
+    commission_prestation: Optional[float] = None # Commission prestation (montant fixe)
+    devise: Optional[str] = None                  # Devise (GNF, USD, EUR)
 
 @api_router.get("/admin/settings")
 async def get_admin_settings():
@@ -3157,9 +3159,11 @@ async def get_admin_settings():
         # Return default settings if none exist
         default_settings = {
             'type': 'platform_settings',
-            'commission_proprio': 5.0,      # 5% par défaut
-            'commission_visite': 10.0,      # 10% par défaut
-            'commission_prestation': 15.0,  # 15% par défaut
+            'commission_vente': 5.0,        # 5% par défaut (pourcentage)
+            'commission_proprio': 50000,    # 50,000 GNF par défaut (montant fixe)
+            'commission_visite': 10000,     # 10,000 GNF par défaut (montant fixe)
+            'commission_prestation': 25000, # 25,000 GNF par défaut (montant fixe)
+            'devise': 'GNF',                # Devise par défaut
             'created_at': datetime.now(timezone.utc).isoformat(),
             'updated_at': datetime.now(timezone.utc).isoformat()
         }
@@ -3175,12 +3179,16 @@ async def update_admin_settings(settings: AdminSettingsUpdate):
         'updated_at': datetime.now(timezone.utc).isoformat()
     }
     
+    if settings.commission_vente is not None:
+        update_data['commission_vente'] = settings.commission_vente
     if settings.commission_proprio is not None:
         update_data['commission_proprio'] = settings.commission_proprio
     if settings.commission_visite is not None:
         update_data['commission_visite'] = settings.commission_visite
     if settings.commission_prestation is not None:
         update_data['commission_prestation'] = settings.commission_prestation
+    if settings.devise is not None:
+        update_data['devise'] = settings.devise
     
     result = await db.admin_settings.update_one(
         {'type': 'platform_settings'},
