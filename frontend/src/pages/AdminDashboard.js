@@ -74,6 +74,15 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
   // Track which tabs have been loaded (for lazy loading)
   const [loadedTabs, setLoadedTabs] = useState({});
   const [tabLoading, setTabLoading] = useState(false);
+  
+  // Settings state
+  const [settings, setSettings] = useState({
+    commission_proprio: 5,
+    commission_visite: 10,
+    commission_prestation: 15
+  });
+  const [commissionRevenue, setCommissionRevenue] = useState(null);
+  const [savingSettings, setSavingSettings] = useState(false);
 
   // Initial load - only stats (fast)
   useEffect(() => {
