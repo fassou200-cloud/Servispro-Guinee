@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { 
   Home, MapPin, Trash2, Moon, Calendar, Users, CheckCircle, XCircle, Clock,
@@ -9,9 +13,10 @@ import {
   Shirt, Lock, Coffee, Droplets, ShowerHead, Mountain, Volume2, 
   Flame, Sofa, Baby, UtensilsCrossed, Sun, ChefHat, Waves,
   Armchair, Hotel, Refrigerator, Microwave as MicrowaveIcon, CircleDot,
-  FileText, Shield, Eye, ExternalLink
+  FileText, Shield, Eye, ExternalLink, Edit, X, Save
 } from 'lucide-react';
 import axios from 'axios';
+import { getErrorMessage } from '@/utils/helpers';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,6 +27,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
