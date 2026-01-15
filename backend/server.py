@@ -3284,12 +3284,6 @@ async def get_commission_revenue():
             'commission_prestation': settings.get('commission_prestation', 25000)
         }
     }
-        'rates': {
-            'commission_proprio': settings['commission_proprio'],
-            'commission_visite': settings['commission_visite'],
-            'commission_prestation': settings['commission_prestation']
-        }
-    }
 
 # Include router
 app.include_router(api_router)
