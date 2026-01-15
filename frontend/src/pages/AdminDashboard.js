@@ -1937,29 +1937,35 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                     </span>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                     <div className="bg-slate-800/50 p-4 rounded-lg">
-                      <p className="text-sm text-slate-400 mb-1">Total Transactions</p>
+                      <p className="text-sm text-slate-400 mb-1">Transactions</p>
                       <p className="text-2xl font-bold text-white">
                         {commissionRevenue?.total_transactions || 0}
                       </p>
                     </div>
                     <div className="bg-slate-800/50 p-4 rounded-lg">
-                      <p className="text-sm text-slate-400 mb-1">Volume Total</p>
+                      <p className="text-sm text-slate-400 mb-1">Ventes</p>
                       <p className="text-2xl font-bold text-white">
-                        {(commissionRevenue?.total_volume || 0).toLocaleString('fr-FR')} <span className="text-sm text-slate-400">GNF</span>
+                        {commissionRevenue?.total_sales || 0}
                       </p>
                     </div>
                     <div className="bg-slate-800/50 p-4 rounded-lg">
-                      <p className="text-sm text-slate-400 mb-1">Commission Visite</p>
-                      <p className="text-2xl font-bold text-green-400">
-                        {(commissionRevenue?.commission_breakdown?.visite || 0).toLocaleString('fr-FR')} <span className="text-sm text-slate-400">GNF</span>
+                      <p className="text-sm text-slate-400 mb-1">Volume Paiements</p>
+                      <p className="text-xl font-bold text-white">
+                        {(commissionRevenue?.total_volume_payments || 0).toLocaleString('fr-FR')} <span className="text-xs text-slate-400">{commissionRevenue?.devise || settings.devise}</span>
+                      </p>
+                    </div>
+                    <div className="bg-slate-800/50 p-4 rounded-lg">
+                      <p className="text-sm text-slate-400 mb-1">Volume Ventes</p>
+                      <p className="text-xl font-bold text-white">
+                        {(commissionRevenue?.total_volume_sales || 0).toLocaleString('fr-FR')} <span className="text-xs text-slate-400">{commissionRevenue?.devise || settings.devise}</span>
                       </p>
                     </div>
                     <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-4 rounded-lg">
                       <p className="text-sm text-purple-200 mb-1">Total Commission</p>
                       <p className="text-2xl font-bold text-white">
-                        {(commissionRevenue?.total_commission || 0).toLocaleString('fr-FR')} <span className="text-sm text-purple-200">GNF</span>
+                        {(commissionRevenue?.total_commission || 0).toLocaleString('fr-FR')} <span className="text-sm text-purple-200">{commissionRevenue?.devise || settings.devise}</span>
                       </p>
                     </div>
                   </div>
@@ -1967,15 +1973,22 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                   {/* Commission Breakdown */}
                   <div className="mt-4 pt-4 border-t border-purple-700/50">
                     <p className="text-sm text-slate-400 mb-2">Répartition des commissions:</p>
-                    <div className="flex gap-4 text-sm">
+                    <div className="flex flex-wrap gap-4 text-sm">
                       <span className="text-slate-300">
-                        Proprio: <span className="text-purple-400 font-semibold">{(commissionRevenue?.commission_breakdown?.proprio || 0).toLocaleString('fr-FR')} GNF</span>
+                        Vente: <span className="text-amber-400 font-semibold">{(commissionRevenue?.commission_breakdown?.vente || 0).toLocaleString('fr-FR')} {commissionRevenue?.devise || settings.devise}</span>
+                        <span className="text-slate-500 text-xs ml-1">({commissionRevenue?.transaction_counts?.vente || 0} ventes)</span>
                       </span>
                       <span className="text-slate-300">
-                        Visite: <span className="text-green-400 font-semibold">{(commissionRevenue?.commission_breakdown?.visite || 0).toLocaleString('fr-FR')} GNF</span>
+                        Proprio: <span className="text-purple-400 font-semibold">{(commissionRevenue?.commission_breakdown?.proprio || 0).toLocaleString('fr-FR')} {commissionRevenue?.devise || settings.devise}</span>
+                        <span className="text-slate-500 text-xs ml-1">({commissionRevenue?.transaction_counts?.proprio || 0} trans.)</span>
                       </span>
                       <span className="text-slate-300">
-                        Prestation: <span className="text-blue-400 font-semibold">{(commissionRevenue?.commission_breakdown?.prestation || 0).toLocaleString('fr-FR')} GNF</span>
+                        Visite: <span className="text-green-400 font-semibold">{(commissionRevenue?.commission_breakdown?.visite || 0).toLocaleString('fr-FR')} {commissionRevenue?.devise || settings.devise}</span>
+                        <span className="text-slate-500 text-xs ml-1">({commissionRevenue?.transaction_counts?.visite || 0} trans.)</span>
+                      </span>
+                      <span className="text-slate-300">
+                        Prestation: <span className="text-blue-400 font-semibold">{(commissionRevenue?.commission_breakdown?.prestation || 0).toLocaleString('fr-FR')} {commissionRevenue?.devise || settings.devise}</span>
+                        <span className="text-slate-500 text-xs ml-1">({commissionRevenue?.transaction_counts?.prestation || 0} trans.)</span>
                       </span>
                     </div>
                   </div>
@@ -1999,68 +2012,109 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                     </Button>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {/* Commission Proprio */}
+                  {/* Currency Selection */}
+                  <div className="mb-6 p-4 bg-slate-700/50 rounded-lg">
+                    <label className="text-sm font-medium text-slate-300 flex items-center gap-2 mb-3">
+                      <DollarSign className="h-4 w-4 text-amber-400" />
+                      Devise
+                    </label>
+                    <div className="flex gap-2 flex-wrap">
+                      {deviseOptions.map((option) => (
+                        <button
+                          key={option.value}
+                          onClick={() => setSettings({...settings, devise: option.value})}
+                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            settings.devise === option.value
+                              ? 'bg-amber-600 text-white'
+                              : 'bg-slate-600 text-slate-300 hover:bg-slate-500'
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {/* Commission Vente (pourcentage) */}
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-slate-300 flex items-center gap-2">
-                        <Percent className="h-4 w-4 text-purple-400" />
+                        <Percent className="h-4 w-4 text-amber-400" />
+                        Commission Vente
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.5"
+                          value={settings.commission_vente}
+                          onChange={(e) => setSettings({...settings, commission_vente: e.target.value})}
+                          className="w-full h-12 px-4 pr-12 bg-slate-700 border border-slate-600 rounded-lg text-white focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+                        />
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-amber-400 font-bold">%</span>
+                      </div>
+                      <p className="text-xs text-slate-500">Pourcentage sur les ventes immobilières</p>
+                    </div>
+
+                    {/* Commission Proprio (montant fixe) */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-slate-300 flex items-center gap-2">
+                        <Home className="h-4 w-4 text-purple-400" />
                         Commission Propriétaire
                       </label>
                       <div className="relative">
                         <input
                           type="number"
                           min="0"
-                          max="100"
-                          step="0.5"
+                          step="1000"
                           value={settings.commission_proprio}
                           onChange={(e) => setSettings({...settings, commission_proprio: e.target.value})}
-                          className="w-full h-12 px-4 pr-12 bg-slate-700 border border-slate-600 rounded-lg text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+                          className="w-full h-12 px-4 pr-16 bg-slate-700 border border-slate-600 rounded-lg text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                         />
-                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">%</span>
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm">{settings.devise}</span>
                       </div>
-                      <p className="text-xs text-slate-500">Commission sur les transactions immobilières</p>
+                      <p className="text-xs text-slate-500">Montant fixe par transaction</p>
                     </div>
 
-                    {/* Commission Visite */}
+                    {/* Commission Visite (montant fixe) */}
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-slate-300 flex items-center gap-2">
-                        <Percent className="h-4 w-4 text-green-400" />
+                        <Eye className="h-4 w-4 text-green-400" />
                         Commission Frais de Visite
                       </label>
                       <div className="relative">
                         <input
                           type="number"
                           min="0"
-                          max="100"
-                          step="0.5"
+                          step="1000"
                           value={settings.commission_visite}
                           onChange={(e) => setSettings({...settings, commission_visite: e.target.value})}
-                          className="w-full h-12 px-4 pr-12 bg-slate-700 border border-slate-600 rounded-lg text-white focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                          className="w-full h-12 px-4 pr-16 bg-slate-700 border border-slate-600 rounded-lg text-white focus:border-green-500 focus:ring-1 focus:ring-green-500"
                         />
-                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">%</span>
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm">{settings.devise}</span>
                       </div>
-                      <p className="text-xs text-slate-500">Commission sur les frais de visite (investigation)</p>
+                      <p className="text-xs text-slate-500">Montant fixe par visite (investigation)</p>
                     </div>
 
-                    {/* Commission Prestation */}
+                    {/* Commission Prestation (montant fixe) */}
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-slate-300 flex items-center gap-2">
-                        <Percent className="h-4 w-4 text-blue-400" />
+                        <Briefcase className="h-4 w-4 text-blue-400" />
                         Commission Prestation
                       </label>
                       <div className="relative">
                         <input
                           type="number"
                           min="0"
-                          max="100"
-                          step="0.5"
+                          step="1000"
                           value={settings.commission_prestation}
                           onChange={(e) => setSettings({...settings, commission_prestation: e.target.value})}
-                          className="w-full h-12 px-4 pr-12 bg-slate-700 border border-slate-600 rounded-lg text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                          className="w-full h-12 px-4 pr-16 bg-slate-700 border border-slate-600 rounded-lg text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                         />
-                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">%</span>
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm">{settings.devise}</span>
                       </div>
-                      <p className="text-xs text-slate-500">Commission sur les prestations de services</p>
+                      <p className="text-xs text-slate-500">Montant fixe par prestation</p>
                     </div>
                   </div>
 
@@ -2091,9 +2145,10 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                   <div className="flex items-center gap-2 text-sm text-slate-400">
                     <AlertCircle className="h-4 w-4" />
                     <span>
-                      Taux actuels appliqués: Proprio <span className="text-purple-400 font-semibold">{commissionRevenue?.rates?.commission_proprio || settings.commission_proprio}%</span> | 
-                      Visite <span className="text-green-400 font-semibold">{commissionRevenue?.rates?.commission_visite || settings.commission_visite}%</span> | 
-                      Prestation <span className="text-blue-400 font-semibold">{commissionRevenue?.rates?.commission_prestation || settings.commission_prestation}%</span>
+                      Taux actuels: Vente <span className="text-amber-400 font-semibold">{commissionRevenue?.rates?.commission_vente || settings.commission_vente}%</span> | 
+                      Proprio <span className="text-purple-400 font-semibold">{(commissionRevenue?.rates?.commission_proprio || settings.commission_proprio).toLocaleString('fr-FR')} {settings.devise}</span> | 
+                      Visite <span className="text-green-400 font-semibold">{(commissionRevenue?.rates?.commission_visite || settings.commission_visite).toLocaleString('fr-FR')} {settings.devise}</span> | 
+                      Prestation <span className="text-blue-400 font-semibold">{(commissionRevenue?.rates?.commission_prestation || settings.commission_prestation).toLocaleString('fr-FR')} {settings.devise}</span>
                     </span>
                   </div>
                 </Card>
