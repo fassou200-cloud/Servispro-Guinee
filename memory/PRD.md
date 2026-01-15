@@ -134,11 +134,16 @@ Construire une plateforme nommée "ServisPro" pour les prestataires de services 
   - Location longue durée : 5%
   - Vente immobilière : 3%
   - Location véhicule : 10%
-- ✅ **Backend mis à jour** : Nouveaux champs dans `admin_settings`
+- ✅ **Backend mis à jour** : Nouveaux champs dans `admin_settings`, endpoint public `/api/commission-rates`
 - ✅ **Interface Admin Settings** : 5 champs de pourcentage avec icônes colorées
 - ✅ **Répartition des revenus par domaine** dans le dashboard admin
 - ✅ **Calcul automatique des commissions** basé sur le type de transaction
 - ✅ **Migration automatique** des anciens paramètres vers la nouvelle structure
+- ✅ **Composant CommissionRatesCard** : Affiche les commissions aux utilisateurs selon leur domaine
+  - Agent Immobilier : Location courte/longue durée + Vente immobilière
+  - Prestataire véhicule : Location véhicule
+  - Autres prestataires : Prestation de services
+  - Entreprises : Selon leur secteur d'activité
 
 ### 2026-01-13 - Approbation Admin des Locations (NOUVEAU)
 - ✅ **Champ `approval_status`** ajouté aux locations : `pending`, `approved`, `rejected`
