@@ -556,10 +556,26 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Providers List */}
             <div className="space-y-4">
-              <h2 className="text-lg font-heading font-bold text-white mb-4">
-                Liste des Prestataires
-              </h2>
-              {providers.length === 0 ? (
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-heading font-bold text-white">
+                  Liste des Prestataires
+                </h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => refreshTabData('providers')}
+                  disabled={tabLoading}
+                  className="text-slate-400 hover:text-white"
+                >
+                  <RefreshCw className={`h-4 w-4 ${tabLoading ? 'animate-spin' : ''}`} />
+                </Button>
+              </div>
+              {tabLoading && !loadedTabs['providers'] ? (
+                <Card className="p-8 bg-slate-800 border-slate-700 text-center">
+                  <Loader2 className="h-8 w-8 animate-spin text-amber-500 mx-auto mb-2" />
+                  <p className="text-slate-400">Chargement des prestataires...</p>
+                </Card>
+              ) : providers.length === 0 ? (
                 <Card className="p-8 bg-slate-800 border-slate-700 text-center">
                   <p className="text-slate-400">Aucun prestataire inscrit</p>
                 </Card>
