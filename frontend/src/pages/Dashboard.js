@@ -20,7 +20,7 @@ import VehicleListingForm from '@/components/VehicleListingForm';
 import MyVehicles from '@/components/MyVehicles';
 import PropertySaleForm from '@/components/PropertySaleForm';
 import MyPropertySales from '@/components/MyPropertySales';
-import NotificationBell from '@/components/NotificationBell';
+import CommissionRatesCard from '@/components/CommissionRatesCard';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -248,6 +248,11 @@ const Dashboard = ({ setIsAuthenticated }) => {
         </header>
 
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
+          {/* Commission Rates Info */}
+          <div className="mb-6">
+            <CommissionRatesCard profession={user.profession} />
+          </div>
+
           {/* Profile Summary */}
           <Card className="p-6 mb-6">
             <div className="flex items-center gap-6">
