@@ -215,6 +215,7 @@ Construire une plateforme nommée "ServisPro" pour les prestataires de services 
 
 ### P0 - Terminé
 - [x] **Approbation Admin des locations** - TERMINÉ 2026-01-13
+- [x] **Paramètres Admin: Commissions par Domaine** - TERMINÉ 2026-01-15
 
 ### P1 - À Venir
 - [ ] Page publique des offres d'emploi avec filtres (BrowseJobs.js)
