@@ -179,7 +179,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
     try {
       await axios.put(`${API}/admin/providers/${providerId}/approve`);
       toast.success('Prestataire approuvé !');
-      fetchData();
+      refreshTabData('providers');
       setSelectedProvider(null);
     } catch (error) {
       toast.error('Erreur lors de l\'approbation');
@@ -190,7 +190,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
     try {
       await axios.put(`${API}/admin/providers/${providerId}/reject`);
       toast.success('Prestataire rejeté');
-      fetchData();
+      refreshTabData('providers');
       setSelectedProvider(null);
     } catch (error) {
       toast.error('Erreur lors du rejet');
