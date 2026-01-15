@@ -3209,9 +3209,11 @@ async def get_commission_revenue():
     settings = await db.admin_settings.find_one({'type': 'platform_settings'}, {'_id': 0})
     if not settings:
         settings = {
-            'commission_proprio': 5.0,
-            'commission_visite': 10.0,
-            'commission_prestation': 15.0
+            'commission_vente': 5.0,        # pourcentage
+            'commission_proprio': 50000,    # montant fixe
+            'commission_visite': 10000,     # montant fixe
+            'commission_prestation': 25000, # montant fixe
+            'devise': 'GNF'
         }
     
     # Calculate date 30 days ago
@@ -3223,41 +3225,65 @@ async def get_commission_revenue():
         'created_at': {'$gte': thirty_days_ago}
     }, {'_id': 0}).to_list(1000)
     
+    # Get property sales from the last 30 days
+    sales = await db.property_sales.find({
+        'status': 'sold',
+        'sold_at': {'$gte': thirty_days_ago}
+    }, {'_id': 0}).to_list(1000)
+    
     # Calculate commissions
     total_payments = len(payments)
-    total_amount = sum(p.get('amount', 0) for p in payments)
+    total_sales = len(sales)
+    total_payment_amount = sum(p.get('amount', 0) for p in payments)
+    total_sales_amount = sum(s.get('price', 0) for s in sales)
     
-    # Commission breakdown (based on payment types)
-    commission_visite = 0
-    commission_prestation = 0
-    commission_proprio = 0
+    # Commission breakdown
+    # Vente: pourcentage sur le montant de vente
+    commission_vente = total_sales_amount * (settings.get('commission_vente', 5) / 100)
     
-    for payment in payments:
-        amount = payment.get('amount', 0)
-        payment_type = payment.get('payment_type', 'visite')  # Default to visite
-        
-        if payment_type == 'visite':
-            commission_visite += amount * (settings['commission_visite'] / 100)
-        elif payment_type == 'prestation':
-            commission_prestation += amount * (settings['commission_prestation'] / 100)
-        elif payment_type == 'proprio':
-            commission_proprio += amount * (settings['commission_proprio'] / 100)
-        else:
-            # Default: apply visite commission
-            commission_visite += amount * (settings['commission_visite'] / 100)
+    # Autres: montant fixe par transaction
+    commission_visite_count = sum(1 for p in payments if p.get('payment_type', 'visite') == 'visite')
+    commission_prestation_count = sum(1 for p in payments if p.get('payment_type') == 'prestation')
+    commission_proprio_count = sum(1 for p in payments if p.get('payment_type') == 'proprio')
     
-    total_commission = commission_visite + commission_prestation + commission_proprio
+    # Si pas de type défini, considérer comme visite
+    commission_visite_count += sum(1 for p in payments if not p.get('payment_type'))
+    
+    commission_visite = commission_visite_count * settings.get('commission_visite', 10000)
+    commission_prestation = commission_prestation_count * settings.get('commission_prestation', 25000)
+    commission_proprio = commission_proprio_count * settings.get('commission_proprio', 50000)
+    
+    total_commission = commission_vente + commission_visite + commission_prestation + commission_proprio
+    
+    devise = settings.get('devise', 'GNF')
     
     return {
         'period': '30 derniers jours',
         'total_transactions': total_payments,
-        'total_volume': total_amount,
+        'total_sales': total_sales,
+        'total_volume_payments': total_payment_amount,
+        'total_volume_sales': total_sales_amount,
         'commission_breakdown': {
+            'vente': round(commission_vente, 0),
             'visite': round(commission_visite, 0),
             'prestation': round(commission_prestation, 0),
             'proprio': round(commission_proprio, 0)
         },
+        'transaction_counts': {
+            'vente': total_sales,
+            'visite': commission_visite_count,
+            'prestation': commission_prestation_count,
+            'proprio': commission_proprio_count
+        },
         'total_commission': round(total_commission, 0),
+        'devise': devise,
+        'rates': {
+            'commission_vente': settings.get('commission_vente', 5),
+            'commission_proprio': settings.get('commission_proprio', 50000),
+            'commission_visite': settings.get('commission_visite', 10000),
+            'commission_prestation': settings.get('commission_prestation', 25000)
+        }
+    }
         'rates': {
             'commission_proprio': settings['commission_proprio'],
             'commission_visite': settings['commission_visite'],
