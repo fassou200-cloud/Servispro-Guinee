@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { getErrorMessage } from '@/utils/helpers';
+import CommissionRatesCard from '@/components/CommissionRatesCard';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -654,6 +655,13 @@ const CompanyDashboard = () => {
       )}
 
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
+        {/* Commission Rates Info */}
+        {company.verification_status === 'approved' && (
+          <div className="mb-6">
+            <CommissionRatesCard sector={company.sector} />
+          </div>
+        )}
+
         {/* Profile Summary - Same style as Agent Immobilier */}
         <Card className="p-6 mb-6">
           <div className="flex items-center gap-6">
