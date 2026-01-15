@@ -185,6 +185,26 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
     }
   };
 
+  // Save settings
+  const handleSaveSettings = async () => {
+    setSavingSettings(true);
+    try {
+      await axios.put(`${API}/admin/settings`, {
+        commission_proprio: parseFloat(settings.commission_proprio) || 0,
+        commission_visite: parseFloat(settings.commission_visite) || 0,
+        commission_prestation: parseFloat(settings.commission_prestation) || 0
+      });
+      toast.success('Paramètres enregistrés avec succès !');
+      // Refresh commission revenue with new rates
+      const revenueRes = await axios.get(`${API}/admin/commission-revenue`);
+      setCommissionRevenue(revenueRes.data);
+    } catch (error) {
+      toast.error('Erreur lors de la sauvegarde des paramètres');
+    } finally {
+      setSavingSettings(false);
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('adminToken');
     localStorage.removeItem('admin');
