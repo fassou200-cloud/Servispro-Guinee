@@ -75,6 +75,7 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
   const [reviewStats, setReviewStats] = useState(null);
   const [showPaymentPopup, setShowPaymentPopup] = useState(false);
   const [paymentCompleted, setPaymentCompleted] = useState(false);
+  const [serviceFees, setServiceFees] = useState(null);
 
   useEffect(() => {
     fetchProvider();
@@ -84,6 +85,15 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
       setCustomer(JSON.parse(storedCustomer));
     }
   }, [providerId]);
+
+  // Fetch service fees when provider is loaded
+  useEffect(() => {
+    if (provider?.profession) {
+      axios.get(`${API}/service-fees/${provider.profession}`)
+        .then(res => setServiceFees(res.data))
+        .catch(() => setServiceFees({ frais_visite: 50000, frais_prestation: 100000 }));
+    }
+  }, [provider?.profession]);
 
   const fetchProvider = async () => {
     try {
