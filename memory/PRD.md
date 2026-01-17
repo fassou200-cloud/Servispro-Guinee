@@ -127,6 +127,19 @@ Construire une plateforme nommée "ServisPro" pour les prestataires de services 
 
 ## Changelog
 
+### 2026-01-17 - Frais de Service par Profession (NOUVEAU)
+- ✅ **Admin peut définir les frais par profession** :
+  - Frais de visite (payé avant le déplacement)
+  - Frais de prestation (tarif de base du service)
+- ✅ **Interface Admin** : Tableau éditable avec tous les métiers
+  - Logisticien, Électromécanicien, Mécanicien, Plombier, Maçon, Menuisier
+  - Agent Immobilier (frais visite uniquement)
+  - Soudeur, Camionneur, Tracteur, Voiture, Autres
+- ✅ **Affichage côté client** : Frais visibles sur le profil prestataire
+- ✅ **Affichage côté prestataire** : Frais visibles dans leur dashboard
+- ✅ **Remplace les "frais d'investigation" individuels** par les frais définis par l'admin
+- ✅ **Endpoints API** : `/api/admin/service-fees`, `/api/service-fees/{profession}`
+
 ### 2026-01-15 - Paramètres Admin: Commissions par Domaine (NOUVEAU)
 - ✅ **Nouvelle structure de commissions par domaine** (tous en pourcentage) :
   - Prestation de services : 10%
