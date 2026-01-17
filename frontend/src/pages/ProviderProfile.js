@@ -133,8 +133,8 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
       return;
     }
 
-    // Check if provider has investigation fee and payment not yet completed
-    if (provider?.investigation_fee && provider.investigation_fee > 0 && !paymentCompleted) {
+    // Check if service has visit fees (defined by admin) and payment not yet completed
+    if (serviceFees?.frais_visite && serviceFees.frais_visite > 0 && !paymentCompleted) {
       setShowPaymentPopup(true);
       return;
     }
