@@ -249,9 +249,9 @@ const Dashboard = ({ setIsAuthenticated }) => {
         </header>
 
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
-          {/* Commission Rates Info */}
+          {/* Service Fees Info */}
           <div className="mb-6">
-            <CommissionRatesCard profession={user.profession} />
+            <ProviderFeesCard profession={user.profession} />
           </div>
 
           {/* Profile Summary */}
@@ -352,9 +352,9 @@ const Dashboard = ({ setIsAuthenticated }) => {
         </header>
 
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-6">
-          {/* Commission Rates Info */}
+          {/* Service Fees Info */}
           <div className="mb-6">
-            <CommissionRatesCard profession={user.profession} />
+            <ProviderFeesCard profession={user.profession} />
           </div>
 
           {/* Profile Banner */}
