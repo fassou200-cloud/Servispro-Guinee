@@ -2226,6 +2226,103 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                     </span>
                   </div>
                 </Card>
+
+                {/* Service Fees by Profession */}
+                <Card className="p-6 bg-slate-800 border-slate-700 mt-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-heading font-bold text-white flex items-center gap-2">
+                      <DollarSign className="h-6 w-6 text-green-400" />
+                      Frais de Service par Profession
+                    </h2>
+                    <Button
+                      onClick={handleSaveServiceFees}
+                      disabled={savingFees}
+                      className="bg-green-600 hover:bg-green-700 gap-2"
+                    >
+                      {savingFees ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Enregistrement...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="h-4 w-4" />
+                          Enregistrer les Frais
+                        </>
+                      )}
+                    </Button>
+                  </div>
+
+                  <p className="text-sm text-slate-400 mb-4">
+                    Définissez les frais de visite et de prestation pour chaque catégorie de métier. Ces frais seront affichés aux clients et prestataires.
+                  </p>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-slate-700">
+                          <th className="text-left py-3 px-4 text-slate-300 font-medium">Profession</th>
+                          <th className="text-center py-3 px-4 text-slate-300 font-medium">
+                            <div className="flex items-center justify-center gap-2">
+                              <Eye className="h-4 w-4 text-blue-400" />
+                              Frais de Visite ({settings.devise})
+                            </div>
+                          </th>
+                          <th className="text-center py-3 px-4 text-slate-300 font-medium">
+                            <div className="flex items-center justify-center gap-2">
+                              <Briefcase className="h-4 w-4 text-green-400" />
+                              Frais de Prestation ({settings.devise})
+                            </div>
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {serviceFees.filter(fee => 
+                          !['Electrician', 'Mechanic', 'Plumber', 'Logistics', 'Other'].includes(fee.profession)
+                        ).map((fee) => (
+                          <tr key={fee.profession} className="border-b border-slate-700/50 hover:bg-slate-700/30">
+                            <td className="py-3 px-4">
+                              <span className="text-white font-medium">{fee.label || fee.profession}</span>
+                            </td>
+                            <td className="py-3 px-4">
+                              <input
+                                type="number"
+                                min="0"
+                                step="1000"
+                                value={fee.frais_visite || 0}
+                                onChange={(e) => handleUpdateFee(fee.profession, 'frais_visite', e.target.value)}
+                                className="w-full max-w-[150px] mx-auto block h-10 px-3 bg-slate-700 border border-slate-600 rounded-lg text-white text-center focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                              />
+                            </td>
+                            <td className="py-3 px-4">
+                              <input
+                                type="number"
+                                min="0"
+                                step="1000"
+                                value={fee.frais_prestation || 0}
+                                onChange={(e) => handleUpdateFee(fee.profession, 'frais_prestation', e.target.value)}
+                                className="w-full max-w-[150px] mx-auto block h-10 px-3 bg-slate-700 border border-slate-600 rounded-lg text-white text-center focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                              />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div className="mt-4 p-3 bg-blue-900/30 border border-blue-700/50 rounded-lg">
+                    <div className="flex items-start gap-2 text-sm text-blue-300">
+                      <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                      <div>
+                        <p className="font-medium">À propos des frais :</p>
+                        <ul className="list-disc list-inside mt-1 text-blue-400 text-xs">
+                          <li><strong>Frais de visite</strong> : Payé par le client avant le déplacement du prestataire</li>
+                          <li><strong>Frais de prestation</strong> : Montant de base pour le service (le prestataire peut facturer plus selon le travail)</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
               </>
             )}
           </div>
