@@ -22,6 +22,7 @@ import PropertySaleForm from '@/components/PropertySaleForm';
 import MyPropertySales from '@/components/MyPropertySales';
 import NotificationBell from '@/components/NotificationBell';
 import ProviderFeesCard from '@/components/ProviderFeesCard';
+import VisitRequestsList from '@/components/VisitRequestsList';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
