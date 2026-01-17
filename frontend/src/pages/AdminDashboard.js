@@ -596,7 +596,15 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
             className={activeTab === 'sales' ? 'bg-emerald-600 hover:bg-emerald-700' : 'border-slate-600 text-slate-300'}
           >
             <DollarSign className="h-4 w-4 mr-2" />
-            Ventes ({propertySales.length})
+            Ventes Immo ({propertySales.length})
+          </Button>
+          <Button
+            variant={activeTab === 'vehicle-sales' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('vehicle-sales')}
+            className={activeTab === 'vehicle-sales' ? 'bg-indigo-600 hover:bg-indigo-700' : 'border-slate-600 text-slate-300'}
+          >
+            <Car className="h-4 w-4 mr-2" />
+            Ventes Véhicules
           </Button>
           <Button
             variant={activeTab === 'companies' ? 'default' : 'outline'}
