@@ -244,8 +244,10 @@ Construire une plateforme nommée "ServisPro" pour les prestataires de services 
 ### P0 - Terminé
 - [x] **Approbation Admin des locations** - TERMINÉ 2026-01-13
 - [x] **Paramètres Admin: Commissions par Domaine** - TERMINÉ 2026-01-15
+- [x] **Vente de Véhicules** - TERMINÉ 2026-01-17
 
 ### P1 - À Venir
+- [ ] Gestion admin des conversations de vente (véhicules ET propriétés)
 - [ ] Page publique des offres d'emploi avec filtres (BrowseJobs.js)
 - [ ] WebSockets pour statut en ligne temps réel
 - [ ] Page publique des services d'entreprises
