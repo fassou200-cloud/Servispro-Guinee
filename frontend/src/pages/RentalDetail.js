@@ -612,6 +612,21 @@ const RentalDetail = () => {
           </div>
         </div>
       </div>
+
+      {/* Visit Request Modal */}
+      {showVisitForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <VisitRequestForm 
+              rental={rental}
+              onSuccess={() => {
+                setTimeout(() => setShowVisitForm(false), 3000);
+              }}
+              onClose={() => setShowVisitForm(false)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
