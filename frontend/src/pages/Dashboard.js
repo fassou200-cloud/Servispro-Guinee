@@ -415,6 +415,23 @@ const Dashboard = ({ setIsAuthenticated }) => {
               <TrendingUp className="h-4 w-4" />
               + Ajouter Véhicule
             </Button>
+            {/* Vehicle Sales Tabs */}
+            <Button
+              variant={activeTab === 'sales' ? 'default' : 'outline'}
+              onClick={() => setActiveTab('sales')}
+              className={`gap-2 ${activeTab === 'sales' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-emerald-50 border-emerald-200 hover:bg-emerald-100'}`}
+            >
+              <DollarSign className="h-4 w-4 text-emerald-600" />
+              Mes Ventes
+            </Button>
+            <Button
+              variant={activeTab === 'create-sale' ? 'default' : 'outline'}
+              onClick={() => setActiveTab('create-sale')}
+              className={`gap-2 ${activeTab === 'create-sale' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-emerald-50 border-emerald-200 hover:bg-emerald-100'}`}
+            >
+              <DollarSign className="h-4 w-4 text-emerald-600" />
+              + Vendre
+            </Button>
             <Button
               variant={activeTab === 'profile' ? 'default' : 'outline'}
               onClick={() => setActiveTab('profile')}
@@ -430,6 +447,13 @@ const Dashboard = ({ setIsAuthenticated }) => {
           {activeTab === 'create-vehicle' && (
             <VehicleListingForm 
               onSuccess={() => setActiveTab('vehicles')} 
+              userProfession={user.profession}
+            />
+          )}
+          {activeTab === 'sales' && <MyVehicleSales />}
+          {activeTab === 'create-sale' && (
+            <VehicleSaleForm 
+              onSuccess={() => setActiveTab('sales')} 
               userProfession={user.profession}
             />
           )}
