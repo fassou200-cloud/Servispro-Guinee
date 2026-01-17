@@ -75,28 +75,13 @@ const ProviderFeesCard = ({ profession }) => {
             Payé par le client avant votre déplacement
           </p>
         </div>
-
-        {/* Frais de Prestation */}
-        <div className="bg-background/80 p-4 rounded-xl border border-green-200">
-          <div className="flex items-center gap-2 text-green-600 mb-2">
-            <Briefcase className="h-4 w-4" />
-            <span className="text-sm font-medium">Frais de Prestation</span>
-          </div>
-          <p className="text-2xl font-bold text-foreground">
-            {formatPrice(fees.frais_prestation)}
-            <span className="text-sm font-normal text-muted-foreground ml-1">{settings.devise}</span>
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Tarif de base pour votre service
-          </p>
-        </div>
       </div>
 
       <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
         <div className="flex items-start gap-2 text-xs text-blue-700">
           <Info className="h-4 w-4 mt-0.5 shrink-0" />
           <span>
-            Ces tarifs sont définis par ServisPro et appliqués à votre catégorie de métier. 
+            Ce tarif est défini par ServisPro et appliqué à votre catégorie de métier. 
             Le client doit payer les frais de visite avant votre déplacement.
           </span>
         </div>
