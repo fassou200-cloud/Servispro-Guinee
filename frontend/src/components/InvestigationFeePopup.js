@@ -223,7 +223,7 @@ const InvestigationFeePopup = ({
               <div className="flex items-start gap-3">
                 <Info className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
                 <div className="text-sm text-amber-800">
-                  <p className="font-bold mb-2">Conditions du Tarif d'Investigation :</p>
+                  <p className="font-bold mb-2">Conditions du Frais de Visite :</p>
                   <ul className="space-y-1">
                     <li className="flex items-center gap-2">
                       <AlertTriangle className="h-4 w-4 text-red-500" />
@@ -250,7 +250,7 @@ const InvestigationFeePopup = ({
                 <div className="text-right">
                   <p className="text-sm text-gray-500">Montant à payer</p>
                   <p className="text-2xl font-bold text-amber-600">
-                    {investigationFee.toLocaleString('fr-FR')} GNF
+                    {fraisVisite.toLocaleString('fr-FR')} GNF
                   </p>
                 </div>
               </div>
@@ -547,7 +547,7 @@ const InvestigationFeePopup = ({
                 <div className="flex justify-between pt-3 border-t border-gray-200">
                   <span className="font-bold text-gray-700">Montant payé</span>
                   <span className="text-xl font-bold text-green-600">
-                    {investigationFee.toLocaleString('fr-FR')} GNF
+                    {fraisVisite.toLocaleString('fr-FR')} GNF
                   </span>
                 </div>
               </div>
@@ -584,14 +584,14 @@ const InvestigationFeePopup = ({
           <div className="relative">
             <img 
               src={BANNER_URL} 
-              alt="Tarif d'investigation" 
+              alt="Frais de Visite" 
               className="w-full h-40 object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
             <div className="absolute bottom-4 left-4 right-4">
               <h2 className="text-xl font-heading font-bold text-white flex items-center gap-2">
                 <Shield className="h-5 w-5 text-amber-400" />
-                Tarif d'Investigation
+                Frais de Visite
               </h2>
             </div>
             <button
@@ -621,7 +621,7 @@ const InvestigationFeePopup = ({
                     {paymentMethod === 'orange_money' ? 'Orange Money' : 'MTN Mobile Money'}
                   </p>
                   <p className="text-sm opacity-80">
-                    {investigationFee.toLocaleString('fr-FR')} GNF
+                    {fraisVisite.toLocaleString('fr-FR')} GNF
                   </p>
                 </div>
               </div>
