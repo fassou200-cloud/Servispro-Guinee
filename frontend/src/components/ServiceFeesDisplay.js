@@ -61,13 +61,13 @@ const ServiceFeesDisplay = ({ profession, showTitle = true, compact = false }) =
         {fees.frais_visite > 0 && (
           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full">
             <Eye className="h-3.5 w-3.5" />
-            <span className="font-medium">Visite: {formatPrice(fees.frais_visite)} {settings.devise}</span>
+            <span className="font-medium">Frais de Visite: {formatPrice(fees.frais_visite)} {settings.devise}</span>
           </div>
         )}
         {fees.frais_prestation > 0 && (
           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 rounded-full">
             <Briefcase className="h-3.5 w-3.5" />
-            <span className="font-medium">Prestation: {formatPrice(fees.frais_prestation)} {settings.devise}</span>
+            <span className="font-medium">Frais de Prestation: {formatPrice(fees.frais_prestation)} {settings.devise}</span>
           </div>
         )}
       </div>
