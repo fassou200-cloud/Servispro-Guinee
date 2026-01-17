@@ -71,6 +71,7 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
   const categories = [
     {
       name: 'Logisticien',
+      profession: 'Logisticien',
       icon: Truck,
       description: 'Services de transport et livraison rapides',
       image: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80',
@@ -79,6 +80,7 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
     },
     {
       name: 'Électromécanicien',
+      profession: 'Electromecanicien',
       icon: Settings,
       description: 'Maintenance et réparation électromécanique',
       image: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800&q=80',
@@ -87,6 +89,7 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
     },
     {
       name: 'Mécanicien',
+      profession: 'Mecanicien',
       icon: Wrench,
       description: 'Réparation automobile et entretien',
       image: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=800&q=80',
@@ -95,6 +98,7 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
     },
     {
       name: 'Plombier',
+      profession: 'Plombier',
       icon: Droplet,
       description: 'Installation et réparation plomberie',
       image: 'https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?w=800&q=80',
@@ -103,6 +107,7 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
     },
     {
       name: 'Maçon',
+      profession: 'Macon',
       icon: Hammer,
       description: 'Construction et rénovation de qualité',
       image: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800&q=80',
@@ -111,6 +116,7 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
     },
     {
       name: 'Menuisier',
+      profession: 'Menuisier',
       icon: Hammer,
       description: 'Travaux de bois et menuiserie',
       image: 'https://images.unsplash.com/photo-1588854337115-1c67d9247e4d?w=800&q=80',
@@ -119,6 +125,7 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
     },
     {
       name: 'Agent Immobilier',
+      profession: 'AgentImmobilier',
       icon: Building,
       description: 'Location et vente immobilière',
       image: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=80',
@@ -127,6 +134,7 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
     },
     {
       name: 'Soudeur',
+      profession: 'Soudeur',
       icon: Flame,
       description: 'Soudure et travaux métalliques',
       image: 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=800&q=80',
@@ -135,6 +143,7 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
     },
     {
       name: 'Camionneur',
+      profession: 'Camionneur',
       icon: Truck,
       description: 'Location de camions courte et longue durée',
       image: 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=800&q=80',
@@ -143,6 +152,7 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
     },
     {
       name: 'Tracteur',
+      profession: 'Tracteur',
       icon: Truck,
       description: 'Location de tracteurs agricoles',
       image: 'https://images.unsplash.com/photo-1530267981375-f0de937f5f13?w=800&q=80',
@@ -151,6 +161,7 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
     },
     {
       name: 'Voiture',
+      profession: 'Voiture',
       icon: Truck,
       description: 'Location de voitures particulières',
       image: 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=800&q=80',
