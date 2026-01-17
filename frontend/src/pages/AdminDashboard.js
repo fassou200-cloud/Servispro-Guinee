@@ -86,6 +86,10 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
   });
   const [commissionRevenue, setCommissionRevenue] = useState(null);
   const [savingSettings, setSavingSettings] = useState(false);
+  
+  // Service fees state
+  const [serviceFees, setServiceFees] = useState([]);
+  const [savingFees, setSavingFees] = useState(false);
 
   // Currency options
   const deviseOptions = [
