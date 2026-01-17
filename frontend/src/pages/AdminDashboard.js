@@ -7,10 +7,11 @@ import {
   Shield, LogOut, Users, Briefcase, CheckCircle, XCircle, 
   Clock, Eye, Home, Building, UserCheck, UserX, AlertCircle, Trash2, UserCircle,
   MapPin, Calendar, Moon, DollarSign, Star, MessageCircle, FileText, ExternalLink,
-  Loader2, RefreshCw, Settings, Percent, TrendingUp, Save
+  Loader2, RefreshCw, Settings, Percent, TrendingUp, Save, Car
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
+import AdminSalesManager from '@/components/AdminSalesManager';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
