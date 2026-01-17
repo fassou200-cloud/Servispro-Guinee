@@ -43,6 +43,7 @@ const InvestigationFeePopup = ({
   const [paymentMethod, setPaymentMethod] = useState('orange_money');
   const [phoneNumber, setPhoneNumber] = useState(customerPhone || '');
   const [loading, setLoading] = useState(false);
+  const [serviceFees, setServiceFees] = useState({ frais_visite: 50000 });
   
   // Multi-step flow
   const [step, setStep] = useState(1); // 1: Info, 2: OTP Sent, 3: Enter OTP, 4: Processing, 5: Success
@@ -53,6 +54,15 @@ const InvestigationFeePopup = ({
   const [transactionDate, setTransactionDate] = useState('');
   const [paymentId, setPaymentId] = useState(null);
   const [countdown, setCountdown] = useState(0);
+
+  // Fetch service fees for the provider's profession
+  useEffect(() => {
+    if (provider?.profession) {
+      axios.get(`${API}/service-fees/${provider.profession}`)
+        .then(res => setServiceFees(res.data))
+        .catch(() => setServiceFees({ frais_visite: 50000 }));
+    }
+  }, [provider?.profession]);
 
   // Reset state when popup opens/closes
   useEffect(() => {
