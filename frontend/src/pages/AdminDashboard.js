@@ -2231,13 +2231,13 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                 <Card className="p-6 bg-slate-800 border-slate-700 mt-6">
                   <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-heading font-bold text-white flex items-center gap-2">
-                      <DollarSign className="h-6 w-6 text-green-400" />
-                      Frais de Service par Profession
+                      <DollarSign className="h-6 w-6 text-blue-400" />
+                      Frais de Visite par Profession
                     </h2>
                     <Button
                       onClick={handleSaveServiceFees}
                       disabled={savingFees}
-                      className="bg-green-600 hover:bg-green-700 gap-2"
+                      className="bg-blue-600 hover:bg-blue-700 gap-2"
                     >
                       {savingFees ? (
                         <>
@@ -2254,7 +2254,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                   </div>
 
                   <p className="text-sm text-slate-400 mb-4">
-                    Définissez les frais de visite et de prestation pour chaque catégorie de métier. Ces frais seront affichés aux clients et prestataires.
+                    Définissez les frais de visite pour chaque catégorie de métier. Ces frais seront affichés aux clients et prestataires.
                   </p>
 
                   <div className="overflow-x-auto">
