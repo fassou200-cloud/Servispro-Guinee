@@ -18,6 +18,8 @@ import MyRentals from '@/components/MyRentals';
 import RentalConversations from '@/components/RentalConversations';
 import VehicleListingForm from '@/components/VehicleListingForm';
 import MyVehicles from '@/components/MyVehicles';
+import VehicleSaleForm from '@/components/VehicleSaleForm';
+import MyVehicleSales from '@/components/MyVehicleSales';
 import PropertySaleForm from '@/components/PropertySaleForm';
 import MyPropertySales from '@/components/MyPropertySales';
 import NotificationBell from '@/components/NotificationBell';
