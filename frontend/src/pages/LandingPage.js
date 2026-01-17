@@ -427,6 +427,7 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
             {categories.map((category, index) => {
               const Icon = category.icon;
+              const frais = serviceFees[category.profession] || 0;
               return (
                 <Card
                   key={category.name}
@@ -441,6 +442,16 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
                     
+                    {/* Frais de Visite Badge */}
+                    {frais > 0 && (
+                      <div className="absolute top-3 right-3 px-3 py-1.5 bg-white/95 backdrop-blur-sm rounded-full shadow-lg flex items-center gap-1.5">
+                        <Eye className="h-3.5 w-3.5 text-blue-600" />
+                        <span className="text-xs font-bold text-slate-800">
+                          {formatPrice(frais)} {settings.devise}
+                        </span>
+                      </div>
+                    )}
+                    
                     {/* Content */}
                     <div className="absolute inset-0 flex flex-col justify-end p-6">
                       <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${category.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg`}>
@@ -452,6 +463,14 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
                       <p className="text-sm text-gray-300 line-clamp-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         {category.description}
                       </p>
+                      {/* Show frais on hover */}
+                      {frais > 0 && (
+                        <div className="flex items-center gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <span className="text-xs text-blue-300 bg-blue-500/20 px-2 py-1 rounded-full">
+                            Frais de visite: {formatPrice(frais)} {settings.devise}
+                          </span>
+                        </div>
+                      )}
                       <div className="flex items-center gap-2 mt-4 text-white/80 group-hover:text-white transition-colors">
                         <span className="text-sm font-medium">Voir plus</span>
                         <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
