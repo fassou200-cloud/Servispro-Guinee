@@ -257,6 +257,46 @@ class VisitRequestUpdate(BaseModel):
     status: VisitRequestStatus
     response_message: Optional[str] = None
 
+# Vehicle Sale Models
+class VehicleSaleStatus(str, Enum):
+    PENDING = "pending"       # En attente d'approbation admin
+    APPROVED = "approved"     # Approuvé et visible
+    SOLD = "sold"            # Vendu
+    REJECTED = "rejected"    # Rejeté par admin
+
+class VehicleSaleCreate(BaseModel):
+    vehicle_type: str        # Voiture, Camion, Tracteur
+    brand: str               # Marque
+    model: str               # Modèle
+    year: int                # Année
+    mileage: Optional[int] = None  # Kilométrage
+    fuel_type: Optional[str] = None  # Essence, Diesel, Électrique
+    transmission: Optional[str] = None  # Manuelle, Automatique
+    price: float             # Prix de vente
+    description: str
+    location: str
+    condition: str = "used"  # new, used, refurbished
+    photos: List[str] = []
+
+class VehicleSaleUpdate(BaseModel):
+    brand: Optional[str] = None
+    model: Optional[str] = None
+    year: Optional[int] = None
+    mileage: Optional[int] = None
+    fuel_type: Optional[str] = None
+    transmission: Optional[str] = None
+    price: Optional[float] = None
+    description: Optional[str] = None
+    location: Optional[str] = None
+    condition: Optional[str] = None
+
+class VehicleSaleInquiry(BaseModel):
+    vehicle_id: str
+    customer_name: str
+    customer_phone: str
+    customer_email: Optional[str] = None
+    message: str
+
 class RentalListingCreate(BaseModel):
     property_type: PropertyType
     title: str
