@@ -254,21 +254,12 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
                   </div>
                 )}
 
-                {/* Quick Stats */}
-                <div className="flex flex-wrap gap-3">
-                  {provider.profession !== 'AgentImmobilier' && provider.price && (
-                    <div className="px-4 py-2 rounded-xl bg-amber-50 border border-amber-200">
-                      <span className="text-amber-700 text-sm">Tarif: </span>
-                      <span className="font-bold text-amber-900">{Number(provider.price).toLocaleString('fr-FR')} GNF</span>
-                    </div>
-                  )}
-                  {provider.profession !== 'AgentImmobilier' && provider.investigation_fee && (
-                    <div className="px-4 py-2 rounded-xl bg-amber-50 border border-amber-200">
-                      <span className="text-amber-700 text-sm">Tarif d'investigation: </span>
-                      <span className="font-bold text-amber-900">{Number(provider.investigation_fee).toLocaleString('fr-FR')} GNF</span>
-                    </div>
-                  )}
-                </div>
+                {/* Service Fees Display */}
+                {provider.profession !== 'AgentImmobilier' && (
+                  <div className="mt-4">
+                    <ServiceFeesDisplay profession={provider.profession} compact={true} />
+                  </div>
+                )}
               </div>
 
               {/* CTA Button */}
