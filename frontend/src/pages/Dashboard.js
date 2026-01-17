@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { 
   LogOut, User, Briefcase, ShieldCheck, Home, MessageCircle, 
   Bell, Clock, CheckCircle, XCircle, MapPin, Calendar, CheckCheck,
-  TrendingUp, AlertCircle, Star, Truck, Car, Tractor, Building, DollarSign
+  TrendingUp, AlertCircle, Star, Truck, Car, Tractor, Building, DollarSign, Eye
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
