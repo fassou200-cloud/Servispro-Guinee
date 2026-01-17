@@ -201,6 +201,16 @@ Construire une plateforme nommée "ServisPro" pour les prestataires de services 
 - ✅ Les entreprises non-immobilières ne voient pas ces onglets
 - ✅ Tests : 12 tests backend + tests UI - 100% passés
 
+### 2026-01-17 - Vente de Véhicules
+- ✅ Nouvelle fonctionnalité : prestataires véhicules peuvent vendre leurs véhicules
+- ✅ Backend : endpoints POST/GET/PUT pour créer, lister et gérer les ventes
+- ✅ Frontend Provider : onglets "Mes Ventes" et "+ Vendre" dans le dashboard véhicule
+- ✅ Frontend Admin : onglet "Ventes Véhicules" avec gestion Approuver/Rejeter/Vendu
+- ✅ Composants créés : VehicleSaleForm.js, MyVehicleSales.js, AdminSalesManager.js
+- ✅ Conversations de vente gérées par l'admin
+- ✅ Tests : 16 tests backend - 100% passés
+- ✅ Professions concernées : Voiture, Camionneur, Tracteur
+
 ### 2026-01-11 - Espace Entreprise
 - ✅ Créé formulaire inscription entreprise en 2 étapes (CompanyAuth.js)
 - ✅ Ajouté connexion par numéro RCCM + mot de passe
