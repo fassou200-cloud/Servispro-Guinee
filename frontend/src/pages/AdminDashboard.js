@@ -225,6 +225,37 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
     }
   };
 
+  // Update a single service fee
+  const handleUpdateFee = (profession, field, value) => {
+    setServiceFees(prev => 
+      prev.map(fee => 
+        fee.profession === profession 
+          ? { ...fee, [field]: parseFloat(value) || 0 }
+          : fee
+      )
+    );
+  };
+
+  // Save all service fees
+  const handleSaveServiceFees = async () => {
+    setSavingFees(true);
+    try {
+      const feesToSave = serviceFees.map(fee => ({
+        profession: fee.profession,
+        frais_visite: parseFloat(fee.frais_visite) || 0,
+        frais_prestation: parseFloat(fee.frais_prestation) || 0
+      }));
+      
+      await axios.put(`${API}/admin/service-fees/bulk`, feesToSave);
+      toast.success('Frais de service enregistrés avec succès !');
+    } catch (error) {
+      console.error('Error saving fees:', error);
+      toast.error('Erreur lors de la sauvegarde des frais');
+    } finally {
+      setSavingFees(false);
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('adminToken');
     localStorage.removeItem('admin');
