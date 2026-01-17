@@ -3199,6 +3199,151 @@ async def get_public_commission_rates():
         'devise': settings.get('devise', 'GNF')
     }
 
+# ==================== SERVICE FEES BY PROFESSION ====================
+
+class ServiceFeesUpdate(BaseModel):
+    profession: str
+    frais_visite: Optional[float] = None
+    frais_prestation: Optional[float] = None
+
+@api_router.get("/admin/service-fees")
+async def get_all_service_fees():
+    """Get all service fees by profession"""
+    fees = await db.service_fees.find({}, {'_id': 0}).to_list(100)
+    
+    # If no fees exist, return defaults for all professions
+    if not fees:
+        default_fees = [
+            {'profession': 'Logisticien', 'frais_visite': 50000, 'frais_prestation': 100000, 'label': 'Logisticien'},
+            {'profession': 'Electromecanicien', 'frais_visite': 50000, 'frais_prestation': 150000, 'label': 'Électromécanicien'},
+            {'profession': 'Mecanicien', 'frais_visite': 50000, 'frais_prestation': 100000, 'label': 'Mécanicien'},
+            {'profession': 'Plombier', 'frais_visite': 50000, 'frais_prestation': 100000, 'label': 'Plombier'},
+            {'profession': 'Macon', 'frais_visite': 50000, 'frais_prestation': 150000, 'label': 'Maçon'},
+            {'profession': 'Menuisier', 'frais_visite': 50000, 'frais_prestation': 120000, 'label': 'Menuisier'},
+            {'profession': 'AgentImmobilier', 'frais_visite': 100000, 'frais_prestation': 0, 'label': 'Agent Immobilier'},
+            {'profession': 'Soudeur', 'frais_visite': 50000, 'frais_prestation': 100000, 'label': 'Soudeur'},
+            {'profession': 'Camionneur', 'frais_visite': 0, 'frais_prestation': 200000, 'label': 'Camionneur'},
+            {'profession': 'Tracteur', 'frais_visite': 0, 'frais_prestation': 150000, 'label': 'Tracteur'},
+            {'profession': 'Voiture', 'frais_visite': 0, 'frais_prestation': 100000, 'label': 'Voiture'},
+            {'profession': 'Autres', 'frais_visite': 50000, 'frais_prestation': 100000, 'label': 'Autres'},
+            {'profession': 'Electrician', 'frais_visite': 50000, 'frais_prestation': 100000, 'label': 'Électricien'},
+            {'profession': 'Mechanic', 'frais_visite': 50000, 'frais_prestation': 100000, 'label': 'Mécanicien'},
+            {'profession': 'Plumber', 'frais_visite': 50000, 'frais_prestation': 100000, 'label': 'Plombier'},
+            {'profession': 'Logistics', 'frais_visite': 50000, 'frais_prestation': 100000, 'label': 'Logistique'},
+            {'profession': 'Other', 'frais_visite': 50000, 'frais_prestation': 100000, 'label': 'Autres'},
+        ]
+        # Insert defaults
+        await db.service_fees.insert_many(default_fees)
+        return default_fees
+    
+    return fees
+
+@api_router.get("/admin/service-fees/{profession}")
+async def get_service_fees_by_profession(profession: str):
+    """Get service fees for a specific profession"""
+    fees = await db.service_fees.find_one({'profession': profession}, {'_id': 0})
+    
+    if not fees:
+        # Return default fees
+        return {
+            'profession': profession,
+            'frais_visite': 50000,
+            'frais_prestation': 100000,
+            'label': profession
+        }
+    
+    return fees
+
+@api_router.put("/admin/service-fees")
+async def update_service_fees(fees: ServiceFeesUpdate):
+    """Update service fees for a profession"""
+    update_data = {
+        'profession': fees.profession,
+        'updated_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    if fees.frais_visite is not None:
+        update_data['frais_visite'] = fees.frais_visite
+    if fees.frais_prestation is not None:
+        update_data['frais_prestation'] = fees.frais_prestation
+    
+    result = await db.service_fees.update_one(
+        {'profession': fees.profession},
+        {'$set': update_data},
+        upsert=True
+    )
+    
+    # Return updated fees
+    updated_fees = await db.service_fees.find_one({'profession': fees.profession}, {'_id': 0})
+    return updated_fees
+
+@api_router.put("/admin/service-fees/bulk")
+async def update_bulk_service_fees(fees_list: List[ServiceFeesUpdate]):
+    """Update multiple service fees at once"""
+    results = []
+    for fees in fees_list:
+        update_data = {
+            'profession': fees.profession,
+            'updated_at': datetime.now(timezone.utc).isoformat()
+        }
+        
+        if fees.frais_visite is not None:
+            update_data['frais_visite'] = fees.frais_visite
+        if fees.frais_prestation is not None:
+            update_data['frais_prestation'] = fees.frais_prestation
+        
+        await db.service_fees.update_one(
+            {'profession': fees.profession},
+            {'$set': update_data},
+            upsert=True
+        )
+        
+        updated = await db.service_fees.find_one({'profession': fees.profession}, {'_id': 0})
+        results.append(updated)
+    
+    return results
+
+# Public endpoint to get service fees (for providers and customers)
+@api_router.get("/service-fees")
+async def get_public_service_fees():
+    """Get all service fees (public endpoint)"""
+    fees = await db.service_fees.find({}, {'_id': 0}).to_list(100)
+    
+    if not fees:
+        # Return defaults
+        return [
+            {'profession': 'Logisticien', 'frais_visite': 50000, 'frais_prestation': 100000, 'label': 'Logisticien'},
+            {'profession': 'Electromecanicien', 'frais_visite': 50000, 'frais_prestation': 150000, 'label': 'Électromécanicien'},
+            {'profession': 'Mecanicien', 'frais_visite': 50000, 'frais_prestation': 100000, 'label': 'Mécanicien'},
+            {'profession': 'Plombier', 'frais_visite': 50000, 'frais_prestation': 100000, 'label': 'Plombier'},
+            {'profession': 'Macon', 'frais_visite': 50000, 'frais_prestation': 150000, 'label': 'Maçon'},
+            {'profession': 'Menuisier', 'frais_visite': 50000, 'frais_prestation': 120000, 'label': 'Menuisier'},
+            {'profession': 'AgentImmobilier', 'frais_visite': 100000, 'frais_prestation': 0, 'label': 'Agent Immobilier'},
+            {'profession': 'Soudeur', 'frais_visite': 50000, 'frais_prestation': 100000, 'label': 'Soudeur'},
+            {'profession': 'Camionneur', 'frais_visite': 0, 'frais_prestation': 200000, 'label': 'Camionneur'},
+            {'profession': 'Tracteur', 'frais_visite': 0, 'frais_prestation': 150000, 'label': 'Tracteur'},
+            {'profession': 'Voiture', 'frais_visite': 0, 'frais_prestation': 100000, 'label': 'Voiture'},
+            {'profession': 'Autres', 'frais_visite': 50000, 'frais_prestation': 100000, 'label': 'Autres'},
+            {'profession': 'Electrician', 'frais_visite': 50000, 'frais_prestation': 100000, 'label': 'Électricien'},
+        ]
+    
+    return fees
+
+@api_router.get("/service-fees/{profession}")
+async def get_public_fees_by_profession(profession: str):
+    """Get service fees for a specific profession (public endpoint)"""
+    fees = await db.service_fees.find_one({'profession': profession}, {'_id': 0})
+    
+    if not fees:
+        return {
+            'profession': profession,
+            'frais_visite': 50000,
+            'frais_prestation': 100000,
+            'label': profession
+        }
+    
+    return fees
+
 @api_router.get("/admin/settings")
 async def get_admin_settings():
     """Get admin platform settings"""
