@@ -6,20 +6,52 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Zap, Wrench, Droplet, Truck, Home, ArrowRight, Shield, Clock, Star, 
   User, LogOut, Hammer, Building, Settings, Flame, CheckCircle, 
-  Phone, MapPin, Users, Award, ChevronRight, Play, Sparkles
+  Phone, MapPin, Users, Award, ChevronRight, Play, Sparkles, Eye
 } from 'lucide-react';
+import axios from 'axios';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
 
 const LandingPage = ({ isCustomerAuthenticated }) => {
   const navigate = useNavigate();
   const [customer, setCustomer] = useState(null);
   const [activeCategory, setActiveCategory] = useState(0);
+  const [serviceFees, setServiceFees] = useState({});
+  const [settings, setSettings] = useState({ devise: 'GNF' });
 
   useEffect(() => {
     const storedCustomer = localStorage.getItem('customer');
     if (storedCustomer) {
       setCustomer(JSON.parse(storedCustomer));
     }
+    
+    // Fetch service fees from admin
+    fetchServiceFees();
   }, []);
+
+  const fetchServiceFees = async () => {
+    try {
+      const [feesRes, settingsRes] = await Promise.all([
+        axios.get(`${API}/service-fees`),
+        axios.get(`${API}/commission-rates`)
+      ]);
+      
+      // Convert array to object by profession
+      const feesMap = {};
+      feesRes.data.forEach(fee => {
+        feesMap[fee.profession] = fee.frais_visite || 0;
+      });
+      setServiceFees(feesMap);
+      setSettings({ devise: settingsRes.data.devise || 'GNF' });
+    } catch (error) {
+      console.error('Error fetching service fees:', error);
+    }
+  };
+
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat('fr-FR').format(price || 0);
+  };
 
   // Auto-rotate categories
   useEffect(() => {
