@@ -284,6 +284,9 @@ const Dashboard = ({ setIsAuthenticated }) => {
             <Button variant={activeTab === 'create-rental' ? 'default' : 'outline'} onClick={() => setActiveTab('create-rental')} className="gap-2">
               <Home className="h-4 w-4" /> + Location
             </Button>
+            <Button variant={activeTab === 'visit-requests' ? 'default' : 'outline'} onClick={() => setActiveTab('visit-requests')} className="gap-2 bg-blue-50 border-blue-200 hover:bg-blue-100">
+              <Eye className="h-4 w-4 text-blue-600" /> Visites
+            </Button>
             <Button variant={activeTab === 'sales' ? 'default' : 'outline'} onClick={() => setActiveTab('sales')} className="gap-2 bg-emerald-50 border-emerald-200 hover:bg-emerald-100">
               <DollarSign className="h-4 w-4 text-emerald-600" /> Ventes
             </Button>
@@ -298,6 +301,7 @@ const Dashboard = ({ setIsAuthenticated }) => {
           {activeTab === 'profile' && <ProfileForm user={user} setUser={setUser} onUpdate={fetchProfile} />}
           {activeTab === 'rentals' && <MyRentals />}
           {activeTab === 'create-rental' && <RentalListingForm onSuccess={() => setActiveTab('rentals')} />}
+          {activeTab === 'visit-requests' && <VisitRequestsList userType="provider" />}
           {activeTab === 'sales' && <MyPropertySales />}
           {activeTab === 'create-sale' && <PropertySaleForm onSuccess={() => setActiveTab('sales')} />}
           {activeTab === 'messages' && <RentalConversations />}
