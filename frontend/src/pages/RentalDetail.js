@@ -130,6 +130,7 @@ const RentalDetail = () => {
   const [loading, setLoading] = useState(true);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [showChat, setShowChat] = useState(false);
+  const [showVisitForm, setShowVisitForm] = useState(false);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
