@@ -86,7 +86,7 @@ const InvestigationFeePopup = ({
 
   if (!isOpen) return null;
 
-  const investigationFee = provider?.investigation_fee || 0;
+  const fraisVisite = serviceFees?.frais_visite || 50000;
 
   // Step 1: Initiate payment and send OTP
   const handleInitiatePayment = async () => {
@@ -104,7 +104,7 @@ const InvestigationFeePopup = ({
         provider_id: provider.id,
         customer_phone: phoneNumber,
         customer_name: customerName || 'Client',
-        amount: investigationFee,
+        amount: fraisVisite,
         payment_method: paymentMethod
       });
 
