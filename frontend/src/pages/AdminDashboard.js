@@ -2302,7 +2302,6 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                         <p className="mt-1 text-blue-400 text-xs">
                           Les frais de visite sont payés par le client avant le déplacement du prestataire. Ce montant est défini par la plateforme pour chaque catégorie de métier.
                         </p>
-                        </ul>
                       </div>
                     </div>
                   </div>
