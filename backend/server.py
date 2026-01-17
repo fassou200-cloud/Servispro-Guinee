@@ -1785,6 +1785,156 @@ async def upload_rental_document(
     
     return {'document_url': doc_url, 'document_type': doc_type, 'message': 'Document uploadé avec succès'}
 
+# ==================== VISIT REQUESTS (Demandes de Visite) ====================
+
+@api_router.post("/visit-requests")
+async def create_visit_request(request_data: VisitRequestCreate):
+    """Create a visit request for a rental property"""
+    # Verify rental exists
+    rental = await db.rental_listings.find_one({'id': request_data.rental_id}, {'_id': 0})
+    if not rental:
+        raise HTTPException(status_code=404, detail="Location non trouvée")
+    
+    # Get service fees for AgentImmobilier
+    fees = await db.service_fees.find_one({'profession': 'AgentImmobilier'}, {'_id': 0})
+    frais_visite = fees.get('frais_visite', 100000) if fees else 100000
+    
+    visit_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+    
+    visit_doc = {
+        'id': visit_id,
+        'rental_id': request_data.rental_id,
+        'rental_title': rental.get('title', ''),
+        'rental_location': rental.get('location', ''),
+        'owner_id': rental.get('owner_id'),
+        'owner_type': rental.get('owner_type', 'provider'),  # 'provider' or 'company'
+        'customer_name': request_data.customer_name,
+        'customer_phone': request_data.customer_phone,
+        'customer_email': request_data.customer_email,
+        'preferred_date': request_data.preferred_date,
+        'preferred_time': request_data.preferred_time,
+        'message': request_data.message,
+        'frais_visite': frais_visite,
+        'payment_status': 'pending',  # pending, paid
+        'status': VisitRequestStatus.PENDING.value,
+        'created_at': now,
+        'updated_at': now
+    }
+    
+    await db.visit_requests.insert_one(visit_doc)
+    
+    # Create notification for the owner
+    if rental.get('owner_id'):
+        notification_doc = {
+            'id': str(uuid.uuid4()),
+            'user_id': rental.get('owner_id'),
+            'user_type': rental.get('owner_type', 'provider'),
+            'title': 'Nouvelle demande de visite',
+            'message': f"{request_data.customer_name} souhaite visiter votre bien '{rental.get('title', 'Propriété')}' le {request_data.preferred_date}",
+            'notification_type': 'visit_request',
+            'related_id': visit_id,
+            'is_read': False,
+            'created_at': now
+        }
+        await db.notifications.insert_one(notification_doc)
+    
+    return {
+        'id': visit_id,
+        'message': 'Demande de visite envoyée avec succès',
+        'frais_visite': frais_visite,
+        'status': 'pending'
+    }
+
+@api_router.get("/visit-requests/my-requests")
+async def get_my_visit_requests(current_user: dict = Depends(get_current_user)):
+    """Get visit requests for the current provider/company's rentals"""
+    user_id = current_user.get('id')
+    
+    # Get all visit requests for this owner
+    requests = await db.visit_requests.find(
+        {'owner_id': user_id},
+        {'_id': 0}
+    ).sort('created_at', -1).to_list(100)
+    
+    return requests
+
+@api_router.get("/visit-requests/customer/{customer_phone}")
+async def get_customer_visit_requests(customer_phone: str):
+    """Get visit requests for a customer by phone number"""
+    requests = await db.visit_requests.find(
+        {'customer_phone': customer_phone},
+        {'_id': 0}
+    ).sort('created_at', -1).to_list(50)
+    
+    return requests
+
+@api_router.get("/visit-requests/{visit_id}")
+async def get_visit_request(visit_id: str):
+    """Get a specific visit request"""
+    request = await db.visit_requests.find_one({'id': visit_id}, {'_id': 0})
+    if not request:
+        raise HTTPException(status_code=404, detail="Demande de visite non trouvée")
+    return request
+
+@api_router.put("/visit-requests/{visit_id}")
+async def update_visit_request(visit_id: str, update_data: VisitRequestUpdate, current_user: dict = Depends(get_current_user)):
+    """Accept or reject a visit request"""
+    # Find the visit request
+    request = await db.visit_requests.find_one({'id': visit_id}, {'_id': 0})
+    if not request:
+        raise HTTPException(status_code=404, detail="Demande de visite non trouvée")
+    
+    # Verify ownership
+    if request.get('owner_id') != current_user.get('id'):
+        raise HTTPException(status_code=403, detail="Non autorisé à modifier cette demande")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    update_fields = {
+        'status': update_data.status.value,
+        'updated_at': now
+    }
+    
+    if update_data.response_message:
+        update_fields['response_message'] = update_data.response_message
+    
+    await db.visit_requests.update_one(
+        {'id': visit_id},
+        {'$set': update_fields}
+    )
+    
+    # Create notification for customer (we'll need a way to reach them)
+    status_messages = {
+        'accepted': f"Votre demande de visite pour '{request.get('rental_title', 'la propriété')}' a été acceptée !",
+        'rejected': f"Votre demande de visite pour '{request.get('rental_title', 'la propriété')}' a été refusée.",
+        'completed': f"Visite pour '{request.get('rental_title', 'la propriété')}' marquée comme terminée."
+    }
+    
+    return {
+        'id': visit_id,
+        'status': update_data.status.value,
+        'message': status_messages.get(update_data.status.value, 'Statut mis à jour')
+    }
+
+@api_router.get("/rentals/{rental_id}/visit-requests")
+async def get_rental_visit_requests(rental_id: str, current_user: dict = Depends(get_current_user)):
+    """Get all visit requests for a specific rental"""
+    # Verify user owns this rental
+    rental = await db.rental_listings.find_one({'id': rental_id}, {'_id': 0})
+    if not rental:
+        raise HTTPException(status_code=404, detail="Location non trouvée")
+    
+    if rental.get('owner_id') != current_user.get('id'):
+        raise HTTPException(status_code=403, detail="Non autorisé")
+    
+    requests = await db.visit_requests.find(
+        {'rental_id': rental_id},
+        {'_id': 0}
+    ).sort('created_at', -1).to_list(50)
+    
+    return requests
+
 # ==================== PROPERTY SALE ROUTES (Vente Immobilière) ====================
 
 @api_router.post("/property-sales")
