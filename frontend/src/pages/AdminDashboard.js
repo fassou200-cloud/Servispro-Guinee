@@ -2268,12 +2268,6 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                               Frais de Visite ({settings.devise})
                             </div>
                           </th>
-                          <th className="text-center py-3 px-4 text-slate-300 font-medium">
-                            <div className="flex items-center justify-center gap-2">
-                              <Briefcase className="h-4 w-4 text-green-400" />
-                              Frais de Prestation ({settings.devise})
-                            </div>
-                          </th>
                         </tr>
                       </thead>
                       <tbody>
@@ -2291,17 +2285,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                                 step="1000"
                                 value={fee.frais_visite || 0}
                                 onChange={(e) => handleUpdateFee(fee.profession, 'frais_visite', e.target.value)}
-                                className="w-full max-w-[150px] mx-auto block h-10 px-3 bg-slate-700 border border-slate-600 rounded-lg text-white text-center focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                              />
-                            </td>
-                            <td className="py-3 px-4">
-                              <input
-                                type="number"
-                                min="0"
-                                step="1000"
-                                value={fee.frais_prestation || 0}
-                                onChange={(e) => handleUpdateFee(fee.profession, 'frais_prestation', e.target.value)}
-                                className="w-full max-w-[150px] mx-auto block h-10 px-3 bg-slate-700 border border-slate-600 rounded-lg text-white text-center focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                                className="w-full max-w-[200px] mx-auto block h-10 px-3 bg-slate-700 border border-slate-600 rounded-lg text-white text-center focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                               />
                             </td>
                           </tr>
@@ -2314,10 +2298,10 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                     <div className="flex items-start gap-2 text-sm text-blue-300">
                       <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
                       <div>
-                        <p className="font-medium">À propos des frais :</p>
-                        <ul className="list-disc list-inside mt-1 text-blue-400 text-xs">
-                          <li><strong>Frais de visite</strong> : Payé par le client avant le déplacement du prestataire</li>
-                          <li><strong>Frais de prestation</strong> : Montant de base pour le service (le prestataire peut facturer plus selon le travail)</li>
+                        <p className="font-medium">À propos des frais de visite :</p>
+                        <p className="mt-1 text-blue-400 text-xs">
+                          Les frais de visite sont payés par le client avant le déplacement du prestataire. Ce montant est défini par la plateforme pour chaque catégorie de métier.
+                        </p>
                         </ul>
                       </div>
                     </div>
