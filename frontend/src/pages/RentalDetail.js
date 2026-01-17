@@ -513,14 +513,27 @@ const RentalDetail = () => {
                 </div>
 
                 {!showChat ? (
-                  <Button
-                    className="w-full h-14 font-heading font-bold gap-3 rounded-2xl bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-lg shadow-green-500/30 text-base"
-                    data-testid="start-chat-button"
-                    onClick={() => setShowChat(true)}
-                  >
-                    <MessageCircle className="h-5 w-5" />
-                    Démarrer une Conversation
-                  </Button>
+                  <div className="space-y-3">
+                    {/* Visit Request Button */}
+                    <Button
+                      className="w-full h-14 font-heading font-bold gap-3 rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg shadow-blue-500/30 text-base"
+                      data-testid="request-visit-button"
+                      onClick={() => setShowVisitForm(true)}
+                    >
+                      <Eye className="h-5 w-5" />
+                      Demander une Visite
+                    </Button>
+
+                    {/* Chat Button */}
+                    <Button
+                      className="w-full h-14 font-heading font-bold gap-3 rounded-2xl bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-lg shadow-green-500/30 text-base"
+                      data-testid="start-chat-button"
+                      onClick={() => setShowChat(true)}
+                    >
+                      <MessageCircle className="h-5 w-5" />
+                      Contacter le Propriétaire
+                    </Button>
+                  </div>
                 ) : (
                   <div className="space-y-4">
                     {/* Chat Messages */}
