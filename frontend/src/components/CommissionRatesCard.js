@@ -59,23 +59,32 @@ const getDomainColor = (domain) => {
 
 const CommissionRatesCard = ({ profession, sector, compact = false }) => {
   const [rates, setRates] = useState(null);
+  const [serviceFees, setServiceFees] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetchCommissionRates();
-  }, []);
+    fetchData();
+  }, [profession]);
 
-  const fetchCommissionRates = async () => {
+  const fetchData = async () => {
     try {
-      const response = await axios.get(`${API}/commission-rates`);
-      setRates(response.data);
+      const [ratesRes, feesRes] = await Promise.all([
+        axios.get(`${API}/commission-rates`),
+        profession ? axios.get(`${API}/service-fees/${profession}`) : Promise.resolve({ data: null })
+      ]);
+      setRates(ratesRes.data);
+      setServiceFees(feesRes.data);
     } catch (err) {
-      console.error('Error fetching commission rates:', err);
-      setError('Impossible de charger les taux');
+      console.error('Error fetching data:', err);
+      setError('Impossible de charger les données');
     } finally {
       setLoading(false);
     }
+  };
+
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat('fr-FR').format(price || 0);
   };
 
   if (loading) {
