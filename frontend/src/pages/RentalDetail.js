@@ -512,101 +512,15 @@ const RentalDetail = () => {
                   </div>
                 </div>
 
-                {!showChat ? (
-                  <div className="space-y-3">
-                    {/* Visit Request Button */}
-                    <Button
-                      className="w-full h-14 font-heading font-bold gap-3 rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg shadow-blue-500/30 text-base"
-                      data-testid="request-visit-button"
-                      onClick={() => setShowVisitForm(true)}
-                    >
-                      <Eye className="h-5 w-5" />
-                      Demander une Visite
-                    </Button>
-
-                    {/* Chat Button */}
-                    <Button
-                      className="w-full h-14 font-heading font-bold gap-3 rounded-2xl bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-lg shadow-green-500/30 text-base"
-                      data-testid="start-chat-button"
-                      onClick={() => setShowChat(true)}
-                    >
-                      <MessageCircle className="h-5 w-5" />
-                      Contacter le Propriétaire
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {/* Chat Messages */}
-                    <div className="h-72 overflow-y-auto border border-slate-200 rounded-2xl p-4 bg-slate-50">
-                      {messages.length === 0 ? (
-                        <div className="h-full flex flex-col items-center justify-center text-slate-400 text-sm">
-                          <MessageCircle className="h-12 w-12 mb-3 opacity-50" />
-                          <p>Aucun message</p>
-                          <p className="text-xs">Commencez la conversation !</p>
-                        </div>
-                      ) : (
-                        <div className="space-y-3">
-                          {messages.map((msg) => (
-                            <div
-                              key={msg.id}
-                              className={`flex ${msg.sender_type === 'customer' ? 'justify-end' : 'justify-start'}`}
-                            >
-                              <div
-                                className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm ${
-                                  msg.sender_type === 'customer'
-                                    ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
-                                    : 'bg-white text-slate-700 shadow-sm border'
-                                }`}
-                              >
-                                <p>{msg.message}</p>
-                                <p className={`text-xs mt-1 ${
-                                  msg.sender_type === 'customer' ? 'text-green-100' : 'text-slate-400'
-                                }`}>
-                                  {new Date(msg.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-                                </p>
-                              </div>
-                            </div>
-                          ))}
-                          <div ref={messagesEndRef} />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Message Input */}
-                    <form onSubmit={handleSendMessage} className="flex gap-2">
-                      <Input
-                        value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
-                        placeholder="Écrivez votre message..."
-                        className="flex-1 h-12 rounded-xl border-slate-200"
-                        disabled={sendingMessage}
-                      />
-                      <Button 
-                        type="submit" 
-                        size="icon"
-                        disabled={sendingMessage || !newMessage.trim()}
-                        className="h-12 w-12 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
-                      >
-                        <Send className="h-5 w-5" />
-                      </Button>
-                    </form>
-                  </div>
-                )}
-
-                {/* Quick Contact */}
-                <div className="mt-6 pt-6 border-t border-slate-100">
-                  <p className="text-sm text-slate-500 mb-3">Ou contactez directement</p>
-                  <div className="flex gap-3">
-                    <Button variant="outline" className="flex-1 gap-2 rounded-xl h-11">
-                      <Phone className="h-4 w-4" />
-                      Appeler
-                    </Button>
-                    <Button variant="outline" className="flex-1 gap-2 rounded-xl h-11">
-                      <Mail className="h-4 w-4" />
-                      Email
-                    </Button>
-                  </div>
-                </div>
+                {/* Visit Request Button Only */}
+                <Button
+                  className="w-full h-14 font-heading font-bold gap-3 rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg shadow-blue-500/30 text-base"
+                  data-testid="request-visit-button"
+                  onClick={() => setShowVisitForm(true)}
+                >
+                  <Eye className="h-5 w-5" />
+                  Demander une Visite
+                </Button>
               </Card>
             </div>
           </div>
