@@ -254,12 +254,10 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
                   </div>
                 )}
 
-                {/* Service Fees Display */}
-                {provider.profession !== 'AgentImmobilier' && (
-                  <div className="mt-4">
-                    <ServiceFeesDisplay profession={provider.profession} compact={true} />
-                  </div>
-                )}
+                {/* Service Fees Display - For ALL providers including Agent Immobilier */}
+                <div className="mt-4">
+                  <ServiceFeesDisplay profession={provider.profession} compact={true} />
+                </div>
               </div>
 
               {/* CTA Button */}
