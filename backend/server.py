@@ -1975,6 +1975,286 @@ async def get_rental_visit_requests(rental_id: str, current_user: dict = Depends
     
     return requests
 
+# ==================== VEHICLE SALES (Vente de Véhicules) ====================
+
+@api_router.post("/vehicle-sales")
+async def create_vehicle_sale(sale_data: VehicleSaleCreate, current_user: dict = Depends(get_current_user)):
+    """Create a new vehicle sale listing (Vehicle providers only)"""
+    if current_user.get('profession') not in ['Camionneur', 'Tracteur', 'Voiture']:
+        raise HTTPException(
+            status_code=403, 
+            detail="Seuls les prestataires de véhicules peuvent créer des annonces de vente"
+        )
+    
+    sale_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+    
+    vehicle_type_map = {
+        'Camionneur': 'Camion',
+        'Tracteur': 'Tracteur',
+        'Voiture': 'Voiture'
+    }
+    
+    sale_doc = {
+        'id': sale_id,
+        'seller_id': current_user.get('id'),
+        'seller_name': f"{current_user.get('first_name', '')} {current_user.get('last_name', '')}",
+        'seller_phone': current_user.get('phone_number', ''),
+        'vehicle_type': sale_data.vehicle_type or vehicle_type_map.get(current_user.get('profession'), 'Véhicule'),
+        'brand': sale_data.brand,
+        'model': sale_data.model,
+        'year': sale_data.year,
+        'mileage': sale_data.mileage,
+        'fuel_type': sale_data.fuel_type,
+        'transmission': sale_data.transmission,
+        'price': sale_data.price,
+        'description': sale_data.description,
+        'location': sale_data.location,
+        'condition': sale_data.condition,
+        'photos': sale_data.photos,
+        'status': VehicleSaleStatus.PENDING.value,
+        'created_at': now,
+        'updated_at': now
+    }
+    
+    await db.vehicle_sales.insert_one(sale_doc)
+    
+    # Notify admin of new vehicle sale listing
+    admin_notification = {
+        'id': str(uuid.uuid4()),
+        'user_id': 'admin',
+        'user_type': 'admin',
+        'title': 'Nouvelle annonce de vente de véhicule',
+        'message': f"{sale_doc['seller_name']} a créé une annonce de vente: {sale_data.brand} {sale_data.model} ({sale_data.year})",
+        'notification_type': 'vehicle_sale',
+        'related_id': sale_id,
+        'is_read': False,
+        'created_at': now
+    }
+    await db.notifications.insert_one(admin_notification)
+    
+    return {
+        'id': sale_id,
+        'message': 'Annonce de vente créée avec succès. En attente d\'approbation.',
+        'status': 'pending'
+    }
+
+@api_router.get("/vehicle-sales/my-sales")
+async def get_my_vehicle_sales(current_user: dict = Depends(get_current_user)):
+    """Get vehicle sales for the current seller"""
+    sales = await db.vehicle_sales.find(
+        {'seller_id': current_user.get('id')},
+        {'_id': 0}
+    ).sort('created_at', -1).to_list(50)
+    
+    return sales
+
+@api_router.get("/vehicle-sales")
+async def get_approved_vehicle_sales(vehicle_type: str = None, limit: int = 20):
+    """Get all approved vehicle sales (public)"""
+    query = {'status': VehicleSaleStatus.APPROVED.value}
+    if vehicle_type:
+        query['vehicle_type'] = vehicle_type
+    
+    sales = await db.vehicle_sales.find(
+        query,
+        {'_id': 0}
+    ).sort('created_at', -1).to_list(limit)
+    
+    return sales
+
+@api_router.get("/vehicle-sales/{sale_id}")
+async def get_vehicle_sale(sale_id: str):
+    """Get a specific vehicle sale"""
+    sale = await db.vehicle_sales.find_one({'id': sale_id}, {'_id': 0})
+    if not sale:
+        raise HTTPException(status_code=404, detail="Annonce non trouvée")
+    return sale
+
+@api_router.put("/vehicle-sales/{sale_id}")
+async def update_vehicle_sale(sale_id: str, update_data: VehicleSaleUpdate, current_user: dict = Depends(get_current_user)):
+    """Update a vehicle sale listing"""
+    sale = await db.vehicle_sales.find_one({'id': sale_id}, {'_id': 0})
+    if not sale:
+        raise HTTPException(status_code=404, detail="Annonce non trouvée")
+    
+    if sale.get('seller_id') != current_user.get('id'):
+        raise HTTPException(status_code=403, detail="Non autorisé")
+    
+    update_fields = {'updated_at': datetime.now(timezone.utc).isoformat()}
+    
+    for field, value in update_data.dict(exclude_unset=True).items():
+        if value is not None:
+            update_fields[field] = value
+    
+    await db.vehicle_sales.update_one(
+        {'id': sale_id},
+        {'$set': update_fields}
+    )
+    
+    updated = await db.vehicle_sales.find_one({'id': sale_id}, {'_id': 0})
+    return updated
+
+@api_router.delete("/vehicle-sales/{sale_id}")
+async def delete_vehicle_sale(sale_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete a vehicle sale listing"""
+    sale = await db.vehicle_sales.find_one({'id': sale_id}, {'_id': 0})
+    if not sale:
+        raise HTTPException(status_code=404, detail="Annonce non trouvée")
+    
+    if sale.get('seller_id') != current_user.get('id'):
+        raise HTTPException(status_code=403, detail="Non autorisé")
+    
+    await db.vehicle_sales.delete_one({'id': sale_id})
+    return {'message': 'Annonce supprimée'}
+
+# Vehicle Sale Inquiries (go to admin)
+@api_router.post("/vehicle-sales/{sale_id}/inquiries")
+async def create_vehicle_inquiry(sale_id: str, inquiry: VehicleSaleInquiry):
+    """Create an inquiry for a vehicle sale (goes to admin)"""
+    sale = await db.vehicle_sales.find_one({'id': sale_id}, {'_id': 0})
+    if not sale:
+        raise HTTPException(status_code=404, detail="Annonce non trouvée")
+    
+    inquiry_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+    
+    inquiry_doc = {
+        'id': inquiry_id,
+        'vehicle_id': sale_id,
+        'vehicle_info': f"{sale.get('brand')} {sale.get('model')} ({sale.get('year')})",
+        'vehicle_price': sale.get('price'),
+        'seller_id': sale.get('seller_id'),
+        'seller_name': sale.get('seller_name'),
+        'seller_phone': sale.get('seller_phone'),
+        'customer_name': inquiry.customer_name,
+        'customer_phone': inquiry.customer_phone,
+        'customer_email': inquiry.customer_email,
+        'message': inquiry.message,
+        'status': 'pending',  # pending, contacted, completed
+        'admin_notes': None,
+        'created_at': now,
+        'updated_at': now
+    }
+    
+    await db.vehicle_inquiries.insert_one(inquiry_doc)
+    
+    # Notify admin
+    admin_notification = {
+        'id': str(uuid.uuid4()),
+        'user_id': 'admin',
+        'user_type': 'admin',
+        'title': 'Nouvelle demande d\'achat de véhicule',
+        'message': f"{inquiry.customer_name} est intéressé par: {sale.get('brand')} {sale.get('model')} - {sale.get('price'):,.0f} GNF",
+        'notification_type': 'vehicle_inquiry',
+        'related_id': inquiry_id,
+        'is_read': False,
+        'created_at': now
+    }
+    await db.notifications.insert_one(admin_notification)
+    
+    return {
+        'id': inquiry_id,
+        'message': 'Votre demande a été envoyée. L\'équipe ServisPro vous contactera bientôt.',
+        'status': 'pending'
+    }
+
+# Admin endpoints for vehicle sales
+@api_router.get("/admin/vehicle-sales")
+async def admin_get_all_vehicle_sales(status: str = None):
+    """Admin: Get all vehicle sales"""
+    query = {}
+    if status:
+        query['status'] = status
+    
+    sales = await db.vehicle_sales.find(query, {'_id': 0}).sort('created_at', -1).to_list(100)
+    return sales
+
+@api_router.put("/admin/vehicle-sales/{sale_id}/approve")
+async def admin_approve_vehicle_sale(sale_id: str):
+    """Admin: Approve a vehicle sale"""
+    result = await db.vehicle_sales.update_one(
+        {'id': sale_id},
+        {'$set': {'status': VehicleSaleStatus.APPROVED.value, 'updated_at': datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Annonce non trouvée")
+    
+    # Notify seller
+    sale = await db.vehicle_sales.find_one({'id': sale_id}, {'_id': 0})
+    if sale:
+        notification = {
+            'id': str(uuid.uuid4()),
+            'user_id': sale.get('seller_id'),
+            'user_type': 'provider',
+            'title': 'Annonce de vente approuvée',
+            'message': f"Votre annonce {sale.get('brand')} {sale.get('model')} a été approuvée et est maintenant visible.",
+            'notification_type': 'vehicle_sale_approved',
+            'related_id': sale_id,
+            'is_read': False,
+            'created_at': datetime.now(timezone.utc).isoformat()
+        }
+        await db.notifications.insert_one(notification)
+    
+    return {'message': 'Annonce approuvée'}
+
+@api_router.put("/admin/vehicle-sales/{sale_id}/reject")
+async def admin_reject_vehicle_sale(sale_id: str):
+    """Admin: Reject a vehicle sale"""
+    result = await db.vehicle_sales.update_one(
+        {'id': sale_id},
+        {'$set': {'status': VehicleSaleStatus.REJECTED.value, 'updated_at': datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Annonce non trouvée")
+    
+    return {'message': 'Annonce rejetée'}
+
+@api_router.put("/admin/vehicle-sales/{sale_id}/sold")
+async def admin_mark_vehicle_sold(sale_id: str):
+    """Admin: Mark a vehicle as sold"""
+    result = await db.vehicle_sales.update_one(
+        {'id': sale_id},
+        {'$set': {'status': VehicleSaleStatus.SOLD.value, 'sold_at': datetime.now(timezone.utc).isoformat(), 'updated_at': datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Annonce non trouvée")
+    
+    return {'message': 'Véhicule marqué comme vendu'}
+
+@api_router.get("/admin/vehicle-inquiries")
+async def admin_get_vehicle_inquiries(status: str = None):
+    """Admin: Get all vehicle inquiries"""
+    query = {}
+    if status:
+        query['status'] = status
+    
+    inquiries = await db.vehicle_inquiries.find(query, {'_id': 0}).sort('created_at', -1).to_list(100)
+    return inquiries
+
+@api_router.put("/admin/vehicle-inquiries/{inquiry_id}")
+async def admin_update_vehicle_inquiry(inquiry_id: str, status: str, admin_notes: str = None):
+    """Admin: Update vehicle inquiry status"""
+    update_fields = {
+        'status': status,
+        'updated_at': datetime.now(timezone.utc).isoformat()
+    }
+    if admin_notes:
+        update_fields['admin_notes'] = admin_notes
+    
+    result = await db.vehicle_inquiries.update_one(
+        {'id': inquiry_id},
+        {'$set': update_fields}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Demande non trouvée")
+    
+    return {'message': 'Statut mis à jour'}
+
 # ==================== PROPERTY SALE ROUTES (Vente Immobilière) ====================
 
 @api_router.post("/property-sales")
