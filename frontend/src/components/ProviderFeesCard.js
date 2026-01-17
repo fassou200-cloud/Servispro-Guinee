@@ -60,7 +60,7 @@ const ProviderFeesCard = ({ profession }) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4">
         {/* Frais de Visite */}
         <div className="bg-background/80 p-4 rounded-xl border border-blue-200">
           <div className="flex items-center gap-2 text-blue-600 mb-2">
