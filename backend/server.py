@@ -236,6 +236,27 @@ class JobOffer(BaseModel):
     status: str
     created_at: str
 
+# Visit Request Models for Rentals
+class VisitRequestStatus(str, Enum):
+    PENDING = "pending"
+    ACCEPTED = "accepted"
+    REJECTED = "rejected"
+    COMPLETED = "completed"
+    CANCELLED = "cancelled"
+
+class VisitRequestCreate(BaseModel):
+    rental_id: str
+    customer_name: str
+    customer_phone: str
+    customer_email: Optional[str] = None
+    preferred_date: str
+    preferred_time: Optional[str] = None
+    message: Optional[str] = None
+
+class VisitRequestUpdate(BaseModel):
+    status: VisitRequestStatus
+    response_message: Optional[str] = None
+
 class RentalListingCreate(BaseModel):
     property_type: PropertyType
     title: str
