@@ -3525,12 +3525,26 @@ async def get_provider_unread_count(current_user: dict = Depends(get_current_use
 @api_router.get("/notifications/unread-count/customer")
 async def get_customer_unread_count(current_customer: dict = Depends(get_current_customer)):
     """Get count of unread notifications for customer"""
-    count = await db.notifications.count_documents({
-        'user_id': current_customer['id'],
+    customer_id = current_customer.get('id')
+    customer_phone = current_customer.get('phone_number')
+    
+    # Count from standard notifications
+    count_standard = await db.notifications.count_documents({
+        'user_id': customer_id,
         'user_type': 'customer',
         'is_read': False
     })
-    return {'unread_count': count}
+    
+    # Count from customer_notifications (visit requests)
+    count_visits = await db.customer_notifications.count_documents({
+        '$or': [
+            {'customer_id': customer_id},
+            {'customer_phone': customer_phone}
+        ],
+        'is_read': False
+    })
+    
+    return {'unread_count': count_standard + count_visits}
 
 @api_router.put("/notifications/{notification_id}/read")
 async def mark_notification_read(notification_id: str):
