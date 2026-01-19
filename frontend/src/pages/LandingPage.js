@@ -27,6 +27,10 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
   const [propertySales, setPropertySales] = useState([]);
   const [loadingProperties, setLoadingProperties] = useState(true);
   
+  // Property detail modal state
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [detailProperty, setDetailProperty] = useState(null);
+  
   // Property inquiry modal state
   const [showInquiryModal, setShowInquiryModal] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState(null);
