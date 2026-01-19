@@ -1452,7 +1452,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                     key={sale.id} 
                     className={`p-4 bg-slate-800 border-slate-700 cursor-pointer transition-colors ${
                       selectedSale?.id === sale.id ? 'border-emerald-500' : 'hover:border-slate-600'
-                    }`}
+                    } ${sale.status === 'pending' ? 'border-l-4 border-l-orange-500' : ''}`}
                     onClick={() => setSelectedSale(sale)}
                   >
                     <div className="flex gap-4">
@@ -1470,8 +1470,17 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
                           <h3 className="font-bold text-white truncate">{sale.title}</h3>
-                          <span className="flex-shrink-0 px-2 py-1 rounded text-xs font-medium bg-emerald-600/20 text-emerald-400">
-                            {sale.property_type}
+                          <span className={`flex-shrink-0 px-2 py-1 rounded text-xs font-medium ${
+                            sale.status === 'pending' ? 'bg-orange-600/20 text-orange-400' :
+                            sale.status === 'approved' ? 'bg-green-600/20 text-green-400' :
+                            sale.status === 'rejected' ? 'bg-red-600/20 text-red-400' :
+                            sale.status === 'sold' ? 'bg-purple-600/20 text-purple-400' :
+                            'bg-emerald-600/20 text-emerald-400'
+                          }`}>
+                            {sale.status === 'pending' ? 'En attente' :
+                             sale.status === 'approved' ? 'Approuvé' :
+                             sale.status === 'rejected' ? 'Rejeté' :
+                             sale.status === 'sold' ? 'Vendu' : sale.property_type}
                           </span>
                         </div>
                         <p className="text-sm text-slate-400">{sale.agent_name}</p>
@@ -1483,11 +1492,6 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                           <span className="text-emerald-400 font-bold text-sm">
                             {Number(sale.sale_price).toLocaleString('fr-FR')} GNF
                           </span>
-                          {sale.is_available ? (
-                            <span className="px-2 py-0.5 rounded text-xs bg-green-600/20 text-green-400">À Vendre</span>
-                          ) : (
-                            <span className="px-2 py-0.5 rounded text-xs bg-red-600/20 text-red-400">Vendu</span>
-                          )}
                         </div>
                       </div>
                     </div>
