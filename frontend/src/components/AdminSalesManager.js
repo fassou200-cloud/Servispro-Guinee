@@ -130,6 +130,26 @@ const AdminSalesManager = () => {
     }
   };
 
+  // Property Inquiry Actions
+  const handleUpdatePropertyInquiry = async (inquiryId, status) => {
+    setProcessingId(inquiryId);
+    try {
+      await axios.put(`${API}/admin/property-inquiries/${inquiryId}?status=${status}&admin_notes=${encodeURIComponent(adminNotes)}`);
+      toast.success('Demande mise à jour !');
+      setPropertyInquiries(prev => 
+        prev.map(i => i.id === inquiryId ? {...i, status, admin_notes: adminNotes} : i)
+      );
+      if (selectedPropertyInquiry?.id === inquiryId) {
+        setSelectedPropertyInquiry({...selectedPropertyInquiry, status, admin_notes: adminNotes});
+      }
+      setAdminNotes('');
+    } catch (error) {
+      toast.error('Erreur lors de la mise à jour');
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
   const getStatusBadge = (status) => {
     const styles = {
       pending: { bg: 'bg-orange-600/20', text: 'text-orange-400', label: 'En attente' },
@@ -145,6 +165,7 @@ const AdminSalesManager = () => {
   const pendingSales = vehicleSales.filter(s => s.status === 'pending');
   const approvedSales = vehicleSales.filter(s => s.status === 'approved');
   const pendingInquiries = vehicleInquiries.filter(i => i.status === 'pending');
+  const pendingPropertyInquiries = propertyInquiries.filter(i => i.status === 'pending');
 
   if (loading) {
     return (
