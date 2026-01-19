@@ -2471,22 +2471,62 @@ async def admin_get_property_inquiries(status: str = None):
     return inquiries
 
 @api_router.put("/admin/property-inquiries/{inquiry_id}")
-async def admin_update_property_inquiry(inquiry_id: str, status: str, admin_notes: str = None):
-    """Admin: Update a property inquiry status"""
-    update_data = {
-        'status': status,
-        'updated_at': datetime.now(timezone.utc).isoformat()
+async def admin_update_property_inquiry(inquiry_id: str, update_data: AdminPropertyInquiryResponse):
+    """Admin: Update a property inquiry status and respond to customer"""
+    # Get the inquiry to find customer info
+    inquiry = await db.property_inquiries.find_one({'id': inquiry_id}, {'_id': 0})
+    if not inquiry:
+        raise HTTPException(status_code=404, detail="Demande non trouvée")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    update_fields = {
+        'status': update_data.status,
+        'updated_at': now
     }
-    if admin_notes:
-        update_data['admin_notes'] = admin_notes
+    if update_data.admin_notes:
+        update_fields['admin_notes'] = update_data.admin_notes
+    if update_data.admin_response:
+        update_fields['admin_response'] = update_data.admin_response
+        update_fields['response_date'] = now
     
     result = await db.property_inquiries.update_one(
         {'id': inquiry_id},
-        {'$set': update_data}
+        {'$set': update_fields}
     )
     
     if result.modified_count == 0:
         raise HTTPException(status_code=404, detail="Demande non trouvée")
+    
+    # Send notification to customer if there's a response or status change
+    customer_id = inquiry.get('customer_id')
+    if customer_id and (update_data.admin_response or update_data.status in ['contacted', 'completed']):
+        status_text = {
+            'pending': 'En attente',
+            'contacted': 'Contacté',
+            'completed': 'Terminé',
+            'rejected': 'Rejeté'
+        }.get(update_data.status, update_data.status)
+        
+        notification_message = update_data.admin_response or f"Votre demande pour '{inquiry.get('property_info', 'la propriété')}' a été mise à jour: {status_text}"
+        
+        customer_notification = {
+            'id': str(uuid.uuid4()),
+            'customer_phone': inquiry.get('customer_phone'),
+            'title': 'Réponse à votre demande d\'achat',
+            'message': notification_message,
+            'link': '/customer/dashboard?tab=demandes',
+            'read': False,
+            'created_at': now,
+            'data': {
+                'type': 'property_inquiry_response',
+                'inquiry_id': inquiry_id,
+                'property_info': inquiry.get('property_info'),
+                'status': update_data.status,
+                'admin_response': update_data.admin_response
+            }
+        }
+        await db.customer_notifications.insert_one(customer_notification)
     
     return {'message': 'Demande mise à jour', 'inquiry_id': inquiry_id}
 
