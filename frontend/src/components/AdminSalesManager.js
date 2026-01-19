@@ -247,10 +247,23 @@ const AdminSalesManager = () => {
           className={activeSubTab === 'vehicle-inquiries' ? 'bg-blue-600' : 'border-slate-600 text-slate-300'}
         >
           <MessageCircle className="h-4 w-4 mr-2" />
-          Demandes d'Achat ({vehicleInquiries.length})
+          Demandes Véhicules ({vehicleInquiries.length})
           {pendingInquiries.length > 0 && (
             <span className="ml-2 px-2 py-0.5 bg-orange-500 text-white text-xs rounded-full">
               {pendingInquiries.length}
+            </span>
+          )}
+        </Button>
+        <Button
+          variant={activeSubTab === 'property-inquiries' ? 'default' : 'outline'}
+          onClick={() => { setActiveSubTab('property-inquiries'); setSelectedPropertyInquiry(null); }}
+          className={activeSubTab === 'property-inquiries' ? 'bg-amber-600' : 'border-slate-600 text-slate-300'}
+        >
+          <Home className="h-4 w-4 mr-2" />
+          Demandes Immobilier ({propertyInquiries.length})
+          {pendingPropertyInquiries.length > 0 && (
+            <span className="ml-2 px-2 py-0.5 bg-orange-500 text-white text-xs rounded-full">
+              {pendingPropertyInquiries.length}
             </span>
           )}
         </Button>
