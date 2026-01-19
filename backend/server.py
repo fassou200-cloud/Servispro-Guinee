@@ -2308,6 +2308,77 @@ async def admin_update_vehicle_inquiry(inquiry_id: str, status: str, admin_notes
     
     return {'message': 'Statut mis à jour'}
 
+# ==================== ADMIN PROPERTY SALES ROUTES ====================
+
+@api_router.get("/admin/property-sales")
+async def admin_get_all_property_sales(status: str = None):
+    """Admin: Get all property sales for management"""
+    query = {}
+    if status:
+        query['status'] = status
+    
+    sales = await db.property_sales.find(query, {'_id': 0}).sort('created_at', -1).to_list(100)
+    return sales
+
+@api_router.get("/admin/property-sales/pending")
+async def admin_get_pending_property_sales():
+    """Admin: Get all pending property sales"""
+    sales = await db.property_sales.find(
+        {'status': 'pending'},
+        {'_id': 0}
+    ).sort('created_at', -1).to_list(100)
+    return sales
+
+@api_router.put("/admin/property-sales/{sale_id}/approve")
+async def admin_approve_property_sale(sale_id: str):
+    """Admin: Approve a property sale"""
+    result = await db.property_sales.update_one(
+        {'id': sale_id},
+        {'$set': {
+            'status': 'approved',
+            'updated_at': datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Vente non trouvée")
+    
+    return {'message': 'Vente immobilière approuvée', 'sale_id': sale_id}
+
+@api_router.put("/admin/property-sales/{sale_id}/reject")
+async def admin_reject_property_sale(sale_id: str):
+    """Admin: Reject a property sale"""
+    result = await db.property_sales.update_one(
+        {'id': sale_id},
+        {'$set': {
+            'status': 'rejected',
+            'updated_at': datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Vente non trouvée")
+    
+    return {'message': 'Vente immobilière rejetée', 'sale_id': sale_id}
+
+@api_router.put("/admin/property-sales/{sale_id}/sold")
+async def admin_mark_property_sold(sale_id: str):
+    """Admin: Mark a property as sold"""
+    result = await db.property_sales.update_one(
+        {'id': sale_id},
+        {'$set': {
+            'status': 'sold',
+            'is_available': False,
+            'sold_at': datetime.now(timezone.utc).isoformat(),
+            'updated_at': datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Vente non trouvée")
+    
+    return {'message': 'Propriété marquée comme vendue', 'sale_id': sale_id}
+
 # ==================== PROPERTY SALE ROUTES (Vente Immobilière) ====================
 
 @api_router.post("/property-sales")
