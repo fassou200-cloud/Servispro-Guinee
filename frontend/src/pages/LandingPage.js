@@ -1006,6 +1006,208 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
         </div>
       )}
 
+      {/* Property Detail Modal */}
+      {showDetailModal && detailProperty && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/80" onClick={() => setShowDetailModal(false)} />
+          <div className="relative bg-gray-900 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-gray-700 shadow-xl">
+            {/* Header with close button */}
+            <div className="sticky top-0 bg-gray-900/95 backdrop-blur p-4 border-b border-gray-700 flex items-center justify-between z-10">
+              <div>
+                <h3 className="text-xl font-bold text-white">{detailProperty.title}</h3>
+                <p className="text-sm text-gray-400 flex items-center gap-2">
+                  <MapPin className="h-4 w-4" />
+                  {detailProperty.location}
+                </p>
+              </div>
+              <button 
+                onClick={() => setShowDetailModal(false)}
+                className="p-2 hover:bg-gray-800 rounded-full transition-colors"
+              >
+                <X className="h-6 w-6 text-gray-400" />
+              </button>
+            </div>
+
+            {/* Property Images */}
+            <div className="relative">
+              {detailProperty.photos && detailProperty.photos.length > 0 ? (
+                <div className="grid grid-cols-2 gap-2 p-4">
+                  <img 
+                    src={`${BACKEND_URL}${detailProperty.photos[0]}`}
+                    alt={detailProperty.title}
+                    className="w-full h-64 object-cover rounded-lg col-span-2"
+                  />
+                  {detailProperty.photos.slice(1, 5).map((photo, idx) => (
+                    <img 
+                      key={idx}
+                      src={`${BACKEND_URL}${photo}`}
+                      alt={`${detailProperty.title} ${idx + 2}`}
+                      className="w-full h-32 object-cover rounded-lg"
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="h-64 bg-gray-800 flex items-center justify-center m-4 rounded-lg">
+                  <Home className="h-20 w-20 text-gray-600" />
+                </div>
+              )}
+              
+              {/* Badge Type & Verified */}
+              <div className="absolute top-6 left-6 flex gap-2">
+                <span className="px-3 py-1 bg-emerald-500 text-white text-sm font-bold rounded-full">
+                  {detailProperty.property_type === 'House' ? 'Maison' : 
+                   detailProperty.property_type === 'Apartment' ? 'Appartement' : 
+                   detailProperty.property_type === 'Land' ? 'Terrain' : 
+                   detailProperty.property_type === 'Commercial' ? 'Commercial' : detailProperty.property_type}
+                </span>
+                <span className="px-3 py-1 bg-green-600 text-white text-sm font-bold rounded-full flex items-center gap-1">
+                  <CheckCircle className="h-4 w-4" />
+                  Vérifié
+                </span>
+              </div>
+            </div>
+
+            {/* Property Details */}
+            <div className="p-6">
+              {/* Price Section */}
+              <div className="bg-emerald-900/30 border border-emerald-700/50 rounded-xl p-6 mb-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-emerald-400 mb-1">Prix de vente</p>
+                    <p className="text-3xl font-bold text-white">
+                      {Number(detailProperty.sale_price).toLocaleString('fr-FR')} GNF
+                    </p>
+                    {detailProperty.is_negotiable && (
+                      <span className="text-sm text-emerald-400">Prix négociable</span>
+                    )}
+                  </div>
+                  <Button 
+                    className="bg-emerald-600 hover:bg-emerald-700 gap-2 h-12 px-6"
+                    onClick={() => { setShowDetailModal(false); openInquiryModal(detailProperty); }}
+                  >
+                    <MessageCircle className="h-5 w-5" />
+                    Contacter le Vendeur
+                  </Button>
+                </div>
+              </div>
+
+              {/* Features Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                {detailProperty.num_rooms && (
+                  <div className="bg-gray-800/50 rounded-xl p-4 text-center">
+                    <Bed className="h-6 w-6 text-emerald-400 mx-auto mb-2" />
+                    <p className="text-2xl font-bold text-white">{detailProperty.num_rooms}</p>
+                    <p className="text-sm text-gray-400">Chambres</p>
+                  </div>
+                )}
+                {detailProperty.num_bathrooms && (
+                  <div className="bg-gray-800/50 rounded-xl p-4 text-center">
+                    <Bath className="h-6 w-6 text-emerald-400 mx-auto mb-2" />
+                    <p className="text-2xl font-bold text-white">{detailProperty.num_bathrooms}</p>
+                    <p className="text-sm text-gray-400">Salles de bain</p>
+                  </div>
+                )}
+                {detailProperty.surface_area && (
+                  <div className="bg-gray-800/50 rounded-xl p-4 text-center">
+                    <Home className="h-6 w-6 text-emerald-400 mx-auto mb-2" />
+                    <p className="text-2xl font-bold text-white">{detailProperty.surface_area}</p>
+                    <p className="text-sm text-gray-400">m² Surface</p>
+                  </div>
+                )}
+                {detailProperty.land_area && (
+                  <div className="bg-gray-800/50 rounded-xl p-4 text-center">
+                    <Trees className="h-6 w-6 text-emerald-400 mx-auto mb-2" />
+                    <p className="text-2xl font-bold text-white">{detailProperty.land_area}</p>
+                    <p className="text-sm text-gray-400">m² Terrain</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Amenities */}
+              <div className="mb-6">
+                <h4 className="text-lg font-bold text-white mb-3">Caractéristiques</h4>
+                <div className="flex flex-wrap gap-2">
+                  {detailProperty.has_garage && (
+                    <span className="px-3 py-2 bg-gray-800 text-gray-300 rounded-lg flex items-center gap-2">
+                      <Car className="h-4 w-4 text-emerald-400" />
+                      Garage
+                    </span>
+                  )}
+                  {detailProperty.has_garden && (
+                    <span className="px-3 py-2 bg-gray-800 text-gray-300 rounded-lg flex items-center gap-2">
+                      <Trees className="h-4 w-4 text-emerald-400" />
+                      Jardin
+                    </span>
+                  )}
+                  {detailProperty.has_pool && (
+                    <span className="px-3 py-2 bg-gray-800 text-gray-300 rounded-lg flex items-center gap-2">
+                      <Droplet className="h-4 w-4 text-emerald-400" />
+                      Piscine
+                    </span>
+                  )}
+                  {detailProperty.has_security && (
+                    <span className="px-3 py-2 bg-gray-800 text-gray-300 rounded-lg flex items-center gap-2">
+                      <Shield className="h-4 w-4 text-emerald-400" />
+                      Sécurité
+                    </span>
+                  )}
+                  {detailProperty.furnished && (
+                    <span className="px-3 py-2 bg-gray-800 text-gray-300 rounded-lg flex items-center gap-2">
+                      <Home className="h-4 w-4 text-emerald-400" />
+                      Meublé
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Description */}
+              {detailProperty.description && (
+                <div className="mb-6">
+                  <h4 className="text-lg font-bold text-white mb-3">Description</h4>
+                  <p className="text-gray-400 leading-relaxed whitespace-pre-line">
+                    {detailProperty.description}
+                  </p>
+                </div>
+              )}
+
+              {/* Agent Info */}
+              <div className="bg-gray-800/50 rounded-xl p-6">
+                <h4 className="text-lg font-bold text-white mb-4">Vendeur / Agent</h4>
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-full bg-emerald-600 flex items-center justify-center">
+                    <User className="h-7 w-7 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-bold text-white">{detailProperty.agent_name || 'Agent ServisPro'}</p>
+                    <p className="text-sm text-gray-400">Agent Immobilier Vérifié</p>
+                  </div>
+                  <Button 
+                    className="bg-emerald-600 hover:bg-emerald-700 gap-2"
+                    onClick={() => { setShowDetailModal(false); openInquiryModal(detailProperty); }}
+                  >
+                    <Phone className="h-4 w-4" />
+                    Contacter
+                  </Button>
+                </div>
+              </div>
+
+              {/* Legal Documents Info */}
+              {detailProperty.documents && detailProperty.documents.length > 0 && (
+                <div className="mt-6 p-4 bg-blue-900/20 border border-blue-700/50 rounded-xl">
+                  <div className="flex items-center gap-2 text-blue-400">
+                    <Shield className="h-5 w-5" />
+                    <span className="font-medium">Documents légaux vérifiés</span>
+                  </div>
+                  <p className="text-sm text-gray-400 mt-1">
+                    Cette propriété dispose de tous les documents légaux requis (titre foncier, etc.)
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Footer */}
       <footer className="bg-gray-950 py-16">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
