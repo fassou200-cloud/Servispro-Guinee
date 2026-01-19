@@ -3488,11 +3488,29 @@ async def get_provider_notifications(current_user: dict = Depends(get_current_us
 @api_router.get("/notifications/customer")
 async def get_customer_notifications(current_customer: dict = Depends(get_current_customer)):
     """Get all notifications for the current customer"""
-    notifications = await db.notifications.find(
-        {'user_id': current_customer['id'], 'user_type': 'customer'},
+    customer_id = current_customer.get('id')
+    customer_phone = current_customer.get('phone_number')
+    
+    # Get notifications from both collections
+    notifications_standard = await db.notifications.find(
+        {'user_id': customer_id, 'user_type': 'customer'},
         {'_id': 0}
     ).sort('created_at', -1).to_list(50)
-    return notifications
+    
+    # Get notifications from customer_notifications (visit requests)
+    notifications_visits = await db.customer_notifications.find(
+        {'$or': [
+            {'customer_id': customer_id},
+            {'customer_phone': customer_phone}
+        ]},
+        {'_id': 0}
+    ).sort('created_at', -1).to_list(50)
+    
+    # Combine and sort
+    all_notifications = notifications_standard + notifications_visits
+    all_notifications.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+    
+    return all_notifications[:50]
 
 @api_router.get("/notifications/unread-count/provider")
 async def get_provider_unread_count(current_user: dict = Depends(get_current_user)):
