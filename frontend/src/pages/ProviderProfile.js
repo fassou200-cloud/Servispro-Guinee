@@ -86,12 +86,12 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
     }
   }, [providerId]);
 
-  // Fetch service fees when provider is loaded
+  // Fetch service fees when provider is loaded - synced with admin settings
   useEffect(() => {
     if (provider?.profession) {
       axios.get(`${API}/service-fees/${provider.profession}`)
         .then(res => setServiceFees(res.data))
-        .catch(() => setServiceFees({ frais_visite: 50000, frais_prestation: 100000 }));
+        .catch(() => setServiceFees({ frais_visite: 0, frais_prestation: 0 }));
     }
   }, [provider?.profession]);
 
