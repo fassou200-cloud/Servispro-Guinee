@@ -90,14 +90,6 @@ const ServiceRequestForm = ({ providerId, providerName, provider, onSuccess }) =
     }
   };
 
-  const handlePaymentSuccess = () => {
-    setPaymentCompleted(true);
-    setShowPaymentPopup(false);
-    toast.success('Paiement effectué ! Envoi de votre demande...');
-    // Automatically submit the request after payment
-    submitServiceRequest();
-  };
-
   return (
     <div>
       <h3 className="text-2xl font-heading font-bold text-foreground mb-2">
@@ -106,23 +98,6 @@ const ServiceRequestForm = ({ providerId, providerName, provider, onSuccess }) =
       <p className="text-muted-foreground mb-6">
         Remplissez le formulaire ci-dessous pour envoyer une demande de service
       </p>
-
-      {/* Investigation Fee Notice */}
-      {requiresPayment && (
-        <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-          <div className="flex items-center gap-3">
-            <CreditCard className="h-5 w-5 text-amber-600" />
-            <div>
-              <p className="font-semibold text-amber-800">Tarif d'Investigation Requis</p>
-              <p className="text-sm text-amber-700">
-                Ce prestataire demande un tarif d'investigation de{' '}
-                <span className="font-bold">{Number(provider.investigation_fee).toLocaleString('fr-FR')} GNF</span>{' '}
-                avant de traiter votre demande.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
