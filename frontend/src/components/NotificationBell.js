@@ -205,7 +205,10 @@ const NotificationBell = ({ userType = 'provider' }) => {
                 notifications.map((notification) => (
                   <div
                     key={notification.id}
-                    onClick={() => !notification.is_read && markAsRead(notification.id)}
+                    onClick={() => {
+                      if (!notification.is_read) markAsRead(notification.id);
+                      setSelectedNotification(selectedNotification?.id === notification.id ? null : notification);
+                    }}
                     className={`p-4 border-b cursor-pointer transition-colors ${
                       notification.is_read 
                         ? 'bg-white hover:bg-gray-50' 
@@ -222,12 +225,39 @@ const NotificationBell = ({ userType = 'provider' }) => {
                         <p className={`text-sm ${notification.is_read ? 'text-gray-700' : 'text-gray-900 font-medium'}`}>
                           {notification.title}
                         </p>
-                        <p className="text-xs text-gray-500 mt-1 line-clamp-2">
-                          {notification.message}
-                        </p>
+                        
+                        {/* Show full message when selected, otherwise show truncated */}
+                        {selectedNotification?.id === notification.id ? (
+                          <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                            <p className="text-sm text-gray-700 whitespace-pre-line">
+                              {notification.message}
+                            </p>
+                            {/* Show provider phone prominently if available */}
+                            {notification.provider_phone && (
+                              <div className="mt-3 p-2 bg-white rounded-lg border border-green-300 flex items-center gap-2">
+                                <Phone className="h-4 w-4 text-green-600" />
+                                <span className="text-sm font-medium text-green-700">
+                                  Appelez le prestataire : 
+                                </span>
+                                <a 
+                                  href={`tel:${notification.provider_phone}`}
+                                  className="text-green-600 font-bold hover:underline"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  {notification.provider_phone}
+                                </a>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+                            {notification.message}
+                          </p>
+                        )}
+                        
                         <div className="flex items-center gap-2 mt-2 text-xs text-gray-400">
                           <Clock className="h-3 w-3" />
-                          {formatTimeAgo(notification.created_at)}
+                          {formatTimeAgo(notification.created_at)}}
                         </div>
                       </div>
                       {!notification.is_read && (
