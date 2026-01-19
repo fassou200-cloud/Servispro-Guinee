@@ -201,6 +201,23 @@ Construire une plateforme nommée "ServisPro" pour les prestataires de services 
 - ✅ Les entreprises non-immobilières ne voient pas ces onglets
 - ✅ Tests : 12 tests backend + tests UI - 100% passés
 
+### 2026-01-19 - Ventes Immobilières & Demandes d'Achat (NOUVEAU)
+- ✅ **Ventes immobilières sur Landing Page** :
+  - Section "Propriétés à Vendre" sur la page d'accueil
+  - Affiche uniquement les propriétés approuvées par l'admin
+  - Cartes avec badge "Vérifié" et bouton "Contacter"
+- ✅ **Système de demandes d'achat immobilier** :
+  - Modal de demande sur la Landing Page
+  - Champs : nom, téléphone, email, budget, mode de financement, message
+  - Backend : endpoints POST /api/property-sales/{id}/inquiries
+- ✅ **Gestion admin des demandes immobilières** :
+  - Sous-onglet "Demandes Immobilier" dans AdminSalesManager
+  - Liste des demandes avec badge de statut
+  - Détails : info acheteur, propriété demandée, agent immobilier
+  - Actions : "Marquer Contacté", "Marquer Terminé"
+  - Notes admin pour suivi des conversations
+- ✅ **Tests** : 15 tests backend + tests UI - 100% passés
+
 ### 2026-01-17 - Vente de Véhicules
 - ✅ Nouvelle fonctionnalité : prestataires véhicules peuvent vendre leurs véhicules
 - ✅ Backend : endpoints POST/GET/PUT pour créer, lister et gérer les ventes
