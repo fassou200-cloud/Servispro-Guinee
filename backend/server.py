@@ -2362,9 +2362,10 @@ async def get_all_property_sales(
     location: Optional[str] = None,
     min_price: Optional[int] = None,
     max_price: Optional[int] = None,
-    available_only: bool = True
+    available_only: bool = True,
+    approved_only: bool = True
 ):
-    """Get all property sales with optional filters"""
+    """Get all property sales with optional filters - only approved ones for public"""
     query = {}
     
     if property_type:
@@ -2373,6 +2374,8 @@ async def get_all_property_sales(
         query['location'] = {'$regex': location, '$options': 'i'}
     if available_only:
         query['is_available'] = True
+    if approved_only:
+        query['status'] = 'approved'
     if min_price:
         query['sale_price'] = {'$gte': min_price}
     if max_price:
