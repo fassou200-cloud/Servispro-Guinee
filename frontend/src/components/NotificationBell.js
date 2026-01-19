@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { 
   Bell, X, Check, CheckCheck, CreditCard, Briefcase, 
-  AlertCircle, MessageCircle, Clock
+  AlertCircle, MessageCircle, Clock, Phone
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -38,6 +38,7 @@ const NotificationBell = ({ userType = 'provider' }) => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [selectedNotification, setSelectedNotification] = useState(null);
 
   const getToken = () => {
     if (userType === 'provider') {
