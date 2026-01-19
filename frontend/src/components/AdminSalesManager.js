@@ -897,14 +897,45 @@ const AdminSalesManager = () => {
                   </div>
                 </div>
 
-                {/* Admin Notes */}
+                {/* Previous Admin Response (if any) */}
+                {selectedPropertyInquiry.admin_response && (
+                  <div className="mb-4 p-4 bg-blue-900/20 border border-blue-700/50 rounded-lg">
+                    <h4 className="text-sm font-bold text-blue-300 uppercase mb-2">Réponse envoyée au client</h4>
+                    <p className="text-slate-300">{selectedPropertyInquiry.admin_response}</p>
+                    {selectedPropertyInquiry.response_date && (
+                      <p className="text-xs text-slate-500 mt-2">
+                        Envoyée le {new Date(selectedPropertyInquiry.response_date).toLocaleDateString('fr-FR')}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Admin Response to Client */}
                 <div className="mb-4">
-                  <h4 className="text-sm font-bold text-slate-300 uppercase mb-2">Notes Admin</h4>
+                  <h4 className="text-sm font-bold text-slate-300 uppercase mb-2">
+                    Répondre au Client
+                    <span className="ml-2 text-xs font-normal text-emerald-400">(visible par le client)</span>
+                  </h4>
+                  <Textarea
+                    value={adminResponse}
+                    onChange={(e) => setAdminResponse(e.target.value)}
+                    placeholder="Écrivez votre réponse au client... (ex: Bonjour, nous avons bien reçu votre demande. Une visite est possible le...)"
+                    rows={4}
+                    className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-500"
+                  />
+                </div>
+
+                {/* Admin Notes (internal) */}
+                <div className="mb-4">
+                  <h4 className="text-sm font-bold text-slate-300 uppercase mb-2">
+                    Notes Internes
+                    <span className="ml-2 text-xs font-normal text-slate-500">(non visible par le client)</span>
+                  </h4>
                   <Textarea
                     value={adminNotes}
                     onChange={(e) => setAdminNotes(e.target.value)}
-                    placeholder="Ajoutez des notes sur cette demande (ex: appelé le client, visite programmée...)"
-                    rows={3}
+                    placeholder="Ajoutez des notes internes sur cette demande..."
+                    rows={2}
                     className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-500"
                   />
                 </div>
@@ -914,35 +945,53 @@ const AdminSalesManager = () => {
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-3 pt-4 border-t border-slate-700">
-                  {selectedPropertyInquiry.status === 'pending' && (
+                <div className="space-y-3 pt-4 border-t border-slate-700">
+                  {/* Send Response Button */}
+                  {adminResponse && (
                     <Button
-                      onClick={() => handleUpdatePropertyInquiry(selectedPropertyInquiry.id, 'contacted')}
+                      onClick={() => handleUpdatePropertyInquiry(selectedPropertyInquiry.id, selectedPropertyInquiry.status === 'pending' ? 'contacted' : selectedPropertyInquiry.status, adminResponse)}
                       disabled={processingId === selectedPropertyInquiry.id}
-                      className="flex-1 bg-amber-600 hover:bg-amber-700 gap-2"
+                      className="w-full bg-blue-600 hover:bg-blue-700 gap-2"
                     >
                       {processingId === selectedPropertyInquiry.id ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
-                        <Phone className="h-4 w-4" />
+                        <Send className="h-4 w-4" />
                       )}
-                      Marquer Contacté
+                      Envoyer la Réponse au Client
                     </Button>
                   )}
-                  {(selectedPropertyInquiry.status === 'pending' || selectedPropertyInquiry.status === 'contacted') && (
-                    <Button
-                      onClick={() => handleUpdatePropertyInquiry(selectedPropertyInquiry.id, 'completed')}
-                      disabled={processingId === selectedPropertyInquiry.id}
-                      className="flex-1 bg-green-600 hover:bg-green-700 gap-2"
-                    >
-                      {processingId === selectedPropertyInquiry.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <CheckCircle className="h-4 w-4" />
-                      )}
-                      Marquer Terminé
-                    </Button>
-                  )}
+
+                  <div className="flex gap-3">
+                    {selectedPropertyInquiry.status === 'pending' && (
+                      <Button
+                        onClick={() => handleUpdatePropertyInquiry(selectedPropertyInquiry.id, 'contacted', adminResponse || null)}
+                        disabled={processingId === selectedPropertyInquiry.id}
+                        className="flex-1 bg-amber-600 hover:bg-amber-700 gap-2"
+                      >
+                        {processingId === selectedPropertyInquiry.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Phone className="h-4 w-4" />
+                        )}
+                        Marquer Contacté
+                      </Button>
+                    )}
+                    {(selectedPropertyInquiry.status === 'pending' || selectedPropertyInquiry.status === 'contacted') && (
+                      <Button
+                        onClick={() => handleUpdatePropertyInquiry(selectedPropertyInquiry.id, 'completed', adminResponse || null)}
+                        disabled={processingId === selectedPropertyInquiry.id}
+                        className="flex-1 bg-green-600 hover:bg-green-700 gap-2"
+                      >
+                        {processingId === selectedPropertyInquiry.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <CheckCircle className="h-4 w-4" />
+                        )}
+                        Marquer Terminé
+                      </Button>
+                    )}
+                  </div>
                 </div>
 
                 {selectedPropertyInquiry.status === 'completed' && (
