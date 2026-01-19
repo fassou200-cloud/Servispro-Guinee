@@ -22,11 +22,11 @@ const ServiceFeesDisplay = ({ profession, showTitle = true, compact = false }) =
       setFees(response.data);
     } catch (err) {
       console.error('Error fetching service fees:', err);
-      // Default fees
+      // Default to 0 if API fails - synced with admin settings
       setFees({
         profession: profession,
-        frais_visite: 50000,
-        frais_prestation: 100000
+        frais_visite: 0,
+        frais_prestation: 0
       });
     } finally {
       setLoading(false);
