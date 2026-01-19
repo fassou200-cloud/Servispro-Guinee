@@ -1837,7 +1837,11 @@ async def create_visit_request(request_data: VisitRequestCreate):
     
     # Get service fees for AgentImmobilier
     fees = await db.service_fees.find_one({'profession': 'AgentImmobilier'}, {'_id': 0})
-    frais_visite = fees.get('frais_visite', 100000) if fees else 100000
+    frais_visite = fees.get('frais_visite', 0) if fees else 0
+    
+    # Determine owner - could be service_provider_id or company_id
+    owner_id = rental.get('service_provider_id') or rental.get('company_id')
+    owner_type = 'company' if rental.get('company_id') else 'provider'
     
     visit_id = str(uuid.uuid4())
     now = datetime.now(timezone.utc).isoformat()
@@ -1847,8 +1851,8 @@ async def create_visit_request(request_data: VisitRequestCreate):
         'rental_id': request_data.rental_id,
         'rental_title': rental.get('title', ''),
         'rental_location': rental.get('location', ''),
-        'owner_id': rental.get('owner_id'),
-        'owner_type': rental.get('owner_type', 'provider'),  # 'provider' or 'company'
+        'provider_id': owner_id,
+        'owner_type': owner_type,
         'customer_name': request_data.customer_name,
         'customer_phone': request_data.customer_phone,
         'customer_email': request_data.customer_email,
@@ -1865,11 +1869,11 @@ async def create_visit_request(request_data: VisitRequestCreate):
     await db.visit_requests.insert_one(visit_doc)
     
     # Create notification for the owner
-    if rental.get('owner_id'):
+    if owner_id:
         notification_doc = {
             'id': str(uuid.uuid4()),
-            'user_id': rental.get('owner_id'),
-            'user_type': rental.get('owner_type', 'provider'),
+            'user_id': owner_id,
+            'user_type': owner_type,
             'title': 'Nouvelle demande de visite',
             'message': f"{request_data.customer_name} souhaite visiter votre bien '{rental.get('title', 'Propriété')}' le {request_data.preferred_date}",
             'notification_type': 'visit_request',
