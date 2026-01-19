@@ -68,6 +68,9 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
   const [loadingInquiries, setLoadingInquiries] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedInquiry, setSelectedInquiry] = useState(null);
+  const [replyMessage, setReplyMessage] = useState('');
+  const [sendingReply, setSendingReply] = useState(false);
+  const conversationEndRef = useRef(null);
 
   useEffect(() => {
     const storedCustomer = localStorage.getItem('customer');
@@ -89,6 +92,13 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
       fetchPropertyInquiries();
     }
   }, [activeTab]);
+
+  // Scroll to bottom of conversation when messages change
+  useEffect(() => {
+    if (conversationEndRef.current) {
+      conversationEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [selectedInquiry?.conversation]);
 
   const fetchJobs = async () => {
     try {
