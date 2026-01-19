@@ -719,6 +719,244 @@ const AdminSalesManager = () => {
           </div>
         </div>
       )}
+
+      {/* Property Inquiries Tab */}
+      {activeSubTab === 'property-inquiries' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Inquiries List */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-heading font-bold text-white">
+                Demandes d'Achat Immobilier
+              </h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={fetchData}
+                className="text-slate-400 hover:text-white"
+              >
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Info Box */}
+            <div className="p-4 bg-amber-900/20 border border-amber-700/50 rounded-lg mb-4">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="h-5 w-5 text-amber-400 mt-0.5" />
+                <div className="text-sm text-amber-300">
+                  <p className="font-medium">Gestion des demandes immobilières</p>
+                  <p className="text-amber-400">
+                    Contactez les acheteurs intéressés et facilitez la mise en relation avec les agents immobiliers.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {propertyInquiries.length === 0 ? (
+              <Card className="p-8 bg-slate-800 border-slate-700 text-center">
+                <Home className="h-12 w-12 text-slate-600 mx-auto mb-4" />
+                <p className="text-slate-400">Aucune demande d'achat immobilier</p>
+              </Card>
+            ) : (
+              propertyInquiries.map((inquiry) => {
+                const statusStyle = getStatusBadge(inquiry.status);
+                
+                return (
+                  <Card 
+                    key={inquiry.id} 
+                    className={`p-4 bg-slate-800 border-slate-700 cursor-pointer transition-colors ${
+                      selectedPropertyInquiry?.id === inquiry.id ? 'border-amber-500' : 'hover:border-slate-600'
+                    } ${inquiry.status === 'pending' ? 'border-l-4 border-l-orange-500' : ''}`}
+                    onClick={() => { setSelectedPropertyInquiry(inquiry); setAdminNotes(inquiry.admin_notes || ''); }}
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <h3 className="font-bold text-white">{inquiry.customer_name}</h3>
+                        <p className="text-sm text-slate-400">{inquiry.customer_phone}</p>
+                      </div>
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${statusStyle.bg} ${statusStyle.text}`}>
+                        {statusStyle.label}
+                      </span>
+                    </div>
+                    <div className="p-2 bg-slate-700/50 rounded mb-2">
+                      <p className="text-xs text-slate-400">Propriété demandée:</p>
+                      <p className="text-white font-medium">{inquiry.property_info}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <MapPin className="h-3 w-3 text-slate-400" />
+                        <span className="text-slate-400 text-xs">{inquiry.property_location}</span>
+                      </div>
+                      <p className="text-amber-400 text-sm font-bold mt-1">
+                        {Number(inquiry.property_price).toLocaleString('fr-FR')} GNF
+                      </p>
+                    </div>
+                    <p className="text-sm text-slate-400 line-clamp-2">{inquiry.message}</p>
+                    <p className="text-xs text-slate-500 mt-2">
+                      {new Date(inquiry.created_at).toLocaleDateString('fr-FR')}
+                    </p>
+                  </Card>
+                );
+              })
+            )}
+          </div>
+
+          {/* Inquiry Detail */}
+          <div>
+            <h2 className="text-lg font-heading font-bold text-white mb-4">
+              Détails de la Demande
+            </h2>
+            {selectedPropertyInquiry ? (
+              <Card className="p-6 bg-slate-800 border-slate-700">
+                {/* Customer Info */}
+                <div className="mb-4 p-4 bg-amber-900/20 border border-amber-700/50 rounded-lg">
+                  <h4 className="text-sm font-bold text-amber-300 uppercase mb-3">Acheteur Intéressé</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-white">
+                      <User className="h-4 w-4 text-amber-400" />
+                      <span className="font-medium">{selectedPropertyInquiry.customer_name}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-slate-300">
+                      <Phone className="h-4 w-4 text-amber-400" />
+                      <a href={`tel:${selectedPropertyInquiry.customer_phone}`} className="text-amber-400 hover:underline">
+                        {selectedPropertyInquiry.customer_phone}
+                      </a>
+                    </div>
+                    {selectedPropertyInquiry.customer_email && (
+                      <div className="flex items-center gap-2 text-slate-300">
+                        <Mail className="h-4 w-4 text-amber-400" />
+                        <a href={`mailto:${selectedPropertyInquiry.customer_email}`} className="text-amber-400 hover:underline">
+                          {selectedPropertyInquiry.customer_email}
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                  {/* Budget and Financing Info */}
+                  {(selectedPropertyInquiry.budget_range || selectedPropertyInquiry.financing_type) && (
+                    <div className="mt-3 pt-3 border-t border-amber-700/50">
+                      {selectedPropertyInquiry.budget_range && (
+                        <div className="flex items-center gap-2 text-slate-300 mb-1">
+                          <DollarSign className="h-4 w-4 text-amber-400" />
+                          <span className="text-sm">Budget: {selectedPropertyInquiry.budget_range}</span>
+                        </div>
+                      )}
+                      {selectedPropertyInquiry.financing_type && (
+                        <div className="flex items-center gap-2 text-slate-300">
+                          <Building className="h-4 w-4 text-amber-400" />
+                          <span className="text-sm">
+                            Financement: {
+                              selectedPropertyInquiry.financing_type === 'cash' ? 'Comptant' :
+                              selectedPropertyInquiry.financing_type === 'credit' ? 'Crédit' : 'Autre'
+                            }
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Property Info */}
+                <div className="mb-4 p-4 bg-emerald-900/20 border border-emerald-700/50 rounded-lg">
+                  <h4 className="text-sm font-bold text-emerald-300 uppercase mb-3">Propriété Demandée</h4>
+                  <p className="text-white font-bold text-lg">{selectedPropertyInquiry.property_info}</p>
+                  <div className="flex items-center gap-2 text-slate-300 mt-1">
+                    <MapPin className="h-4 w-4 text-emerald-400" />
+                    <span>{selectedPropertyInquiry.property_location}</span>
+                  </div>
+                  <p className="text-emerald-400 text-xl font-bold mt-2">
+                    {Number(selectedPropertyInquiry.property_price).toLocaleString('fr-FR')} GNF
+                  </p>
+                </div>
+
+                {/* Agent Info */}
+                <div className="mb-4 p-4 bg-slate-700/50 rounded-lg">
+                  <h4 className="text-sm font-bold text-slate-300 uppercase mb-3">Agent Immobilier</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-slate-300">
+                      <User className="h-4 w-4 text-slate-400" />
+                      {selectedPropertyInquiry.agent_name}
+                    </div>
+                    <div className="flex items-center gap-2 text-slate-300">
+                      <Phone className="h-4 w-4 text-slate-400" />
+                      <a href={`tel:${selectedPropertyInquiry.agent_phone}`} className="text-emerald-400 hover:underline">
+                        {selectedPropertyInquiry.agent_phone}
+                      </a>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Message */}
+                <div className="mb-4">
+                  <h4 className="text-sm font-bold text-slate-300 uppercase mb-2">Message de l'acheteur</h4>
+                  <div className="p-3 bg-slate-700/50 rounded-lg">
+                    <p className="text-slate-300">{selectedPropertyInquiry.message}</p>
+                  </div>
+                </div>
+
+                {/* Admin Notes */}
+                <div className="mb-4">
+                  <h4 className="text-sm font-bold text-slate-300 uppercase mb-2">Notes Admin</h4>
+                  <Textarea
+                    value={adminNotes}
+                    onChange={(e) => setAdminNotes(e.target.value)}
+                    placeholder="Ajoutez des notes sur cette demande (ex: appelé le client, visite programmée...)"
+                    rows={3}
+                    className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-500"
+                  />
+                </div>
+
+                <div className="text-xs text-slate-500 mb-4">
+                  Demande reçue le {new Date(selectedPropertyInquiry.created_at).toLocaleDateString('fr-FR')}
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-3 pt-4 border-t border-slate-700">
+                  {selectedPropertyInquiry.status === 'pending' && (
+                    <Button
+                      onClick={() => handleUpdatePropertyInquiry(selectedPropertyInquiry.id, 'contacted')}
+                      disabled={processingId === selectedPropertyInquiry.id}
+                      className="flex-1 bg-amber-600 hover:bg-amber-700 gap-2"
+                    >
+                      {processingId === selectedPropertyInquiry.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Phone className="h-4 w-4" />
+                      )}
+                      Marquer Contacté
+                    </Button>
+                  )}
+                  {(selectedPropertyInquiry.status === 'pending' || selectedPropertyInquiry.status === 'contacted') && (
+                    <Button
+                      onClick={() => handleUpdatePropertyInquiry(selectedPropertyInquiry.id, 'completed')}
+                      disabled={processingId === selectedPropertyInquiry.id}
+                      className="flex-1 bg-green-600 hover:bg-green-700 gap-2"
+                    >
+                      {processingId === selectedPropertyInquiry.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <CheckCircle className="h-4 w-4" />
+                      )}
+                      Marquer Terminé
+                    </Button>
+                  )}
+                </div>
+
+                {selectedPropertyInquiry.status === 'completed' && (
+                  <div className="mt-4 p-3 bg-green-900/20 border border-green-700/50 rounded-lg">
+                    <p className="text-sm text-green-400 flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4" />
+                      Cette demande a été traitée
+                    </p>
+                  </div>
+                )}
+              </Card>
+            ) : (
+              <Card className="p-8 bg-slate-800 border-slate-700 text-center">
+                <Home className="h-12 w-12 text-slate-600 mx-auto mb-4" />
+                <p className="text-slate-400">Sélectionnez une demande pour voir ses détails</p>
+              </Card>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
