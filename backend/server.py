@@ -1895,9 +1895,9 @@ async def get_my_visit_requests(current_user: dict = Depends(get_current_user)):
     """Get visit requests for the current provider/company's rentals"""
     user_id = current_user.get('id')
     
-    # Get all visit requests for this owner
+    # Get all visit requests for this owner (check both provider_id and owner_id for compatibility)
     requests = await db.visit_requests.find(
-        {'owner_id': user_id},
+        {'$or': [{'provider_id': user_id}, {'owner_id': user_id}]},
         {'_id': 0}
     ).sort('created_at', -1).to_list(100)
     
