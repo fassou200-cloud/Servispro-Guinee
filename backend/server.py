@@ -311,6 +311,9 @@ class AdminPropertyInquiryResponse(BaseModel):
     admin_response: Optional[str] = None
     admin_notes: Optional[str] = None
 
+class InquiryMessage(BaseModel):
+    message: str
+
 class RentalListingCreate(BaseModel):
     property_type: PropertyType
     title: str
