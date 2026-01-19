@@ -1949,11 +1949,58 @@ async def update_visit_request(visit_id: str, update_data: VisitRequestUpdate, c
         {'$set': update_fields}
     )
     
-    # Create notification for customer (we'll need a way to reach them)
+    # Create notification for customer when accepted
+    if update_data.status.value == 'accepted':
+        # Get provider info
+        provider_phone = current_user.get('phone_number', '')
+        provider_name = f"{current_user.get('first_name', '')} {current_user.get('last_name', '')}".strip()
+        
+        # Find customer by phone to create notification
+        customer = await db.customers.find_one({'phone_number': request.get('customer_phone')}, {'_id': 0})
+        
+        notification_message = (
+            f"🎉 Bonne nouvelle ! Votre demande de visite pour '{request.get('rental_title', 'la propriété')}' "
+            f"a été acceptée par {provider_name}.\n\n"
+            f"📞 Contactez le prestataire au : {provider_phone}\n\n"
+            f"📅 Date demandée : {request.get('preferred_date', 'Non spécifiée')}"
+        )
+        
+        notification_doc = {
+            'id': str(uuid.uuid4()),
+            'customer_phone': request.get('customer_phone'),
+            'customer_id': customer.get('id') if customer else None,
+            'user_type': 'customer',
+            'title': '✅ Demande de visite acceptée',
+            'message': notification_message,
+            'provider_phone': provider_phone,
+            'provider_name': provider_name,
+            'notification_type': 'visit_accepted',
+            'related_id': visit_id,
+            'rental_id': request.get('rental_id'),
+            'is_read': False,
+            'created_at': now
+        }
+        await db.customer_notifications.insert_one(notification_doc)
+    
+    elif update_data.status.value == 'rejected':
+        # Notification for rejection
+        notification_doc = {
+            'id': str(uuid.uuid4()),
+            'customer_phone': request.get('customer_phone'),
+            'user_type': 'customer',
+            'title': '❌ Demande de visite refusée',
+            'message': f"Votre demande de visite pour '{request.get('rental_title', 'la propriété')}' a été refusée par le prestataire.",
+            'notification_type': 'visit_rejected',
+            'related_id': visit_id,
+            'is_read': False,
+            'created_at': now
+        }
+        await db.customer_notifications.insert_one(notification_doc)
+    
     status_messages = {
-        'accepted': f"Votre demande de visite pour '{request.get('rental_title', 'la propriété')}' a été acceptée !",
-        'rejected': f"Votre demande de visite pour '{request.get('rental_title', 'la propriété')}' a été refusée.",
-        'completed': f"Visite pour '{request.get('rental_title', 'la propriété')}' marquée comme terminée."
+        'accepted': f"Demande acceptée ! Le client a reçu votre numéro de téléphone.",
+        'rejected': f"Demande refusée. Le client a été notifié.",
+        'completed': f"Visite marquée comme terminée."
     }
     
     return {
