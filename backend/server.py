@@ -403,6 +403,7 @@ class PropertySale(BaseModel):
     features: List[str] = []
     is_negotiable: bool = True
     is_available: bool = True
+    status: str = "pending"  # pending, approved, rejected, sold
     # Required Documents
     photos: List[str] = []
     titre_foncier: Optional[str] = None  # Land title document (required)
