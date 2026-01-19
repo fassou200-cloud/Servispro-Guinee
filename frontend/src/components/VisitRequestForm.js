@@ -131,10 +131,16 @@ const VisitRequestForm = ({ rental, onSuccess, onClose }) => {
     // Simulate payment processing
     setTimeout(async () => {
       try {
+        // Build customer name from first_name and last_name
+        const customerName = customer.name || 
+          (customer.first_name && customer.last_name 
+            ? `${customer.first_name} ${customer.last_name}` 
+            : customer.first_name || 'Client');
+        
         // Create visit request with payment completed
         const response = await axios.post(`${API}/visit-requests`, {
           rental_id: rental.id,
-          customer_name: customer.name,
+          customer_name: customerName,
           customer_phone: customer.phone_number,
           customer_email: customer.email || null,
           preferred_date: formData.preferred_date,
