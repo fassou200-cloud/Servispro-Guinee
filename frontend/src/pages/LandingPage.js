@@ -2,14 +2,18 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { useNavigate } from 'react-router-dom';
 import { 
   Zap, Wrench, Droplet, Truck, Home, ArrowRight, Shield, Clock, Star, 
   User, LogOut, Hammer, Building, Settings, Flame, CheckCircle, 
   Phone, MapPin, Users, Award, ChevronRight, Play, Sparkles, Eye,
-  DollarSign, Bed, Bath, Car, Trees
+  DollarSign, Bed, Bath, Car, Trees, X, MessageCircle, Loader2, Mail
 } from 'lucide-react';
 import axios from 'axios';
+import { toast } from 'sonner';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -22,6 +26,19 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
   const [settings, setSettings] = useState({ devise: 'GNF' });
   const [propertySales, setPropertySales] = useState([]);
   const [loadingProperties, setLoadingProperties] = useState(true);
+  
+  // Property inquiry modal state
+  const [showInquiryModal, setShowInquiryModal] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState(null);
+  const [inquiryForm, setInquiryForm] = useState({
+    customer_name: '',
+    customer_phone: '',
+    customer_email: '',
+    message: '',
+    budget_range: '',
+    financing_type: 'cash'
+  });
+  const [submittingInquiry, setSubmittingInquiry] = useState(false);
 
   useEffect(() => {
     const storedCustomer = localStorage.getItem('customer');
