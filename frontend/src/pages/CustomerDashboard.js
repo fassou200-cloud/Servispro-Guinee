@@ -729,43 +729,113 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
                         </div>
                       )}
 
-                      {/* Admin Response */}
-                      {selectedInquiry.admin_response && (
-                        <div className="p-4 bg-green-50 border border-green-200 rounded-xl mb-4">
-                          <h5 className="text-sm font-bold text-green-700 uppercase mb-2 flex items-center gap-2">
-                            <MessageCircle className="h-4 w-4" />
-                            Réponse de ServisPro
-                          </h5>
-                          <p className="text-gray-700">{selectedInquiry.admin_response}</p>
-                          {selectedInquiry.response_date && (
-                            <p className="text-xs text-gray-400 mt-2">
-                              Reçue le {new Date(selectedInquiry.response_date).toLocaleDateString('fr-FR')}
+                      {/* Conversation Section */}
+                      <div className="border-t border-gray-200 pt-4">
+                        <h5 className="text-sm font-bold text-gray-700 uppercase mb-3 flex items-center gap-2">
+                          <MessageCircle className="h-4 w-4 text-amber-500" />
+                          Conversation
+                        </h5>
+                        
+                        {/* Messages Container */}
+                        <div className="bg-gray-50 rounded-xl p-4 max-h-80 overflow-y-auto mb-4 space-y-3">
+                          {/* Initial message from customer */}
+                          <div className="flex justify-end">
+                            <div className="bg-amber-500 text-white rounded-2xl rounded-br-md px-4 py-2 max-w-[80%]">
+                              <p className="text-sm">{selectedInquiry.message}</p>
+                              <p className="text-xs text-amber-200 mt-1">
+                                {new Date(selectedInquiry.created_at).toLocaleDateString('fr-FR')} - Vous
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Legacy admin_response (if exists and no conversation array) */}
+                          {selectedInquiry.admin_response && (!selectedInquiry.conversation || selectedInquiry.conversation.length === 0) && (
+                            <div className="flex justify-start">
+                              <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-md px-4 py-2 max-w-[80%] shadow-sm">
+                                <p className="text-sm text-gray-700">{selectedInquiry.admin_response}</p>
+                                <p className="text-xs text-gray-400 mt-1">
+                                  {selectedInquiry.response_date ? new Date(selectedInquiry.response_date).toLocaleDateString('fr-FR') : ''} - ServisPro
+                                </p>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Conversation messages */}
+                          {selectedInquiry.conversation && selectedInquiry.conversation.map((msg) => (
+                            <div 
+                              key={msg.id} 
+                              className={`flex ${msg.sender === 'customer' ? 'justify-end' : 'justify-start'}`}
+                            >
+                              <div className={`rounded-2xl px-4 py-2 max-w-[80%] ${
+                                msg.sender === 'customer' 
+                                  ? 'bg-amber-500 text-white rounded-br-md' 
+                                  : 'bg-white border border-gray-200 rounded-bl-md shadow-sm'
+                              }`}>
+                                <p className={`text-sm ${msg.sender === 'customer' ? 'text-white' : 'text-gray-700'}`}>
+                                  {msg.message}
+                                </p>
+                                <p className={`text-xs mt-1 ${msg.sender === 'customer' ? 'text-amber-200' : 'text-gray-400'}`}>
+                                  {new Date(msg.created_at).toLocaleDateString('fr-FR')} - {msg.sender_name}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                          <div ref={conversationEndRef} />
+                        </div>
+
+                        {/* Reply Input */}
+                        {selectedInquiry.status !== 'completed' && (
+                          <div className="space-y-3">
+                            <Textarea
+                              value={replyMessage}
+                              onChange={(e) => setReplyMessage(e.target.value)}
+                              placeholder="Écrivez votre message..."
+                              rows={3}
+                              className="bg-white border-gray-300 resize-none"
+                            />
+                            <Button
+                              onClick={sendReplyMessage}
+                              disabled={sendingReply || !replyMessage.trim()}
+                              className="w-full bg-amber-500 hover:bg-amber-600 gap-2"
+                            >
+                              {sendingReply ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                  Envoi...
+                                </>
+                              ) : (
+                                <>
+                                  <Send className="h-4 w-4" />
+                                  Envoyer
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        )}
+
+                        {/* Status Badge */}
+                        <div className="mt-4 pt-4 border-t border-gray-200">
+                          {selectedInquiry.status === 'pending' && (
+                            <p className="text-orange-600 text-sm flex items-center gap-2">
+                              <Clock className="h-4 w-4" />
+                              En attente de réponse de ServisPro
                             </p>
                           )}
+                          {selectedInquiry.status === 'contacted' && (
+                            <p className="text-blue-600 text-sm flex items-center gap-2">
+                              <Phone className="h-4 w-4" />
+                              Conversation en cours
+                            </p>
+                          )}
+                          {selectedInquiry.status === 'completed' && (
+                            <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                              <p className="text-green-700 text-sm flex items-center gap-2">
+                                <CheckCircle className="h-4 w-4" />
+                                Cette demande a été traitée
+                              </p>
+                            </div>
+                          )}
                         </div>
-                      )}
-
-                      {/* Status */}
-                      <div className="text-sm text-gray-500">
-                        <p>Demande envoyée le {new Date(selectedInquiry.created_at).toLocaleDateString('fr-FR')}</p>
-                        {selectedInquiry.status === 'pending' && (
-                          <p className="text-orange-600 mt-2 flex items-center gap-2">
-                            <Clock className="h-4 w-4" />
-                            En attente de réponse...
-                          </p>
-                        )}
-                        {selectedInquiry.status === 'contacted' && (
-                          <p className="text-blue-600 mt-2 flex items-center gap-2">
-                            <Phone className="h-4 w-4" />
-                            Vous serez contacté prochainement
-                          </p>
-                        )}
-                        {selectedInquiry.status === 'completed' && (
-                          <p className="text-green-600 mt-2 flex items-center gap-2">
-                            <CheckCircle className="h-4 w-4" />
-                            Demande traitée
-                          </p>
-                        )}
                       </div>
                     </Card>
                   ) : (
