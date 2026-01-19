@@ -24,9 +24,11 @@ const AdminSalesManager = () => {
   const [activeSubTab, setActiveSubTab] = useState('vehicle-sales'); // vehicle-sales, vehicle-inquiries, property-inquiries
   const [vehicleSales, setVehicleSales] = useState([]);
   const [vehicleInquiries, setVehicleInquiries] = useState([]);
+  const [propertyInquiries, setPropertyInquiries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedSale, setSelectedSale] = useState(null);
   const [selectedInquiry, setSelectedInquiry] = useState(null);
+  const [selectedPropertyInquiry, setSelectedPropertyInquiry] = useState(null);
   const [processingId, setProcessingId] = useState(null);
   const [adminNotes, setAdminNotes] = useState('');
 
@@ -37,12 +39,14 @@ const AdminSalesManager = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [salesRes, inquiriesRes] = await Promise.all([
+      const [salesRes, vehicleInqRes, propertyInqRes] = await Promise.all([
         axios.get(`${API}/admin/vehicle-sales`),
-        axios.get(`${API}/admin/vehicle-inquiries`)
+        axios.get(`${API}/admin/vehicle-inquiries`),
+        axios.get(`${API}/admin/property-inquiries`)
       ]);
       setVehicleSales(salesRes.data || []);
-      setVehicleInquiries(inquiriesRes.data || []);
+      setVehicleInquiries(vehicleInqRes.data || []);
+      setPropertyInquiries(propertyInqRes.data || []);
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Erreur lors du chargement des données');
