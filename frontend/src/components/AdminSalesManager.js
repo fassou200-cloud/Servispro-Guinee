@@ -910,40 +910,81 @@ const AdminSalesManager = () => {
                   </div>
                 </div>
 
-                {/* Message */}
+                {/* Conversation Section */}
                 <div className="mb-4">
-                  <h4 className="text-sm font-bold text-slate-300 uppercase mb-2">Message de l'acheteur</h4>
-                  <div className="p-3 bg-slate-700/50 rounded-lg">
-                    <p className="text-slate-300">{selectedPropertyInquiry.message}</p>
-                  </div>
-                </div>
-
-                {/* Previous Admin Response (if any) */}
-                {selectedPropertyInquiry.admin_response && (
-                  <div className="mb-4 p-4 bg-blue-900/20 border border-blue-700/50 rounded-lg">
-                    <h4 className="text-sm font-bold text-blue-300 uppercase mb-2">Réponse envoyée au client</h4>
-                    <p className="text-slate-300">{selectedPropertyInquiry.admin_response}</p>
-                    {selectedPropertyInquiry.response_date && (
-                      <p className="text-xs text-slate-500 mt-2">
-                        Envoyée le {new Date(selectedPropertyInquiry.response_date).toLocaleDateString('fr-FR')}
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                {/* Admin Response to Client */}
-                <div className="mb-4">
-                  <h4 className="text-sm font-bold text-slate-300 uppercase mb-2">
-                    Répondre au Client
-                    <span className="ml-2 text-xs font-normal text-emerald-400">(visible par le client)</span>
+                  <h4 className="text-sm font-bold text-slate-300 uppercase mb-3 flex items-center gap-2">
+                    <MessageCircle className="h-4 w-4 text-amber-400" />
+                    Conversation
                   </h4>
-                  <Textarea
-                    value={adminResponse}
-                    onChange={(e) => setAdminResponse(e.target.value)}
-                    placeholder="Écrivez votre réponse au client... (ex: Bonjour, nous avons bien reçu votre demande. Une visite est possible le...)"
-                    rows={4}
-                    className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-500"
-                  />
+                  
+                  {/* Messages Container */}
+                  <div className="bg-slate-700/30 rounded-lg p-4 max-h-64 overflow-y-auto space-y-3 mb-4">
+                    {/* Initial message from customer */}
+                    <div className="flex justify-start">
+                      <div className="bg-amber-600/20 border border-amber-600/30 rounded-2xl rounded-bl-md px-4 py-2 max-w-[85%]">
+                        <p className="text-sm text-slate-200">{selectedPropertyInquiry.message}</p>
+                        <p className="text-xs text-slate-500 mt-1">
+                          {new Date(selectedPropertyInquiry.created_at).toLocaleDateString('fr-FR')} - {selectedPropertyInquiry.customer_name}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Legacy admin_response (if exists and no conversation array) */}
+                    {selectedPropertyInquiry.admin_response && (!selectedPropertyInquiry.conversation || selectedPropertyInquiry.conversation.length === 0) && (
+                      <div className="flex justify-end">
+                        <div className="bg-emerald-600/20 border border-emerald-600/30 rounded-2xl rounded-br-md px-4 py-2 max-w-[85%]">
+                          <p className="text-sm text-slate-200">{selectedPropertyInquiry.admin_response}</p>
+                          <p className="text-xs text-slate-500 mt-1">
+                            {selectedPropertyInquiry.response_date ? new Date(selectedPropertyInquiry.response_date).toLocaleDateString('fr-FR') : ''} - ServisPro
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Conversation messages */}
+                    {selectedPropertyInquiry.conversation && selectedPropertyInquiry.conversation.map((msg) => (
+                      <div 
+                        key={msg.id} 
+                        className={`flex ${msg.sender === 'admin' ? 'justify-end' : 'justify-start'}`}
+                      >
+                        <div className={`rounded-2xl px-4 py-2 max-w-[85%] ${
+                          msg.sender === 'admin' 
+                            ? 'bg-emerald-600/20 border border-emerald-600/30 rounded-br-md' 
+                            : 'bg-amber-600/20 border border-amber-600/30 rounded-bl-md'
+                        }`}>
+                          <p className="text-sm text-slate-200">{msg.message}</p>
+                          <p className="text-xs text-slate-500 mt-1">
+                            {new Date(msg.created_at).toLocaleDateString('fr-FR')} - {msg.sender_name}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Reply Input */}
+                  {selectedPropertyInquiry.status !== 'completed' && (
+                    <div className="space-y-2">
+                      <Textarea
+                        value={adminResponse}
+                        onChange={(e) => setAdminResponse(e.target.value)}
+                        placeholder="Écrivez votre message au client..."
+                        rows={3}
+                        className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-500"
+                      />
+                      <Button
+                        onClick={() => sendPropertyInquiryMessage(selectedPropertyInquiry.id)}
+                        disabled={processingId === selectedPropertyInquiry.id || !adminResponse.trim()}
+                        className="w-full bg-emerald-600 hover:bg-emerald-700 gap-2"
+                      >
+                        {processingId === selectedPropertyInquiry.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Send className="h-4 w-4" />
+                        )}
+                        Envoyer le Message
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Admin Notes (internal) */}
@@ -965,28 +1006,12 @@ const AdminSalesManager = () => {
                   Demande reçue le {new Date(selectedPropertyInquiry.created_at).toLocaleDateString('fr-FR')}
                 </div>
 
-                {/* Actions */}
+                {/* Status Actions */}
                 <div className="space-y-3 pt-4 border-t border-slate-700">
-                  {/* Send Response Button */}
-                  {adminResponse && (
-                    <Button
-                      onClick={() => handleUpdatePropertyInquiry(selectedPropertyInquiry.id, selectedPropertyInquiry.status === 'pending' ? 'contacted' : selectedPropertyInquiry.status, adminResponse)}
-                      disabled={processingId === selectedPropertyInquiry.id}
-                      className="w-full bg-blue-600 hover:bg-blue-700 gap-2"
-                    >
-                      {processingId === selectedPropertyInquiry.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Send className="h-4 w-4" />
-                      )}
-                      Envoyer la Réponse au Client
-                    </Button>
-                  )}
-
                   <div className="flex gap-3">
                     {selectedPropertyInquiry.status === 'pending' && (
                       <Button
-                        onClick={() => handleUpdatePropertyInquiry(selectedPropertyInquiry.id, 'contacted', adminResponse || null)}
+                        onClick={() => handleUpdatePropertyInquiry(selectedPropertyInquiry.id, 'contacted')}
                         disabled={processingId === selectedPropertyInquiry.id}
                         className="flex-1 bg-amber-600 hover:bg-amber-700 gap-2"
                       >
