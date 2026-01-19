@@ -1675,6 +1675,104 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                   <div className="text-xs text-slate-500 mb-4">
                     Créée le {new Date(selectedSale.created_at).toLocaleDateString('fr-FR')}
                   </div>
+
+                  {/* Status Badge */}
+                  <div className="mb-4 p-3 rounded-lg border" style={{
+                    backgroundColor: selectedSale.status === 'pending' ? 'rgba(249, 115, 22, 0.1)' :
+                                    selectedSale.status === 'approved' ? 'rgba(34, 197, 94, 0.1)' :
+                                    selectedSale.status === 'rejected' ? 'rgba(239, 68, 68, 0.1)' :
+                                    'rgba(168, 85, 247, 0.1)',
+                    borderColor: selectedSale.status === 'pending' ? 'rgba(249, 115, 22, 0.3)' :
+                                selectedSale.status === 'approved' ? 'rgba(34, 197, 94, 0.3)' :
+                                selectedSale.status === 'rejected' ? 'rgba(239, 68, 68, 0.3)' :
+                                'rgba(168, 85, 247, 0.3)'
+                  }}>
+                    <p className={`text-sm font-medium flex items-center gap-2 ${
+                      selectedSale.status === 'pending' ? 'text-orange-400' :
+                      selectedSale.status === 'approved' ? 'text-green-400' :
+                      selectedSale.status === 'rejected' ? 'text-red-400' :
+                      'text-purple-400'
+                    }`}>
+                      {selectedSale.status === 'pending' && <Clock className="h-4 w-4" />}
+                      {selectedSale.status === 'approved' && <CheckCircle className="h-4 w-4" />}
+                      {selectedSale.status === 'rejected' && <XCircle className="h-4 w-4" />}
+                      {selectedSale.status === 'sold' && <DollarSign className="h-4 w-4" />}
+                      Statut: {selectedSale.status === 'pending' ? 'En attente d\'approbation' :
+                               selectedSale.status === 'approved' ? 'Approuvé - Visible sur le site' :
+                               selectedSale.status === 'rejected' ? 'Rejeté' :
+                               'Vendu'}
+                    </p>
+                  </div>
+
+                  {/* Action Buttons */}
+                  {selectedSale.status === 'pending' && (
+                    <div className="flex gap-3 pt-4 border-t border-slate-700">
+                      <Button
+                        onClick={async () => {
+                          try {
+                            await axios.put(`${API}/admin/property-sales/${selectedSale.id}/approve`);
+                            toast.success('Vente immobilière approuvée !');
+                            fetchData();
+                            setSelectedSale({...selectedSale, status: 'approved'});
+                          } catch (error) {
+                            toast.error('Erreur lors de l\'approbation');
+                          }
+                        }}
+                        className="flex-1 bg-green-600 hover:bg-green-700 gap-2"
+                      >
+                        <CheckCircle className="h-4 w-4" />
+                        Approuver
+                      </Button>
+                      <Button
+                        onClick={async () => {
+                          try {
+                            await axios.put(`${API}/admin/property-sales/${selectedSale.id}/reject`);
+                            toast.success('Vente immobilière rejetée');
+                            fetchData();
+                            setSelectedSale({...selectedSale, status: 'rejected'});
+                          } catch (error) {
+                            toast.error('Erreur lors du rejet');
+                          }
+                        }}
+                        variant="outline"
+                        className="flex-1 border-red-600 text-red-400 hover:bg-red-600 hover:text-white gap-2"
+                      >
+                        <XCircle className="h-4 w-4" />
+                        Rejeter
+                      </Button>
+                    </div>
+                  )}
+
+                  {selectedSale.status === 'approved' && (
+                    <div className="pt-4 border-t border-slate-700">
+                      <Button
+                        onClick={async () => {
+                          try {
+                            await axios.put(`${API}/admin/property-sales/${selectedSale.id}/sold`);
+                            toast.success('Propriété marquée comme vendue !');
+                            fetchData();
+                            setSelectedSale({...selectedSale, status: 'sold', is_available: false});
+                          } catch (error) {
+                            toast.error('Erreur lors de la mise à jour');
+                          }
+                        }}
+                        className="w-full bg-purple-600 hover:bg-purple-700 gap-2"
+                      >
+                        <DollarSign className="h-4 w-4" />
+                        Marquer comme Vendu
+                      </Button>
+                    </div>
+                  )}
+
+                  {selectedSale.status === 'sold' && (
+                    <div className="p-3 bg-purple-900/20 border border-purple-700/50 rounded-lg">
+                      <p className="text-sm text-purple-400 flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4" />
+                        Cette propriété a été vendue
+                        {selectedSale.sold_at && ` le ${new Date(selectedSale.sold_at).toLocaleDateString('fr-FR')}`}
+                      </p>
+                    </div>
+                  )}
                 </Card>
               ) : (
                 <Card className="p-8 bg-slate-800 border-slate-700 text-center">
