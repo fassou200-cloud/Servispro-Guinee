@@ -2397,8 +2397,8 @@ async def admin_mark_property_sold(sale_id: str):
 # ==================== PROPERTY SALE INQUIRIES (Demandes d'achat immobilier) ====================
 
 @api_router.post("/property-sales/{sale_id}/inquiries")
-async def create_property_inquiry(sale_id: str, inquiry: PropertySaleInquiry):
-    """Create an inquiry for a property sale (goes to admin)"""
+async def create_property_inquiry(sale_id: str, inquiry: PropertySaleInquiry, current_customer: dict = Depends(get_current_customer)):
+    """Create an inquiry for a property sale (requires customer login)"""
     sale = await db.property_sales.find_one({'id': sale_id}, {'_id': 0})
     if not sale:
         raise HTTPException(status_code=404, detail="Propriété non trouvée")
@@ -2412,17 +2412,20 @@ async def create_property_inquiry(sale_id: str, inquiry: PropertySaleInquiry):
         'property_info': f"{sale.get('title')} - {sale.get('property_type')}",
         'property_price': sale.get('sale_price'),
         'property_location': sale.get('location'),
+        'property_photos': sale.get('photos', []),
         'agent_id': sale.get('agent_id'),
         'agent_name': sale.get('agent_name'),
         'agent_phone': sale.get('agent_phone'),
-        'customer_name': inquiry.customer_name,
-        'customer_phone': inquiry.customer_phone,
+        'customer_id': current_customer['id'],
+        'customer_name': inquiry.customer_name or f"{current_customer.get('first_name', '')} {current_customer.get('last_name', '')}".strip(),
+        'customer_phone': inquiry.customer_phone or current_customer.get('phone_number', ''),
         'customer_email': inquiry.customer_email,
         'message': inquiry.message,
         'budget_range': inquiry.budget_range,
         'financing_type': inquiry.financing_type,
         'status': 'pending',  # pending, contacted, completed, rejected
         'admin_notes': None,
+        'admin_response': None,
         'created_at': now,
         'updated_at': now
     }
@@ -2435,7 +2438,7 @@ async def create_property_inquiry(sale_id: str, inquiry: PropertySaleInquiry):
         'user_id': 'admin',
         'user_type': 'admin',
         'title': 'Nouvelle demande d\'achat immobilier',
-        'message': f"{inquiry.customer_name} est intéressé par: {sale.get('title')} - {sale.get('sale_price'):,.0f} GNF",
+        'message': f"{inquiry_doc['customer_name']} est intéressé par: {sale.get('title')} - {sale.get('sale_price'):,.0f} GNF",
         'notification_type': 'property_inquiry',
         'related_id': inquiry_id,
         'is_read': False,
@@ -2448,6 +2451,15 @@ async def create_property_inquiry(sale_id: str, inquiry: PropertySaleInquiry):
         'message': 'Votre demande a été envoyée. L\'équipe ServisPro vous contactera bientôt.',
         'status': 'pending'
     }
+
+@api_router.get("/customer/property-inquiries")
+async def get_customer_property_inquiries(current_customer: dict = Depends(get_current_customer)):
+    """Get all property inquiries for the current customer"""
+    inquiries = await db.property_inquiries.find(
+        {'customer_id': current_customer['id']},
+        {'_id': 0}
+    ).sort('created_at', -1).to_list(100)
+    return inquiries
 
 @api_router.get("/admin/property-inquiries")
 async def admin_get_property_inquiries(status: str = None):
