@@ -59,10 +59,14 @@ const getStatusColor = (status) => {
 
 const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [customer, setCustomer] = useState(null);
   const [jobs, setJobs] = useState([]);
+  const [propertyInquiries, setPropertyInquiries] = useState([]);
   const [loadingJobs, setLoadingJobs] = useState(true);
+  const [loadingInquiries, setLoadingInquiries] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
+  const [selectedInquiry, setSelectedInquiry] = useState(null);
 
   useEffect(() => {
     const storedCustomer = localStorage.getItem('customer');
@@ -70,7 +74,20 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
       setCustomer(JSON.parse(storedCustomer));
     }
     fetchJobs();
-  }, []);
+    
+    // Check for tab parameter in URL
+    const tabParam = searchParams.get('tab');
+    if (tabParam === 'demandes') {
+      setActiveTab('demandes');
+      fetchPropertyInquiries();
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (activeTab === 'demandes') {
+      fetchPropertyInquiries();
+    }
+  }, [activeTab]);
 
   const fetchJobs = async () => {
     try {
@@ -80,6 +97,22 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
       console.error('Failed to fetch jobs:', error);
     } finally {
       setLoadingJobs(false);
+    }
+  };
+
+  const fetchPropertyInquiries = async () => {
+    setLoadingInquiries(true);
+    try {
+      const token = localStorage.getItem('customerToken');
+      const response = await axios.get(`${API}/customer/property-inquiries`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setPropertyInquiries(response.data || []);
+    } catch (error) {
+      console.error('Failed to fetch property inquiries:', error);
+      toast.error('Erreur lors du chargement des demandes');
+    } finally {
+      setLoadingInquiries(false);
     }
   };
 
