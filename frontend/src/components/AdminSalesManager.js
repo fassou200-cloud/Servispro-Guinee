@@ -31,6 +31,7 @@ const AdminSalesManager = () => {
   const [selectedPropertyInquiry, setSelectedPropertyInquiry] = useState(null);
   const [processingId, setProcessingId] = useState(null);
   const [adminNotes, setAdminNotes] = useState('');
+  const [adminResponse, setAdminResponse] = useState('');
 
   useEffect(() => {
     fetchData();
