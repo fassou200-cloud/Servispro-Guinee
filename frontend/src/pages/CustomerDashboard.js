@@ -119,11 +119,41 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setPropertyInquiries(response.data || []);
+      // Update selected inquiry if it exists
+      if (selectedInquiry) {
+        const updated = response.data.find(i => i.id === selectedInquiry.id);
+        if (updated) setSelectedInquiry(updated);
+      }
     } catch (error) {
       console.error('Failed to fetch property inquiries:', error);
       toast.error('Erreur lors du chargement des demandes');
     } finally {
       setLoadingInquiries(false);
+    }
+  };
+
+  const sendReplyMessage = async () => {
+    if (!replyMessage.trim() || !selectedInquiry) return;
+    
+    setSendingReply(true);
+    try {
+      const token = localStorage.getItem('customerToken');
+      await axios.post(
+        `${API}/customer/property-inquiries/${selectedInquiry.id}/message`,
+        { message: replyMessage },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      toast.success('Message envoyé !');
+      setReplyMessage('');
+      
+      // Refresh inquiries to get updated conversation
+      await fetchPropertyInquiries();
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast.error('Erreur lors de l\'envoi du message');
+    } finally {
+      setSendingReply(false);
     }
   };
 
