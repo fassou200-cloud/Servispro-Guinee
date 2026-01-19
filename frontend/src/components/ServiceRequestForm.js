@@ -41,9 +41,6 @@ const ServiceRequestForm = ({ providerId, providerName, provider, onSuccess }) =
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Payment is no longer required for service requests
-  const requiresPayment = false;
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     
