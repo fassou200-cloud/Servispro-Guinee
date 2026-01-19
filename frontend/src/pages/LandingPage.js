@@ -610,6 +610,133 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
         </div>
       </section>
 
+      {/* Property Sales Section */}
+      {propertySales.length > 0 && (
+        <section className="py-20 bg-gradient-to-b from-gray-900 to-gray-950">
+          <div className="max-w-7xl mx-auto px-4 md:px-8">
+            <div className="text-center mb-12">
+              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 text-emerald-400 text-sm font-medium mb-4">
+                <DollarSign className="h-4 w-4" />
+                Ventes Immobilières
+              </span>
+              <h2 className="text-3xl md:text-4xl font-heading font-black text-white mb-4">
+                Propriétés à Vendre
+              </h2>
+              <p className="text-gray-400 max-w-2xl mx-auto">
+                Découvrez notre sélection de propriétés vérifiées et approuvées par notre équipe
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {propertySales.slice(0, 6).map((sale) => (
+                <Card 
+                  key={sale.id}
+                  className="bg-gray-800/50 border-gray-700 overflow-hidden hover:border-emerald-500/50 transition-all duration-300 group cursor-pointer"
+                  onClick={() => navigate(`/property-sale/${sale.id}`)}
+                >
+                  {/* Property Image */}
+                  <div className="relative h-48 bg-gray-700">
+                    {sale.photos && sale.photos.length > 0 ? (
+                      <img 
+                        src={`${BACKEND_URL}${sale.photos[0]}`}
+                        alt={sale.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Home className="h-16 w-16 text-gray-600" />
+                      </div>
+                    )}
+                    <div className="absolute top-3 left-3">
+                      <span className="px-3 py-1 bg-emerald-500 text-white text-xs font-bold rounded-full">
+                        {sale.property_type === 'House' ? 'Maison' : 
+                         sale.property_type === 'Apartment' ? 'Appartement' : 
+                         sale.property_type === 'Land' ? 'Terrain' : 
+                         sale.property_type === 'Commercial' ? 'Commercial' : sale.property_type}
+                      </span>
+                    </div>
+                    <div className="absolute top-3 right-3">
+                      <span className="px-3 py-1 bg-green-600 text-white text-xs font-bold rounded-full flex items-center gap-1">
+                        <CheckCircle className="h-3 w-3" />
+                        Vérifié
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Property Info */}
+                  <div className="p-5">
+                    <h3 className="font-bold text-white text-lg mb-2 line-clamp-1 group-hover:text-emerald-400 transition-colors">
+                      {sale.title}
+                    </h3>
+                    <div className="flex items-center gap-2 text-gray-400 text-sm mb-3">
+                      <MapPin className="h-4 w-4" />
+                      <span className="line-clamp-1">{sale.location}</span>
+                    </div>
+
+                    {/* Features */}
+                    <div className="flex items-center gap-4 text-gray-400 text-sm mb-4">
+                      {sale.num_rooms && (
+                        <span className="flex items-center gap-1">
+                          <Bed className="h-4 w-4" />
+                          {sale.num_rooms} ch.
+                        </span>
+                      )}
+                      {sale.num_bathrooms && (
+                        <span className="flex items-center gap-1">
+                          <Bath className="h-4 w-4" />
+                          {sale.num_bathrooms} sdb.
+                        </span>
+                      )}
+                      {sale.has_garage && (
+                        <span className="flex items-center gap-1">
+                          <Car className="h-4 w-4" />
+                        </span>
+                      )}
+                      {sale.has_garden && (
+                        <span className="flex items-center gap-1">
+                          <Trees className="h-4 w-4" />
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Price */}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-2xl font-bold text-emerald-400">
+                          {Number(sale.sale_price).toLocaleString('fr-FR')} GNF
+                        </p>
+                        {sale.is_negotiable && (
+                          <span className="text-xs text-gray-500">Négociable</span>
+                        )}
+                      </div>
+                      <Button 
+                        size="sm"
+                        className="bg-emerald-600 hover:bg-emerald-700 gap-1"
+                      >
+                        <Eye className="h-4 w-4" />
+                        Voir
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+
+            {propertySales.length > 6 && (
+              <div className="text-center mt-8">
+                <Button
+                  onClick={() => navigate('/property-sales')}
+                  className="bg-emerald-600 hover:bg-emerald-700 gap-2"
+                >
+                  Voir toutes les propriétés
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
       {/* Footer */}
       <footer className="bg-gray-950 py-16">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
