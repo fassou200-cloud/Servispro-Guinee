@@ -133,12 +133,7 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
       return;
     }
 
-    // Check if service has visit fees (defined by admin) and payment not yet completed
-    if (serviceFees?.frais_visite && serviceFees.frais_visite > 0 && !paymentCompleted) {
-      setShowPaymentPopup(true);
-      return;
-    }
-    
+    // No payment required for service requests - show form directly
     setShowRequestForm(!showRequestForm);
   };
 
