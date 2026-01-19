@@ -276,8 +276,36 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
           </Card>
         </div>
 
-        {/* Quick Actions */}
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
+        {/* Navigation Tabs */}
+        <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
+          <Button
+            variant={activeTab === 'overview' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('overview')}
+            className={`rounded-xl ${activeTab === 'overview' ? 'bg-green-600 hover:bg-green-700' : ''}`}
+          >
+            <Home className="h-4 w-4 mr-2" />
+            Aperçu
+          </Button>
+          <Button
+            variant={activeTab === 'demandes' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('demandes')}
+            className={`rounded-xl ${activeTab === 'demandes' ? 'bg-amber-600 hover:bg-amber-700' : ''}`}
+          >
+            <MessageCircle className="h-4 w-4 mr-2" />
+            Mes Demandes
+            {propertyInquiries.length > 0 && (
+              <span className="ml-2 px-2 py-0.5 bg-amber-500 text-white text-xs rounded-full">
+                {propertyInquiries.length}
+              </span>
+            )}
+          </Button>
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === 'overview' && (
+          <>
+            {/* Quick Actions */}
+            <div className="grid md:grid-cols-2 gap-6 mb-8">
           <Card 
             className="group p-6 rounded-2xl border-0 shadow-lg bg-white hover:shadow-2xl transition-all cursor-pointer overflow-hidden relative"
             onClick={() => navigate('/browse')}
