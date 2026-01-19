@@ -132,25 +132,46 @@ const AdminSalesManager = () => {
   };
 
   // Property Inquiry Actions
-  const handleUpdatePropertyInquiry = async (inquiryId, status, adminResponse = null) => {
+  const handleUpdatePropertyInquiry = async (inquiryId, status, adminResponseText = null) => {
     setProcessingId(inquiryId);
     try {
       await axios.put(`${API}/admin/property-inquiries/${inquiryId}`, {
         status: status,
         admin_notes: adminNotes || null,
-        admin_response: adminResponse || null
+        admin_response: adminResponseText || null
       });
       toast.success('Demande mise à jour ! Le client a été notifié.');
-      setPropertyInquiries(prev => 
-        prev.map(i => i.id === inquiryId ? {...i, status, admin_notes: adminNotes, admin_response: adminResponse} : i)
-      );
+      await fetchData(); // Refresh all data
       if (selectedPropertyInquiry?.id === inquiryId) {
-        setSelectedPropertyInquiry({...selectedPropertyInquiry, status, admin_notes: adminNotes, admin_response: adminResponse});
+        const updated = propertyInquiries.find(i => i.id === inquiryId);
+        if (updated) setSelectedPropertyInquiry(updated);
       }
       setAdminNotes('');
       setAdminResponse('');
     } catch (error) {
       toast.error('Erreur lors de la mise à jour');
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  // Send conversation message to customer
+  const sendPropertyInquiryMessage = async (inquiryId) => {
+    if (!adminResponse.trim()) return;
+    
+    setProcessingId(inquiryId);
+    try {
+      await axios.post(`${API}/admin/property-inquiries/${inquiryId}/message`, {
+        message: adminResponse
+      });
+      toast.success('Message envoyé au client !');
+      setAdminResponse('');
+      await fetchData(); // Refresh to get updated conversation
+      // Update selected inquiry
+      const updated = propertyInquiries.find(i => i.id === inquiryId);
+      if (updated) setSelectedPropertyInquiry(updated);
+    } catch (error) {
+      toast.error('Erreur lors de l\'envoi du message');
     } finally {
       setProcessingId(null);
     }
