@@ -1929,8 +1929,9 @@ async def update_visit_request(visit_id: str, update_data: VisitRequestUpdate, c
     if not request:
         raise HTTPException(status_code=404, detail="Demande de visite non trouvée")
     
-    # Verify ownership
-    if request.get('owner_id') != current_user.get('id'):
+    # Verify ownership - check both provider_id and owner_id for compatibility
+    owner_id = request.get('provider_id') or request.get('owner_id')
+    if owner_id != current_user.get('id'):
         raise HTTPException(status_code=403, detail="Non autorisé à modifier cette demande")
     
     now = datetime.now(timezone.utc).isoformat()
