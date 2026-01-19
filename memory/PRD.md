@@ -121,6 +121,18 @@ Construire une plateforme nommée "ServisPro" pour les prestataires de services 
 
 ## Changelog
 
+### 2026-01-19 - Système de Conversation Client-Admin pour Demandes d'Achat (NOUVEAU)
+- ✅ **Connexion obligatoire** pour soumettre une demande d'achat
+- ✅ **Onglet "Mes Demandes"** dans le dashboard client :
+  - Liste des demandes avec statut (En attente, Contacté, Terminé)
+  - Indicateur "Nouvelle réponse reçue"
+  - Panneau de détails avec message client et réponse admin
+- ✅ **Système de réponse admin** :
+  - Champ "Répondre au Client" (visible par le client)
+  - Champ "Notes Internes" (non visible par le client)
+  - Notification automatique au client lors de réponse
+- ✅ **Tests** : 16 tests backend + tests UI - 100% passés
+
 ### 2026-01-19 - Ventes Immobilières & Demandes d'Achat
 - ✅ **Ventes immobilières sur Landing Page** :
   - Section "Propriétés à Vendre" sur la page d'accueil
