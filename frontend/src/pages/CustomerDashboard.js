@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { getErrorMessage } from '@/utils/helpers';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { 
   Home, LogOut, Search, Building, User, CheckCircle, Clock, Briefcase,
   ArrowRight, MapPin, Calendar, Star, Bell, Settings, ChevronRight,
-  Phone, Shield, Sparkles, TrendingUp
+  Phone, Shield, Sparkles, TrendingUp, MessageCircle, DollarSign, 
+  Mail, RefreshCw, Eye
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
