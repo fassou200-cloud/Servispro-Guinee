@@ -2389,6 +2389,90 @@ async def admin_mark_property_sold(sale_id: str):
     
     return {'message': 'Propriété marquée comme vendue', 'sale_id': sale_id}
 
+# ==================== PROPERTY SALE INQUIRIES (Demandes d'achat immobilier) ====================
+
+@api_router.post("/property-sales/{sale_id}/inquiries")
+async def create_property_inquiry(sale_id: str, inquiry: PropertySaleInquiry):
+    """Create an inquiry for a property sale (goes to admin)"""
+    sale = await db.property_sales.find_one({'id': sale_id}, {'_id': 0})
+    if not sale:
+        raise HTTPException(status_code=404, detail="Propriété non trouvée")
+    
+    inquiry_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+    
+    inquiry_doc = {
+        'id': inquiry_id,
+        'property_id': sale_id,
+        'property_info': f"{sale.get('title')} - {sale.get('property_type')}",
+        'property_price': sale.get('sale_price'),
+        'property_location': sale.get('location'),
+        'agent_id': sale.get('agent_id'),
+        'agent_name': sale.get('agent_name'),
+        'agent_phone': sale.get('agent_phone'),
+        'customer_name': inquiry.customer_name,
+        'customer_phone': inquiry.customer_phone,
+        'customer_email': inquiry.customer_email,
+        'message': inquiry.message,
+        'budget_range': inquiry.budget_range,
+        'financing_type': inquiry.financing_type,
+        'status': 'pending',  # pending, contacted, completed, rejected
+        'admin_notes': None,
+        'created_at': now,
+        'updated_at': now
+    }
+    
+    await db.property_inquiries.insert_one(inquiry_doc)
+    
+    # Notify admin
+    admin_notification = {
+        'id': str(uuid.uuid4()),
+        'user_id': 'admin',
+        'user_type': 'admin',
+        'title': 'Nouvelle demande d\'achat immobilier',
+        'message': f"{inquiry.customer_name} est intéressé par: {sale.get('title')} - {sale.get('sale_price'):,.0f} GNF",
+        'notification_type': 'property_inquiry',
+        'related_id': inquiry_id,
+        'is_read': False,
+        'created_at': now
+    }
+    await db.notifications.insert_one(admin_notification)
+    
+    return {
+        'id': inquiry_id,
+        'message': 'Votre demande a été envoyée. L\'équipe ServisPro vous contactera bientôt.',
+        'status': 'pending'
+    }
+
+@api_router.get("/admin/property-inquiries")
+async def admin_get_property_inquiries(status: str = None):
+    """Admin: Get all property sale inquiries"""
+    query = {}
+    if status:
+        query['status'] = status
+    inquiries = await db.property_inquiries.find(query, {'_id': 0}).sort('created_at', -1).to_list(100)
+    return inquiries
+
+@api_router.put("/admin/property-inquiries/{inquiry_id}")
+async def admin_update_property_inquiry(inquiry_id: str, status: str, admin_notes: str = None):
+    """Admin: Update a property inquiry status"""
+    update_data = {
+        'status': status,
+        'updated_at': datetime.now(timezone.utc).isoformat()
+    }
+    if admin_notes:
+        update_data['admin_notes'] = admin_notes
+    
+    result = await db.property_inquiries.update_one(
+        {'id': inquiry_id},
+        {'$set': update_data}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Demande non trouvée")
+    
+    return {'message': 'Demande mise à jour', 'inquiry_id': inquiry_id}
+
 # ==================== PROPERTY SALE ROUTES (Vente Immobilière) ====================
 
 @api_router.post("/property-sales")
