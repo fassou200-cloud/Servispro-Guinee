@@ -1310,6 +1310,7 @@ async def create_company_property_sale(
         'documents_additionnels': [],
         'documents_verified': False,
         'verification_date': None,
+        'status': 'pending',  # pending, approved, rejected, sold
         'created_at': now,
         'updated_at': now
     }
@@ -2420,6 +2421,7 @@ async def create_property_sale(sale_data: PropertySaleCreate, current_user: dict
         'documents_additionnels': [],
         'documents_verified': False,
         'verification_date': None,
+        'status': 'pending',  # pending, approved, rejected, sold
         'created_at': now,
         'updated_at': now
     }
