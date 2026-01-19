@@ -1,14 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getErrorMessage } from '@/utils/helpers';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Textarea } from '@/components/ui/textarea';
 import { 
   Home, LogOut, Search, Building, User, CheckCircle, Clock, Briefcase,
   ArrowRight, MapPin, Calendar, Star, Bell, Settings, ChevronRight,
   Phone, Shield, Sparkles, TrendingUp, MessageCircle, DollarSign, 
-  Mail, RefreshCw, Eye
+  Mail, RefreshCw, Eye, Send, Loader2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
