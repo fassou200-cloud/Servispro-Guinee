@@ -306,6 +306,11 @@ class PropertySaleInquiry(BaseModel):
     budget_range: Optional[str] = None  # e.g., "500M - 1B GNF"
     financing_type: Optional[str] = None  # "cash", "credit", "other"
 
+class AdminPropertyInquiryResponse(BaseModel):
+    status: str
+    admin_response: Optional[str] = None
+    admin_notes: Optional[str] = None
+
 class RentalListingCreate(BaseModel):
     property_type: PropertyType
     title: str
