@@ -297,6 +297,15 @@ class VehicleSaleInquiry(BaseModel):
     customer_email: Optional[str] = None
     message: str
 
+class PropertySaleInquiry(BaseModel):
+    property_id: str
+    customer_name: str
+    customer_phone: str
+    customer_email: Optional[str] = None
+    message: str
+    budget_range: Optional[str] = None  # e.g., "500M - 1B GNF"
+    financing_type: Optional[str] = None  # "cash", "credit", "other"
+
 class RentalListingCreate(BaseModel):
     property_type: PropertyType
     title: str
