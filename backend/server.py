@@ -2464,6 +2464,99 @@ async def get_customer_property_inquiries(current_customer: dict = Depends(get_c
     ).sort('created_at', -1).to_list(100)
     return inquiries
 
+@api_router.post("/customer/property-inquiries/{inquiry_id}/message")
+async def customer_send_inquiry_message(
+    inquiry_id: str, 
+    message_data: InquiryMessage,
+    current_customer: dict = Depends(get_current_customer)
+):
+    """Customer sends a message in the inquiry conversation"""
+    inquiry = await db.property_inquiries.find_one({'id': inquiry_id, 'customer_id': current_customer['id']}, {'_id': 0})
+    if not inquiry:
+        raise HTTPException(status_code=404, detail="Demande non trouvée")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    new_message = {
+        'id': str(uuid.uuid4()),
+        'sender': 'customer',
+        'sender_name': inquiry.get('customer_name', 'Client'),
+        'message': message_data.message,
+        'created_at': now
+    }
+    
+    # Add message to conversation array
+    await db.property_inquiries.update_one(
+        {'id': inquiry_id},
+        {
+            '$push': {'conversation': new_message},
+            '$set': {'updated_at': now, 'status': 'pending'}  # Reset to pending when customer replies
+        }
+    )
+    
+    # Notify admin
+    admin_notification = {
+        'id': str(uuid.uuid4()),
+        'user_id': 'admin',
+        'user_type': 'admin',
+        'title': 'Nouveau message - Demande d\'achat',
+        'message': f"{inquiry.get('customer_name')} a répondu concernant: {inquiry.get('property_info')}",
+        'notification_type': 'property_inquiry_reply',
+        'related_id': inquiry_id,
+        'is_read': False,
+        'created_at': now
+    }
+    await db.notifications.insert_one(admin_notification)
+    
+    return {'message': 'Message envoyé', 'id': new_message['id']}
+
+@api_router.post("/admin/property-inquiries/{inquiry_id}/message")
+async def admin_send_inquiry_message(inquiry_id: str, message_data: InquiryMessage):
+    """Admin sends a message in the inquiry conversation"""
+    inquiry = await db.property_inquiries.find_one({'id': inquiry_id}, {'_id': 0})
+    if not inquiry:
+        raise HTTPException(status_code=404, detail="Demande non trouvée")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    new_message = {
+        'id': str(uuid.uuid4()),
+        'sender': 'admin',
+        'sender_name': 'ServisPro',
+        'message': message_data.message,
+        'created_at': now
+    }
+    
+    # Add message to conversation array
+    await db.property_inquiries.update_one(
+        {'id': inquiry_id},
+        {
+            '$push': {'conversation': new_message},
+            '$set': {'updated_at': now, 'status': 'contacted'}
+        }
+    )
+    
+    # Notify customer
+    customer_id = inquiry.get('customer_id')
+    if customer_id:
+        customer_notification = {
+            'id': str(uuid.uuid4()),
+            'customer_phone': inquiry.get('customer_phone'),
+            'title': 'Réponse à votre demande d\'achat',
+            'message': message_data.message,
+            'link': '/customer/dashboard?tab=demandes',
+            'read': False,
+            'created_at': now,
+            'data': {
+                'type': 'property_inquiry_message',
+                'inquiry_id': inquiry_id,
+                'property_info': inquiry.get('property_info')
+            }
+        }
+        await db.customer_notifications.insert_one(customer_notification)
+    
+    return {'message': 'Message envoyé', 'id': new_message['id']}
+
 @api_router.get("/admin/property-inquiries")
 async def admin_get_property_inquiries(status: str = None):
     """Admin: Get all property sale inquiries"""
