@@ -155,7 +155,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
           setAgentsImmobilier(agentsRes.data);
           break;
         case 'sales':
-          const salesRes = await axios.get(`${API}/property-sales?available_only=false`).catch(() => ({ data: [] }));
+          const salesRes = await axios.get(`${API}/admin/property-sales`).catch(() => ({ data: [] }));
           setPropertySales(salesRes.data);
           break;
         case 'companies':
