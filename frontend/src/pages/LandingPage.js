@@ -6,7 +6,8 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Zap, Wrench, Droplet, Truck, Home, ArrowRight, Shield, Clock, Star, 
   User, LogOut, Hammer, Building, Settings, Flame, CheckCircle, 
-  Phone, MapPin, Users, Award, ChevronRight, Play, Sparkles, Eye
+  Phone, MapPin, Users, Award, ChevronRight, Play, Sparkles, Eye,
+  DollarSign, Bed, Bath, Car, Trees
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -19,6 +20,8 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
   const [activeCategory, setActiveCategory] = useState(0);
   const [serviceFees, setServiceFees] = useState({});
   const [settings, setSettings] = useState({ devise: 'GNF' });
+  const [propertySales, setPropertySales] = useState([]);
+  const [loadingProperties, setLoadingProperties] = useState(true);
 
   useEffect(() => {
     const storedCustomer = localStorage.getItem('customer');
@@ -26,9 +29,21 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
       setCustomer(JSON.parse(storedCustomer));
     }
     
-    // Fetch service fees from admin
+    // Fetch service fees and property sales
     fetchServiceFees();
+    fetchPropertySales();
   }, []);
+
+  const fetchPropertySales = async () => {
+    try {
+      const response = await axios.get(`${API}/property-sales?approved_only=true`);
+      setPropertySales(response.data || []);
+    } catch (error) {
+      console.error('Error fetching property sales:', error);
+    } finally {
+      setLoadingProperties(false);
+    }
+  };
 
   const fetchServiceFees = async () => {
     try {
