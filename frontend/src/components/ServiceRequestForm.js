@@ -45,19 +45,13 @@ const ServiceRequestForm = ({ providerId, providerName, provider, onSuccess }) =
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Check if provider requires payment
-  const requiresPayment = provider?.investigation_fee && provider.investigation_fee > 0;
+  // Payment is no longer required for service requests
+  const requiresPayment = false;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // If payment is required and not completed, show payment popup
-    if (requiresPayment && !paymentCompleted) {
-      setShowPaymentPopup(true);
-      return;
-    }
-
-    // Submit the service request
+    // Submit the service request directly without payment
     await submitServiceRequest();
   };
 
