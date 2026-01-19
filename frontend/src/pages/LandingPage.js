@@ -89,9 +89,15 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
     return new Intl.NumberFormat('fr-FR').format(price || 0);
   };
 
+  // Open property detail modal
+  const openDetailModal = (property) => {
+    setDetailProperty(property);
+    setShowDetailModal(true);
+  };
+
   // Handle property inquiry - requires login
   const openInquiryModal = (property, e) => {
-    e.stopPropagation();
+    if (e) e.stopPropagation();
     
     // Check if customer is logged in
     if (!customer) {
