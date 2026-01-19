@@ -141,14 +141,9 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
             </div>
             
             <div className="flex items-center gap-3">
-              {pendingConfirmation.length > 0 && (
-                <div className="relative">
-                  <Bell className="h-5 w-5 text-gray-600" />
-                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                    {pendingConfirmation.length}
-                  </span>
-                </div>
-              )}
+              {/* Notification Bell for Customer */}
+              <NotificationBell userType="customer" />
+              
               <Button
                 variant="ghost"
                 onClick={handleLogout}
