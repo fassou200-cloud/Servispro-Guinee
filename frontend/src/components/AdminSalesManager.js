@@ -131,18 +131,23 @@ const AdminSalesManager = () => {
   };
 
   // Property Inquiry Actions
-  const handleUpdatePropertyInquiry = async (inquiryId, status) => {
+  const handleUpdatePropertyInquiry = async (inquiryId, status, adminResponse = null) => {
     setProcessingId(inquiryId);
     try {
-      await axios.put(`${API}/admin/property-inquiries/${inquiryId}?status=${status}&admin_notes=${encodeURIComponent(adminNotes)}`);
-      toast.success('Demande mise à jour !');
+      await axios.put(`${API}/admin/property-inquiries/${inquiryId}`, {
+        status: status,
+        admin_notes: adminNotes || null,
+        admin_response: adminResponse || null
+      });
+      toast.success('Demande mise à jour ! Le client a été notifié.');
       setPropertyInquiries(prev => 
-        prev.map(i => i.id === inquiryId ? {...i, status, admin_notes: adminNotes} : i)
+        prev.map(i => i.id === inquiryId ? {...i, status, admin_notes: adminNotes, admin_response: adminResponse} : i)
       );
       if (selectedPropertyInquiry?.id === inquiryId) {
-        setSelectedPropertyInquiry({...selectedPropertyInquiry, status, admin_notes: adminNotes});
+        setSelectedPropertyInquiry({...selectedPropertyInquiry, status, admin_notes: adminNotes, admin_response: adminResponse});
       }
       setAdminNotes('');
+      setAdminResponse('');
     } catch (error) {
       toast.error('Erreur lors de la mise à jour');
     } finally {
