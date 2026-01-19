@@ -734,7 +734,8 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
                 <Card 
                   key={sale.id}
                   className="bg-gray-800/50 border-gray-700 overflow-hidden hover:border-emerald-500/50 transition-all duration-300 group cursor-pointer"
-                  onClick={() => navigate(`/property-sale/${sale.id}`)}
+                  onClick={() => openDetailModal(sale)}
+                  data-testid={`property-card-${sale.id}`}
                 >
                   {/* Property Image */}
                   <div className="relative h-48 bg-gray-700">
@@ -802,18 +803,30 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
                     </div>
 
                     {/* Price */}
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-2xl font-bold text-emerald-400">
-                          {Number(sale.sale_price).toLocaleString('fr-FR')} GNF
-                        </p>
-                        {sale.is_negotiable && (
-                          <span className="text-xs text-gray-500">Négociable</span>
-                        )}
-                      </div>
+                    <div className="mb-4">
+                      <p className="text-2xl font-bold text-emerald-400">
+                        {Number(sale.sale_price).toLocaleString('fr-FR')} GNF
+                      </p>
+                      {sale.is_negotiable && (
+                        <span className="text-xs text-gray-500">Négociable</span>
+                      )}
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-2">
                       <Button 
                         size="sm"
-                        className="bg-emerald-600 hover:bg-emerald-700 gap-1"
+                        variant="outline"
+                        className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-700 gap-1"
+                        onClick={(e) => { e.stopPropagation(); openDetailModal(sale); }}
+                        data-testid={`view-property-${sale.id}`}
+                      >
+                        <Eye className="h-4 w-4" />
+                        Voir détails
+                      </Button>
+                      <Button 
+                        size="sm"
+                        className="flex-1 bg-emerald-600 hover:bg-emerald-700 gap-1"
                         onClick={(e) => openInquiryModal(sale, e)}
                         data-testid={`contact-property-${sale.id}`}
                       >
