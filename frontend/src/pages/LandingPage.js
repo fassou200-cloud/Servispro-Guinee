@@ -783,9 +783,11 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
                       <Button 
                         size="sm"
                         className="bg-emerald-600 hover:bg-emerald-700 gap-1"
+                        onClick={(e) => openInquiryModal(sale, e)}
+                        data-testid={`contact-property-${sale.id}`}
                       >
-                        <Eye className="h-4 w-4" />
-                        Voir
+                        <MessageCircle className="h-4 w-4" />
+                        Contacter
                       </Button>
                     </div>
                   </div>
@@ -806,6 +808,158 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
             )}
           </div>
         </section>
+      )}
+
+      {/* Property Inquiry Modal */}
+      {showInquiryModal && selectedProperty && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/70" onClick={() => setShowInquiryModal(false)} />
+          <div className="relative bg-gray-900 rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto border border-gray-700 shadow-xl">
+            <div className="sticky top-0 bg-gray-900 p-4 border-b border-gray-700 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-white">Demande d'achat</h3>
+                <p className="text-sm text-gray-400">Contactez-nous pour cette propriété</p>
+              </div>
+              <button 
+                onClick={() => setShowInquiryModal(false)}
+                className="p-2 hover:bg-gray-800 rounded-full transition-colors"
+              >
+                <X className="h-5 w-5 text-gray-400" />
+              </button>
+            </div>
+
+            {/* Property Summary */}
+            <div className="p-4 border-b border-gray-700">
+              <div className="flex gap-3">
+                {selectedProperty.photos && selectedProperty.photos.length > 0 ? (
+                  <img 
+                    src={`${BACKEND_URL}${selectedProperty.photos[0]}`}
+                    alt={selectedProperty.title}
+                    className="w-20 h-20 rounded-lg object-cover"
+                  />
+                ) : (
+                  <div className="w-20 h-20 rounded-lg bg-gray-700 flex items-center justify-center">
+                    <Home className="h-8 w-8 text-gray-500" />
+                  </div>
+                )}
+                <div>
+                  <h4 className="font-bold text-white">{selectedProperty.title}</h4>
+                  <p className="text-sm text-gray-400 flex items-center gap-1">
+                    <MapPin className="h-3 w-3" />
+                    {selectedProperty.location}
+                  </p>
+                  <p className="text-emerald-400 font-bold">
+                    {Number(selectedProperty.sale_price).toLocaleString('fr-FR')} GNF
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Inquiry Form */}
+            <form onSubmit={handleInquirySubmit} className="p-4 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2 md:col-span-1">
+                  <Label htmlFor="customer_name" className="text-gray-300">Nom complet *</Label>
+                  <Input
+                    id="customer_name"
+                    value={inquiryForm.customer_name}
+                    onChange={(e) => setInquiryForm({...inquiryForm, customer_name: e.target.value})}
+                    placeholder="Votre nom"
+                    required
+                    className="bg-gray-800 border-gray-600 text-white"
+                  />
+                </div>
+                <div className="col-span-2 md:col-span-1">
+                  <Label htmlFor="customer_phone" className="text-gray-300">Téléphone *</Label>
+                  <Input
+                    id="customer_phone"
+                    value={inquiryForm.customer_phone}
+                    onChange={(e) => setInquiryForm({...inquiryForm, customer_phone: e.target.value})}
+                    placeholder="Ex: 622001234"
+                    required
+                    className="bg-gray-800 border-gray-600 text-white"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="customer_email" className="text-gray-300">Email (optionnel)</Label>
+                <Input
+                  id="customer_email"
+                  type="email"
+                  value={inquiryForm.customer_email}
+                  onChange={(e) => setInquiryForm({...inquiryForm, customer_email: e.target.value})}
+                  placeholder="votre@email.com"
+                  className="bg-gray-800 border-gray-600 text-white"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="budget_range" className="text-gray-300">Budget approximatif</Label>
+                  <Input
+                    id="budget_range"
+                    value={inquiryForm.budget_range}
+                    onChange={(e) => setInquiryForm({...inquiryForm, budget_range: e.target.value})}
+                    placeholder="Ex: 500M - 1B GNF"
+                    className="bg-gray-800 border-gray-600 text-white"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="financing_type" className="text-gray-300">Mode de financement</Label>
+                  <select
+                    id="financing_type"
+                    value={inquiryForm.financing_type}
+                    onChange={(e) => setInquiryForm({...inquiryForm, financing_type: e.target.value})}
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white"
+                  >
+                    <option value="cash">Comptant</option>
+                    <option value="credit">Crédit bancaire</option>
+                    <option value="other">Autre</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="message" className="text-gray-300">Message *</Label>
+                <Textarea
+                  id="message"
+                  value={inquiryForm.message}
+                  onChange={(e) => setInquiryForm({...inquiryForm, message: e.target.value})}
+                  placeholder="Décrivez votre intérêt pour cette propriété, vos questions..."
+                  rows={4}
+                  required
+                  className="bg-gray-800 border-gray-600 text-white"
+                />
+              </div>
+
+              <div className="pt-2">
+                <Button 
+                  type="submit" 
+                  disabled={submittingInquiry}
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 gap-2"
+                  data-testid="submit-property-inquiry"
+                >
+                  {submittingInquiry ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Envoi en cours...
+                    </>
+                  ) : (
+                    <>
+                      <MessageCircle className="h-4 w-4" />
+                      Envoyer ma demande
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              <p className="text-xs text-gray-500 text-center">
+                En envoyant cette demande, vous acceptez d'être contacté par notre équipe ServisPro.
+              </p>
+            </form>
+          </div>
+        </div>
       )}
 
       {/* Footer */}
