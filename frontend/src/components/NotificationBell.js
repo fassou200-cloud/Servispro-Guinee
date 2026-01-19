@@ -17,13 +17,17 @@ const NotificationIcon = ({ type }) => {
     case 'service_request':
       return <Briefcase className="h-5 w-5 text-blue-500" />;
     case 'job_accepted':
+    case 'visit_accepted':
       return <Check className="h-5 w-5 text-emerald-500" />;
     case 'job_rejected':
+    case 'visit_rejected':
       return <X className="h-5 w-5 text-red-500" />;
     case 'job_completed':
       return <CheckCheck className="h-5 w-5 text-purple-500" />;
     case 'system':
       return <AlertCircle className="h-5 w-5 text-amber-500" />;
+    case 'visit_request':
+      return <Clock className="h-5 w-5 text-blue-500" />;
     default:
       return <MessageCircle className="h-5 w-5 text-gray-500" />;
   }
