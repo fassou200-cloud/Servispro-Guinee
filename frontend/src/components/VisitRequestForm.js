@@ -24,7 +24,7 @@ const VisitRequestForm = ({ rental, onSuccess, onClose }) => {
     message: ''
   });
   const [loading, setLoading] = useState(false);
-  const [fraisVisite, setFraisVisite] = useState(100000);
+  const [fraisVisite, setFraisVisite] = useState(null); // null = loading, number = loaded
   const [settings, setSettings] = useState({ devise: 'GNF' });
   
   // Payment flow states
@@ -44,15 +44,17 @@ const VisitRequestForm = ({ rental, onSuccess, onClose }) => {
       setPaymentPhone(parsed.phone_number || '');
     }
     
-    // Get frais de visite and settings
+    // Get frais de visite and settings - synchronized with admin settings
     Promise.all([
       axios.get(`${API}/service-fees/AgentImmobilier`),
       axios.get(`${API}/commission-rates`)
     ]).then(([feesRes, settingsRes]) => {
-      setFraisVisite(feesRes.data.frais_visite || 100000);
+      // Use explicit check for null/undefined to allow 0 as valid value
+      const fees = feesRes.data.frais_visite;
+      setFraisVisite(fees !== null && fees !== undefined ? fees : 0);
       setSettings({ devise: settingsRes.data.devise || 'GNF' });
     }).catch(() => {
-      setFraisVisite(100000);
+      setFraisVisite(0); // Default to 0 if API fails
     });
   }, []);
 
