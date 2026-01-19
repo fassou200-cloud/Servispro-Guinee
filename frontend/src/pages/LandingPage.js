@@ -85,24 +85,37 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
     return new Intl.NumberFormat('fr-FR').format(price || 0);
   };
 
-  // Handle property inquiry
+  // Handle property inquiry - requires login
   const openInquiryModal = (property, e) => {
     e.stopPropagation();
-    setSelectedProperty(property);
-    // Pre-fill with customer info if logged in
-    if (customer) {
-      setInquiryForm(prev => ({
-        ...prev,
-        customer_name: `${customer.first_name || ''} ${customer.last_name || ''}`.trim(),
-        customer_phone: customer.phone_number || '',
-        customer_email: customer.email || ''
-      }));
+    
+    // Check if customer is logged in
+    if (!customer) {
+      toast.error('Veuillez vous connecter pour contacter un vendeur');
+      navigate('/customer/auth?redirect=/&action=inquiry');
+      return;
     }
+    
+    setSelectedProperty(property);
+    // Pre-fill with customer info
+    setInquiryForm(prev => ({
+      ...prev,
+      customer_name: `${customer.first_name || ''} ${customer.last_name || ''}`.trim(),
+      customer_phone: customer.phone_number || '',
+      customer_email: customer.email || ''
+    }));
     setShowInquiryModal(true);
   };
 
   const handleInquirySubmit = async (e) => {
     e.preventDefault();
+    
+    // Double-check login
+    if (!customer) {
+      toast.error('Veuillez vous connecter pour soumettre une demande');
+      return;
+    }
+    
     if (!inquiryForm.customer_name || !inquiryForm.customer_phone || !inquiryForm.message) {
       toast.error('Veuillez remplir tous les champs obligatoires');
       return;
@@ -110,6 +123,7 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
     
     setSubmittingInquiry(true);
     try {
+      const customerToken = localStorage.getItem('customerToken');
       await axios.post(`${API}/property-sales/${selectedProperty.id}/inquiries`, {
         property_id: selectedProperty.id,
         customer_name: inquiryForm.customer_name,
@@ -118,9 +132,11 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
         message: inquiryForm.message,
         budget_range: inquiryForm.budget_range || null,
         financing_type: inquiryForm.financing_type || 'cash'
+      }, {
+        headers: { Authorization: `Bearer ${customerToken}` }
       });
       
-      toast.success('Votre demande a été envoyée ! Notre équipe vous contactera bientôt.');
+      toast.success('Votre demande a été envoyée ! Vous pouvez suivre son statut dans votre tableau de bord.');
       setShowInquiryModal(false);
       setSelectedProperty(null);
       setInquiryForm({
@@ -133,7 +149,12 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
       });
     } catch (error) {
       console.error('Error submitting inquiry:', error);
-      toast.error('Erreur lors de l\'envoi de votre demande. Veuillez réessayer.');
+      if (error.response?.status === 401) {
+        toast.error('Session expirée. Veuillez vous reconnecter.');
+        navigate('/customer/auth');
+      } else {
+        toast.error('Erreur lors de l\'envoi de votre demande. Veuillez réessayer.');
+      }
     } finally {
       setSubmittingInquiry(false);
     }
