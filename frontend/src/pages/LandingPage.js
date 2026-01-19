@@ -85,6 +85,60 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
     return new Intl.NumberFormat('fr-FR').format(price || 0);
   };
 
+  // Handle property inquiry
+  const openInquiryModal = (property, e) => {
+    e.stopPropagation();
+    setSelectedProperty(property);
+    // Pre-fill with customer info if logged in
+    if (customer) {
+      setInquiryForm(prev => ({
+        ...prev,
+        customer_name: `${customer.first_name || ''} ${customer.last_name || ''}`.trim(),
+        customer_phone: customer.phone_number || '',
+        customer_email: customer.email || ''
+      }));
+    }
+    setShowInquiryModal(true);
+  };
+
+  const handleInquirySubmit = async (e) => {
+    e.preventDefault();
+    if (!inquiryForm.customer_name || !inquiryForm.customer_phone || !inquiryForm.message) {
+      toast.error('Veuillez remplir tous les champs obligatoires');
+      return;
+    }
+    
+    setSubmittingInquiry(true);
+    try {
+      await axios.post(`${API}/property-sales/${selectedProperty.id}/inquiries`, {
+        property_id: selectedProperty.id,
+        customer_name: inquiryForm.customer_name,
+        customer_phone: inquiryForm.customer_phone,
+        customer_email: inquiryForm.customer_email || null,
+        message: inquiryForm.message,
+        budget_range: inquiryForm.budget_range || null,
+        financing_type: inquiryForm.financing_type || 'cash'
+      });
+      
+      toast.success('Votre demande a été envoyée ! Notre équipe vous contactera bientôt.');
+      setShowInquiryModal(false);
+      setSelectedProperty(null);
+      setInquiryForm({
+        customer_name: '',
+        customer_phone: '',
+        customer_email: '',
+        message: '',
+        budget_range: '',
+        financing_type: 'cash'
+      });
+    } catch (error) {
+      console.error('Error submitting inquiry:', error);
+      toast.error('Erreur lors de l\'envoi de votre demande. Veuillez réessayer.');
+    } finally {
+      setSubmittingInquiry(false);
+    }
+  };
+
   // Auto-rotate categories
   useEffect(() => {
     const interval = setInterval(() => {
