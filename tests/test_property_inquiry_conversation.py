@@ -275,7 +275,7 @@ class TestPropertyInquiryConversation:
         time.sleep(0.5)
         
         response = self.session.get(
-            f"{BASE_URL}/api/customer/notifications",
+            f"{BASE_URL}/api/notifications/customer",
             headers=headers
         )
         
