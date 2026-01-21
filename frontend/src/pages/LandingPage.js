@@ -10,7 +10,8 @@ import {
   Zap, Wrench, Droplet, Truck, Home, ArrowRight, Shield, Clock, Star, 
   User, LogOut, Hammer, Building, Settings, Flame, CheckCircle, 
   Phone, MapPin, Users, Award, ChevronRight, Play, Sparkles, Eye,
-  DollarSign, Bed, Bath, Car, Trees, X, MessageCircle, Loader2, Mail
+  DollarSign, Bed, Bath, Car, Trees, X, MessageCircle, Loader2, Mail,
+  Key, ShoppingBag, Briefcase, Search
 } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
