@@ -3420,26 +3420,10 @@ async def admin_login(input_data: AdminLoginInput):
 async def get_visit_fees_stats():
     """Get statistics for visit fees paid (frais de visite) for locations and services"""
     now = datetime.now(timezone.utc)
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     
-    # Get all completed payments
-    all_payments = await db.payments.find(
-        {'status': 'completed'},
-        {'_id': 0}
-    ).to_list(1000)
-    
-    # Get visit requests with payment info
-    visit_requests = await db.visit_requests.find(
-        {'payment_status': 'paid'},
-        {'_id': 0}
-    ).to_list(1000)
-    
-    # Get service requests with payment info (demandes de service/prestation)
-    service_jobs = await db.jobs.find(
-        {'payment_status': 'paid'},
-        {'_id': 0}
-    ).to_list(1000)
-    
-    # Calculate totals for Locations (visit requests for rentals)
+    # Initialize stats
     location_fees = {
         'total_amount': 0,
         'count': 0,
@@ -3450,7 +3434,6 @@ async def get_visit_fees_stats():
         'recent_payments': []
     }
     
-    # Calculate totals for Services/Prestataires
     service_fees = {
         'total_amount': 0,
         'count': 0,
@@ -3461,12 +3444,11 @@ async def get_visit_fees_stats():
         'recent_payments': []
     }
     
-    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    # 1. Get all visit requests (for locations) - both pending and paid
+    visit_requests = await db.visit_requests.find({}, {'_id': 0}).sort('created_at', -1).to_list(100)
     
-    # Process visit requests (locations)
     for vr in visit_requests:
-        amount = vr.get('frais_visite', 0)
+        amount = vr.get('frais_visite', 0) or 0
         if amount > 0:
             location_fees['total_amount'] += amount
             location_fees['count'] += 1
@@ -3474,14 +3456,19 @@ async def get_visit_fees_stats():
             created_at = vr.get('created_at', '')
             if created_at:
                 try:
-                    created_date = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+                    if isinstance(created_at, str):
+                        created_date = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+                    else:
+                        created_date = created_at
+                    if created_date.tzinfo is None:
+                        created_date = created_date.replace(tzinfo=timezone.utc)
                     if created_date >= today_start:
                         location_fees['today_amount'] += amount
                         location_fees['today_count'] += 1
                     if created_date >= month_start:
                         location_fees['this_month_amount'] += amount
                         location_fees['this_month_count'] += 1
-                except:
+                except Exception as e:
                     pass
             
             if len(location_fees['recent_payments']) < 10:
@@ -3491,50 +3478,52 @@ async def get_visit_fees_stats():
                     'customer_name': vr.get('customer_name', 'N/A'),
                     'customer_phone': vr.get('customer_phone', 'N/A'),
                     'rental_title': vr.get('rental_title', 'N/A'),
-                    'created_at': vr.get('created_at'),
+                    'payment_status': vr.get('payment_status', 'pending'),
+                    'created_at': str(vr.get('created_at', '')),
                     'type': 'location'
                 })
     
-    # Process service jobs (prestataires)
-    for job in service_jobs:
-        amount = job.get('frais_visite', 0) or job.get('investigation_fee', 0)
+    # 2. Get all payments from payments collection (for prestataires/services)
+    payments = await db.payments.find({}, {'_id': 0}).sort('created_at', -1).to_list(100)
+    
+    for payment in payments:
+        amount = payment.get('amount', 0) or 0
+        status = payment.get('status', '')
+        
         if amount > 0:
             service_fees['total_amount'] += amount
             service_fees['count'] += 1
             
-            created_at = job.get('created_at', '')
+            created_at = payment.get('created_at', '')
             if created_at:
                 try:
-                    created_date = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+                    if isinstance(created_at, str):
+                        created_date = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+                    else:
+                        created_date = created_at
+                    if created_date.tzinfo is None:
+                        created_date = created_date.replace(tzinfo=timezone.utc)
                     if created_date >= today_start:
                         service_fees['today_amount'] += amount
                         service_fees['today_count'] += 1
                     if created_date >= month_start:
                         service_fees['this_month_amount'] += amount
                         service_fees['this_month_count'] += 1
-                except:
+                except Exception as e:
                     pass
             
             if len(service_fees['recent_payments']) < 10:
                 service_fees['recent_payments'].append({
-                    'id': job.get('id'),
+                    'id': payment.get('id'),
                     'amount': amount,
-                    'customer_name': job.get('customer_name', 'N/A'),
-                    'customer_phone': job.get('customer_phone', 'N/A'),
-                    'provider_name': job.get('provider_name', 'N/A'),
-                    'service_type': job.get('service_description', 'N/A'),
-                    'created_at': job.get('created_at'),
+                    'customer_name': payment.get('customer_name', 'Client'),
+                    'customer_phone': payment.get('customer_phone', 'N/A'),
+                    'provider_name': payment.get('provider_name', 'N/A'),
+                    'service_type': payment.get('payment_type', 'investigation_fee'),
+                    'status': status,
+                    'created_at': str(payment.get('created_at', '')),
                     'type': 'prestataire'
                 })
-    
-    # Also process payments collection for any other payments
-    for payment in all_payments:
-        amount = payment.get('amount', 0)
-        payment_type = payment.get('payment_type', '')
-        
-        if payment_type == 'investigation_fee' or payment_type == 'visite':
-            service_fees['total_amount'] += amount
-            service_fees['count'] += 1
     
     return {
         'locations': location_fees,
@@ -3543,7 +3532,9 @@ async def get_visit_fees_stats():
             'amount': location_fees['total_amount'] + service_fees['total_amount'],
             'count': location_fees['count'] + service_fees['count'],
             'today_amount': location_fees['today_amount'] + service_fees['today_amount'],
-            'this_month_amount': location_fees['this_month_amount'] + service_fees['this_month_amount']
+            'today_count': location_fees['today_count'] + service_fees['today_count'],
+            'this_month_amount': location_fees['this_month_amount'] + service_fees['this_month_amount'],
+            'this_month_count': location_fees['this_month_count'] + service_fees['this_month_count']
         }
     }
 
