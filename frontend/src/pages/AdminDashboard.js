@@ -625,6 +625,14 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
             Entreprises ({companies.length})
           </Button>
           <Button
+            variant={activeTab === 'revenus' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('revenus')}
+            className={activeTab === 'revenus' ? 'bg-green-600 hover:bg-green-700' : 'border-slate-600 text-slate-300'}
+          >
+            <DollarSign className="h-4 w-4 mr-2" />
+            Revenus
+          </Button>
+          <Button
             variant={activeTab === 'settings' ? 'default' : 'outline'}
             onClick={() => setActiveTab('settings')}
             className={activeTab === 'settings' ? 'bg-purple-600 hover:bg-purple-700' : 'border-slate-600 text-slate-300'}
