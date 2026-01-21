@@ -91,6 +91,10 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
   // Service fees state
   const [serviceFees, setServiceFees] = useState([]);
   const [savingFees, setSavingFees] = useState(false);
+  
+  // Visit fees statistics
+  const [visitFeesStats, setVisitFeesStats] = useState(null);
+  const [loadingVisitFees, setLoadingVisitFees] = useState(false);
 
   // Currency options
   const deviseOptions = [
