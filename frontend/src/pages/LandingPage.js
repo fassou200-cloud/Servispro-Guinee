@@ -22,14 +22,21 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
   const navigate = useNavigate();
   const [customer, setCustomer] = useState(null);
   const [activeCategory, setActiveCategory] = useState(0);
+  const [activeSection, setActiveSection] = useState('prestataires'); // prestataires, locations, ventes
   const [serviceFees, setServiceFees] = useState({});
   const [settings, setSettings] = useState({ devise: 'GNF' });
   const [propertySales, setPropertySales] = useState([]);
+  const [rentals, setRentals] = useState([]);
   const [loadingProperties, setLoadingProperties] = useState(true);
+  const [loadingRentals, setLoadingRentals] = useState(true);
   
   // Property detail modal state
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [detailProperty, setDetailProperty] = useState(null);
+  
+  // Rental detail modal state
+  const [showRentalModal, setShowRentalModal] = useState(false);
+  const [detailRental, setDetailRental] = useState(null);
   
   // Property inquiry modal state
   const [showInquiryModal, setShowInquiryModal] = useState(false);
@@ -50,9 +57,10 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
       setCustomer(JSON.parse(storedCustomer));
     }
     
-    // Fetch service fees and property sales
+    // Fetch all data
     fetchServiceFees();
     fetchPropertySales();
+    fetchRentals();
   }, []);
 
   const fetchPropertySales = async () => {
@@ -63,6 +71,17 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
       console.error('Error fetching property sales:', error);
     } finally {
       setLoadingProperties(false);
+    }
+  };
+
+  const fetchRentals = async () => {
+    try {
+      const response = await axios.get(`${API}/rentals?status=approved`);
+      setRentals(response.data || []);
+    } catch (error) {
+      console.error('Error fetching rentals:', error);
+    } finally {
+      setLoadingRentals(false);
     }
   };
 
