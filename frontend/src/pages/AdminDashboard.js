@@ -176,6 +176,12 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
           setCommissionRevenue(revenueRes.data);
           setServiceFees(feesRes.data);
           break;
+        case 'revenus':
+          setLoadingVisitFees(true);
+          const visitFeesRes = await axios.get(`${API}/admin/visit-fees-stats`);
+          setVisitFeesStats(visitFeesRes.data);
+          setLoadingVisitFees(false);
+          break;
         default:
           break;
       }
