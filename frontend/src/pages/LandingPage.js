@@ -665,8 +665,308 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
               );
             })}
           </div>
+
+          {/* CTA dans la section prestataires */}
+          <div className="text-center mt-12">
+            <Button
+              size="lg"
+              onClick={() => navigate('/browse')}
+              className="bg-green-600 hover:bg-green-700 text-white px-8 rounded-xl shadow-lg"
+            >
+              <Search className="h-5 w-5 mr-2" />
+              Rechercher un Prestataire
+            </Button>
+          </div>
         </div>
       </section>
+      )}
+
+      {/* ==================== LOCATIONS SECTION ==================== */}
+      {activeSection === 'locations' && (
+        <section className="py-16 bg-blue-50">
+          <div className="max-w-7xl mx-auto px-4 md:px-8">
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100 text-blue-700 text-sm font-medium mb-4">
+                <Key className="h-4 w-4" />
+                Locations Immobilières
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-heading font-bold text-gray-900 mb-4">
+                Propriétés à Louer
+              </h2>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                Trouvez votre logement idéal parmi nos offres vérifiées
+              </p>
+            </div>
+
+            {loadingRentals ? (
+              <div className="flex items-center justify-center py-20">
+                <Loader2 className="h-10 w-10 animate-spin text-blue-500" />
+              </div>
+            ) : rentals.length === 0 ? (
+              <div className="text-center py-20">
+                <div className="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-6">
+                  <Key className="h-10 w-10 text-blue-400" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Aucune location disponible</h3>
+                <p className="text-gray-600 mb-6">Revenez bientôt pour découvrir nos nouvelles offres</p>
+                <Button onClick={() => navigate('/browse?category=AgentImmobilier')} className="bg-blue-600 hover:bg-blue-700">
+                  Voir les Agents Immobiliers
+                </Button>
+              </div>
+            ) : (
+              <>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {rentals.slice(0, 6).map((rental) => (
+                    <Card 
+                      key={rental.id}
+                      className="bg-white border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300 group cursor-pointer"
+                      onClick={() => { setDetailRental(rental); setShowRentalModal(true); }}
+                    >
+                      {/* Rental Image */}
+                      <div className="relative h-48 bg-gray-200">
+                        {rental.photos && rental.photos.length > 0 ? (
+                          <img 
+                            src={`${BACKEND_URL}${rental.photos[0]}`}
+                            alt={rental.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Home className="h-16 w-16 text-gray-400" />
+                          </div>
+                        )}
+                        <div className="absolute top-3 left-3">
+                          <span className="px-3 py-1 bg-blue-500 text-white text-xs font-bold rounded-full">
+                            {rental.rental_type === 'long_term' ? 'Longue Durée' : 'Courte Durée'}
+                          </span>
+                        </div>
+                        <div className="absolute top-3 right-3">
+                          <span className="px-3 py-1 bg-green-600 text-white text-xs font-bold rounded-full flex items-center gap-1">
+                            <CheckCircle className="h-3 w-3" />
+                            Vérifié
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Rental Info */}
+                      <div className="p-5">
+                        <h3 className="font-bold text-gray-900 text-lg mb-2 line-clamp-1 group-hover:text-blue-600 transition-colors">
+                          {rental.title}
+                        </h3>
+                        <div className="flex items-center gap-2 text-gray-500 text-sm mb-3">
+                          <MapPin className="h-4 w-4" />
+                          <span className="line-clamp-1">{rental.location}</span>
+                        </div>
+
+                        {/* Features */}
+                        <div className="flex items-center gap-4 text-gray-500 text-sm mb-4">
+                          {rental.num_rooms && (
+                            <span className="flex items-center gap-1">
+                              <Bed className="h-4 w-4" />
+                              {rental.num_rooms}
+                            </span>
+                          )}
+                          {rental.num_bathrooms && (
+                            <span className="flex items-center gap-1">
+                              <Bath className="h-4 w-4" />
+                              {rental.num_bathrooms}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Price */}
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-2xl font-bold text-blue-600">
+                              {Number(rental.rental_price).toLocaleString('fr-FR')} GNF
+                            </p>
+                            <span className="text-xs text-gray-500">
+                              {rental.rental_type === 'long_term' ? '/ mois' : '/ nuit'}
+                            </span>
+                          </div>
+                          <Button 
+                            size="sm"
+                            className="bg-blue-600 hover:bg-blue-700 gap-1"
+                            onClick={(e) => { e.stopPropagation(); navigate(`/rental/${rental.id}`); }}
+                          >
+                            <Eye className="h-4 w-4" />
+                            Voir
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+
+                {rentals.length > 6 && (
+                  <div className="text-center mt-12">
+                    <Button
+                      size="lg"
+                      onClick={() => navigate('/rentals')}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-8 rounded-xl shadow-lg"
+                    >
+                      Voir toutes les Locations ({rentals.length})
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* ==================== VENTES SECTION ==================== */}
+      {activeSection === 'ventes' && (
+        <section className="py-16 bg-emerald-50">
+          <div className="max-w-7xl mx-auto px-4 md:px-8">
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-100 text-emerald-700 text-sm font-medium mb-4">
+                <ShoppingBag className="h-4 w-4" />
+                Ventes Immobilières
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-heading font-bold text-gray-900 mb-4">
+                Propriétés à Vendre
+              </h2>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                Investissez dans l'immobilier guinéen avec nos propriétés vérifiées
+              </p>
+            </div>
+
+            {loadingProperties ? (
+              <div className="flex items-center justify-center py-20">
+                <Loader2 className="h-10 w-10 animate-spin text-emerald-500" />
+              </div>
+            ) : propertySales.length === 0 ? (
+              <div className="text-center py-20">
+                <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-6">
+                  <ShoppingBag className="h-10 w-10 text-emerald-400" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Aucune propriété à vendre</h3>
+                <p className="text-gray-600 mb-6">Revenez bientôt pour découvrir nos nouvelles offres</p>
+                <Button onClick={() => navigate('/browse?category=AgentImmobilier')} className="bg-emerald-600 hover:bg-emerald-700">
+                  Voir les Agents Immobiliers
+                </Button>
+              </div>
+            ) : (
+              <>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {propertySales.slice(0, 6).map((sale) => (
+                    <Card 
+                      key={sale.id}
+                      className="bg-white border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300 group cursor-pointer"
+                      onClick={() => openDetailModal(sale)}
+                      data-testid={`property-card-${sale.id}`}
+                    >
+                      {/* Property Image */}
+                      <div className="relative h-48 bg-gray-200">
+                        {sale.photos && sale.photos.length > 0 ? (
+                          <img 
+                            src={`${BACKEND_URL}${sale.photos[0]}`}
+                            alt={sale.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Home className="h-16 w-16 text-gray-400" />
+                          </div>
+                        )}
+                        <div className="absolute top-3 left-3">
+                          <span className="px-3 py-1 bg-emerald-500 text-white text-xs font-bold rounded-full">
+                            {sale.property_type === 'House' ? 'Maison' : 
+                             sale.property_type === 'Apartment' ? 'Appartement' : 
+                             sale.property_type === 'Land' ? 'Terrain' : 
+                             sale.property_type === 'Commercial' ? 'Commercial' : sale.property_type}
+                          </span>
+                        </div>
+                        <div className="absolute top-3 right-3">
+                          <span className="px-3 py-1 bg-green-600 text-white text-xs font-bold rounded-full flex items-center gap-1">
+                            <CheckCircle className="h-3 w-3" />
+                            Vérifié
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Property Info */}
+                      <div className="p-5">
+                        <h3 className="font-bold text-gray-900 text-lg mb-2 line-clamp-1 group-hover:text-emerald-600 transition-colors">
+                          {sale.title}
+                        </h3>
+                        <div className="flex items-center gap-2 text-gray-500 text-sm mb-3">
+                          <MapPin className="h-4 w-4" />
+                          <span className="line-clamp-1">{sale.location}</span>
+                        </div>
+
+                        {/* Features */}
+                        <div className="flex items-center gap-4 text-gray-500 text-sm mb-4">
+                          {sale.num_rooms && (
+                            <span className="flex items-center gap-1">
+                              <Bed className="h-4 w-4" />
+                              {sale.num_rooms} ch.
+                            </span>
+                          )}
+                          {sale.num_bathrooms && (
+                            <span className="flex items-center gap-1">
+                              <Bath className="h-4 w-4" />
+                              {sale.num_bathrooms}
+                            </span>
+                          )}
+                          {sale.has_garage && <Car className="h-4 w-4" />}
+                          {sale.has_garden && <Trees className="h-4 w-4" />}
+                        </div>
+
+                        {/* Price */}
+                        <div className="mb-4">
+                          <p className="text-2xl font-bold text-emerald-600">
+                            {Number(sale.sale_price).toLocaleString('fr-FR')} GNF
+                          </p>
+                          {sale.is_negotiable && (
+                            <span className="text-xs text-gray-500">Négociable</span>
+                          )}
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex gap-2">
+                          <Button 
+                            size="sm"
+                            variant="outline"
+                            className="flex-1 border-gray-300 text-gray-600 hover:bg-gray-100 gap-1"
+                            onClick={(e) => { e.stopPropagation(); openDetailModal(sale); }}
+                          >
+                            <Eye className="h-4 w-4" />
+                            Détails
+                          </Button>
+                          <Button 
+                            size="sm"
+                            className="flex-1 bg-emerald-600 hover:bg-emerald-700 gap-1"
+                            onClick={(e) => openInquiryModal(sale, e)}
+                          >
+                            <MessageCircle className="h-4 w-4" />
+                            Contacter
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+
+                {propertySales.length > 6 && (
+                  <div className="text-center mt-12">
+                    <Button
+                      size="lg"
+                      onClick={() => navigate('/property-sales')}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 rounded-xl shadow-lg"
+                    >
+                      Voir toutes les Propriétés ({propertySales.length})
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Features Section */}
       <section className="py-20 bg-white">
