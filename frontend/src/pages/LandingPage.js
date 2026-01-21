@@ -549,20 +549,67 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
         </div>
       </section>
 
-      {/* Categories Grid */}
-      <section className="py-20 bg-gray-50">
+      {/* Section Navigation Tabs */}
+      <section className="sticky top-20 z-40 bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-heading font-bold text-gray-900 mb-4">
-              Nos Services Professionnels
-            </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Des experts qualifiés dans chaque domaine, prêts à intervenir rapidement
-            </p>
+          <div className="flex items-center justify-center gap-2 py-4">
+            <Button
+              variant={activeSection === 'prestataires' ? 'default' : 'ghost'}
+              onClick={() => setActiveSection('prestataires')}
+              className={`gap-2 rounded-full px-6 ${activeSection === 'prestataires' ? 'bg-green-600 hover:bg-green-700 text-white' : 'text-gray-600 hover:text-green-600'}`}
+            >
+              <Briefcase className="h-4 w-4" />
+              Prestataires
+            </Button>
+            <Button
+              variant={activeSection === 'locations' ? 'default' : 'ghost'}
+              onClick={() => setActiveSection('locations')}
+              className={`gap-2 rounded-full px-6 ${activeSection === 'locations' ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'text-gray-600 hover:text-blue-600'}`}
+            >
+              <Key className="h-4 w-4" />
+              Locations
+              {rentals.length > 0 && (
+                <span className="ml-1 px-2 py-0.5 bg-blue-500 text-white text-xs rounded-full">
+                  {rentals.length}
+                </span>
+              )}
+            </Button>
+            <Button
+              variant={activeSection === 'ventes' ? 'default' : 'ghost'}
+              onClick={() => setActiveSection('ventes')}
+              className={`gap-2 rounded-full px-6 ${activeSection === 'ventes' ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'text-gray-600 hover:text-emerald-600'}`}
+            >
+              <ShoppingBag className="h-4 w-4" />
+              Ventes
+              {propertySales.length > 0 && (
+                <span className="ml-1 px-2 py-0.5 bg-emerald-500 text-white text-xs rounded-full">
+                  {propertySales.length}
+                </span>
+              )}
+            </Button>
           </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-            {categories.map((category, index) => {
+        </div>
+      </section>
+
+      {/* ==================== PRESTATAIRES SECTION ==================== */}
+      {activeSection === 'prestataires' && (
+        <section className="py-16 bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4 md:px-8">
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-100 text-green-700 text-sm font-medium mb-4">
+                <Briefcase className="h-4 w-4" />
+                Services Professionnels
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-heading font-bold text-gray-900 mb-4">
+                Nos Prestataires de Services
+              </h2>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                Des experts qualifiés dans chaque domaine, prêts à intervenir rapidement
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+              {categories.map((category, index) => {
               const Icon = category.icon;
               const frais = serviceFees[category.profession] || 0;
               return (
