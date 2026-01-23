@@ -131,6 +131,67 @@ const VisitRequestForm = ({ rental, onSuccess, onClose }) => {
     }, 1500);
   };
 
+  // Pay with accumulated credits
+  const handlePayWithCredits = async () => {
+    if (customerBalance < fraisVisite) {
+      toast.error('Solde de créances insuffisant');
+      return;
+    }
+
+    setStep(4);
+    setLoading(true);
+
+    try {
+      const token = localStorage.getItem('customerToken');
+      const customerName = customer.name || 
+        (customer.first_name && customer.last_name 
+          ? `${customer.first_name} ${customer.last_name}` 
+          : customer.first_name || 'Client');
+      
+      // Create visit request
+      const response = await axios.post(`${API}/visit-requests`, {
+        rental_id: rental.id,
+        customer_name: customerName,
+        customer_phone: customer.phone_number,
+        customer_email: customer.email || null,
+        preferred_date: formData.preferred_date,
+        preferred_time: formData.preferred_time || null,
+        message: formData.message || null
+      });
+
+      // Pay with credits
+      await axios.post(`${API}/customer/pay-with-credits`, {
+        visit_request_id: response.data.id,
+        amount: fraisVisite
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      // Update payment status
+      await axios.put(`${API}/visit-requests/${response.data.id}/payment`, {
+        payment_status: 'paid',
+        payment_method: 'credits',
+        payment_phone: customer.phone_number
+      }).catch(() => {});
+
+      setStep(5);
+      toast.success('Paiement par créances effectué !');
+      
+      // Update local balance
+      setCustomerBalance(prev => prev - fraisVisite);
+      
+      if (onSuccess) {
+        onSuccess(response.data);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('Erreur lors du paiement par créances');
+      setStep(2);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Verify OTP and process payment
   const handleVerifyOtp = async () => {
     if (otp !== generatedOtp) {
