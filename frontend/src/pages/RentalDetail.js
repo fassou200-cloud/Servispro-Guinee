@@ -9,7 +9,7 @@ import {
   ChevronLeft, ChevronRight, Star, Phone, Mail, Clock, Heart, Share2, Building,
   Thermometer, Laptop, Shirt, Lock, Coffee, Droplets, ShowerHead, Mountain, 
   Volume2, Flame, Sofa, Baby, UtensilsCrossed, Sun, ChefHat, Waves,
-  Armchair, Hotel, Refrigerator, Microwave as MicrowaveIcon, CircleDot, Eye
+  Armchair, Hotel, Refrigerator, Microwave as MicrowaveIcon, CircleDot, Eye, Shield
 } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
