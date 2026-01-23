@@ -150,6 +150,26 @@ class Customer(BaseModel):
     first_name: str
     last_name: str
     phone_number: str
+    balance: float = 0.0  # Solde de créances du client
+    created_at: str
+
+# Credit Transaction Types
+class CreditTransactionType(str, Enum):
+    VISIT_REJECTED = "visit_rejected"  # Visite refusée après paiement
+    PROVIDER_NO_SHOW = "provider_no_show"  # Prestataire ne s'est pas présenté
+    USED_FOR_PAYMENT = "used_for_payment"  # Crédit utilisé pour un paiement
+    ADMIN_ADJUSTMENT = "admin_adjustment"  # Ajustement par admin
+    REFUND = "refund"  # Remboursement
+
+class CreditTransaction(BaseModel):
+    id: str
+    customer_id: str
+    customer_phone: str
+    amount: float  # Positif = crédit, Négatif = débit
+    transaction_type: str
+    description: str
+    related_id: Optional[str] = None  # ID de la visite ou demande de service
+    balance_after: float  # Solde après transaction
     created_at: str
 
 class AuthResponse(BaseModel):
