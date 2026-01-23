@@ -2034,19 +2034,93 @@ async def update_visit_request(visit_id: str, update_data: VisitRequestUpdate, c
         await db.customer_notifications.insert_one(notification_doc)
     
     elif update_data.status.value == 'rejected':
-        # Notification for rejection
-        notification_doc = {
-            'id': str(uuid.uuid4()),
-            'customer_phone': request.get('customer_phone'),
-            'user_type': 'customer',
-            'title': '❌ Demande de visite refusée',
-            'message': f"Votre demande de visite pour '{request.get('rental_title', 'la propriété')}' a été refusée par le prestataire.",
-            'notification_type': 'visit_rejected',
-            'related_id': visit_id,
-            'is_read': False,
-            'created_at': now
-        }
-        await db.customer_notifications.insert_one(notification_doc)
+        # Check if payment was made - if so, credit the customer
+        if request.get('payment_status') == 'paid':
+            customer = await db.customers.find_one({'phone_number': request.get('customer_phone')}, {'_id': 0})
+            if customer:
+                credit_amount = request.get('visit_fee', 0) or 0
+                if credit_amount > 0:
+                    # Get current balance
+                    current_balance = customer.get('balance', 0) or 0
+                    new_balance = current_balance + credit_amount
+                    
+                    # Update customer balance
+                    await db.customers.update_one(
+                        {'id': customer['id']},
+                        {'$set': {'balance': new_balance}}
+                    )
+                    
+                    # Create credit transaction record
+                    credit_transaction = {
+                        'id': str(uuid.uuid4()),
+                        'customer_id': customer['id'],
+                        'customer_phone': request.get('customer_phone'),
+                        'amount': credit_amount,
+                        'transaction_type': 'visit_rejected',
+                        'description': f"Crédit suite au refus de visite pour '{request.get('rental_title', 'la propriété')}'",
+                        'related_id': visit_id,
+                        'balance_after': new_balance,
+                        'created_at': now
+                    }
+                    await db.credit_transactions.insert_one(credit_transaction)
+                    
+                    # Enhanced notification with credit info
+                    notification_doc = {
+                        'id': str(uuid.uuid4()),
+                        'customer_phone': request.get('customer_phone'),
+                        'customer_id': customer.get('id'),
+                        'user_type': 'customer',
+                        'title': '❌ Demande de visite refusée - Crédit ajouté',
+                        'message': f"Votre demande de visite pour '{request.get('rental_title', 'la propriété')}' a été refusée.\n\n💰 Un crédit de {credit_amount:,.0f} GNF a été ajouté à votre solde.\nNouveau solde: {new_balance:,.0f} GNF",
+                        'notification_type': 'visit_rejected_credit',
+                        'related_id': visit_id,
+                        'credit_amount': credit_amount,
+                        'is_read': False,
+                        'created_at': now
+                    }
+                    await db.customer_notifications.insert_one(notification_doc)
+                else:
+                    # Standard rejection notification (no credit to add)
+                    notification_doc = {
+                        'id': str(uuid.uuid4()),
+                        'customer_phone': request.get('customer_phone'),
+                        'user_type': 'customer',
+                        'title': '❌ Demande de visite refusée',
+                        'message': f"Votre demande de visite pour '{request.get('rental_title', 'la propriété')}' a été refusée par le prestataire.",
+                        'notification_type': 'visit_rejected',
+                        'related_id': visit_id,
+                        'is_read': False,
+                        'created_at': now
+                    }
+                    await db.customer_notifications.insert_one(notification_doc)
+            else:
+                # No customer found - standard notification
+                notification_doc = {
+                    'id': str(uuid.uuid4()),
+                    'customer_phone': request.get('customer_phone'),
+                    'user_type': 'customer',
+                    'title': '❌ Demande de visite refusée',
+                    'message': f"Votre demande de visite pour '{request.get('rental_title', 'la propriété')}' a été refusée par le prestataire.",
+                    'notification_type': 'visit_rejected',
+                    'related_id': visit_id,
+                    'is_read': False,
+                    'created_at': now
+                }
+                await db.customer_notifications.insert_one(notification_doc)
+        else:
+            # No payment was made - standard rejection notification
+            notification_doc = {
+                'id': str(uuid.uuid4()),
+                'customer_phone': request.get('customer_phone'),
+                'user_type': 'customer',
+                'title': '❌ Demande de visite refusée',
+                'message': f"Votre demande de visite pour '{request.get('rental_title', 'la propriété')}' a été refusée par le prestataire.",
+                'notification_type': 'visit_rejected',
+                'related_id': visit_id,
+                'is_read': False,
+                'created_at': now
+            }
+            await db.customer_notifications.insert_one(notification_doc)
     
     status_messages = {
         'accepted': f"Demande acceptée ! Le client a reçu votre numéro de téléphone.",
