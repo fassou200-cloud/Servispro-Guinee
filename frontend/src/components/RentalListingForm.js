@@ -264,6 +264,8 @@ const RentalListingForm = ({ onSuccess }) => {
         description: formData.description,
         location: formData.location,
         rental_price: formData.rental_type === 'long_term' ? rentalPrice : null,
+        caution: formData.rental_type === 'long_term' && formData.caution ? parseFloat(formData.caution) : null,
+        mois_avance: formData.rental_type === 'long_term' && formData.mois_avance ? parseInt(formData.mois_avance) : null,
         price_per_night: formData.rental_type === 'short_term' ? pricePerNight : null,
         min_nights: formData.rental_type === 'short_term' ? (parseInt(formData.min_nights) || 1) : 1,
         max_guests: formData.max_guests ? parseInt(formData.max_guests) : null,
