@@ -26,7 +26,7 @@ const COMPANY_SECTORS = [
   { value: 'Securite', label: 'Sécurité & Gardiennage' },
   { value: 'Informatique', label: 'Informatique & Technologie' },
   { value: 'Restauration', label: 'Restauration & Hôtellerie' },
-  { value: 'Immobilier', label: 'Immobilier' },
+  { value: 'Immobilier', label: 'Agence Immobilière' },
   { value: 'Commerce', label: 'Commerce & Distribution' },
   { value: 'Agriculture', label: 'Agriculture & Agroalimentaire' },
   { value: 'Industrie', label: 'Industrie & Manufacture' },
