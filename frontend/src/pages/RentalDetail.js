@@ -428,6 +428,34 @@ const RentalDetail = () => {
                 </div>
               )}
 
+              {/* Long term rental info - Caution et Mois d'avance */}
+              {rental.rental_type === 'long_term' && (rental.caution || rental.mois_avance) && (
+                <div className="flex flex-wrap gap-6 mb-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl">
+                  {rental.caution && (
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center">
+                        <Shield className="h-6 w-6 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-blue-600">Caution</p>
+                        <p className="text-lg font-bold text-blue-800">{Number(rental.caution).toLocaleString('fr-FR')} GNF</p>
+                      </div>
+                    </div>
+                  )}
+                  {rental.mois_avance && (
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center">
+                        <Calendar className="h-6 w-6 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-blue-600">Avance requise</p>
+                        <p className="text-lg font-bold text-blue-800">{rental.mois_avance} mois</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Availability Dates */}
               {(rental.available_from || rental.available_to) && (
                 <div className="mb-6 p-6 bg-slate-50 rounded-2xl">
