@@ -1512,6 +1512,34 @@ const CompanyDashboard = () => {
                   )}
                 </div>
 
+                {/* Caution et Mois d'avance - uniquement pour location longue durée */}
+                {rentalForm.rental_type === 'long_term' && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Caution (GNF)</Label>
+                      <Input
+                        type="number"
+                        value={rentalForm.caution}
+                        onChange={(e) => setRentalForm({ ...rentalForm, caution: e.target.value })}
+                        placeholder="1000000"
+                        data-testid="rental-caution"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Mois d'avance</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        max="12"
+                        value={rentalForm.mois_avance}
+                        onChange={(e) => setRentalForm({ ...rentalForm, mois_avance: e.target.value })}
+                        placeholder="2"
+                        data-testid="rental-mois-avance"
+                      />
+                    </div>
+                  </div>
+                )}
+
                 <Button type="submit" className="w-full h-14 bg-emerald-600 hover:bg-emerald-700" data-testid="rental-submit-step1">
                   Continuer - Photos
                 </Button>
