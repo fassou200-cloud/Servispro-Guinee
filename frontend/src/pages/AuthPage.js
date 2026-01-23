@@ -129,7 +129,7 @@ const AuthPage = ({ setIsAuthenticated }) => {
     { value: 'Plombier', label: 'Plombier', icon: Zap },
     { value: 'Macon', label: 'Maçon', icon: Home },
     { value: 'Menuisier', label: 'Menuisier', icon: Home },
-    { value: 'AgentImmobilier', label: 'Agent Immobilier', icon: Home },
+    { value: 'AgentImmobilier', label: 'Propriétaire immobilier', icon: Home },
     { value: 'Soudeur', label: 'Soudeur', icon: Zap },
     { value: 'Camionneur', label: 'Camionneur (Location)', icon: Truck },
     { value: 'Tracteur', label: 'Tracteur (Location)', icon: Truck },

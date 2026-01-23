@@ -280,7 +280,7 @@ const ProfileForm = ({ user, setUser, onUpdate }) => {
               <SelectItem value="Plombier">Plombier</SelectItem>
               <SelectItem value="Macon">Maçon</SelectItem>
               <SelectItem value="Menuisier">Menuisier</SelectItem>
-              <SelectItem value="AgentImmobilier">Agent Immobilier</SelectItem>
+              <SelectItem value="AgentImmobilier">Propriétaire immobilier</SelectItem>
               <SelectItem value="Soudeur">Soudeur</SelectItem>
               <SelectItem value="Autres">Autres Métiers</SelectItem>
             </SelectContent>

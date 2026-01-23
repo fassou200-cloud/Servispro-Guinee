@@ -227,7 +227,7 @@ const Dashboard = ({ setIsAuthenticated }) => {
                   Accueil
                 </Button>
                 <h1 className="text-2xl font-heading font-bold text-foreground">
-                  Espace Agent Immobilier
+                  Espace Propriétaire immobilier
                 </h1>
               </div>
               <div className="flex items-center gap-6">

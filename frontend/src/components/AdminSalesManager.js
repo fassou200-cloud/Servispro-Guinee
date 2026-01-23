@@ -895,7 +895,7 @@ const AdminSalesManager = () => {
 
                 {/* Agent Info */}
                 <div className="mb-4 p-4 bg-slate-700/50 rounded-lg">
-                  <h4 className="text-sm font-bold text-slate-300 uppercase mb-3">Agent Immobilier</h4>
+                  <h4 className="text-sm font-bold text-slate-300 uppercase mb-3">Propriétaire immobilier</h4>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-slate-300">
                       <User className="h-4 w-4 text-slate-400" />

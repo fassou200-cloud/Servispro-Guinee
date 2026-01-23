@@ -504,7 +504,7 @@ const RentalDetail = () => {
                   </div>
                   <div>
                     <div className="text-sm text-slate-500">Propriétaire</div>
-                    <div className="font-bold text-slate-900">{rental.provider_name || 'Agent Immobilier'}</div>
+                    <div className="font-bold text-slate-900">{rental.provider_name || 'Propriétaire immobilier'}</div>
                     <div className="flex items-center gap-1 text-sm text-green-600">
                       <Clock className="h-3 w-3" />
                       Répond généralement en 1h

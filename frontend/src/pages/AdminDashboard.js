@@ -1363,7 +1363,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                     </Avatar>
                     <div>
                       <h3 className="text-xl font-bold text-white">{selectedAgent.first_name} {selectedAgent.last_name}</h3>
-                      <p className="text-amber-400">Agent Immobilier</p>
+                      <p className="text-amber-400">Propriétaire immobilier</p>
                       <p className="text-sm text-slate-400">{selectedAgent.phone_number}</p>
                     </div>
                   </div>
