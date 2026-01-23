@@ -1158,6 +1158,8 @@ async def create_company_rental(
         'description': listing_data.description,
         'location': listing_data.location,
         'rental_price': listing_data.rental_price,
+        'caution': listing_data.caution,
+        'mois_avance': listing_data.mois_avance,
         'rental_type': listing_data.rental_type,
         'price_per_night': listing_data.price_per_night,
         'min_nights': listing_data.min_nights,
