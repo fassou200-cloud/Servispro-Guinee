@@ -399,6 +399,19 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
               </span>
             )}
           </Button>
+          <Button
+            variant={activeTab === 'creances' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('creances')}
+            className={`rounded-xl ${activeTab === 'creances' ? 'bg-purple-600 hover:bg-purple-700' : ''}`}
+          >
+            <Wallet className="h-4 w-4 mr-2" />
+            Mes Créances
+            {balance > 0 && (
+              <span className="ml-2 px-2 py-0.5 bg-purple-500 text-white text-xs rounded-full">
+                {balance.toLocaleString('fr-FR')} GNF
+              </span>
+            )}
+          </Button>
         </div>
 
         {/* Tab Content */}
