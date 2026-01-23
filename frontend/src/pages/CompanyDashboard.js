@@ -381,6 +381,8 @@ const CompanyDashboard = () => {
         description: '',
         location: '',
         rental_price: '',
+        caution: '',
+        mois_avance: '',
         rental_type: 'long_term',
         price_per_night: '',
         min_nights: '1',
