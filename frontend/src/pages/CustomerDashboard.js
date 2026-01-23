@@ -71,6 +71,11 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
   const [replyMessage, setReplyMessage] = useState('');
   const [sendingReply, setSendingReply] = useState(false);
   const conversationEndRef = useRef(null);
+  
+  // Credit/Balance state
+  const [balance, setBalance] = useState(0);
+  const [creditHistory, setCreditHistory] = useState([]);
+  const [loadingBalance, setLoadingBalance] = useState(false);
 
   useEffect(() => {
     const storedCustomer = localStorage.getItem('customer');
@@ -78,18 +83,24 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
       setCustomer(JSON.parse(storedCustomer));
     }
     fetchJobs();
+    fetchBalance();
     
     // Check for tab parameter in URL
     const tabParam = searchParams.get('tab');
     if (tabParam === 'demandes') {
       setActiveTab('demandes');
       fetchPropertyInquiries();
+    } else if (tabParam === 'creances') {
+      setActiveTab('creances');
+      fetchCreditHistory();
     }
   }, [searchParams]);
 
   useEffect(() => {
     if (activeTab === 'demandes') {
       fetchPropertyInquiries();
+    } else if (activeTab === 'creances') {
+      fetchCreditHistory();
     }
   }, [activeTab]);
 
