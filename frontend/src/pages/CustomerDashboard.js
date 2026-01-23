@@ -1009,69 +1009,73 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {creditHistory.map((transaction) => (
-                    <div 
-                      key={transaction.id}
-                      className={`flex items-center justify-between p-4 rounded-xl border ${
-                        transaction.amount > 0 
-                          ? 'bg-green-50 border-green-200' 
-                          : 'bg-red-50 border-red-200'
-                      }`}
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                          transaction.amount > 0 ? 'bg-green-100' : 'bg-red-100'
-                        }`}>
-                          {transaction.transaction_type === 'visit_rejected' && (
-                            <Building className={`h-5 w-5 ${transaction.amount > 0 ? 'text-green-600' : 'text-red-600'}`} />
-                          )}
-                          {transaction.transaction_type === 'provider_no_show' && (
-                            <User className={`h-5 w-5 ${transaction.amount > 0 ? 'text-green-600' : 'text-red-600'}`} />
-                          )}
-                          {transaction.transaction_type === 'used_for_payment' && (
-                            <CreditCard className={`h-5 w-5 ${transaction.amount > 0 ? 'text-green-600' : 'text-red-600'}`} />
-                          )}
-                          {transaction.transaction_type === 'admin_adjustment' && (
-                            <Shield className={`h-5 w-5 ${transaction.amount > 0 ? 'text-green-600' : 'text-red-600'}`} />
-                          )}
-                          {!['visit_rejected', 'provider_no_show', 'used_for_payment', 'admin_adjustment'].includes(transaction.transaction_type) && (
-                            <Wallet className={`h-5 w-5 ${transaction.amount > 0 ? 'text-green-600' : 'text-red-600'}`} />
-                          )}
+                  {creditHistory.map((transaction) => {
+                    // Determine if this is a refusal-type transaction (show in red)
+                    const isRefusal = ['visit_rejected', 'provider_no_show', 'used_for_payment'].includes(transaction.transaction_type) || transaction.amount < 0;
+                    // Accepted/positive transactions (admin credit, refund) show in green
+                    const isAccepted = ['admin_adjustment', 'refund'].includes(transaction.transaction_type) && transaction.amount > 0;
+                    
+                    const bgColor = isRefusal ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200';
+                    const iconBgColor = isRefusal ? 'bg-red-100' : 'bg-green-100';
+                    const iconColor = isRefusal ? 'text-red-600' : 'text-green-600';
+                    const amountColor = isRefusal ? 'text-red-600' : 'text-green-600';
+                    
+                    return (
+                      <div 
+                        key={transaction.id}
+                        className={`flex items-center justify-between p-4 rounded-xl border ${bgColor}`}
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${iconBgColor}`}>
+                            {transaction.transaction_type === 'visit_rejected' && (
+                              <Building className={`h-5 w-5 ${iconColor}`} />
+                            )}
+                            {transaction.transaction_type === 'provider_no_show' && (
+                              <User className={`h-5 w-5 ${iconColor}`} />
+                            )}
+                            {transaction.transaction_type === 'used_for_payment' && (
+                              <CreditCard className={`h-5 w-5 ${iconColor}`} />
+                            )}
+                            {transaction.transaction_type === 'admin_adjustment' && (
+                              <Shield className={`h-5 w-5 ${iconColor}`} />
+                            )}
+                            {!['visit_rejected', 'provider_no_show', 'used_for_payment', 'admin_adjustment'].includes(transaction.transaction_type) && (
+                              <Wallet className={`h-5 w-5 ${iconColor}`} />
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900">
+                              {transaction.transaction_type === 'visit_rejected' && '❌ Visite refusée'}
+                              {transaction.transaction_type === 'provider_no_show' && '❌ Prestataire absent'}
+                              {transaction.transaction_type === 'used_for_payment' && '💳 Utilisé pour paiement'}
+                              {transaction.transaction_type === 'admin_adjustment' && (transaction.amount > 0 ? '✅ Crédit admin' : '❌ Débit admin')}
+                              {transaction.transaction_type === 'refund' && '✅ Remboursement'}
+                            </p>
+                            <p className="text-sm text-gray-500 truncate max-w-xs">
+                              {transaction.description}
+                            </p>
+                            <p className="text-xs text-gray-400 mt-1">
+                              {new Date(transaction.created_at).toLocaleDateString('fr-FR', {
+                                day: 'numeric',
+                                month: 'long',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-medium text-gray-900">
-                            {transaction.transaction_type === 'visit_rejected' && 'Visite refusée'}
-                            {transaction.transaction_type === 'provider_no_show' && 'Prestataire absent'}
-                            {transaction.transaction_type === 'used_for_payment' && 'Utilisé pour paiement'}
-                            {transaction.transaction_type === 'admin_adjustment' && 'Ajustement admin'}
-                            {transaction.transaction_type === 'refund' && 'Remboursement'}
+                        <div className="text-right">
+                          <p className={`text-lg font-bold ${amountColor}`}>
+                            {transaction.amount > 0 ? '+' : ''}{transaction.amount.toLocaleString('fr-FR')} GNF
                           </p>
-                          <p className="text-sm text-gray-500 truncate max-w-xs">
-                            {transaction.description}
-                          </p>
-                          <p className="text-xs text-gray-400 mt-1">
-                            {new Date(transaction.created_at).toLocaleDateString('fr-FR', {
-                              day: 'numeric',
-                              month: 'long',
-                              year: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
+                          <p className="text-xs text-gray-400">
+                            Solde: {transaction.balance_after.toLocaleString('fr-FR')} GNF
                           </p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className={`text-lg font-bold ${
-                          transaction.amount > 0 ? 'text-green-600' : 'text-red-600'
-                        }`}>
-                          {transaction.amount > 0 ? '+' : ''}{transaction.amount.toLocaleString('fr-FR')} GNF
-                        </p>
-                        <p className="text-xs text-gray-400">
-                          Solde: {transaction.balance_after.toLocaleString('fr-FR')} GNF
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </Card>
