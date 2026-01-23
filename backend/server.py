@@ -2038,7 +2038,7 @@ async def update_visit_request(visit_id: str, update_data: VisitRequestUpdate, c
         if request.get('payment_status') == 'paid':
             customer = await db.customers.find_one({'phone_number': request.get('customer_phone')}, {'_id': 0})
             if customer:
-                credit_amount = request.get('visit_fee', 0) or 0
+                credit_amount = request.get('frais_visite', 0) or 0
                 if credit_amount > 0:
                     # Get current balance
                     current_balance = customer.get('balance', 0) or 0
