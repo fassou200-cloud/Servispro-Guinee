@@ -320,6 +320,9 @@ class RentalListingCreate(BaseModel):
     description: str
     location: str
     rental_price: Optional[float] = None  # For long-term rentals (monthly)
+    # New fields for long-term rentals
+    caution: Optional[float] = None  # Security deposit
+    mois_avance: Optional[int] = None  # Number of months advance payment
     # New fields for short-term rentals (Airbnb-style)
     rental_type: str = "long_term"  # "long_term" or "short_term"
     price_per_night: Optional[float] = None  # For short-term rentals
@@ -353,6 +356,9 @@ class RentalListing(BaseModel):
     description: str
     location: str
     rental_price: Optional[float] = None  # Optional for short-term rentals
+    # New fields for long-term rentals
+    caution: Optional[float] = None  # Security deposit
+    mois_avance: Optional[int] = None  # Number of months advance payment
     # New fields for short-term rentals
     rental_type: str = "long_term"
     price_per_night: Optional[float] = None
