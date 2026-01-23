@@ -4727,6 +4727,92 @@ async def get_customer_balance(current_customer: dict = Depends(get_current_cust
         'balance': customer.get('balance', 0) or 0
     }
 
+class PayWithCreditsRequest(BaseModel):
+    visit_request_id: Optional[str] = None
+    service_request_id: Optional[str] = None
+    amount: float
+
+@api_router.post("/customer/pay-with-credits")
+async def pay_with_credits(payment_data: PayWithCreditsRequest, current_customer: dict = Depends(get_current_customer)):
+    """Pay for a visit or service request using accumulated credits"""
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Get customer with current balance
+    customer = await db.customers.find_one({'id': current_customer['id']}, {'_id': 0})
+    if not customer:
+        raise HTTPException(status_code=404, detail="Client non trouvé")
+    
+    current_balance = customer.get('balance', 0) or 0
+    amount = payment_data.amount
+    
+    # Check if customer has enough balance
+    if current_balance < amount:
+        raise HTTPException(status_code=400, detail=f"Solde insuffisant. Votre solde: {current_balance} GNF, Montant requis: {amount} GNF")
+    
+    # Calculate new balance
+    new_balance = current_balance - amount
+    
+    # Update customer balance
+    await db.customers.update_one(
+        {'id': current_customer['id']},
+        {'$set': {'balance': new_balance}}
+    )
+    
+    # Determine what this payment is for
+    description = "Paiement par créances"
+    related_id = None
+    
+    if payment_data.visit_request_id:
+        visit = await db.visit_requests.find_one({'id': payment_data.visit_request_id})
+        if visit:
+            description = f"Paiement des frais de visite pour '{visit.get('rental_title', 'propriété')}'"
+            related_id = payment_data.visit_request_id
+    elif payment_data.service_request_id:
+        related_id = payment_data.service_request_id
+        description = "Paiement des frais de prestation"
+    
+    # Create credit transaction (negative amount = debit)
+    credit_transaction = {
+        'id': str(uuid.uuid4()),
+        'customer_id': current_customer['id'],
+        'customer_phone': current_customer.get('phone_number'),
+        'amount': -amount,  # Negative for debit
+        'transaction_type': 'used_for_payment',
+        'description': description,
+        'related_id': related_id,
+        'balance_after': new_balance,
+        'created_at': now
+    }
+    await db.credit_transactions.insert_one(credit_transaction)
+    
+    # Create a payment record
+    payment_id = str(uuid.uuid4())
+    payment_doc = {
+        'id': payment_id,
+        'visit_request_id': payment_data.visit_request_id,
+        'service_request_id': payment_data.service_request_id,
+        'customer_id': current_customer['id'],
+        'customer_phone': current_customer.get('phone_number'),
+        'customer_name': f"{customer.get('first_name', '')} {customer.get('last_name', '')}",
+        'amount': amount,
+        'currency': 'GNF',
+        'payment_method': 'credits',
+        'payment_type': 'visite' if payment_data.visit_request_id else 'service_request',
+        'status': 'completed',
+        'created_at': now,
+        'updated_at': now
+    }
+    await db.payments.insert_one(payment_doc)
+    
+    return {
+        'success': True,
+        'message': 'Paiement effectué avec vos créances',
+        'amount_paid': amount,
+        'previous_balance': current_balance,
+        'new_balance': new_balance,
+        'payment_id': payment_id
+    }
+
 @api_router.get("/customer/credit-history")
 async def get_customer_credit_history(current_customer: dict = Depends(get_current_customer)):
     """Get credit transaction history for a customer"""
