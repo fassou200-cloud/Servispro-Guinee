@@ -335,6 +335,8 @@ const CompanyDashboard = () => {
       const response = await axios.post(`${API}/company/rentals`, {
         ...rentalForm,
         rental_price: parseFloat(rentalForm.rental_price) || 0,
+        caution: rentalForm.rental_type === 'long_term' && rentalForm.caution ? parseFloat(rentalForm.caution) : null,
+        mois_avance: rentalForm.rental_type === 'long_term' && rentalForm.mois_avance ? parseInt(rentalForm.mois_avance) : null,
         price_per_night: rentalForm.rental_type === 'short_term' ? parseFloat(rentalForm.price_per_night) : null,
         min_nights: rentalForm.rental_type === 'short_term' ? parseInt(rentalForm.min_nights) : 1,
         max_guests: rentalForm.max_guests ? parseInt(rentalForm.max_guests) : null
