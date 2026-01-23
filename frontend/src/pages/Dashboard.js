@@ -38,7 +38,7 @@ const translateProfession = (profession) => {
     'Plombier': 'Plombier',
     'Macon': 'Maçon',
     'Menuisier': 'Menuisier',
-    'AgentImmobilier': 'Agent Immobilier',
+    'AgentImmobilier': 'Propriétaire immobilier',
     'Soudeur': 'Soudeur',
     'Camionneur': 'Camionneur (Location)',
     'Tracteur': 'Tracteur (Location)',

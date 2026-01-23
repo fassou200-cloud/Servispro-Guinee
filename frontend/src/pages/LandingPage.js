@@ -261,7 +261,7 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
       color: 'from-yellow-500 to-yellow-600'
     },
     {
-      name: 'Agent Immobilier',
+      name: 'Propriétaire immobilier',
       profession: 'AgentImmobilier',
       icon: Building,
       description: 'Location et vente immobilière',
@@ -1404,7 +1404,7 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
                   </div>
                   <div className="flex-1">
                     <p className="font-bold text-white">{detailProperty.agent_name || 'Agent ServisPro'}</p>
-                    <p className="text-sm text-gray-400">Agent Immobilier Vérifié</p>
+                    <p className="text-sm text-gray-400">Propriétaire immobilier Vérifié</p>
                   </div>
                   <Button 
                     className="bg-emerald-600 hover:bg-emerald-700 gap-2"
