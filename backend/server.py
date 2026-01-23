@@ -4650,6 +4650,206 @@ async def get_commission_revenue():
         }
     }
 
+# ==================== CUSTOMER CREDIT/BALANCE SYSTEM ====================
+
+@api_router.get("/customer/balance")
+async def get_customer_balance(current_customer: dict = Depends(get_current_customer)):
+    """Get the current balance/credit of a customer"""
+    customer = await db.customers.find_one({'id': current_customer['id']}, {'_id': 0})
+    if not customer:
+        raise HTTPException(status_code=404, detail="Client non trouvé")
+    
+    return {
+        'customer_id': customer['id'],
+        'customer_name': f"{customer['first_name']} {customer['last_name']}",
+        'balance': customer.get('balance', 0) or 0
+    }
+
+@api_router.get("/customer/credit-history")
+async def get_customer_credit_history(current_customer: dict = Depends(get_current_customer)):
+    """Get credit transaction history for a customer"""
+    transactions = await db.credit_transactions.find(
+        {'customer_id': current_customer['id']},
+        {'_id': 0}
+    ).sort('created_at', -1).to_list(50)
+    
+    return transactions
+
+@api_router.post("/customer/report-no-show/{job_id}")
+async def report_provider_no_show(job_id: str, current_customer: dict = Depends(get_current_customer)):
+    """Report that a provider didn't show up for a paid service - credits the customer"""
+    # Find the job/service request
+    job = await db.jobs.find_one({'id': job_id}, {'_id': 0})
+    if not job:
+        # Try to find in payments collection
+        payment = await db.payments.find_one({'job_id': job_id}, {'_id': 0})
+        if not payment:
+            raise HTTPException(status_code=404, detail="Demande de service non trouvée")
+        
+        # Verify this payment belongs to the customer
+        if payment.get('customer_phone') != current_customer.get('phone_number'):
+            raise HTTPException(status_code=403, detail="Non autorisé")
+        
+        # Check if payment was completed
+        if payment.get('status') != 'completed':
+            raise HTTPException(status_code=400, detail="Le paiement n'a pas été effectué")
+        
+        # Check if already reported
+        existing_report = await db.no_show_reports.find_one({'payment_id': payment['id']})
+        if existing_report:
+            raise HTTPException(status_code=400, detail="Ce signalement a déjà été fait")
+        
+        credit_amount = payment.get('amount', 0) or 0
+        
+        if credit_amount > 0:
+            now = datetime.now(timezone.utc).isoformat()
+            
+            # Get current balance
+            customer = await db.customers.find_one({'id': current_customer['id']}, {'_id': 0})
+            current_balance = customer.get('balance', 0) or 0
+            new_balance = current_balance + credit_amount
+            
+            # Update customer balance
+            await db.customers.update_one(
+                {'id': current_customer['id']},
+                {'$set': {'balance': new_balance}}
+            )
+            
+            # Create credit transaction record
+            credit_transaction = {
+                'id': str(uuid.uuid4()),
+                'customer_id': current_customer['id'],
+                'customer_phone': current_customer.get('phone_number'),
+                'amount': credit_amount,
+                'transaction_type': 'provider_no_show',
+                'description': f"Crédit suite à la non-présentation du prestataire {payment.get('provider_name', '')}",
+                'related_id': job_id,
+                'balance_after': new_balance,
+                'created_at': now
+            }
+            await db.credit_transactions.insert_one(credit_transaction)
+            
+            # Record the no-show report
+            no_show_report = {
+                'id': str(uuid.uuid4()),
+                'payment_id': payment['id'],
+                'job_id': job_id,
+                'customer_id': current_customer['id'],
+                'customer_phone': current_customer.get('phone_number'),
+                'provider_id': payment.get('provider_id'),
+                'provider_name': payment.get('provider_name'),
+                'amount_credited': credit_amount,
+                'status': 'credited',
+                'created_at': now
+            }
+            await db.no_show_reports.insert_one(no_show_report)
+            
+            # Create notification
+            notification_doc = {
+                'id': str(uuid.uuid4()),
+                'customer_phone': current_customer.get('phone_number'),
+                'customer_id': current_customer['id'],
+                'user_type': 'customer',
+                'title': '💰 Crédit ajouté - Non-présentation prestataire',
+                'message': f"Suite à la non-présentation du prestataire, un crédit de {credit_amount:,.0f} GNF a été ajouté à votre solde.\nNouveau solde: {new_balance:,.0f} GNF",
+                'notification_type': 'provider_no_show_credit',
+                'related_id': job_id,
+                'credit_amount': credit_amount,
+                'is_read': False,
+                'created_at': now
+            }
+            await db.customer_notifications.insert_one(notification_doc)
+            
+            return {
+                'success': True,
+                'message': 'Signalement enregistré. Votre crédit a été ajouté.',
+                'credit_amount': credit_amount,
+                'new_balance': new_balance
+            }
+    
+    return {
+        'success': False,
+        'message': 'Impossible de traiter ce signalement'
+    }
+
+@api_router.post("/admin/customer/{customer_id}/adjust-balance")
+async def admin_adjust_customer_balance(
+    customer_id: str, 
+    amount: float = Query(..., description="Montant (positif pour crédit, négatif pour débit)"),
+    reason: str = Query(..., description="Raison de l'ajustement")
+):
+    """Admin endpoint to adjust a customer's balance"""
+    customer = await db.customers.find_one({'id': customer_id}, {'_id': 0})
+    if not customer:
+        raise HTTPException(status_code=404, detail="Client non trouvé")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    current_balance = customer.get('balance', 0) or 0
+    new_balance = current_balance + amount
+    
+    # Prevent negative balance
+    if new_balance < 0:
+        raise HTTPException(status_code=400, detail="Le solde ne peut pas être négatif")
+    
+    # Update customer balance
+    await db.customers.update_one(
+        {'id': customer_id},
+        {'$set': {'balance': new_balance}}
+    )
+    
+    # Create credit transaction record
+    credit_transaction = {
+        'id': str(uuid.uuid4()),
+        'customer_id': customer_id,
+        'customer_phone': customer.get('phone_number'),
+        'amount': amount,
+        'transaction_type': 'admin_adjustment',
+        'description': f"Ajustement administratif: {reason}",
+        'related_id': None,
+        'balance_after': new_balance,
+        'created_at': now
+    }
+    await db.credit_transactions.insert_one(credit_transaction)
+    
+    # Create notification for customer
+    if amount > 0:
+        notification_doc = {
+            'id': str(uuid.uuid4()),
+            'customer_phone': customer.get('phone_number'),
+            'customer_id': customer_id,
+            'user_type': 'customer',
+            'title': '💰 Crédit ajouté par l\'administration',
+            'message': f"Un crédit de {amount:,.0f} GNF a été ajouté à votre solde.\nRaison: {reason}\nNouveau solde: {new_balance:,.0f} GNF",
+            'notification_type': 'admin_credit',
+            'credit_amount': amount,
+            'is_read': False,
+            'created_at': now
+        }
+        await db.customer_notifications.insert_one(notification_doc)
+    
+    return {
+        'customer_id': customer_id,
+        'previous_balance': current_balance,
+        'adjustment': amount,
+        'new_balance': new_balance,
+        'reason': reason
+    }
+
+@api_router.get("/admin/customers-with-balance")
+async def get_customers_with_balance():
+    """Get all customers with their balance information"""
+    customers = await db.customers.find(
+        {},
+        {'_id': 0, 'password': 0}
+    ).to_list(1000)
+    
+    # Add balance info if missing
+    for customer in customers:
+        if 'balance' not in customer:
+            customer['balance'] = 0
+    
+    return customers
+
 # Include router
 app.include_router(api_router)
 
