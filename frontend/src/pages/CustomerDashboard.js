@@ -923,6 +923,160 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
             )}
           </div>
         )}
+
+        {/* Créances Tab */}
+        {activeTab === 'creances' && (
+          <div className="space-y-6">
+            {/* Balance Card */}
+            <Card className="p-6 rounded-2xl border-0 shadow-lg bg-gradient-to-br from-purple-600 to-indigo-700 text-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-purple-200 text-sm mb-1">Votre Solde de Créances</p>
+                  <p className="text-4xl font-bold">{balance.toLocaleString('fr-FR')} GNF</p>
+                  <p className="text-purple-200 text-sm mt-2">
+                    Utilisable pour vos prochains paiements
+                  </p>
+                </div>
+                <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center">
+                  <Wallet className="h-10 w-10 text-white" />
+                </div>
+              </div>
+            </Card>
+
+            {/* Info Cards */}
+            <div className="grid md:grid-cols-2 gap-4">
+              <Card className="p-5 rounded-2xl border-0 shadow-md bg-amber-50 border-l-4 border-amber-500">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0">
+                    <AlertTriangle className="h-5 w-5 text-amber-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-amber-800">Visite refusée</h4>
+                    <p className="text-sm text-amber-700 mt-1">
+                      Si un propriétaire refuse votre demande de visite après paiement, 
+                      le montant est automatiquement crédité sur votre solde.
+                    </p>
+                  </div>
+                </div>
+              </Card>
+              <Card className="p-5 rounded-2xl border-0 shadow-md bg-red-50 border-l-4 border-red-500">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center flex-shrink-0">
+                    <User className="h-5 w-5 text-red-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-red-800">Prestataire absent</h4>
+                    <p className="text-sm text-red-700 mt-1">
+                      Si un prestataire ne se présente pas après paiement, 
+                      signalez-le pour récupérer votre crédit.
+                    </p>
+                  </div>
+                </div>
+              </Card>
+            </div>
+
+            {/* Credit History */}
+            <Card className="p-6 rounded-2xl border-0 shadow-lg bg-white">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="text-xl font-heading font-bold text-gray-900">Historique des Créances</h3>
+                  <p className="text-sm text-gray-500">Vos transactions de crédit</p>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={fetchCreditHistory}
+                  className="gap-2"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  Actualiser
+                </Button>
+              </div>
+
+              {loadingBalance ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+                </div>
+              ) : creditHistory.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                    <CreditCard className="h-8 w-8 text-gray-400" />
+                  </div>
+                  <p className="text-gray-500">Aucune transaction de crédit pour le moment</p>
+                  <p className="text-sm text-gray-400 mt-1">
+                    Les créances apparaîtront ici lorsqu'un remboursement sera effectué
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {creditHistory.map((transaction) => (
+                    <div 
+                      key={transaction.id}
+                      className={`flex items-center justify-between p-4 rounded-xl border ${
+                        transaction.amount > 0 
+                          ? 'bg-green-50 border-green-200' 
+                          : 'bg-red-50 border-red-200'
+                      }`}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                          transaction.amount > 0 ? 'bg-green-100' : 'bg-red-100'
+                        }`}>
+                          {transaction.transaction_type === 'visit_rejected' && (
+                            <Building className={`h-5 w-5 ${transaction.amount > 0 ? 'text-green-600' : 'text-red-600'}`} />
+                          )}
+                          {transaction.transaction_type === 'provider_no_show' && (
+                            <User className={`h-5 w-5 ${transaction.amount > 0 ? 'text-green-600' : 'text-red-600'}`} />
+                          )}
+                          {transaction.transaction_type === 'used_for_payment' && (
+                            <CreditCard className={`h-5 w-5 ${transaction.amount > 0 ? 'text-green-600' : 'text-red-600'}`} />
+                          )}
+                          {transaction.transaction_type === 'admin_adjustment' && (
+                            <Shield className={`h-5 w-5 ${transaction.amount > 0 ? 'text-green-600' : 'text-red-600'}`} />
+                          )}
+                          {!['visit_rejected', 'provider_no_show', 'used_for_payment', 'admin_adjustment'].includes(transaction.transaction_type) && (
+                            <Wallet className={`h-5 w-5 ${transaction.amount > 0 ? 'text-green-600' : 'text-red-600'}`} />
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900">
+                            {transaction.transaction_type === 'visit_rejected' && 'Visite refusée'}
+                            {transaction.transaction_type === 'provider_no_show' && 'Prestataire absent'}
+                            {transaction.transaction_type === 'used_for_payment' && 'Utilisé pour paiement'}
+                            {transaction.transaction_type === 'admin_adjustment' && 'Ajustement admin'}
+                            {transaction.transaction_type === 'refund' && 'Remboursement'}
+                          </p>
+                          <p className="text-sm text-gray-500 truncate max-w-xs">
+                            {transaction.description}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-1">
+                            {new Date(transaction.created_at).toLocaleDateString('fr-FR', {
+                              day: 'numeric',
+                              month: 'long',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className={`text-lg font-bold ${
+                          transaction.amount > 0 ? 'text-green-600' : 'text-red-600'
+                        }`}>
+                          {transaction.amount > 0 ? '+' : ''}{transaction.amount.toLocaleString('fr-FR')} GNF
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          Solde: {transaction.balance_after.toLocaleString('fr-FR')} GNF
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+          </div>
+        )}
       </div>
     </div>
   );
