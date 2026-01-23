@@ -122,6 +122,54 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
     }
   };
 
+  const fetchBalance = async () => {
+    try {
+      const token = localStorage.getItem('customerToken');
+      const response = await axios.get(`${API}/customer/balance`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setBalance(response.data.balance || 0);
+    } catch (error) {
+      console.error('Failed to fetch balance:', error);
+    }
+  };
+
+  const fetchCreditHistory = async () => {
+    setLoadingBalance(true);
+    try {
+      const token = localStorage.getItem('customerToken');
+      const response = await axios.get(`${API}/customer/credit-history`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setCreditHistory(response.data || []);
+    } catch (error) {
+      console.error('Failed to fetch credit history:', error);
+      toast.error('Erreur lors du chargement de l\'historique');
+    } finally {
+      setLoadingBalance(false);
+    }
+  };
+
+  const reportNoShow = async (jobId) => {
+    try {
+      const token = localStorage.getItem('customerToken');
+      const response = await axios.post(`${API}/customer/report-no-show/${jobId}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.success) {
+        toast.success(response.data.message);
+        setBalance(response.data.new_balance);
+        fetchCreditHistory();
+        fetchJobs();
+      } else {
+        toast.error(response.data.message);
+      }
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Erreur lors du signalement'));
+    }
+  };
+
   const fetchPropertyInquiries = async () => {
     setLoadingInquiries(true);
     try {
