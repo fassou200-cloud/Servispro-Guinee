@@ -2134,6 +2134,68 @@ async def update_visit_request(visit_id: str, update_data: VisitRequestUpdate, c
         'message': status_messages.get(update_data.status.value, 'Statut mis à jour')
     }
 
+class VisitPaymentUpdate(BaseModel):
+    payment_status: str  # 'pending' or 'paid'
+    payment_method: Optional[str] = None
+    payment_phone: Optional[str] = None
+
+@api_router.put("/visit-requests/{visit_id}/payment")
+async def update_visit_payment_status(visit_id: str, payment_data: VisitPaymentUpdate):
+    """Update the payment status of a visit request"""
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Find the visit request
+    request = await db.visit_requests.find_one({'id': visit_id}, {'_id': 0})
+    if not request:
+        raise HTTPException(status_code=404, detail="Demande de visite non trouvée")
+    
+    # Update payment status
+    update_doc = {
+        'payment_status': payment_data.payment_status,
+        'updated_at': now
+    }
+    
+    if payment_data.payment_method:
+        update_doc['payment_method'] = payment_data.payment_method
+    if payment_data.payment_phone:
+        update_doc['payment_phone'] = payment_data.payment_phone
+    
+    if payment_data.payment_status == 'paid':
+        update_doc['paid_at'] = now
+        
+        # Create a payment record in the payments collection
+        payment_id = str(uuid.uuid4())
+        frais_visite = request.get('frais_visite', 0) or 0
+        
+        if frais_visite > 0:
+            payment_doc = {
+                'id': payment_id,
+                'visit_request_id': visit_id,
+                'rental_id': request.get('rental_id'),
+                'provider_id': request.get('provider_id'),
+                'customer_phone': request.get('customer_phone'),
+                'customer_name': request.get('customer_name'),
+                'amount': frais_visite,
+                'currency': 'GNF',
+                'payment_method': payment_data.payment_method or 'mobile_money',
+                'payment_type': 'visite',
+                'status': 'completed',
+                'created_at': now,
+                'updated_at': now
+            }
+            await db.payments.insert_one(payment_doc)
+    
+    await db.visit_requests.update_one(
+        {'id': visit_id},
+        {'$set': update_doc}
+    )
+    
+    return {
+        'id': visit_id,
+        'payment_status': payment_data.payment_status,
+        'message': 'Statut de paiement mis à jour'
+    }
+
 @api_router.get("/rentals/{rental_id}/visit-requests")
 async def get_rental_visit_requests(rental_id: str, current_user: dict = Depends(get_current_user)):
     """Get all visit requests for a specific rental"""
