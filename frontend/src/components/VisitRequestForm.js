@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { 
   Calendar, Clock, User, Phone, Mail, Send, CheckCircle, 
-  Eye, Loader2, AlertCircle, X, LogIn, CreditCard, Smartphone
+  Eye, Loader2, AlertCircle, X, LogIn, CreditCard, Smartphone, Wallet
 } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
@@ -26,6 +26,7 @@ const VisitRequestForm = ({ rental, onSuccess, onClose }) => {
   const [loading, setLoading] = useState(false);
   const [fraisVisite, setFraisVisite] = useState(null); // null = loading, number = loaded
   const [settings, setSettings] = useState({ devise: 'GNF' });
+  const [customerBalance, setCustomerBalance] = useState(0); // Customer credit balance
   
   // Payment flow states
   const [step, setStep] = useState(1); // 1: Form, 2: Payment, 3: OTP, 4: Processing, 5: Success
@@ -42,6 +43,18 @@ const VisitRequestForm = ({ rental, onSuccess, onClose }) => {
       const parsed = JSON.parse(storedCustomer);
       setCustomer(parsed);
       setPaymentPhone(parsed.phone_number || '');
+      
+      // Fetch customer balance
+      const token = localStorage.getItem('customerToken');
+      if (token) {
+        axios.get(`${API}/customer/balance`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }).then(res => {
+          setCustomerBalance(res.data.balance || 0);
+        }).catch(() => {
+          setCustomerBalance(0);
+        });
+      }
     }
     
     // Get frais de visite and settings - synchronized with admin settings
