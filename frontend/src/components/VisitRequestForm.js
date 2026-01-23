@@ -439,6 +439,8 @@ const VisitRequestForm = ({ rental, onSuccess, onClose }) => {
 
   // Step 2: Payment
   if (step === 2) {
+    const canPayWithCredits = customerBalance >= fraisVisite && fraisVisite > 0;
+    
     return (
       <Card className="p-6 bg-white border-slate-200 shadow-lg rounded-2xl relative">
         {onClose && (
@@ -462,7 +464,7 @@ const VisitRequestForm = ({ rental, onSuccess, onClose }) => {
         </div>
 
         {/* Amount */}
-        <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200 mb-6">
+        <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200 mb-4">
           <div className="flex items-center justify-between">
             <span className="text-green-700 font-medium">Montant à payer</span>
             <span className="text-2xl font-bold text-green-800">
@@ -471,10 +473,47 @@ const VisitRequestForm = ({ rental, onSuccess, onClose }) => {
           </div>
         </div>
 
+        {/* Customer Credit Balance */}
+        {customerBalance > 0 && (
+          <div className="p-4 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl border border-purple-200 mb-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Wallet className="h-5 w-5 text-purple-600" />
+                <span className="text-purple-700 font-medium">Votre solde de créances</span>
+              </div>
+              <span className="text-xl font-bold text-purple-800">
+                {formatPrice(customerBalance)} {settings.devise}
+              </span>
+            </div>
+            {canPayWithCredits && (
+              <p className="text-sm text-purple-600 mt-2">
+                ✓ Vous pouvez payer avec vos créances accumulées
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Payment Method */}
         <div className="space-y-4">
           <Label>Mode de paiement</Label>
-          <div className="grid grid-cols-2 gap-3">
+          <div className={`grid ${canPayWithCredits ? 'grid-cols-3' : 'grid-cols-2'} gap-3`}>
+            {/* Pay with Credits Option */}
+            {canPayWithCredits && (
+              <button
+                onClick={() => setPaymentMethod('credits')}
+                className={`p-4 rounded-xl border-2 transition-all ${
+                  paymentMethod === 'credits'
+                    ? 'border-purple-500 bg-purple-50'
+                    : 'border-slate-200 hover:border-purple-300'
+                }`}
+              >
+                <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
+                  <Wallet className="h-6 w-6 text-white" />
+                </div>
+                <p className="font-medium text-slate-900 text-sm">Créances</p>
+                <p className="text-xs text-purple-600 mt-1">{formatPrice(customerBalance)} disponible</p>
+              </button>
+            )}
             <button
               onClick={() => setPaymentMethod('orange_money')}
               className={`p-4 rounded-xl border-2 transition-all ${
@@ -486,7 +525,7 @@ const VisitRequestForm = ({ rental, onSuccess, onClose }) => {
               <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-orange-500 flex items-center justify-center">
                 <Smartphone className="h-6 w-6 text-white" />
               </div>
-              <p className="font-medium text-slate-900">Orange Money</p>
+              <p className="font-medium text-slate-900 text-sm">Orange Money</p>
             </button>
             <button
               onClick={() => setPaymentMethod('mtn_money')}
@@ -499,39 +538,60 @@ const VisitRequestForm = ({ rental, onSuccess, onClose }) => {
               <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-yellow-500 flex items-center justify-center">
                 <Smartphone className="h-6 w-6 text-white" />
               </div>
-              <p className="font-medium text-slate-900">MTN Money</p>
+              <p className="font-medium text-slate-900 text-sm">MTN Money</p>
             </button>
           </div>
 
-          <div className="space-y-2">
-            <Label>Numéro de téléphone</Label>
-            <Input
-              type="tel"
-              value={paymentPhone}
-              onChange={(e) => setPaymentPhone(e.target.value)}
-              placeholder="6XX XX XX XX"
-              className="h-12"
-            />
-          </div>
+          {/* Phone input only for mobile money */}
+          {paymentMethod !== 'credits' && (
+            <div className="space-y-2">
+              <Label>Numéro de téléphone</Label>
+              <Input
+                type="tel"
+                value={paymentPhone}
+                onChange={(e) => setPaymentPhone(e.target.value)}
+                placeholder="6XX XX XX XX"
+                className="h-12"
+              />
+            </div>
+          )}
 
-          <Button
-            onClick={handleSendOtp}
-            disabled={loading || !paymentPhone}
-            className={`w-full h-12 gap-2 ${
-              paymentMethod === 'orange_money'
-                ? 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700'
-                : 'bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700'
-            }`}
-          >
-            {loading ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
-            ) : (
-              <>
-                <Send className="h-5 w-5" />
-                Payer {formatPrice(fraisVisite)} {settings.devise}
-              </>
-            )}
-          </Button>
+          {/* Pay with Credits Button */}
+          {paymentMethod === 'credits' ? (
+            <Button
+              onClick={handlePayWithCredits}
+              disabled={loading || !canPayWithCredits}
+              className="w-full h-12 gap-2 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700"
+            >
+              {loading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <>
+                  <Wallet className="h-5 w-5" />
+                  Payer avec mes créances
+                </>
+              )}
+            </Button>
+          ) : (
+            <Button
+              onClick={handleSendOtp}
+              disabled={loading || !paymentPhone}
+              className={`w-full h-12 gap-2 ${
+                paymentMethod === 'orange_money'
+                  ? 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700'
+                  : 'bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700'
+              }`}
+            >
+              {loading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <>
+                  <Send className="h-5 w-5" />
+                  Payer {formatPrice(fraisVisite)} {settings.devise}
+                </>
+              )}
+            </Button>
+          )}
 
           <Button
             variant="outline"
