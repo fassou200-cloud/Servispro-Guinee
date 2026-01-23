@@ -1648,6 +1648,8 @@ async def create_rental_listing(listing_data: RentalListingCreate, current_user:
         'description': listing_data.description,
         'location': listing_data.location,
         'rental_price': listing_data.rental_price,
+        'caution': listing_data.caution,
+        'mois_avance': listing_data.mois_avance,
         # New short-term rental fields
         'rental_type': listing_data.rental_type,
         'price_per_night': listing_data.price_per_night,
