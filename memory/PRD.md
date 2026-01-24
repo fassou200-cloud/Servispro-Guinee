@@ -146,6 +146,23 @@ Construire une plateforme nommée "ServisPro" pour les prestataires de services 
   - Champ `custom_profession` ajouté au backend (RegisterInput, ProfileUpdate, ServiceProvider)
   - Champ texte visible lors de l'inscription quand "Autres" est sélectionné
   - Affichage de la profession personnalisée sur les pages BrowseProviders et ProviderProfile
+- ✅ **Admin Dashboard amélioré** :
+  - Suppression de l'onglet "Ventes Véhicules"
+  - Ajout de l'onglet "Demandes Immobilier" avec upload de documents admin
+  - Upload de documents pour les ventes immobilières (section Documents Admin)
+- ✅ **Nouveau Dashboard Prestataire moderne** :
+  - Design sombre avec glassmorphisme et dégradés
+  - Section héro avec avatar, badges et statistiques visuelles
+  - Cartes de demandes avec bordures colorées et effets hover
+  - Navigation par onglets avec gradient actif
+- ✅ **Nouvelle Page d'Accueil Client (CustomerHome.js)** :
+  - Design mobile-first simple et convivial
+  - Header avec logo ServisPro et localisation Conakry
+  - Image héro avec illustration de professionnels africains
+  - Barre de recherche "Rechercher un service ou un logement..."
+  - 2 gros boutons: "Trouver un professionnel" et "Trouver une maison"
+  - Catégories avec icônes rondes colorées (Électricien, Plombier, Mécanicien, Maçon, Location)
+  - Menu de navigation en bas (Accueil, Demandes, Messages, Favoris)
 - ✅ **Tests** : Backend et frontend fonctionnels
 
 ### 2026-01-19 - Système de Conversation Client-Admin pour Demandes d'Achat (NOUVEAU)
