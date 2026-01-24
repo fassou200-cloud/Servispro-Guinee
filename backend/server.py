@@ -3211,7 +3211,7 @@ async def upload_property_sale_document(
     
     doc_url = f"/api/uploads/{filename}"
     
-    if doc_type == 'documents_additionnels':
+    if doc_type in ['documents_additionnels', 'autres_documents']:
         await db.property_sales.update_one(
             {'id': sale_id},
             {
@@ -3233,8 +3233,11 @@ async def upload_property_sale_document(
     doc_labels = {
         'titre_foncier': 'Titre Foncier',
         'registration_ministere': 'Enregistrement Ministère de l\'Habitat',
+        'document_ministere_habitat': 'Document du Ministère de l\'Habitat',
+        'document_batiment': 'Document du Bâtiment',
         'seller_id_document': 'Pièce d\'Identité du Vendeur',
-        'documents_additionnels': 'Document Additionnel'
+        'documents_additionnels': 'Document Additionnel',
+        'autres_documents': 'Autre Document'
     }
     
     return {
