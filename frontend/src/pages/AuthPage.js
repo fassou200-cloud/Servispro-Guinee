@@ -411,25 +411,16 @@ const AuthPage = ({ setIsAuthenticated }) => {
                         </Select>
                       </div>
 
-                      {/* Quartier */}
+                      {/* Quartier - Plain text input */}
                       <div className="space-y-1">
                         <Label className="text-xs text-slate-500">Quartier</Label>
-                        <Select
+                        <Input
+                          type="text"
                           value={formData.quartier}
-                          onValueChange={(value) => setFormData({ ...formData, quartier: value })}
-                          disabled={!formData.commune}
-                        >
-                          <SelectTrigger className="h-10 rounded-lg border-slate-200 text-sm">
-                            <SelectValue placeholder="Quartier" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {quartiers.map((quartier) => (
-                              <SelectItem key={quartier} value={quartier}>
-                                {quartier}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                          onChange={(e) => setFormData({ ...formData, quartier: e.target.value })}
+                          placeholder="Entrez votre quartier"
+                          className="h-10 rounded-lg border-slate-200 text-sm"
+                        />
                       </div>
                     </div>
                   </div>
