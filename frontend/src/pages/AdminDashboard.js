@@ -316,7 +316,8 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
       refreshTabData('providers');
       setSelectedProvider(null);
     } catch (error) {
-      toast.error('Erreur lors de l\'approbation');
+      console.error('Approval error:', error);
+      toast.error(error.response?.data?.detail || 'Erreur lors de l\'approbation');
     }
   };
 
@@ -327,7 +328,8 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
       refreshTabData('providers');
       setSelectedProvider(null);
     } catch (error) {
-      toast.error('Erreur lors du rejet');
+      console.error('Reject error:', error);
+      toast.error(error.response?.data?.detail || 'Erreur lors du rejet');
     }
   };
 
