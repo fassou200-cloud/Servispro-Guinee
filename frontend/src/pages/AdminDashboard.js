@@ -633,6 +633,19 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
             Revenus
           </Button>
           <Button
+            variant={activeTab === 'refunds' ? 'default' : 'outline'}
+            onClick={() => { setActiveTab('refunds'); fetchRefundRequests(); }}
+            className={activeTab === 'refunds' ? 'bg-orange-600 hover:bg-orange-700' : 'border-slate-600 text-slate-300'}
+          >
+            <Banknote className="h-4 w-4 mr-2" />
+            Remboursements
+            {refundRequests.filter(r => r.status === 'pending').length > 0 && (
+              <span className="ml-2 px-2 py-0.5 bg-red-500 text-white text-xs rounded-full">
+                {refundRequests.filter(r => r.status === 'pending').length}
+              </span>
+            )}
+          </Button>
+          <Button
             variant={activeTab === 'settings' ? 'default' : 'outline'}
             onClick={() => setActiveTab('settings')}
             className={activeTab === 'settings' ? 'bg-purple-600 hover:bg-purple-700' : 'border-slate-600 text-slate-300'}
