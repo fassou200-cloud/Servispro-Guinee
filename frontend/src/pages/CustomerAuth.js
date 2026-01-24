@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { getRegions, getVillesByRegion, getCommunesByVille, getQuartiersByCommune } from '@/data/guineaLocations';
+import ForgotPassword from '@/components/ForgotPassword';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -17,6 +18,7 @@ const API = `${BACKEND_URL}/api`;
 const CustomerAuth = ({ setIsCustomerAuthenticated }) => {
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
