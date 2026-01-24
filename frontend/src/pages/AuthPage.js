@@ -315,7 +315,7 @@ const AuthPage = ({ setIsAuthenticated }) => {
                     </Label>
                     <Select
                       value={formData.profession}
-                      onValueChange={(value) => setFormData({ ...formData, profession: value })}
+                      onValueChange={(value) => setFormData({ ...formData, profession: value, custom_profession: '' })}
                       required={!isLogin}
                     >
                       <SelectTrigger data-testid="register-profession-select" className="h-12 rounded-xl border-slate-200">
@@ -339,6 +339,24 @@ const AuthPage = ({ setIsAuthenticated }) => {
                       </SelectContent>
                     </Select>
                   </div>
+
+                  {/* Custom Profession Field - Only shows when "Autres" is selected */}
+                  {formData.profession === 'Autres' && (
+                    <div className="space-y-2">
+                      <Label htmlFor="custom_profession" className="text-slate-700 font-medium text-sm">
+                        Précisez votre métier *
+                      </Label>
+                      <Input
+                        id="custom_profession"
+                        name="custom_profession"
+                        value={formData.custom_profession}
+                        onChange={(e) => setFormData({ ...formData, custom_profession: e.target.value })}
+                        required
+                        className="h-12 rounded-xl border-slate-200 focus:border-orange-500 focus:ring-orange-500"
+                        placeholder="Ex: Coiffeur, Photographe, Peintre..."
+                      />
+                    </div>
+                  )}
 
                   {/* Location Section */}
                   <div className="space-y-3 p-4 bg-slate-50 rounded-xl">
