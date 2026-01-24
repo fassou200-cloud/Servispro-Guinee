@@ -132,6 +132,21 @@ Construire une plateforme nommée "ServisPro" pour les prestataires de services 
 
 ## Changelog
 
+### 2026-01-25 - Affichage Documents Admin + Notifications Approbation
+- ✅ **Affichage des documents pour l'admin** :
+  - Admin peut voir tous les documents uploadés pour les ventes immobilières (Titre Foncier, Document Ministère de l'Habitat, Document du Bâtiment, Pièce d'Identité Vendeur, Documents Additionnels)
+  - Admin peut voir tous les documents uploadés pour les locations (mêmes types de documents)
+  - Section "Documents Légaux" avec icônes vertes pour documents présents et indication "Non fourni" pour documents manquants
+  - Liens cliquables pour ouvrir les documents dans un nouvel onglet
+- ✅ **Système de notifications pour approbations/rejets/suppressions** :
+  - Notification envoyée au propriétaire lors de l'approbation d'une vente
+  - Notification envoyée au propriétaire lors du rejet d'une vente (avec raison)
+  - Notification envoyée au propriétaire lors de la suppression d'une vente
+  - Notification envoyée au propriétaire lors de l'approbation d'une location
+  - Notification envoyée au propriétaire lors du rejet d'une location (avec raison)
+  - Notification envoyée au propriétaire lors de la suppression d'une location
+- ✅ **Tests** : 5/5 fonctionnalités frontend vérifiées avec succès (iteration_10.json)
+
 ### 2026-01-24 - "Mot de passe oublié" + Suppression de Catégories + Autres Métiers
 - ✅ **Fonctionnalité "Mot de passe oublié"** pour les prestataires et clients :
   - Composant ForgotPassword.js avec flux en 3 étapes (téléphone → OTP → nouveau mot de passe)
