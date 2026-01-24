@@ -2849,12 +2849,8 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                   <div className="flex items-center gap-2 text-sm text-slate-400">
                     <AlertCircle className="h-4 w-4" />
                     <span>
-                      Taux actuels: 
-                      Prestation <span className="text-orange-400 font-semibold">{commissionRevenue?.rates?.commission_prestation || settings.commission_prestation}%</span> | 
-                      Loc. Courte <span className="text-cyan-400 font-semibold">{commissionRevenue?.rates?.commission_location_courte || settings.commission_location_courte}%</span> | 
-                      Loc. Longue <span className="text-green-400 font-semibold">{commissionRevenue?.rates?.commission_location_longue || settings.commission_location_longue}%</span> | 
-                      Vente <span className="text-amber-400 font-semibold">{commissionRevenue?.rates?.commission_vente || settings.commission_vente}%</span> | 
-                      Véhicule <span className="text-purple-400 font-semibold">{commissionRevenue?.rates?.commission_location_vehicule || settings.commission_location_vehicule}%</span>
+                      Taux actuel: 
+                      Vente immobilière <span className="text-amber-400 font-semibold">{commissionRevenue?.rates?.commission_vente || settings.commission_vente}%</span>
                     </span>
                   </div>
                 </Card>
