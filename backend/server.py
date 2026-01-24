@@ -2660,6 +2660,66 @@ async def admin_mark_property_sold(sale_id: str):
     
     return {'message': 'Propriété marquée comme vendue', 'sale_id': sale_id}
 
+@api_router.post("/admin/property-sales/{sale_id}/documents")
+async def admin_upload_property_document(sale_id: str, document: UploadFile = File(...)):
+    """Admin: Upload a document for a property sale"""
+    # Verify sale exists
+    sale = await db.property_sales.find_one({'id': sale_id})
+    if not sale:
+        raise HTTPException(status_code=404, detail="Vente non trouvée")
+    
+    # Validate file type
+    allowed_types = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp']
+    if document.content_type not in allowed_types:
+        raise HTTPException(status_code=400, detail="Type de fichier non autorisé")
+    
+    # Save file
+    file_ext = document.filename.split('.')[-1] if '.' in document.filename else 'pdf'
+    filename = f"admin_doc_{sale_id}_{uuid.uuid4().hex[:8]}.{file_ext}"
+    file_path = f"/app/uploads/property_sales/{filename}"
+    
+    os.makedirs("/app/uploads/property_sales", exist_ok=True)
+    
+    content = await document.read()
+    with open(file_path, "wb") as f:
+        f.write(content)
+    
+    # Add to admin_documents array
+    document_url = f"/uploads/property_sales/{filename}"
+    await db.property_sales.update_one(
+        {'id': sale_id},
+        {
+            '$push': {'admin_documents': document_url},
+            '$set': {'updated_at': datetime.now(timezone.utc).isoformat()}
+        }
+    )
+    
+    return {'message': 'Document téléchargé', 'document_path': document_url}
+
+@api_router.delete("/admin/property-sales/{sale_id}/documents")
+async def admin_delete_property_document(sale_id: str, document_path: str = Body(..., embed=True)):
+    """Admin: Delete a document from a property sale"""
+    # Verify sale exists
+    sale = await db.property_sales.find_one({'id': sale_id})
+    if not sale:
+        raise HTTPException(status_code=404, detail="Vente non trouvée")
+    
+    # Remove from array
+    await db.property_sales.update_one(
+        {'id': sale_id},
+        {
+            '$pull': {'admin_documents': document_path},
+            '$set': {'updated_at': datetime.now(timezone.utc).isoformat()}
+        }
+    )
+    
+    # Delete file from disk
+    full_path = f"/app{document_path}"
+    if os.path.exists(full_path):
+        os.remove(full_path)
+    
+    return {'message': 'Document supprimé'}
+
 # ==================== PROPERTY SALE INQUIRIES (Demandes d'achat immobilier) ====================
 
 @api_router.post("/property-sales/{sale_id}/inquiries")
