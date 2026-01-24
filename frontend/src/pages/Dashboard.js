@@ -461,43 +461,57 @@ const Dashboard = ({ setIsAuthenticated }) => {
 
   // Regular Service Provider Dashboard
   return (
-    <div className="min-h-screen bg-muted">
-      {/* Header */}
-      <header className="bg-card border-b border-border sticky top-0 z-10">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      {/* Modern Header */}
+      <header className="bg-slate-900/80 backdrop-blur-xl border-b border-slate-700/50 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Button variant="ghost" onClick={() => window.location.href = '/'} className="gap-2">
+              <Button 
+                variant="ghost" 
+                onClick={() => window.location.href = '/'} 
+                className="gap-2 text-slate-300 hover:text-white hover:bg-slate-800"
+              >
                 <Home className="h-4 w-4" />
-                Accueil
+                <span className="hidden sm:inline">Accueil</span>
               </Button>
-              <h1 className="text-2xl font-heading font-bold text-foreground">
-                Tableau de Bord Prestataire
+              <div className="h-6 w-px bg-slate-700" />
+              <h1 className="text-xl font-heading font-bold text-white">
+                Mon Espace Pro
               </h1>
             </div>
-            <div className="flex items-center gap-6">
-              {/* Notification Badge for Pending Jobs */}
+            <div className="flex items-center gap-4">
+              {/* Notification Badge */}
               {stats.pending > 0 && (
-                <div className="flex items-center gap-2 px-3 py-1 bg-orange-100 text-orange-700 rounded-full animate-pulse">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-orange-500/20 text-orange-400 rounded-full border border-orange-500/30 animate-pulse">
                   <Bell className="h-4 w-4" />
-                  <span className="font-bold">{stats.pending} nouvelle{stats.pending > 1 ? 's' : ''} demande{stats.pending > 1 ? 's' : ''}</span>
+                  <span className="font-medium text-sm">{stats.pending} nouvelle{stats.pending > 1 ? 's' : ''}</span>
                 </div>
               )}
               <NotificationBell userType="provider" />
-              <div className="flex items-center gap-3">
-                <Label htmlFor="online-status" className={`font-heading text-xs uppercase tracking-wide ${user.online_status ? 'text-green-600' : 'text-slate-500'}`}>
-                  {user.online_status ? '🟢 En ligne' : '⚫ Hors ligne'}
-                </Label>
+              
+              {/* Online Status Toggle */}
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-800 rounded-full border border-slate-700">
+                <div className={`h-2 w-2 rounded-full ${user.online_status ? 'bg-green-500 animate-pulse' : 'bg-slate-500'}`} />
+                <span className={`text-sm font-medium ${user.online_status ? 'text-green-400' : 'text-slate-400'}`}>
+                  {user.online_status ? 'En ligne' : 'Hors ligne'}
+                </span>
                 <Switch
                   id="online-status"
                   data-testid="online-status-toggle"
                   checked={user.online_status}
                   onCheckedChange={toggleOnlineStatus}
+                  className="data-[state=checked]:bg-green-500"
                 />
               </div>
-              <Button variant="ghost" onClick={handleLogout} className="gap-2">
+              
+              <Button 
+                variant="ghost" 
+                onClick={handleLogout} 
+                className="gap-2 text-slate-400 hover:text-white hover:bg-slate-800"
+              >
                 <LogOut className="h-4 w-4" />
-                Déconnexion
+                <span className="hidden sm:inline">Déconnexion</span>
               </Button>
             </div>
           </div>
