@@ -635,7 +635,7 @@ const Dashboard = ({ setIsAuthenticated }) => {
             }`}
           >
             <TrendingUp className="h-4 w-4" />
-            Vue d'ensemble
+            Vue d&apos;ensemble
             {stats.pending > 0 && (
               <span className="ml-1 px-2 py-0.5 bg-orange-500 text-white text-xs rounded-full">{stats.pending}</span>
             )}
