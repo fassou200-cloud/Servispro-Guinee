@@ -163,7 +163,7 @@ const AuthPage = ({ setIsAuthenticated }) => {
         </div>
         
         <div className="relative z-10 flex flex-col justify-center p-12 text-white">
-          <div className="flex items-center gap-3 mb-6 cursor-pointer" onClick={() => navigate('/')}>
+          <div className="flex items-center gap-3 mb-8 cursor-pointer" onClick={() => navigate('/')}>
             <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
               <span className="text-3xl font-bold">S</span>
             </div>
@@ -173,55 +173,43 @@ const AuthPage = ({ setIsAuthenticated }) => {
             </div>
           </div>
           
-          <h2 className="text-3xl font-heading font-bold mb-4">
+          <h2 className="text-4xl font-heading font-bold mb-6">
             {formData.profession === 'AgentImmobilier' ? 'Espace Propriétaire Immobilier' : 'Espace Prestataire'}
           </h2>
-          <p className="text-lg opacity-90 mb-6 leading-relaxed">
+          <p className="text-xl opacity-90 mb-10 leading-relaxed">
             {formData.profession === 'AgentImmobilier' 
               ? 'Publiez vos biens immobiliers et trouvez des locataires ou acheteurs en Guinée.'
-              : 'Rejoignez la première plateforme de services professionnels en Guinée.'
+              : 'Rejoignez la première plateforme de services professionnels en Guinée. Développez votre activité et trouvez de nouveaux clients.'
             }
           </p>
-
-          {/* Representative Image */}
-          <div className="mb-6 rounded-2xl overflow-hidden shadow-2xl">
-            <img 
-              src={formData.profession === 'AgentImmobilier'
-                ? 'https://images.unsplash.com/photo-1668642538782-9579e75b0f4b?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzB8MHwxfHNlYXJjaHwyfHxyZWFsJTIwZXN0YXRlJTIwYWdlbnQlMjBob3VzZSUyMHByb3BlcnR5JTIwbW9kZXJuJTIwaG9tZSUyMGJ1aWxkaW5nfGVufDB8fHx8MTc2OTI5MzQ3OXww&ixlib=rb-4.1.0&q=85&w=600'
-                : 'https://customer-assets.emergentagent.com/job_servispro-guinea-3/artifacts/26crrdv7_image.png'
-              }
-              alt={formData.profession === 'AgentImmobilier' ? 'Maison moderne' : 'Équipe de professionnels'}
-              className="w-full h-48 object-cover"
-            />
-          </div>
           
-          <div className="space-y-3">
+          <div className="space-y-4">
             {features.map((feature, index) => {
               const Icon = feature.icon;
               return (
-                <div key={index} className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                    <Icon className="h-5 w-5" />
+                <div key={index} className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                    <Icon className="h-6 w-6" />
                   </div>
-                  <span className="text-base">{feature.text}</span>
+                  <span className="text-lg">{feature.text}</span>
                 </div>
               );
             })}
           </div>
 
           {/* Stats */}
-          <div className="mt-8 grid grid-cols-3 gap-4">
+          <div className="mt-12 grid grid-cols-3 gap-6">
             <div>
-              <div className="text-2xl font-bold">500+</div>
-              <div className="text-xs opacity-80">Prestataires</div>
+              <div className="text-3xl font-bold">500+</div>
+              <div className="text-sm opacity-80">Prestataires</div>
             </div>
             <div>
-              <div className="text-2xl font-bold">2000+</div>
-              <div className="text-xs opacity-80">Services</div>
+              <div className="text-3xl font-bold">2000+</div>
+              <div className="text-sm opacity-80">Services</div>
             </div>
             <div>
-              <div className="text-2xl font-bold">4.8</div>
-              <div className="text-xs opacity-80">Note Moyenne</div>
+              <div className="text-3xl font-bold">4.8</div>
+              <div className="text-sm opacity-80">Note Moyenne</div>
             </div>
           </div>
         </div>
