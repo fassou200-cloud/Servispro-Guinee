@@ -976,7 +976,7 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
         {/* Créances Tab */}
         {activeTab === 'creances' && (
           <div className="space-y-6">
-            {/* Balance Card */}
+            {/* Balance Card with Refund Button */}
             <Card className="p-6 rounded-2xl border-0 shadow-lg bg-gradient-to-br from-purple-600 to-indigo-700 text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -986,11 +986,110 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
                     Utilisable pour vos prochains paiements
                   </p>
                 </div>
-                <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center">
-                  <Wallet className="h-10 w-10 text-white" />
+                <div className="flex flex-col items-center gap-3">
+                  <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center">
+                    <Wallet className="h-10 w-10 text-white" />
+                  </div>
+                  {balance > 0 && (
+                    <Button
+                      onClick={() => setShowRefundForm(true)}
+                      className="bg-white text-purple-700 hover:bg-purple-100 text-sm"
+                      size="sm"
+                    >
+                      <Banknote className="h-4 w-4 mr-1" />
+                      Demander remboursement
+                    </Button>
+                  )}
                 </div>
               </div>
             </Card>
+
+            {/* Refund Request Form */}
+            {showRefundForm && (
+              <Card className="p-6 rounded-2xl border-0 shadow-lg bg-white border-2 border-purple-200">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-bold text-gray-900">Demande de Remboursement</h3>
+                  <button onClick={() => setShowRefundForm(false)} className="p-1 hover:bg-gray-100 rounded-full">
+                    <X className="h-5 w-5 text-gray-500" />
+                  </button>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Montant à rembourser (GNF)</label>
+                    <input
+                      type="number"
+                      value={refundAmount}
+                      onChange={(e) => setRefundAmount(e.target.value)}
+                      max={balance}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder={`Maximum: ${balance.toLocaleString('fr-FR')} GNF`}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Raison de la demande</label>
+                    <textarea
+                      value={refundReason}
+                      onChange={(e) => setRefundReason(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      rows={3}
+                      placeholder="Expliquez pourquoi vous souhaitez un remboursement..."
+                    />
+                  </div>
+                  <Button
+                    onClick={() => requestRefund(refundAmount, refundReason)}
+                    disabled={!refundAmount || parseFloat(refundAmount) <= 0 || parseFloat(refundAmount) > balance || !refundReason}
+                    className="w-full bg-purple-600 hover:bg-purple-700"
+                  >
+                    <Send className="h-4 w-4 mr-2" />
+                    Envoyer la demande
+                  </Button>
+                </div>
+              </Card>
+            )}
+
+            {/* Pending Refund Requests */}
+            {refundRequests.length > 0 && (
+              <Card className="p-6 rounded-2xl border-0 shadow-lg bg-white">
+                <h3 className="text-lg font-bold text-gray-900 mb-4">Mes Demandes de Remboursement</h3>
+                <div className="space-y-3">
+                  {refundRequests.map((request) => (
+                    <div 
+                      key={request.id}
+                      className={`p-4 rounded-xl border ${
+                        request.status === 'pending' ? 'bg-yellow-50 border-yellow-200' :
+                        request.status === 'approved' ? 'bg-green-50 border-green-200' :
+                        'bg-red-50 border-red-200'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-semibold text-gray-900">{request.amount.toLocaleString('fr-FR')} GNF</p>
+                          <p className="text-sm text-gray-500 mt-1">{request.reason}</p>
+                          <p className="text-xs text-gray-400 mt-1">
+                            {new Date(request.created_at).toLocaleDateString('fr-FR', {
+                              day: 'numeric', month: 'long', year: 'numeric'
+                            })}
+                          </p>
+                        </div>
+                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                          request.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                          request.status === 'approved' ? 'bg-green-100 text-green-800' :
+                          'bg-red-100 text-red-800'
+                        }`}>
+                          {request.status === 'pending' ? 'En attente' :
+                           request.status === 'approved' ? 'Approuvé' : 'Refusé'}
+                        </span>
+                      </div>
+                      {request.admin_note && (
+                        <p className="text-sm text-gray-600 mt-2 pt-2 border-t border-gray-200">
+                          <strong>Note admin:</strong> {request.admin_note}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
 
             {/* Info Cards */}
             <div className="grid md:grid-cols-2 gap-4">
