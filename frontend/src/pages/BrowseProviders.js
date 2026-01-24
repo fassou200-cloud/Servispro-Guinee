@@ -349,7 +349,7 @@ const BrowseProviders = ({ isCustomerAuthenticated }) => {
                         </h3>
                         <div className="flex items-center gap-2 text-sm text-gray-500">
                           <Icon className="h-4 w-4" />
-                          {translateProfession(provider.profession)}
+                          {translateProfession(provider.profession, provider.custom_profession)}
                         </div>
                       </div>
                       
