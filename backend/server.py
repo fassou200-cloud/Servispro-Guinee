@@ -793,6 +793,7 @@ async def register(input_data: RegisterInput):
         'phone_number': input_data.phone_number,
         'password': hashed_pwd,
         'profession': input_data.profession.value,
+        'custom_profession': input_data.custom_profession if input_data.profession == ProfessionType.AUTRES else None,
         'about_me': '',
         'profile_picture': None,
         'id_verification_picture': None,
