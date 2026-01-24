@@ -151,7 +151,11 @@ const AuthPage = ({ setIsAuthenticated }) => {
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 relative overflow-hidden">
+      <div className={`hidden lg:flex lg:w-1/2 relative overflow-hidden ${
+        formData.profession === 'AgentImmobilier' 
+          ? 'bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-600' 
+          : 'bg-gradient-to-br from-amber-500 via-orange-500 to-red-500'
+      }`}>
         <div className="absolute inset-0 opacity-20">
           <div className="absolute top-20 left-20 w-72 h-72 bg-white rounded-full blur-3xl" />
           <div className="absolute bottom-20 right-20 w-96 h-96 bg-white rounded-full blur-3xl" />
@@ -159,51 +163,65 @@ const AuthPage = ({ setIsAuthenticated }) => {
         </div>
         
         <div className="relative z-10 flex flex-col justify-center p-12 text-white">
-          <div className="flex items-center gap-3 mb-8 cursor-pointer" onClick={() => navigate('/')}>
+          <div className="flex items-center gap-3 mb-6 cursor-pointer" onClick={() => navigate('/')}>
             <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
               <span className="text-3xl font-bold">S</span>
             </div>
             <div>
               <h1 className="text-2xl font-heading font-bold">ServisPro</h1>
-              <p className="text-sm text-orange-100">Guinée 🇬🇳</p>
+              <p className="text-sm opacity-80">Guinée 🇬🇳</p>
             </div>
           </div>
           
-          <h2 className="text-4xl font-heading font-bold mb-6">
-            Espace Prestataire
+          <h2 className="text-3xl font-heading font-bold mb-4">
+            {formData.profession === 'AgentImmobilier' ? 'Espace Propriétaire Immobilier' : 'Espace Prestataire'}
           </h2>
-          <p className="text-xl text-orange-100 mb-10 leading-relaxed">
-            Rejoignez la première plateforme de services professionnels en Guinée. 
-            Développez votre activité et trouvez de nouveaux clients.
+          <p className="text-lg opacity-90 mb-6 leading-relaxed">
+            {formData.profession === 'AgentImmobilier' 
+              ? 'Publiez vos biens immobiliers et trouvez des locataires ou acheteurs en Guinée.'
+              : 'Rejoignez la première plateforme de services professionnels en Guinée.'
+            }
           </p>
+
+          {/* Representative Image */}
+          <div className="mb-6 rounded-2xl overflow-hidden shadow-2xl">
+            <img 
+              src={formData.profession === 'AgentImmobilier'
+                ? 'https://images.unsplash.com/photo-1668642538782-9579e75b0f4b?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzB8MHwxfHNlYXJjaHwyfHxyZWFsJTIwZXN0YXRlJTIwYWdlbnQlMjBob3VzZSUyMHByb3BlcnR5JTIwbW9kZXJuJTIwaG9tZSUyMGJ1aWxkaW5nfGVufDB8fHx8MTc2OTI5MzQ3OXww&ixlib=rb-4.1.0&q=85&w=600'
+                : 'https://customer-assets.emergentagent.com/job_servispro-guinea-3/artifacts/26crrdv7_image.png'
+              }
+              alt={formData.profession === 'AgentImmobilier' ? 'Maison moderne' : 'Équipe de professionnels'}
+              className="w-full h-48 object-cover"
+            />
+          </div>
           
-          <div className="space-y-4">
+          <div className="space-y-3">
             {features.map((feature, index) => {
               const Icon = feature.icon;
               return (
-                <div key={index} className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                    <Icon className="h-6 w-6" />
+                <div key={index} className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                    <Icon className="h-5 w-5" />
                   </div>
-                  <span className="text-lg">{feature.text}</span>
+                  <span className="text-base">{feature.text}</span>
                 </div>
               );
             })}
           </div>
 
           {/* Stats */}
-          <div className="mt-12 grid grid-cols-3 gap-6">
+          <div className="mt-8 grid grid-cols-3 gap-4">
             <div>
-              <div className="text-3xl font-bold">500+</div>
-              <div className="text-sm text-orange-200">Prestataires</div>
+              <div className="text-2xl font-bold">500+</div>
+              <div className="text-xs opacity-80">Prestataires</div>
             </div>
             <div>
-              <div className="text-3xl font-bold">2000+</div>
-              <div className="text-sm text-orange-200">Services</div>
+              <div className="text-2xl font-bold">2000+</div>
+              <div className="text-xs opacity-80">Services</div>
             </div>
             <div>
-              <div className="text-3xl font-bold">4.8</div>
-              <div className="text-sm text-orange-200">Note Moyenne</div>
+              <div className="text-2xl font-bold">4.8</div>
+              <div className="text-xs opacity-80">Note Moyenne</div>
             </div>
           </div>
         </div>
