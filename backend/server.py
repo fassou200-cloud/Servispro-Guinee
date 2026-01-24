@@ -115,6 +115,7 @@ class RegisterInput(BaseModel):
     phone_number: str
     password: str
     profession: ProfessionType
+    custom_profession: Optional[str] = None
     
     @field_validator('phone_number')
     def validate_phone(cls, v):
