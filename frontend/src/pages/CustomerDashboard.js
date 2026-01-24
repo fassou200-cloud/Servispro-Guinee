@@ -99,6 +99,7 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
     } else if (tabParam === 'creances') {
       setActiveTab('creances');
       fetchCreditHistory();
+      fetchRefundRequests();
     }
   }, [searchParams]);
 
@@ -107,6 +108,7 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
       fetchPropertyInquiries();
     } else if (activeTab === 'creances') {
       fetchCreditHistory();
+      fetchRefundRequests();
     }
   }, [activeTab]);
 
