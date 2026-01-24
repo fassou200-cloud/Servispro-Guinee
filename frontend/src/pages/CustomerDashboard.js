@@ -223,6 +223,10 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
     setLoadingInquiries(true);
     try {
       const token = localStorage.getItem('customerToken');
+      if (!token) {
+        setPropertyInquiries([]);
+        return;
+      }
       const response = await axios.get(`${API}/customer/property-inquiries`, {
         headers: { Authorization: `Bearer ${token}` }
       });
