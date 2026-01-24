@@ -266,7 +266,29 @@ const CompanyAuth = ({ setIsCompanyAuthenticated }) => {
       </div>
 
       <div className="flex items-center justify-center min-h-screen py-20 px-4">
-        <Card className="w-full max-w-2xl p-8 bg-slate-800/50 border-slate-700 backdrop-blur">
+        <div className="w-full max-w-5xl flex flex-col lg:flex-row gap-8 items-center">
+          {/* Left Side - Image */}
+          <div className="hidden lg:block flex-1">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-3xl blur-2xl"></div>
+              <div className="relative bg-slate-800/50 rounded-3xl p-6 border border-slate-700">
+                <img 
+                  src="https://images.unsplash.com/photo-1758518731468-98e90ffd7430?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODd8MHwxfHNlYXJjaHw0fHxidXNpbmVzcyUyMHRlYW0lMjBtZWV0aW5nJTIwb2ZmaWNlJTIwcHJvZmVzc2lvbmFsJTIwY29tcGFueSUyMGNvcnBvcmF0ZXxlbnwwfHx8fDE3NjkyOTMzNDB8MA&ixlib=rb-4.1.0&q=85&w=600"
+                  alt="Équipe d'entreprise professionnelle"
+                  className="w-full h-auto rounded-2xl object-cover"
+                />
+                <div className="mt-6 text-center">
+                  <h3 className="text-xl font-bold text-white mb-2">Rejoignez ServisPro</h3>
+                  <p className="text-slate-400 text-sm">
+                    Publiez vos offres d'emploi et trouvez les meilleurs talents en Guinée
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Side - Form */}
+          <Card className="w-full lg:max-w-xl p-8 bg-slate-800/50 border-slate-700 backdrop-blur">
           {/* Logo/Icon */}
           <div className="flex justify-center mb-6">
             <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/30">
