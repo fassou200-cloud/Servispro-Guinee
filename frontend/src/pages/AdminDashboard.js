@@ -95,6 +95,11 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
   // Visit fees statistics
   const [visitFeesStats, setVisitFeesStats] = useState(null);
   const [loadingVisitFees, setLoadingVisitFees] = useState(false);
+  
+  // Refund requests state
+  const [refundRequests, setRefundRequests] = useState([]);
+  const [loadingRefunds, setLoadingRefunds] = useState(false);
+  const [processingRefund, setProcessingRefund] = useState(null);
 
   // Currency options
   const deviseOptions = [
