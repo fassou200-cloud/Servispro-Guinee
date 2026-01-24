@@ -124,6 +124,20 @@ const CompanyDashboard = () => {
   const [salePhotos, setSalePhotos] = useState([]);
   const [salePhotoPreviewUrls, setSalePhotoPreviewUrls] = useState([]);
   const [uploadingSaleFiles, setUploadingSaleFiles] = useState(false);
+  
+  // Sale documents state
+  const [saleDocuments, setSaleDocuments] = useState({
+    titre_foncier: null,
+    document_ministere_habitat: null,
+    document_batiment: null,
+    documents_additionnels: []
+  });
+  const [saleDocumentNames, setSaleDocumentNames] = useState({
+    titre_foncier: '',
+    document_ministere_habitat: '',
+    document_batiment: '',
+    documents_additionnels: []
+  });
 
   // Check if company is in real estate sector
   const isRealEstateSector = company?.sector === 'Immobilier';
