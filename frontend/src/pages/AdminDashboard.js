@@ -422,7 +422,8 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
         setSelectedRental({ ...selectedRental, approval_status: 'approved' });
       }
     } catch (error) {
-      toast.error('Erreur lors de l\'approbation');
+      console.error('Rental approval error:', error);
+      toast.error(error.response?.data?.detail || 'Erreur lors de l\'approbation');
     }
   };
 
