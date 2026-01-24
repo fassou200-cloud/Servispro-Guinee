@@ -411,6 +411,81 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
     }
   };
 
+  // Admin document upload for property sales
+  const handleAdminDocUpload = async (saleId, event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Type de fichier non autorisé. Utilisez PDF, JPG, PNG ou WEBP');
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Fichier trop volumineux (max 10MB)');
+      return;
+    }
+
+    setUploadingAdminDoc(true);
+    try {
+      const formData = new FormData();
+      formData.append('document', file);
+
+      const response = await axios.post(
+        `${API}/admin/property-sales/${saleId}/documents`,
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } }
+      );
+
+      toast.success('Document téléchargé avec succès !');
+      
+      // Update the selected sale with new document
+      if (selectedSale?.id === saleId) {
+        const adminDocs = selectedSale.admin_documents || [];
+        setSelectedSale({
+          ...selectedSale,
+          admin_documents: [...adminDocs, response.data.document_path]
+        });
+      }
+      
+      // Refresh data
+      refreshTabData('property-sales');
+    } catch (error) {
+      console.error('Document upload error:', error);
+      toast.error(error.response?.data?.detail || 'Erreur lors du téléchargement');
+    } finally {
+      setUploadingAdminDoc(false);
+      // Reset file input
+      event.target.value = '';
+    }
+  };
+
+  // Delete admin document
+  const handleDeleteAdminDoc = async (saleId, docPath) => {
+    try {
+      await axios.delete(`${API}/admin/property-sales/${saleId}/documents`, {
+        data: { document_path: docPath }
+      });
+      
+      toast.success('Document supprimé');
+      
+      // Update the selected sale
+      if (selectedSale?.id === saleId) {
+        setSelectedSale({
+          ...selectedSale,
+          admin_documents: (selectedSale.admin_documents || []).filter(d => d !== docPath)
+        });
+      }
+      
+      refreshTabData('property-sales');
+    } catch (error) {
+      toast.error('Erreur lors de la suppression');
+    }
+  };
+
   // Rental approval functions
   const handleApproveRental = async (rentalId) => {
     try {
