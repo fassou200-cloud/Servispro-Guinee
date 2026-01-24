@@ -69,6 +69,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [rentalFilter, setRentalFilter] = useState('all'); // all, long_term, short_term
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, type: null, id: null, name: '' });
+  const [uploadingAdminDoc, setUploadingAdminDoc] = useState(false);
   
   // Track which tabs have been loaded (for lazy loading)
   const [loadedTabs, setLoadedTabs] = useState({});
