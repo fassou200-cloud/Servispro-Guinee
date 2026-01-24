@@ -280,6 +280,35 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
     navigate('/');
   };
 
+  // Refund requests functions
+  const fetchRefundRequests = async () => {
+    setLoadingRefunds(true);
+    try {
+      const response = await axios.get(`${API}/admin/refund-requests`);
+      setRefundRequests(response.data || []);
+    } catch (error) {
+      console.error('Error fetching refund requests:', error);
+    } finally {
+      setLoadingRefunds(false);
+    }
+  };
+
+  const handleRefundDecision = async (requestId, status, adminNote = '') => {
+    setProcessingRefund(requestId);
+    try {
+      await axios.put(`${API}/admin/refund-requests/${requestId}`, {
+        status: status,
+        admin_note: adminNote
+      });
+      toast.success(status === 'approved' ? 'Remboursement approuvé' : 'Demande refusée');
+      fetchRefundRequests();
+    } catch (error) {
+      toast.error('Erreur lors du traitement');
+    } finally {
+      setProcessingRefund(null);
+    }
+  };
+
   const handleApproveProvider = async (providerId) => {
     try {
       await axios.put(`${API}/admin/providers/${providerId}/approve`);
