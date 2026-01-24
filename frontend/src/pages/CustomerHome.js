@@ -4,8 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
   Search, MapPin, Zap, Wrench, Droplet, Settings, Home, Heart,
-  MessageCircle, ClipboardList, User, ChevronRight, Building, Hammer,
-  Star, Shield, Clock, Users, ArrowRight, Sparkles
+  MessageCircle, ClipboardList, User, Building, Hammer
 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
