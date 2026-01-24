@@ -1950,7 +1950,7 @@ async def upload_rental_document(
     doc_url = f"/api/uploads/{filename}"
     
     # Update based on document type
-    if doc_type == 'documents_additionnels':
+    if doc_type in ['documents_additionnels', 'autres_documents']:
         await db.rental_listings.update_one(
             {'id': rental_id},
             {
