@@ -135,6 +135,19 @@ const CustomerAuth = ({ setIsCustomerAuthenticated }) => {
 
   const regions = getRegions();
 
+  // Show Forgot Password form
+  if (showForgotPassword) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 p-4">
+        <ForgotPassword 
+          userType="customer" 
+          onBack={() => setShowForgotPassword(false)}
+          onSuccess={() => setShowForgotPassword(false)}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Branding */}
