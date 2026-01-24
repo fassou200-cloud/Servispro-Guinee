@@ -381,7 +381,8 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
         setSelectedCompany({ ...selectedCompany, verification_status: 'approved' });
       }
     } catch (error) {
-      toast.error('Erreur lors de approbation');
+      console.error('Company approval error:', error);
+      toast.error(error.response?.data?.detail || 'Erreur lors de l\'approbation');
     }
   };
 
@@ -394,7 +395,8 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
         setSelectedCompany({ ...selectedCompany, verification_status: 'rejected' });
       }
     } catch (error) {
-      toast.error('Erreur lors du rejet');
+      console.error('Company reject error:', error);
+      toast.error(error.response?.data?.detail || 'Erreur lors du rejet');
     }
   };
 
