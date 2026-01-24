@@ -115,8 +115,7 @@ const ProfileForm = ({ user, setUser, onUpdate }) => {
       
       // Prepare data with proper type conversion
       const submitData = {
-        ...formData,
-        investigation_fee: formData.investigation_fee ? parseInt(formData.investigation_fee, 10) : null
+        ...formData
       };
       
       await axios.put(`${API}/profile/me`, submitData, {
