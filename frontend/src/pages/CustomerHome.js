@@ -139,9 +139,9 @@ const CustomerHome = ({ isCustomerAuthenticated }) => {
             {/* Right Image */}
             <div className="flex-1 relative">
               <img 
-                src="https://images.unsplash.com/photo-1622611935038-1c4caa0db5d2?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1Nzl8MHwxfHNlYXJjaHwyfHxkaXZlcnNlJTIwdGVhbSUyMHdvcmtlcnMlMjBwcm9mZXNzaW9uYWxzJTIwY29uc3RydWN0aW9uJTIwZWxlY3RyaWNpYW4lMjBwbHVtYmVyJTIwdG9nZXRoZXJ8ZW58MHx8fHwxNzY5Mjg1MDMyfDA&ixlib=rb-4.1.0&q=85&w=800"
-                alt="Équipe de professionnels ServisPro"
-                className="w-full h-80 object-cover rounded-2xl shadow-2xl"
+                src="https://customer-assets.emergentagent.com/job_servispro-guinea-3/artifacts/26crrdv7_image.png"
+                alt="Équipe de professionnels ServisPro - Électricien, Plombier, Mécanicien"
+                className="w-full h-80 object-contain rounded-2xl"
               />
               <div className="absolute -bottom-4 -left-4 bg-white rounded-xl p-4 shadow-lg">
                 <div className="flex items-center gap-3">
@@ -161,19 +161,17 @@ const CustomerHome = ({ isCustomerAuthenticated }) => {
         </div>
 
         {/* Hero Section - Mobile */}
-        <div className="md:hidden">
-          <div className="relative">
+        <div className="md:hidden bg-gradient-to-b from-green-50 to-white">
+          <div className="px-4 pt-4 pb-2">
+            <h1 className="text-gray-900 font-bold text-xl text-center mb-2">Des experts à votre service</h1>
+            <p className="text-gray-600 text-sm text-center">Électriciens, plombiers, mécaniciens...</p>
+          </div>
+          <div className="flex justify-center px-4">
             <img 
-              src="https://images.unsplash.com/photo-1622611935038-1c4caa0db5d2?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1Nzl8MHwxfHNlYXJjaHwyfHxkaXZlcnNlJTIwdGVhbSUyMHdvcmtlcnMlMjBwcm9mZXNzaW9uYWxzJTIwY29uc3RydWN0aW9uJTIwZWxlY3RyaWNpYW4lMjBwbHVtYmVyJTIwdG9nZXRoZXJ8ZW58MHx8fHwxNzY5Mjg1MDMyfDA&ixlib=rb-4.1.0&q=85&w=800"
-              alt="Équipe de professionnels ServisPro"
-              className="w-full h-48 object-cover"
+              src="https://customer-assets.emergentagent.com/job_servispro-guinea-3/artifacts/26crrdv7_image.png"
+              alt="Équipe de professionnels ServisPro - Électricien, Plombier, Mécanicien"
+              className="w-full max-w-xs h-44 object-contain"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent flex items-end p-4">
-              <div>
-                <h1 className="text-white font-bold text-xl">Des experts à votre service</h1>
-                <p className="text-white/80 text-sm">Électriciens, plombiers, mécaniciens...</p>
-              </div>
-            </div>
           </div>
         </div>
 
