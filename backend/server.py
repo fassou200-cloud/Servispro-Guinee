@@ -497,8 +497,6 @@ class ChatMessage(BaseModel):
 # Vehicle Listing Models
 class VehicleType(str, Enum):
     CAMION = "Camion"
-    TRACTEUR = "Tracteur"
-    VOITURE = "Voiture"
 
 class FuelType(str, Enum):
     ESSENCE = "Essence"
@@ -507,15 +505,15 @@ class FuelType(str, Enum):
     HYBRIDE = "Hybride"
 
 class VehicleListingCreate(BaseModel):
-    vehicle_type: str  # Camion, Tracteur, Voiture
+    vehicle_type: str  # Camion only
     brand: str  # Marque
     model: str  # Modèle
     year: int  # Année
     fuel_type: str  # Type de carburant
     transmission: str = "Manuelle"  # Manuelle ou Automatique
-    seats: Optional[int] = None  # Nombre de places (pour voitures)
+    seats: Optional[int] = None  # Nombre de places
     load_capacity: Optional[str] = None  # Capacité de charge (pour camions)
-    engine_power: Optional[str] = None  # Puissance moteur (pour tracteurs)
+    engine_power: Optional[str] = None  # Puissance moteur
     description: str
     location: str
     price_per_day: int  # Prix par jour en GNF
