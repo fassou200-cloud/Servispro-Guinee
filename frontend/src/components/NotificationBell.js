@@ -1,14 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { 
   Bell, X, Check, CheckCheck, CreditCard, Briefcase, 
-  AlertCircle, MessageCircle, Clock, Phone
+  AlertCircle, MessageCircle, Clock, Phone, Volume2, VolumeX
 } from 'lucide-react';
 import axios from 'axios';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
+
+// Notification sound (base64 encoded short beep)
+const NOTIFICATION_SOUND_URL = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJOVpJaGaV1gdH2LmJyXi3lkYGR0hI6Wl5KHdmVjZ3R+iZKWlI+BcmdlZ3J9iI+TkYt+cGdma3B6hIuQjoqAc2xqbHF4gYmNjIiAfnduam1xeH+FiYmGgX54c3BucHZ8gYaHhYJ+enZ0cnF0eH2BhISDgH16eHZ1dHV4e36BgoGAfnx6eXh3d3h6fH5/gIB/fnx7enl5eXl6e3x9fn5+fX18fHt7e3t7fHx9fX19fX19fX19fXx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8';
 
 const NotificationIcon = ({ type }) => {
   switch (type) {
@@ -21,6 +24,7 @@ const NotificationIcon = ({ type }) => {
       return <Check className="h-5 w-5 text-emerald-500" />;
     case 'job_rejected':
     case 'visit_rejected':
+    case 'visit_rejected_credit':
       return <X className="h-5 w-5 text-red-500" />;
     case 'job_completed':
       return <CheckCheck className="h-5 w-5 text-purple-500" />;
@@ -28,6 +32,12 @@ const NotificationIcon = ({ type }) => {
       return <AlertCircle className="h-5 w-5 text-amber-500" />;
     case 'visit_request':
       return <Clock className="h-5 w-5 text-blue-500" />;
+    case 'refund_approved':
+      return <CreditCard className="h-5 w-5 text-green-500" />;
+    case 'refund_rejected':
+      return <CreditCard className="h-5 w-5 text-red-500" />;
+    case 'provider_no_show_credit':
+      return <CreditCard className="h-5 w-5 text-orange-500" />;
     default:
       return <MessageCircle className="h-5 w-5 text-gray-500" />;
   }
@@ -39,6 +49,9 @@ const NotificationBell = ({ userType = 'provider' }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState(null);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [lastNotificationCount, setLastNotificationCount] = useState(0);
+  const audioRef = useRef(null);
 
   const getToken = () => {
     if (userType === 'provider') {
@@ -48,6 +61,50 @@ const NotificationBell = ({ userType = 'provider' }) => {
     }
     return null;
   };
+
+  // Play notification sound
+  const playNotificationSound = useCallback(() => {
+    if (!soundEnabled) return;
+    
+    try {
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+        audioRef.current.play().catch(e => console.log('Audio play failed:', e));
+      }
+    } catch (e) {
+      console.log('Sound error:', e);
+    }
+  }, [soundEnabled]);
+
+  // Trigger vibration
+  const triggerVibration = useCallback(() => {
+    try {
+      if ('vibrate' in navigator) {
+        navigator.vibrate([200, 100, 200]); // Vibrate pattern: 200ms, pause 100ms, 200ms
+      }
+    } catch (e) {
+      console.log('Vibration not supported');
+    }
+  }, []);
+
+  // Show browser notification
+  const showBrowserNotification = useCallback((title, message) => {
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification(title, {
+        body: message,
+        icon: '/favicon.ico',
+        badge: '/favicon.ico',
+        vibrate: [200, 100, 200]
+      });
+    }
+  }, []);
+
+  // Request notification permission on mount
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, []);
 
   const fetchNotifications = async () => {
     const token = getToken();
@@ -82,7 +139,24 @@ const NotificationBell = ({ userType = 'provider' }) => {
       const response = await axios.get(endpoint, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setUnreadCount(response.data.unread_count);
+      
+      const newCount = response.data.unread_count || 0;
+      
+      // Check if we have new notifications
+      if (newCount > lastNotificationCount && lastNotificationCount > 0) {
+        // New notification arrived!
+        playNotificationSound();
+        triggerVibration();
+        
+        // Try to show browser notification
+        showBrowserNotification(
+          'Nouvelle notification ServisPro',
+          'Vous avez reçu une nouvelle notification'
+        );
+      }
+      
+      setLastNotificationCount(newCount);
+      setUnreadCount(newCount);
     } catch (error) {
       console.error('Error fetching unread count:', error);
     }
@@ -95,6 +169,7 @@ const NotificationBell = ({ userType = 'provider' }) => {
         n.id === notificationId ? { ...n, is_read: true } : n
       ));
       setUnreadCount(prev => Math.max(0, prev - 1));
+      setLastNotificationCount(prev => Math.max(0, prev - 1));
     } catch (error) {
       console.error('Error marking notification as read:', error);
     }
@@ -114,18 +189,30 @@ const NotificationBell = ({ userType = 'provider' }) => {
       });
       setNotifications(notifications.map(n => ({ ...n, is_read: true })));
       setUnreadCount(0);
+      setLastNotificationCount(0);
     } catch (error) {
       console.error('Error marking all as read:', error);
     }
   };
 
-  // Fetch notifications when component mounts
+  // Initialize audio and fetch notifications
   useEffect(() => {
+    // Create audio element
+    audioRef.current = new Audio(NOTIFICATION_SOUND_URL);
+    audioRef.current.volume = 0.5;
+    
+    // Initial fetch
     fetchUnreadCount();
     
-    // Poll for new notifications every 30 seconds
-    const interval = setInterval(fetchUnreadCount, 30000);
-    return () => clearInterval(interval);
+    // Poll for new notifications every 10 seconds (faster polling)
+    const interval = setInterval(fetchUnreadCount, 10000);
+    
+    return () => {
+      clearInterval(interval);
+      if (audioRef.current) {
+        audioRef.current = null;
+      }
+    };
   }, [userType]);
 
   // Fetch full notifications when dropdown opens
@@ -147,8 +234,21 @@ const NotificationBell = ({ userType = 'provider' }) => {
     return date.toLocaleDateString('fr-FR');
   };
 
+  // Toggle sound
+  const toggleSound = (e) => {
+    e.stopPropagation();
+    setSoundEnabled(!soundEnabled);
+    if (!soundEnabled) {
+      // Play a test sound when enabling
+      playNotificationSound();
+    }
+  };
+
   return (
     <div className="relative">
+      {/* Hidden audio element for better compatibility */}
+      <audio ref={audioRef} preload="auto" />
+      
       {/* Bell Button */}
       <Button
         variant="ghost"
@@ -157,7 +257,7 @@ const NotificationBell = ({ userType = 'provider' }) => {
         className="relative"
         data-testid="notification-bell"
       >
-        <Bell className="h-5 w-5" />
+        <Bell className={`h-5 w-5 ${unreadCount > 0 ? 'animate-bounce' : ''}`} />
         {unreadCount > 0 && (
           <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-bold animate-pulse">
             {unreadCount > 9 ? '9+' : unreadCount}
@@ -178,7 +278,17 @@ const NotificationBell = ({ userType = 'provider' }) => {
           <Card className="absolute right-0 top-12 w-80 md:w-96 max-h-[70vh] overflow-hidden z-50 shadow-2xl rounded-2xl border-0">
             {/* Header */}
             <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between">
-              <h3 className="font-heading font-bold text-lg">Notifications</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="font-heading font-bold text-lg">Notifications</h3>
+                {/* Sound toggle */}
+                <button
+                  onClick={toggleSound}
+                  className={`p-1 rounded-full ${soundEnabled ? 'text-green-600 bg-green-50' : 'text-gray-400 bg-gray-100'}`}
+                  title={soundEnabled ? 'Son activé' : 'Son désactivé'}
+                >
+                  {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+                </button>
+              </div>
               {unreadCount > 0 && (
                 <Button
                   variant="ghost"
@@ -201,6 +311,9 @@ const NotificationBell = ({ userType = 'provider' }) => {
                 <div className="p-8 text-center text-gray-500">
                   <Bell className="h-12 w-12 mx-auto mb-3 text-gray-300" />
                   <p>Aucune notification</p>
+                  <p className="text-xs text-gray-400 mt-2">
+                    Les nouvelles notifications apparaîtront ici
+                  </p>
                 </div>
               ) : (
                 notifications.map((notification) => (
@@ -249,6 +362,15 @@ const NotificationBell = ({ userType = 'provider' }) => {
                                 </a>
                               </div>
                             )}
+                            {/* Show credit amount if available */}
+                            {notification.credit_amount && (
+                              <div className="mt-3 p-2 bg-purple-50 rounded-lg border border-purple-200 flex items-center gap-2">
+                                <CreditCard className="h-4 w-4 text-purple-600" />
+                                <span className="text-sm font-bold text-purple-700">
+                                  Crédit ajouté : {notification.credit_amount.toLocaleString('fr-FR')} GNF
+                                </span>
+                              </div>
+                            )}
                           </div>
                         ) : (
                           <p className="text-xs text-gray-500 mt-1 line-clamp-2">
@@ -258,7 +380,7 @@ const NotificationBell = ({ userType = 'provider' }) => {
                         
                         <div className="flex items-center gap-2 mt-2 text-xs text-gray-400">
                           <Clock className="h-3 w-3" />
-                          {formatTimeAgo(notification.created_at)}}
+                          {formatTimeAgo(notification.created_at)}
                         </div>
                       </div>
                       {!notification.is_read && (
