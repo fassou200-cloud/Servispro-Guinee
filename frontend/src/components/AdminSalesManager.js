@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { 
   DollarSign, MapPin, Phone, Mail, User, 
   Calendar, Clock, CheckCircle, XCircle, Eye, MessageCircle, 
-  Loader2, RefreshCw, AlertCircle, Send, Home, Building
+  Loader2, RefreshCw, AlertCircle, Send, Home, Building,
+  FileText, Upload, Trash2, ExternalLink, Paperclip
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
@@ -20,6 +21,8 @@ const AdminSalesManager = () => {
   const [selectedPropertyInquiry, setSelectedPropertyInquiry] = useState(null);
   const [processingId, setProcessingId] = useState(null);
   const [adminResponse, setAdminResponse] = useState('');
+  const [uploadingDoc, setUploadingDoc] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     fetchData();
@@ -96,6 +99,104 @@ const AdminSalesManager = () => {
       toast.error('Erreur lors de l\'envoi');
     } finally {
       setProcessingId(null);
+    }
+  };
+
+  // Document upload for property inquiry
+  const handleDocumentUpload = async (inquiryId, event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Type de fichier non autorisé. Utilisez PDF, JPG, PNG ou WEBP');
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Fichier trop volumineux (max 10MB)');
+      return;
+    }
+
+    setUploadingDoc(true);
+    try {
+      const formData = new FormData();
+      formData.append('document', file);
+
+      const response = await axios.post(
+        `${API}/admin/property-inquiries/${inquiryId}/documents`,
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } }
+      );
+
+      toast.success('Document téléchargé avec succès !');
+      
+      // Update the selected inquiry with new document
+      if (selectedPropertyInquiry?.id === inquiryId) {
+        const docs = selectedPropertyInquiry.admin_documents || [];
+        setSelectedPropertyInquiry({
+          ...selectedPropertyInquiry,
+          admin_documents: [...docs, response.data.document_path]
+        });
+      }
+      
+      // Update the list
+      setPropertyInquiries(prev =>
+        prev.map(i => {
+          if (i.id === inquiryId) {
+            return {
+              ...i,
+              admin_documents: [...(i.admin_documents || []), response.data.document_path]
+            };
+          }
+          return i;
+        })
+      );
+    } catch (error) {
+      console.error('Document upload error:', error);
+      toast.error(error.response?.data?.detail || 'Erreur lors du téléchargement');
+    } finally {
+      setUploadingDoc(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  // Delete document
+  const handleDeleteDocument = async (inquiryId, docPath) => {
+    try {
+      await axios.delete(`${API}/admin/property-inquiries/${inquiryId}/documents`, {
+        data: { document_path: docPath }
+      });
+      
+      toast.success('Document supprimé');
+      
+      // Update the selected inquiry
+      if (selectedPropertyInquiry?.id === inquiryId) {
+        setSelectedPropertyInquiry({
+          ...selectedPropertyInquiry,
+          admin_documents: (selectedPropertyInquiry.admin_documents || []).filter(d => d !== docPath)
+        });
+      }
+      
+      // Update the list
+      setPropertyInquiries(prev =>
+        prev.map(i => {
+          if (i.id === inquiryId) {
+            return {
+              ...i,
+              admin_documents: (i.admin_documents || []).filter(d => d !== docPath)
+            };
+          }
+          return i;
+        })
+      );
+    } catch (error) {
+      toast.error('Erreur lors de la suppression');
     }
   };
 
@@ -214,6 +315,12 @@ const AdminSalesManager = () => {
                       {inquiry.conversation.length} messages
                     </span>
                   )}
+                  {inquiry.admin_documents?.length > 0 && (
+                    <span className="flex items-center gap-1 text-amber-400">
+                      <Paperclip className="h-3 w-3" />
+                      {inquiry.admin_documents.length} docs
+                    </span>
+                  )}
                 </div>
               </Card>
             ))
@@ -282,6 +389,84 @@ const AdminSalesManager = () => {
                 <h4 className="font-medium text-white mb-2">Message du client</h4>
                 <p className="text-slate-300 p-3 bg-slate-700/50 rounded-lg">
                   {selectedPropertyInquiry.message}
+                </p>
+              </div>
+
+              {/* Admin Documents Section */}
+              <div className="mb-6 p-4 bg-slate-700/50 rounded-lg border border-amber-500/30">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-medium text-amber-400 flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Documents Admin
+                  </h4>
+                  <label className="cursor-pointer">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      className="hidden"
+                      accept=".pdf,.jpg,.jpeg,.png,.webp"
+                      onChange={(e) => handleDocumentUpload(selectedPropertyInquiry.id, e)}
+                      disabled={uploadingDoc}
+                    />
+                    <span className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                      uploadingDoc 
+                        ? 'bg-slate-600 text-slate-400 cursor-not-allowed' 
+                        : 'bg-amber-600 hover:bg-amber-700 text-white'
+                    }`}>
+                      {uploadingDoc ? (
+                        <>
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                          Envoi...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="h-3 w-3" />
+                          Ajouter
+                        </>
+                      )}
+                    </span>
+                  </label>
+                </div>
+                
+                {/* List of admin uploaded documents */}
+                {selectedPropertyInquiry.admin_documents && selectedPropertyInquiry.admin_documents.length > 0 ? (
+                  <div className="space-y-2">
+                    {selectedPropertyInquiry.admin_documents.map((doc, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center justify-between p-2 bg-slate-600/50 rounded hover:bg-slate-600 transition-colors"
+                      >
+                        <a
+                          href={`${BACKEND_URL}${doc}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 text-sm text-slate-300 hover:text-white"
+                        >
+                          <FileText className="h-4 w-4 text-amber-400" />
+                          Document {idx + 1}
+                          <ExternalLink className="h-3 w-3 text-slate-500" />
+                        </a>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteDocument(selectedPropertyInquiry.id, doc);
+                          }}
+                          className="h-6 w-6 p-0 text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-500 text-center py-2">
+                    Aucun document ajouté
+                  </p>
+                )}
+                <p className="text-xs text-slate-500 mt-2">
+                  PDF, JPG, PNG, WEBP (max 10MB)
                 </p>
               </div>
 
