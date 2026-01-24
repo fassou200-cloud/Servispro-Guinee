@@ -831,7 +831,7 @@ const Dashboard = ({ setIsAuthenticated }) => {
             {jobs.length === 0 ? (
               <Card className="p-8 text-center">
                 <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Aucun travail dans l'historique</p>
+                <p className="text-muted-foreground">Aucun travail dans l&apos;historique</p>
               </Card>
             ) : (
               jobs.map((job) => (
