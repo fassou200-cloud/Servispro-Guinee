@@ -31,6 +31,7 @@ const AuthPage = ({ setIsAuthenticated }) => {
     phone_number: '',
     password: '',
     profession: '',
+    custom_profession: '',
     region: '',
     ville: '',
     commune: '',
