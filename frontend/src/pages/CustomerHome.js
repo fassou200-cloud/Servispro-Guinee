@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Search, MapPin, Users, Star, Shield, Clock, ChevronRight, User, Building
+  Search, MapPin, Users, Star, Shield, Clock, ChevronRight, User, Building,
+  Zap, Droplet, Wrench, Hammer, Home
 } from 'lucide-react';
 
 const CustomerHome = ({ isCustomerAuthenticated }) => {
