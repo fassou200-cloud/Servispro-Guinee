@@ -546,6 +546,20 @@ const CompanyDashboard = () => {
   const handleCreateSaleStep2 = async () => {
     if (!createdSaleId) return;
     
+    // Validate required documents
+    if (!saleDocuments.titre_foncier) {
+      toast.error('Le Titre Foncier est obligatoire');
+      return;
+    }
+    if (!saleDocuments.document_ministere_habitat) {
+      toast.error('Le Document du Ministère de l\'Habitat est obligatoire');
+      return;
+    }
+    if (!saleDocuments.document_batiment) {
+      toast.error('Le Document du Bâtiment est obligatoire');
+      return;
+    }
+    
     setUploadingSaleFiles(true);
     const token = localStorage.getItem('companyToken');
 
@@ -556,6 +570,37 @@ const CompanyDashboard = () => {
         photoFormData.append('file', photo);
 
         await axios.post(`${API}/company/property-sales/${createdSaleId}/upload-photo`, photoFormData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+      }
+
+      // Upload required documents
+      const docTypes = ['titre_foncier', 'document_ministere_habitat', 'document_batiment'];
+      for (const docType of docTypes) {
+        if (saleDocuments[docType]) {
+          const docFormData = new FormData();
+          docFormData.append('file', saleDocuments[docType]);
+          docFormData.append('document_type', docType);
+
+          await axios.post(`${API}/company/property-sales/${createdSaleId}/upload-document`, docFormData, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'multipart/form-data'
+            }
+          });
+        }
+      }
+
+      // Upload additional documents
+      for (const doc of saleDocuments.documents_additionnels) {
+        const docFormData = new FormData();
+        docFormData.append('file', doc);
+        docFormData.append('document_type', 'autres_documents');
+
+        await axios.post(`${API}/company/property-sales/${createdSaleId}/upload-document`, docFormData, {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'multipart/form-data'
@@ -584,6 +629,18 @@ const CompanyDashboard = () => {
       });
       setSalePhotos([]);
       setSalePhotoPreviewUrls([]);
+      setSaleDocuments({
+        titre_foncier: null,
+        document_ministere_habitat: null,
+        document_batiment: null,
+        documents_additionnels: []
+      });
+      setSaleDocumentNames({
+        titre_foncier: '',
+        document_ministere_habitat: '',
+        document_batiment: '',
+        documents_additionnels: []
+      });
       setSaleStep(1);
       setCreatedSaleId(null);
       setActiveTab('sales');
@@ -592,7 +649,7 @@ const CompanyDashboard = () => {
       const res = await axios.get(`${API}/company/property-sales/my`, { headers: { Authorization: `Bearer ${token}` } });
       setSales(res.data);
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Erreur lors de l\'upload des photos'));
+      toast.error(getErrorMessage(error, 'Erreur lors de l\'upload des fichiers'));
     } finally {
       setUploadingSaleFiles(false);
     }
