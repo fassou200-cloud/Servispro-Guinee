@@ -389,6 +389,19 @@ const CustomerAuth = ({ setIsCustomerAuthenticated }) => {
                   </div>
                 </div>
 
+                {/* Forgot Password Link */}
+                {isLogin && (
+                  <div className="text-right">
+                    <button
+                      type="button"
+                      onClick={() => setShowForgotPassword(true)}
+                      className="text-sm text-green-600 hover:text-green-700 hover:underline"
+                    >
+                      Mot de passe oublié ?
+                    </button>
+                  </div>
+                )}
+
                 <Button
                   type="submit"
                   disabled={loading}
