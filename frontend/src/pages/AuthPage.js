@@ -39,7 +39,6 @@ const AuthPage = ({ setIsAuthenticated }) => {
   // Location options based on selections
   const [villes, setVilles] = useState([]);
   const [communes, setCommunes] = useState([]);
-  const [quartiers, setQuartiers] = useState([]);
 
   // Update villes when region changes
   useEffect(() => {
