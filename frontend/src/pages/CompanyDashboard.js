@@ -469,6 +469,48 @@ const CompanyDashboard = () => {
     setSalePhotoPreviewUrls(newPreviews);
   };
 
+  const handleSaleDocumentSelect = (docType, e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Le fichier est trop grand (max 10MB)');
+      return;
+    }
+
+    if (docType === 'documents_additionnels') {
+      setSaleDocuments(prev => ({
+        ...prev,
+        documents_additionnels: [...prev.documents_additionnels, file]
+      }));
+      setSaleDocumentNames(prev => ({
+        ...prev,
+        documents_additionnels: [...prev.documents_additionnels, file.name]
+      }));
+    } else {
+      setSaleDocuments(prev => ({ ...prev, [docType]: file }));
+      setSaleDocumentNames(prev => ({ ...prev, [docType]: file.name }));
+    }
+    
+    toast.success('Document ajouté');
+  };
+
+  const removeSaleDocument = (docType, index = null) => {
+    if (docType === 'documents_additionnels' && index !== null) {
+      setSaleDocuments(prev => ({
+        ...prev,
+        documents_additionnels: prev.documents_additionnels.filter((_, i) => i !== index)
+      }));
+      setSaleDocumentNames(prev => ({
+        ...prev,
+        documents_additionnels: prev.documents_additionnels.filter((_, i) => i !== index)
+      }));
+    } else {
+      setSaleDocuments(prev => ({ ...prev, [docType]: null }));
+      setSaleDocumentNames(prev => ({ ...prev, [docType]: '' }));
+    }
+  };
+
   const toggleSaleFeature = (featureId) => {
     setSaleForm(prev => ({
       ...prev,
