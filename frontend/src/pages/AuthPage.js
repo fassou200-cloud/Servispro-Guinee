@@ -528,7 +528,7 @@ const AuthPage = ({ setIsAuthenticated }) => {
                   data-testid="auth-toggle-button"
                   onClick={() => {
                     setIsLogin(!isLogin);
-                    setFormData({ first_name: '', last_name: '', phone_number: '', password: '', profession: '', region: '', ville: '', commune: '', quartier: '' });
+                    setFormData({ first_name: '', last_name: '', phone_number: '', password: '', profession: '', custom_profession: '', region: '', ville: '', commune: '', quartier: '' });
                   }}
                   className="ml-1 text-orange-600 hover:text-orange-700 font-medium"
                 >
