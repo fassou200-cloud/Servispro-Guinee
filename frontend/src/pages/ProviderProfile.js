@@ -22,7 +22,6 @@ const API = `${BACKEND_URL}/api`;
 
 const translateProfession = (profession) => {
   const translations = {
-    'Logisticien': 'Logisticien',
     'Electromecanicien': 'Électromécanicien',
     'Mecanicien': 'Mécanicien',
     'Plombier': 'Plombier',
@@ -34,14 +33,12 @@ const translateProfession = (profession) => {
     'Electrician': 'Électricien',
     'Mechanic': 'Mécanicien',
     'Plumber': 'Plombier',
-    'Logistics': 'Logistique',
     'Other': 'Autres'
   };
   return translations[profession] || profession;
 };
 
 const categoryIcons = {
-  'Logisticien': Truck,
   'Electromecanicien': Settings,
   'Mecanicien': Wrench,
   'Plombier': Droplet,
@@ -53,7 +50,6 @@ const categoryIcons = {
 };
 
 const categoryColors = {
-  'Logisticien': 'from-blue-500 to-blue-600',
   'Electromecanicien': 'from-purple-500 to-purple-600',
   'Mecanicien': 'from-orange-500 to-orange-600',
   'Plombier': 'from-cyan-500 to-cyan-600',
