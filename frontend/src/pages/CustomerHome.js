@@ -7,80 +7,42 @@ import {
   MessageCircle, ClipboardList, User, Building, Hammer
 } from 'lucide-react';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
-
 const CustomerHome = ({ isCustomerAuthenticated }) => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
-  const [customer, setCustomer] = useState(null);
 
-  useEffect(() => {
-    if (isCustomerAuthenticated) {
-      const storedCustomer = localStorage.getItem('customer');
-      if (storedCustomer) {
-        setCustomer(JSON.parse(storedCustomer));
-      }
-    }
-  }, [isCustomerAuthenticated]);
-
-  // Categories for quick access
+  // Categories for quick access - exactly 5 as specified
   const categories = [
     { 
       id: 'Electromecanicien', 
       name: 'Électricien', 
       icon: Zap, 
-      color: 'from-yellow-400 to-orange-500',
-      bgColor: 'bg-yellow-50',
-      description: 'Installation & dépannage électrique'
+      emoji: '⚡'
     },
     { 
       id: 'Plombier', 
       name: 'Plombier', 
       icon: Droplet, 
-      color: 'from-blue-400 to-cyan-500',
-      bgColor: 'bg-blue-50',
-      description: 'Réparation & installation sanitaire'
+      emoji: '🚿'
     },
     { 
       id: 'Mecanicien', 
       name: 'Mécanicien', 
       icon: Wrench, 
-      color: 'from-orange-400 to-red-500',
-      bgColor: 'bg-orange-50',
-      description: 'Réparation automobile'
+      emoji: '🔧'
     },
     { 
-      id: 'Macon', 
-      name: 'Maçon', 
-      icon: Hammer, 
-      color: 'from-amber-400 to-yellow-600',
-      bgColor: 'bg-amber-50',
-      description: 'Construction & rénovation'
-    },
-    { 
-      id: 'Menuisier', 
-      name: 'Menuisier', 
+      id: 'Autres', 
+      name: 'Handyman', 
       icon: Settings, 
-      color: 'from-emerald-400 to-teal-500',
-      bgColor: 'bg-emerald-50',
-      description: 'Travaux de bois'
+      emoji: '🛠️'
     },
     { 
       id: 'location', 
       name: 'Location', 
       icon: Home, 
-      color: 'from-purple-400 to-indigo-500',
-      bgColor: 'bg-purple-50',
-      description: 'Maisons & appartements'
+      emoji: '🏠'
     },
-  ];
-
-  const stats = [
-    { icon: Users, value: '500+', label: 'Professionnels' },
-    { icon: Star, value: '4.8', label: 'Note moyenne' },
-    { icon: Shield, value: '100%', label: 'Vérifiés' },
-    { icon: Clock, value: '24h', label: 'Réponse rapide' },
   ];
 
   const handleSearch = (e) => {
