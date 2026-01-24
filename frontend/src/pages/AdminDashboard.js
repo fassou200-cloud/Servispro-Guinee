@@ -2133,6 +2133,11 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
           </div>
         )}
 
+        {/* Property Inquiries Tab - Managed by AdminSalesManager */}
+        {activeTab === 'property-inquiries' && (
+          <AdminSalesManager />
+        )}
+
         {/* Revenus Tab - Visit Fees Statistics */}
         {activeTab === 'revenus' && (
           <div className="space-y-6">
