@@ -2032,6 +2032,170 @@ const CompanyDashboard = () => {
                   )}
                 </div>
 
+                {/* Documents Section */}
+                <div className="space-y-4 p-6 bg-slate-50 rounded-2xl">
+                  <h4 className="font-heading font-bold text-slate-900 flex items-center gap-2">
+                    <Shield className="h-5 w-5 text-emerald-600" />
+                    Documents Légaux Requis
+                  </h4>
+
+                  {/* Titre Foncier */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-slate-700 flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-red-500" />
+                      Titre Foncier *
+                    </Label>
+                    <div className="flex gap-2">
+                      <input
+                        id="company-titre-foncier"
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        onChange={(e) => handleSaleDocumentSelect('titre_foncier', e)}
+                        className="hidden"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => document.getElementById('company-titre-foncier').click()}
+                        className="flex-1 h-12 gap-2 rounded-xl"
+                      >
+                        <Upload className="h-4 w-4" />
+                        {saleDocumentNames.titre_foncier || 'Choisir le fichier'}
+                      </Button>
+                      {saleDocuments.titre_foncier && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeSaleDocument('titre_foncier')}
+                          className="text-red-500"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Document Ministère de l'Habitat */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-slate-700 flex items-center gap-2">
+                      <Building className="h-4 w-4 text-amber-500" />
+                      Document du Ministère de l'Habitat *
+                    </Label>
+                    <div className="flex gap-2">
+                      <input
+                        id="company-ministry-doc"
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        onChange={(e) => handleSaleDocumentSelect('document_ministere_habitat', e)}
+                        className="hidden"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => document.getElementById('company-ministry-doc').click()}
+                        className="flex-1 h-12 gap-2 rounded-xl"
+                      >
+                        <Upload className="h-4 w-4" />
+                        {saleDocumentNames.document_ministere_habitat || 'Choisir le fichier'}
+                      </Button>
+                      {saleDocuments.document_ministere_habitat && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeSaleDocument('document_ministere_habitat')}
+                          className="text-red-500"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Document du Bâtiment */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-slate-700 flex items-center gap-2">
+                      <Home className="h-4 w-4 text-blue-500" />
+                      Document du Bâtiment (Permis de construire, Plan, etc.) *
+                    </Label>
+                    <div className="flex gap-2">
+                      <input
+                        id="company-building-doc"
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        onChange={(e) => handleSaleDocumentSelect('document_batiment', e)}
+                        className="hidden"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => document.getElementById('company-building-doc').click()}
+                        className="flex-1 h-12 gap-2 rounded-xl"
+                      >
+                        <Upload className="h-4 w-4" />
+                        {saleDocumentNames.document_batiment || 'Choisir le fichier'}
+                      </Button>
+                      {saleDocuments.document_batiment && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeSaleDocument('document_batiment')}
+                          className="text-red-500"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Autres Documents */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-slate-700 flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-slate-500" />
+                      Autres Documents (Facultatif)
+                    </Label>
+                    <input
+                      id="company-additional-docs"
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      onChange={(e) => handleSaleDocumentSelect('documents_additionnels', e)}
+                      className="hidden"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => document.getElementById('company-additional-docs').click()}
+                      className="w-full h-12 gap-2 rounded-xl"
+                    >
+                      <Upload className="h-4 w-4" />
+                      Ajouter un Document
+                    </Button>
+                    {saleDocumentNames.documents_additionnels.length > 0 && (
+                      <div className="space-y-2 mt-2">
+                        {saleDocumentNames.documents_additionnels.map((name, index) => (
+                          <div key={index} className="flex items-center justify-between p-2 bg-white rounded-lg">
+                            <span className="text-sm text-slate-600 flex items-center gap-2">
+                              <CheckCircle className="h-4 w-4 text-green-500" />
+                              {name}
+                            </span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => removeSaleDocument('documents_additionnels', index)}
+                              className="text-red-500 h-8 w-8"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 <div className="flex gap-4">
                   <Button
                     type="button"
