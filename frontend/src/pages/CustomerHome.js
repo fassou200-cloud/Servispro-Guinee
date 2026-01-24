@@ -116,6 +116,15 @@ const CustomerHome = ({ isCustomerAuthenticated }) => {
           </div>
         )}
 
+        {/* Hero Image */}
+        <div className="mb-6 rounded-2xl overflow-hidden">
+          <img 
+            src="https://static.prod-images.emergentagent.com/jobs/441dacbc-64b6-4a94-a0a0-6c203d92259e/images/7f16a3034102b625ef7dda2cd3f9a1bfd56294a004a7358179ce0a82240b54e8.png" 
+            alt="Professionnels ServisPro" 
+            className="w-full h-40 object-cover object-top rounded-2xl"
+          />
+        </div>
+
         {/* Search Bar */}
         <form onSubmit={handleSearch} className="mb-8">
           <div className="relative">
