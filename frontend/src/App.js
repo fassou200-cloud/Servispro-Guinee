@@ -7,7 +7,6 @@ import BrowseProviders from '@/pages/BrowseProviders';
 import ProviderProfile from '@/pages/ProviderProfile';
 import BrowseRentals from '@/pages/BrowseRentals';
 import BrowsePropertySales from '@/pages/BrowsePropertySales';
-import BrowseJobs from '@/pages/BrowseJobs';
 import RentalDetail from '@/pages/RentalDetail';
 import CustomerAuth from '@/pages/CustomerAuth';
 import CustomerDashboard from '@/pages/CustomerDashboard';
