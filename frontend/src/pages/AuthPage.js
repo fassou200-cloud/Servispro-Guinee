@@ -9,6 +9,7 @@ import {
   ArrowLeft, User, Phone, Lock, Eye, EyeOff, Briefcase, Shield, 
   Sparkles, Wrench, Home, Zap, Settings, MapPin
 } from 'lucide-react';
+// Note: Truck import removed as Logisticien category was removed
 import { toast } from 'sonner';
 import axios from 'axios';
 import { getRegions, getVillesByRegion, getCommunesByVille } from '@/data/guineaLocations';
@@ -114,7 +115,6 @@ const AuthPage = ({ setIsAuthenticated }) => {
   };
 
   const professions = [
-    { value: 'Logisticien', label: 'Logisticien', icon: Truck },
     { value: 'Electromecanicien', label: 'Électromécanicien', icon: Settings },
     { value: 'Mecanicien', label: 'Mécanicien', icon: Wrench },
     { value: 'Plombier', label: 'Plombier', icon: Zap },
