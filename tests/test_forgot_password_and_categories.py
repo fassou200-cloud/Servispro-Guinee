@@ -12,7 +12,7 @@ import requests
 import os
 import uuid
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://servispro-guinea-3.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://property-hub-gn.preview.emergentagent.com')
 
 # Test data
 TEST_PROVIDER_PHONE = f"622{uuid.uuid4().hex[:7]}"
