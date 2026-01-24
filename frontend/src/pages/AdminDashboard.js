@@ -646,14 +646,6 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
             Ventes Immo ({propertySales.length})
           </Button>
           <Button
-            variant={activeTab === 'vehicle-sales' ? 'default' : 'outline'}
-            onClick={() => setActiveTab('vehicle-sales')}
-            className={activeTab === 'vehicle-sales' ? 'bg-indigo-600 hover:bg-indigo-700' : 'border-slate-600 text-slate-300'}
-          >
-            <Car className="h-4 w-4 mr-2" />
-            Ventes Véhicules
-          </Button>
-          <Button
             variant={activeTab === 'companies' ? 'default' : 'outline'}
             onClick={() => setActiveTab('companies')}
             className={activeTab === 'companies' ? 'bg-teal-600 hover:bg-teal-700' : 'border-slate-600 text-slate-300'}
