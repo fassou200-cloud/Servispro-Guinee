@@ -654,6 +654,14 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
             Entreprises ({companies.length})
           </Button>
           <Button
+            variant={activeTab === 'property-inquiries' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('property-inquiries')}
+            className={activeTab === 'property-inquiries' ? 'bg-amber-600 hover:bg-amber-700' : 'border-slate-600 text-slate-300'}
+          >
+            <Home className="h-4 w-4 mr-2" />
+            Demandes Immobilier
+          </Button>
+          <Button
             variant={activeTab === 'revenus' ? 'default' : 'outline'}
             onClick={() => setActiveTab('revenus')}
             className={activeTab === 'revenus' ? 'bg-green-600 hover:bg-green-700' : 'border-slate-600 text-slate-300'}
