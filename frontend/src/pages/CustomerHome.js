@@ -59,6 +59,12 @@ const CustomerHome = ({ isCustomerAuthenticated }) => {
             >
               Ventes
             </button>
+            <button 
+              onClick={() => navigate('/company/auth')}
+              className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
+            >
+              Entreprise
+            </button>
           </nav>
 
           {/* Right side */}
