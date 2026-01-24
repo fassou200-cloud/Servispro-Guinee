@@ -623,12 +623,16 @@ const Dashboard = ({ setIsAuthenticated }) => {
           </div>
         )}
 
-        {/* Quick Navigation Tabs */}
-        <div className="flex gap-2 mb-6 flex-wrap">
+        {/* Navigation Tabs */}
+        <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
           <Button
-            variant={activeTab === 'overview' ? 'default' : 'outline'}
+            variant={activeTab === 'overview' ? 'default' : 'ghost'}
             onClick={() => setActiveTab('overview')}
-            className="gap-2 font-heading"
+            className={`gap-2 rounded-xl whitespace-nowrap ${
+              activeTab === 'overview' 
+                ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg shadow-purple-500/25' 
+                : 'text-slate-400 hover:text-white hover:bg-slate-800'
+            }`}
           >
             <TrendingUp className="h-4 w-4" />
             Vue d'ensemble
@@ -637,17 +641,25 @@ const Dashboard = ({ setIsAuthenticated }) => {
             )}
           </Button>
           <Button
-            variant={activeTab === 'jobs' ? 'default' : 'outline'}
+            variant={activeTab === 'jobs' ? 'default' : 'ghost'}
             onClick={() => setActiveTab('jobs')}
-            className="gap-2 font-heading"
+            className={`gap-2 rounded-xl whitespace-nowrap ${
+              activeTab === 'jobs' 
+                ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg shadow-purple-500/25' 
+                : 'text-slate-400 hover:text-white hover:bg-slate-800'
+            }`}
           >
             <Briefcase className="h-4 w-4" />
             Tous les Travaux ({jobs.length})
           </Button>
           <Button
-            variant={activeTab === 'profile' ? 'default' : 'outline'}
+            variant={activeTab === 'profile' ? 'default' : 'ghost'}
             onClick={() => setActiveTab('profile')}
-            className="gap-2 font-heading"
+            className={`gap-2 rounded-xl whitespace-nowrap ${
+              activeTab === 'profile' 
+                ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg shadow-purple-500/25' 
+                : 'text-slate-400 hover:text-white hover:bg-slate-800'
+            }`}
           >
             <User className="h-4 w-4" />
             Mon Profil
