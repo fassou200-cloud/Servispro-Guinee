@@ -76,6 +76,12 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
   const [balance, setBalance] = useState(0);
   const [creditHistory, setCreditHistory] = useState([]);
   const [loadingBalance, setLoadingBalance] = useState(false);
+  
+  // Refund request state
+  const [refundRequests, setRefundRequests] = useState([]);
+  const [showRefundForm, setShowRefundForm] = useState(false);
+  const [refundAmount, setRefundAmount] = useState('');
+  const [refundReason, setRefundReason] = useState('');
 
   useEffect(() => {
     const storedCustomer = localStorage.getItem('customer');
