@@ -380,20 +380,12 @@ const BrowseProviders = ({ isCustomerAuthenticated }) => {
                     )}
 
                     {/* Pricing - Not for Agent Immobilier */}
-                    {provider.profession !== 'AgentImmobilier' && (provider.price || provider.investigation_fee) && (
+                    {provider.profession !== 'AgentImmobilier' && provider.price && (
                       <div className="flex items-center gap-4 mb-4 p-3 bg-amber-50 rounded-xl">
-                        {provider.price && (
-                          <div className="text-sm">
-                            <span className="text-amber-700">Tarif: </span>
-                            <span className="font-bold text-amber-900">{Number(provider.price).toLocaleString('fr-FR')} GNF</span>
-                          </div>
-                        )}
-                        {provider.investigation_fee && (
-                          <div className="text-sm">
-                            <span className="text-amber-700">Investigation: </span>
-                            <span className="font-bold text-amber-900">{Number(provider.investigation_fee).toLocaleString('fr-FR')} GNF</span>
-                          </div>
-                        )}
+                        <div className="text-sm">
+                          <span className="text-amber-700">Tarif: </span>
+                          <span className="font-bold text-amber-900">{Number(provider.price).toLocaleString('fr-FR')} GNF</span>
+                        </div>
                       </div>
                     )}
 
