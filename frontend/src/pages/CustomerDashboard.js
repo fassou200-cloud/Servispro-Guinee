@@ -238,7 +238,7 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
       }
     } catch (error) {
       console.error('Failed to fetch property inquiries:', error);
-      toast.error('Erreur lors du chargement des demandes');
+      setPropertyInquiries([]);
     } finally {
       setLoadingInquiries(false);
     }
