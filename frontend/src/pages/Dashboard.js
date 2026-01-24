@@ -203,8 +203,8 @@ const Dashboard = ({ setIsAuthenticated }) => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg">Chargement...</div>
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="text-lg text-gray-600">Chargement...</div>
       </div>
     );
   }
@@ -459,31 +459,31 @@ const Dashboard = ({ setIsAuthenticated }) => {
     );
   }
 
-  // Regular Service Provider Dashboard
+  // Regular Service Provider Dashboard - WHITE THEME
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      {/* Modern Header */}
-      <header className="bg-slate-900/80 backdrop-blur-xl border-b border-slate-700/50 sticky top-0 z-10">
+    <div className="min-h-screen bg-gray-50">
+      {/* Modern Header - White Theme */}
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Button 
                 variant="ghost" 
                 onClick={() => window.location.href = '/'} 
-                className="gap-2 text-slate-300 hover:text-white hover:bg-slate-800"
+                className="gap-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100"
               >
                 <Home className="h-4 w-4" />
                 <span className="hidden sm:inline">Accueil</span>
               </Button>
-              <div className="h-6 w-px bg-slate-700" />
-              <h1 className="text-xl font-heading font-bold text-white">
-                Mon Espace Pro
+              <div className="h-6 w-px bg-gray-200" />
+              <h1 className="text-xl font-heading font-bold text-gray-900">
+                Espace Prestataire
               </h1>
             </div>
             <div className="flex items-center gap-4">
               {/* Notification Badge */}
               {stats.pending > 0 && (
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-orange-500/20 text-orange-400 rounded-full border border-orange-500/30 animate-pulse">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-orange-100 text-orange-600 rounded-full border border-orange-200">
                   <Bell className="h-4 w-4" />
                   <span className="font-medium text-sm">{stats.pending} nouvelle{stats.pending > 1 ? 's' : ''}</span>
                 </div>
@@ -491,9 +491,9 @@ const Dashboard = ({ setIsAuthenticated }) => {
               <NotificationBell userType="provider" />
               
               {/* Online Status Toggle */}
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-800 rounded-full border border-slate-700">
-                <div className={`h-2 w-2 rounded-full ${user.online_status ? 'bg-green-500 animate-pulse' : 'bg-slate-500'}`} />
-                <span className={`text-sm font-medium ${user.online_status ? 'text-green-400' : 'text-slate-400'}`}>
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-full border border-gray-200">
+                <div className={`h-2 w-2 rounded-full ${user.online_status ? 'bg-green-500' : 'bg-gray-400'}`} />
+                <span className={`text-sm font-medium ${user.online_status ? 'text-green-600' : 'text-gray-500'}`}>
                   {user.online_status ? 'En ligne' : 'Hors ligne'}
                 </span>
                 <Switch
@@ -508,7 +508,7 @@ const Dashboard = ({ setIsAuthenticated }) => {
               <Button 
                 variant="ghost" 
                 onClick={handleLogout} 
-                className="gap-2 text-slate-400 hover:text-white hover:bg-slate-800"
+                className="gap-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100"
               >
                 <LogOut className="h-4 w-4" />
                 <span className="hidden sm:inline">Déconnexion</span>
@@ -519,37 +519,35 @@ const Dashboard = ({ setIsAuthenticated }) => {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
-        {/* Hero Section with Profile */}
+        {/* Hero Section with Profile - White Theme */}
         <div className="relative mb-8">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-pink-600/20 rounded-3xl blur-3xl" />
-          <div className="relative bg-slate-800/50 backdrop-blur-sm rounded-3xl border border-slate-700/50 p-8">
+          <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-8">
             <div className="flex flex-col lg:flex-row items-center lg:items-start gap-8">
               {/* Avatar */}
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full blur-xl opacity-50" />
-                <Avatar className="relative h-32 w-32 ring-4 ring-slate-700 shadow-2xl">
+                <Avatar className="relative h-28 w-28 ring-4 ring-green-100 shadow-lg">
                   <AvatarImage src={user.profile_picture ? `${BACKEND_URL}${user.profile_picture}` : undefined} />
-                  <AvatarFallback className="text-4xl font-heading bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                  <AvatarFallback className="text-3xl font-heading bg-gradient-to-br from-green-500 to-green-600 text-white">
                     {user.first_name[0]}{user.last_name[0]}
                   </AvatarFallback>
                 </Avatar>
                 {user.online_status && (
-                  <div className="absolute bottom-2 right-2 h-5 w-5 bg-green-500 rounded-full ring-4 ring-slate-800 animate-pulse" />
+                  <div className="absolute bottom-1 right-1 h-5 w-5 bg-green-500 rounded-full ring-4 ring-white" />
                 )}
               </div>
               
               {/* Profile Info */}
               <div className="flex-1 text-center lg:text-left">
-                <h2 className="text-3xl font-heading font-bold text-white mb-2">
+                <h2 className="text-3xl font-heading font-bold text-gray-900 mb-2">
                   {user.first_name} {user.last_name}
                 </h2>
                 <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 mb-4">
-                  <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-slate-700/50 rounded-full text-slate-300 text-sm">
-                    <Briefcase className="h-4 w-4 text-blue-400" />
+                  <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-gray-100 rounded-full text-gray-700 text-sm">
+                    <Briefcase className="h-4 w-4 text-green-600" />
                     {translateProfession(user.profession, user.custom_profession)}
                   </span>
                   {user.id_verification_picture && (
-                    <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-blue-500/20 rounded-full text-blue-400 text-sm border border-blue-500/30">
+                    <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-blue-50 rounded-full text-blue-600 text-sm border border-blue-200">
                       <ShieldCheck className="h-4 w-4" />
                       Vérifié
                     </span>
@@ -558,27 +556,27 @@ const Dashboard = ({ setIsAuthenticated }) => {
                 
                 {/* Price Info */}
                 {user.price && (
-                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/20 rounded-xl text-emerald-400 border border-emerald-500/30">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-50 rounded-xl text-green-700 border border-green-200">
                     <DollarSign className="h-5 w-5" />
                     <span className="text-lg font-bold">{new Intl.NumberFormat('fr-GN').format(user.price)} GNF</span>
-                    <span className="text-sm text-emerald-300/70">/ service</span>
+                    <span className="text-sm text-green-600">/ service</span>
                   </div>
                 )}
               </div>
 
               {/* Quick Stats - Desktop */}
               <div className="hidden lg:grid grid-cols-3 gap-4">
-                <div className="text-center p-4 bg-slate-700/30 rounded-2xl border border-slate-600/30">
-                  <div className="text-4xl font-bold text-orange-400 mb-1">{stats.pending}</div>
-                  <div className="text-xs text-slate-400 uppercase tracking-wide">En attente</div>
+                <div className="text-center p-4 bg-orange-50 rounded-2xl border border-orange-100">
+                  <div className="text-3xl font-bold text-orange-600 mb-1">{stats.pending}</div>
+                  <div className="text-xs text-orange-500 uppercase tracking-wide">En attente</div>
                 </div>
-                <div className="text-center p-4 bg-slate-700/30 rounded-2xl border border-slate-600/30">
-                  <div className="text-4xl font-bold text-blue-400 mb-1">{stats.accepted}</div>
-                  <div className="text-xs text-slate-400 uppercase tracking-wide">En cours</div>
+                <div className="text-center p-4 bg-blue-50 rounded-2xl border border-blue-100">
+                  <div className="text-3xl font-bold text-blue-600 mb-1">{stats.accepted}</div>
+                  <div className="text-xs text-blue-500 uppercase tracking-wide">En cours</div>
                 </div>
-                <div className="text-center p-4 bg-slate-700/30 rounded-2xl border border-slate-600/30">
-                  <div className="text-4xl font-bold text-green-400 mb-1">{stats.completed}</div>
-                  <div className="text-xs text-slate-400 uppercase tracking-wide">Terminés</div>
+                <div className="text-center p-4 bg-green-50 rounded-2xl border border-green-100">
+                  <div className="text-3xl font-bold text-green-600 mb-1">{stats.completed}</div>
+                  <div className="text-xs text-green-500 uppercase tracking-wide">Terminés</div>
                 </div>
               </div>
             </div>
@@ -587,51 +585,51 @@ const Dashboard = ({ setIsAuthenticated }) => {
 
         {/* Mobile Stats Cards */}
         <div className="grid grid-cols-3 gap-3 mb-6 lg:hidden">
-          <div className="bg-gradient-to-br from-orange-500/20 to-orange-600/10 rounded-2xl p-4 border border-orange-500/20">
-            <Clock className="h-6 w-6 text-orange-400 mb-2" />
-            <div className="text-2xl font-bold text-orange-400">{stats.pending}</div>
-            <div className="text-xs text-orange-300/70">En attente</div>
+          <div className="bg-white rounded-2xl p-4 border border-orange-200 shadow-sm">
+            <Clock className="h-6 w-6 text-orange-500 mb-2" />
+            <div className="text-2xl font-bold text-orange-600">{stats.pending}</div>
+            <div className="text-xs text-orange-500">En attente</div>
           </div>
-          <div className="bg-gradient-to-br from-blue-500/20 to-blue-600/10 rounded-2xl p-4 border border-blue-500/20">
-            <Briefcase className="h-6 w-6 text-blue-400 mb-2" />
-            <div className="text-2xl font-bold text-blue-400">{stats.accepted}</div>
-            <div className="text-xs text-blue-300/70">En cours</div>
+          <div className="bg-white rounded-2xl p-4 border border-blue-200 shadow-sm">
+            <Briefcase className="h-6 w-6 text-blue-500 mb-2" />
+            <div className="text-2xl font-bold text-blue-600">{stats.accepted}</div>
+            <div className="text-xs text-blue-500">En cours</div>
           </div>
-          <div className="bg-gradient-to-br from-green-500/20 to-green-600/10 rounded-2xl p-4 border border-green-500/20">
-            <CheckCircle className="h-6 w-6 text-green-400 mb-2" />
-            <div className="text-2xl font-bold text-green-400">{stats.completed}</div>
-            <div className="text-xs text-green-300/70">Terminés</div>
+          <div className="bg-white rounded-2xl p-4 border border-green-200 shadow-sm">
+            <CheckCircle className="h-6 w-6 text-green-500 mb-2" />
+            <div className="text-2xl font-bold text-green-600">{stats.completed}</div>
+            <div className="text-xs text-green-500">Terminés</div>
           </div>
         </div>
 
         {/* Offline Alert */}
         {!user.online_status && (
-          <div className="mb-6 p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-center gap-4">
-            <div className="h-12 w-12 rounded-xl bg-amber-500/20 flex items-center justify-center">
-              <AlertCircle className="h-6 w-6 text-amber-400" />
+          <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-center gap-4">
+            <div className="h-12 w-12 rounded-xl bg-amber-100 flex items-center justify-center">
+              <AlertCircle className="h-6 w-6 text-amber-600" />
             </div>
             <div className="flex-1">
-              <p className="font-medium text-amber-400">Mode hors ligne activé</p>
-              <p className="text-sm text-amber-300/70">Les clients ne peuvent pas vous contacter. Passez en ligne pour recevoir des demandes.</p>
+              <p className="font-medium text-amber-800">Mode hors ligne activé</p>
+              <p className="text-sm text-amber-600">Les clients ne peuvent pas vous contacter. Passez en ligne pour recevoir des demandes.</p>
             </div>
             <Button 
               onClick={toggleOnlineStatus} 
-              className="bg-amber-500 hover:bg-amber-600 text-slate-900 font-medium"
+              className="bg-amber-500 hover:bg-amber-600 text-white font-medium"
             >
               Passer en ligne
             </Button>
           </div>
         )}
 
-        {/* Navigation Tabs */}
+        {/* Navigation Tabs - White Theme */}
         <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
           <Button
-            variant={activeTab === 'overview' ? 'default' : 'ghost'}
+            variant={activeTab === 'overview' ? 'default' : 'outline'}
             onClick={() => setActiveTab('overview')}
             className={`gap-2 rounded-xl whitespace-nowrap ${
               activeTab === 'overview' 
-                ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg shadow-purple-500/25' 
-                : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                ? 'bg-green-600 hover:bg-green-700 text-white shadow-lg' 
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 border-gray-200'
             }`}
           >
             <TrendingUp className="h-4 w-4" />
@@ -641,24 +639,24 @@ const Dashboard = ({ setIsAuthenticated }) => {
             )}
           </Button>
           <Button
-            variant={activeTab === 'jobs' ? 'default' : 'ghost'}
+            variant={activeTab === 'jobs' ? 'default' : 'outline'}
             onClick={() => setActiveTab('jobs')}
             className={`gap-2 rounded-xl whitespace-nowrap ${
               activeTab === 'jobs' 
-                ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg shadow-purple-500/25' 
-                : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                ? 'bg-green-600 hover:bg-green-700 text-white shadow-lg' 
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 border-gray-200'
             }`}
           >
             <Briefcase className="h-4 w-4" />
             Tous les Travaux ({jobs.length})
           </Button>
           <Button
-            variant={activeTab === 'profile' ? 'default' : 'ghost'}
+            variant={activeTab === 'profile' ? 'default' : 'outline'}
             onClick={() => setActiveTab('profile')}
             className={`gap-2 rounded-xl whitespace-nowrap ${
               activeTab === 'profile' 
-                ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg shadow-purple-500/25' 
-                : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                ? 'bg-green-600 hover:bg-green-700 text-white shadow-lg' 
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 border-gray-200'
             }`}
           >
             <User className="h-4 w-4" />
@@ -666,46 +664,46 @@ const Dashboard = ({ setIsAuthenticated }) => {
           </Button>
         </div>
 
-        {/* Tab Content */}
+        {/* Tab Content - White Theme */}
         {activeTab === 'overview' && (
           <div className="space-y-8">
             {/* Pending Jobs Section */}
             {pendingJobs.length > 0 && (
               <div>
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="h-10 w-10 rounded-xl bg-orange-500/20 flex items-center justify-center">
-                    <Bell className="h-5 w-5 text-orange-400" />
+                  <div className="h-10 w-10 rounded-xl bg-orange-100 flex items-center justify-center">
+                    <Bell className="h-5 w-5 text-orange-600" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-heading font-bold text-white">
+                    <h3 className="text-xl font-heading font-bold text-gray-900">
                       Nouvelles Demandes
                     </h3>
-                    <p className="text-sm text-orange-400">{pendingJobs.length} en attente de réponse</p>
+                    <p className="text-sm text-orange-600">{pendingJobs.length} en attente de réponse</p>
                   </div>
                 </div>
                 <div className="grid gap-4">
                   {pendingJobs.map((job) => (
                     <div 
                       key={job.id} 
-                      className="group relative bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-orange-500/30 p-6 hover:border-orange-500/50 transition-all hover:shadow-lg hover:shadow-orange-500/10"
+                      className="group relative bg-white rounded-2xl border-2 border-orange-200 p-6 hover:border-orange-300 transition-all hover:shadow-lg"
                     >
                       <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-orange-500 to-amber-500 rounded-l-2xl" />
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-3">
-                            <h4 className="text-xl font-heading font-bold text-white">
+                            <h4 className="text-xl font-heading font-bold text-gray-900">
                               {job.service_type}
                             </h4>
-                            <span className="px-3 py-1 bg-orange-500/20 text-orange-400 rounded-full text-sm font-medium border border-orange-500/30">
+                            <span className="px-3 py-1 bg-orange-100 text-orange-600 rounded-full text-sm font-medium border border-orange-200">
                               Nouvelle
                             </span>
                           </div>
                           <div className="flex items-center gap-2 mb-2">
-                            <User className="h-4 w-4 text-slate-500" />
-                            <span className="text-slate-300">{job.client_name}</span>
+                            <User className="h-4 w-4 text-gray-400" />
+                            <span className="text-gray-700">{job.client_name}</span>
                           </div>
-                          <p className="text-slate-400 mb-4 line-clamp-2">{job.description}</p>
-                          <div className="flex flex-wrap gap-4 text-sm text-slate-500">
+                          <p className="text-gray-600 mb-4 line-clamp-2">{job.description}</p>
+                          <div className="flex flex-wrap gap-4 text-sm text-gray-500">
                             {job.location && (
                               <div className="flex items-center gap-1">
                                 <MapPin className="h-4 w-4" />
@@ -723,7 +721,7 @@ const Dashboard = ({ setIsAuthenticated }) => {
                         <div className="flex flex-col gap-2">
                           <Button
                             onClick={() => handleJobAction(job.id, 'Accepted')}
-                            className="gap-2 bg-green-500 hover:bg-green-600 text-white rounded-xl"
+                            className="gap-2 bg-green-600 hover:bg-green-700 text-white rounded-xl"
                           >
                             <CheckCircle className="h-4 w-4" />
                             Accepter
@@ -731,7 +729,7 @@ const Dashboard = ({ setIsAuthenticated }) => {
                           <Button
                             onClick={() => handleJobAction(job.id, 'Rejected')}
                             variant="outline"
-                            className="gap-2 border-red-500/30 text-red-400 hover:bg-red-500/10 rounded-xl"
+                            className="gap-2 border-red-200 text-red-600 hover:bg-red-50 rounded-xl"
                           >
                             <XCircle className="h-4 w-4" />
                             Refuser
@@ -748,39 +746,39 @@ const Dashboard = ({ setIsAuthenticated }) => {
             {activeJobs.length > 0 && (
               <div>
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="h-10 w-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
-                    <Briefcase className="h-5 w-5 text-blue-400" />
+                  <div className="h-10 w-10 rounded-xl bg-blue-100 flex items-center justify-center">
+                    <Briefcase className="h-5 w-5 text-blue-600" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-heading font-bold text-white">
+                    <h3 className="text-xl font-heading font-bold text-gray-900">
                       Travaux en Cours
                     </h3>
-                    <p className="text-sm text-blue-400">{activeJobs.length} travaux actifs</p>
+                    <p className="text-sm text-blue-600">{activeJobs.length} travaux actifs</p>
                   </div>
                 </div>
                 <div className="grid gap-4">
                   {activeJobs.map((job) => (
                     <div 
                       key={job.id} 
-                      className="group relative bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-blue-500/30 p-6 hover:border-blue-500/50 transition-all"
+                      className="group relative bg-white rounded-2xl border-2 border-blue-200 p-6 hover:border-blue-300 transition-all"
                     >
                       <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-blue-500 to-cyan-500 rounded-l-2xl" />
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-3">
-                            <h4 className="text-xl font-heading font-bold text-white">
+                            <h4 className="text-xl font-heading font-bold text-gray-900">
                               {job.service_type}
                             </h4>
-                            <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm font-medium border border-blue-500/30">
+                            <span className="px-3 py-1 bg-blue-100 text-blue-600 rounded-full text-sm font-medium border border-blue-200">
                               En cours
                             </span>
                           </div>
                           <div className="flex items-center gap-2 mb-2">
-                            <User className="h-4 w-4 text-slate-500" />
-                            <span className="text-slate-300">{job.client_name}</span>
+                            <User className="h-4 w-4 text-gray-400" />
+                            <span className="text-gray-700">{job.client_name}</span>
                           </div>
-                          <p className="text-slate-400 mb-4">{job.description}</p>
-                          <div className="flex flex-wrap gap-4 text-sm text-slate-500">
+                          <p className="text-gray-600 mb-4">{job.description}</p>
+                          <div className="flex flex-wrap gap-4 text-sm text-gray-500">
                             {job.location && (
                               <div className="flex items-center gap-1">
                                 <MapPin className="h-4 w-4" />
@@ -791,7 +789,7 @@ const Dashboard = ({ setIsAuthenticated }) => {
                         </div>
                         <Button
                           onClick={() => handleJobAction(job.id, 'ProviderCompleted')}
-                          className="gap-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl"
+                          className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl"
                         >
                           <CheckCheck className="h-4 w-4" />
                           Terminer
@@ -805,14 +803,14 @@ const Dashboard = ({ setIsAuthenticated }) => {
 
             {/* Empty State */}
             {pendingJobs.length === 0 && activeJobs.length === 0 && (
-              <div className="text-center py-16">
-                <div className="h-20 w-20 rounded-full bg-slate-800 flex items-center justify-center mx-auto mb-6">
-                  <Briefcase className="h-10 w-10 text-slate-600" />
+              <div className="text-center py-16 bg-white rounded-2xl border border-gray-200">
+                <div className="h-20 w-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-6">
+                  <Briefcase className="h-10 w-10 text-gray-400" />
                 </div>
-                <h3 className="text-xl font-heading font-bold text-white mb-2">
+                <h3 className="text-xl font-heading font-bold text-gray-900 mb-2">
                   Aucune demande en cours
                 </h3>
-                <p className="text-slate-400 max-w-md mx-auto">
+                <p className="text-gray-500 max-w-md mx-auto">
                   {user.online_status 
                     ? "Vous n'avez pas de nouvelles demandes pour le moment. Restez en ligne pour recevoir des demandes de clients."
                     : "Passez en ligne pour commencer à recevoir des demandes de clients."
@@ -825,32 +823,32 @@ const Dashboard = ({ setIsAuthenticated }) => {
 
         {activeTab === 'jobs' && (
           <div className="space-y-4">
-            <h3 className="text-2xl font-heading font-bold text-foreground mb-4">
+            <h3 className="text-2xl font-heading font-bold text-gray-900 mb-4">
               Historique des Travaux ({jobs.length})
             </h3>
             {jobs.length === 0 ? (
-              <Card className="p-8 text-center">
-                <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Aucun travail dans l&apos;historique</p>
+              <Card className="p-8 text-center bg-white border-gray-200">
+                <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500">Aucun travail dans l&apos;historique</p>
               </Card>
             ) : (
               jobs.map((job) => (
-                <Card key={job.id} className="p-6">
+                <Card key={job.id} className="p-6 bg-white border-gray-200">
                   <div className="flex items-start justify-between mb-4">
                     <div>
                       <div className="flex items-center gap-3 mb-2">
-                        <h4 className="text-xl font-heading font-bold text-foreground">
+                        <h4 className="text-xl font-heading font-bold text-gray-900">
                           {job.service_type}
                         </h4>
                         <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-md text-sm font-medium border ${getStatusBadge(job.status)}`}>
                           {translateStatus(job.status)}
                         </span>
                       </div>
-                      <p className="text-sm text-muted-foreground">Client: {job.client_name}</p>
+                      <p className="text-sm text-gray-500">Client: {job.client_name}</p>
                     </div>
                   </div>
-                  <p className="text-foreground mb-4">{job.description}</p>
-                  <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-4">
+                  <p className="text-gray-700 mb-4">{job.description}</p>
+                  <div className="flex flex-wrap gap-4 text-sm text-gray-500 mb-4">
                     {job.location && (
                       <div className="flex items-center gap-2">
                         <MapPin className="h-4 w-4" />
