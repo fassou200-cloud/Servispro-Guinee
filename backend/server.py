@@ -4152,6 +4152,22 @@ async def delete_rental_admin(rental_id: str):
     if not rental:
         raise HTTPException(status_code=404, detail="Location non trouvée")
     
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Create notification for the property owner before deletion
+    notification_id = str(uuid.uuid4())
+    await db.notifications.insert_one({
+        'id': notification_id,
+        'user_id': rental.get('service_provider_id') or rental.get('company_id'),
+        'user_type': 'provider' if rental.get('service_provider_id') else 'company',
+        'title': 'Location supprimée',
+        'message': f'Votre annonce de location "{rental.get("title", "Propriété")}" a été supprimée par l\'administrateur.',
+        'notification_type': 'rental_deleted',
+        'related_id': rental_id,
+        'is_read': False,
+        'created_at': now
+    })
+    
     # Delete associated chat messages
     await db.chat_messages.delete_many({'rental_id': rental_id})
     
