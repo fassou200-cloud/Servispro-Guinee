@@ -668,36 +668,44 @@ const Dashboard = ({ setIsAuthenticated }) => {
 
         {/* Tab Content */}
         {activeTab === 'overview' && (
-          <div className="space-y-6">
-            {/* Pending Jobs Section - Highlighted */}
+          <div className="space-y-8">
+            {/* Pending Jobs Section */}
             {pendingJobs.length > 0 && (
               <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <Bell className="h-5 w-5 text-orange-600" />
-                  <h3 className="text-xl font-heading font-bold text-foreground">
-                    Nouvelles Demandes ({pendingJobs.length})
-                  </h3>
-                  <span className="text-sm text-orange-600 animate-pulse">• Action requise</span>
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="h-10 w-10 rounded-xl bg-orange-500/20 flex items-center justify-center">
+                    <Bell className="h-5 w-5 text-orange-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-heading font-bold text-white">
+                      Nouvelles Demandes
+                    </h3>
+                    <p className="text-sm text-orange-400">{pendingJobs.length} en attente de réponse</p>
+                  </div>
                 </div>
                 <div className="grid gap-4">
                   {pendingJobs.map((job) => (
-                    <Card key={job.id} className="p-6 border-l-4 border-l-orange-500 bg-gradient-to-r from-orange-50 to-white hover:shadow-lg transition-shadow">
-                      <div className="flex items-start justify-between">
+                    <div 
+                      key={job.id} 
+                      className="group relative bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-orange-500/30 p-6 hover:border-orange-500/50 transition-all hover:shadow-lg hover:shadow-orange-500/10"
+                    >
+                      <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-orange-500 to-amber-500 rounded-l-2xl" />
+                      <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <h4 className="text-xl font-heading font-bold text-foreground">
+                          <div className="flex items-center gap-3 mb-3">
+                            <h4 className="text-xl font-heading font-bold text-white">
                               {job.service_type}
                             </h4>
-                            <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${getStatusBadge(job.status)}`}>
-                              <Clock className="h-3 w-3" />
-                              {translateStatus(job.status)}
+                            <span className="px-3 py-1 bg-orange-500/20 text-orange-400 rounded-full text-sm font-medium border border-orange-500/30">
+                              Nouvelle
                             </span>
                           </div>
-                          <p className="text-sm text-muted-foreground mb-2">
-                            <span className="font-medium">Client:</span> {job.client_name}
-                          </p>
-                          <p className="text-foreground mb-3">{job.description}</p>
-                          <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-2 mb-2">
+                            <User className="h-4 w-4 text-slate-500" />
+                            <span className="text-slate-300">{job.client_name}</span>
+                          </div>
+                          <p className="text-slate-400 mb-4 line-clamp-2">{job.description}</p>
+                          <div className="flex flex-wrap gap-4 text-sm text-slate-500">
                             {job.location && (
                               <div className="flex items-center gap-1">
                                 <MapPin className="h-4 w-4" />
@@ -712,10 +720,10 @@ const Dashboard = ({ setIsAuthenticated }) => {
                             )}
                           </div>
                         </div>
-                        <div className="flex flex-col gap-2 ml-4">
+                        <div className="flex flex-col gap-2">
                           <Button
                             onClick={() => handleJobAction(job.id, 'Accepted')}
-                            className="gap-2 bg-green-600 hover:bg-green-700"
+                            className="gap-2 bg-green-500 hover:bg-green-600 text-white rounded-xl"
                           >
                             <CheckCircle className="h-4 w-4" />
                             Accepter
@@ -723,14 +731,14 @@ const Dashboard = ({ setIsAuthenticated }) => {
                           <Button
                             onClick={() => handleJobAction(job.id, 'Rejected')}
                             variant="outline"
-                            className="gap-2 border-red-300 text-red-600 hover:bg-red-50"
+                            className="gap-2 border-red-500/30 text-red-400 hover:bg-red-500/10 rounded-xl"
                           >
                             <XCircle className="h-4 w-4" />
                             Refuser
                           </Button>
                         </div>
                       </div>
-                    </Card>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -739,28 +747,40 @@ const Dashboard = ({ setIsAuthenticated }) => {
             {/* Active Jobs Section */}
             {activeJobs.length > 0 && (
               <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <Briefcase className="h-5 w-5 text-blue-600" />
-                  <h3 className="text-xl font-heading font-bold text-foreground">
-                    Travaux en Cours ({activeJobs.length})
-                  </h3>
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="h-10 w-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
+                    <Briefcase className="h-5 w-5 text-blue-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-heading font-bold text-white">
+                      Travaux en Cours
+                    </h3>
+                    <p className="text-sm text-blue-400">{activeJobs.length} travaux actifs</p>
+                  </div>
                 </div>
                 <div className="grid gap-4">
                   {activeJobs.map((job) => (
-                    <Card key={job.id} className="p-6 border-l-4 border-l-blue-500">
-                      <div className="flex items-start justify-between">
+                    <div 
+                      key={job.id} 
+                      className="group relative bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-blue-500/30 p-6 hover:border-blue-500/50 transition-all"
+                    >
+                      <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-blue-500 to-cyan-500 rounded-l-2xl" />
+                      <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <h4 className="text-lg font-heading font-bold text-foreground">
+                          <div className="flex items-center gap-3 mb-3">
+                            <h4 className="text-xl font-heading font-bold text-white">
                               {job.service_type}
                             </h4>
-                            <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${getStatusBadge(job.status)}`}>
-                              {translateStatus(job.status)}
+                            <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm font-medium border border-blue-500/30">
+                              En cours
                             </span>
                           </div>
-                          <p className="text-sm text-muted-foreground mb-2">Client: {job.client_name}</p>
-                          <p className="text-foreground mb-3">{job.description}</p>
-                          <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-2 mb-2">
+                            <User className="h-4 w-4 text-slate-500" />
+                            <span className="text-slate-300">{job.client_name}</span>
+                          </div>
+                          <p className="text-slate-400 mb-4">{job.description}</p>
+                          <div className="flex flex-wrap gap-4 text-sm text-slate-500">
                             {job.location && (
                               <div className="flex items-center gap-1">
                                 <MapPin className="h-4 w-4" />
@@ -769,25 +789,15 @@ const Dashboard = ({ setIsAuthenticated }) => {
                             )}
                           </div>
                         </div>
-                        {job.status === 'Accepted' && (
-                          <Button
-                            onClick={() => handleMarkComplete(job.id)}
-                            className="gap-2 bg-green-600 hover:bg-green-700 ml-4"
-                          >
-                            <CheckCheck className="h-4 w-4" />
-                            Marquer Terminé
-                          </Button>
-                        )}
-                        {job.status === 'ProviderCompleted' && (
-                          <div className="bg-purple-100 border border-purple-200 rounded-lg p-3 ml-4">
-                            <p className="text-purple-700 text-sm flex items-center gap-2">
-                              <Clock className="h-4 w-4" />
-                              Attente confirmation client
-                            </p>
-                          </div>
-                        )}
+                        <Button
+                          onClick={() => handleJobAction(job.id, 'ProviderCompleted')}
+                          className="gap-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl"
+                        >
+                          <CheckCheck className="h-4 w-4" />
+                          Terminer
+                        </Button>
                       </div>
-                    </Card>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -795,25 +805,20 @@ const Dashboard = ({ setIsAuthenticated }) => {
 
             {/* Empty State */}
             {pendingJobs.length === 0 && activeJobs.length === 0 && (
-              <Card className="p-12 text-center">
-                <div className="max-w-md mx-auto">
-                  <Briefcase className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-2xl font-heading font-bold text-foreground mb-2">
-                    Aucune demande en cours
-                  </h3>
-                  <p className="text-muted-foreground mb-4">
-                    {user.online_status 
-                      ? "Vous recevrez des notifications dès qu'un client vous enverra une demande de travail."
-                      : "Activez votre statut en ligne pour commencer à recevoir des demandes de travail."}
-                  </p>
-                  {!user.online_status && (
-                    <Button onClick={toggleOnlineStatus} className="gap-2">
-                      <CheckCircle className="h-4 w-4" />
-                      Passer en ligne
-                    </Button>
-                  )}
+              <div className="text-center py-16">
+                <div className="h-20 w-20 rounded-full bg-slate-800 flex items-center justify-center mx-auto mb-6">
+                  <Briefcase className="h-10 w-10 text-slate-600" />
                 </div>
-              </Card>
+                <h3 className="text-xl font-heading font-bold text-white mb-2">
+                  Aucune demande en cours
+                </h3>
+                <p className="text-slate-400 max-w-md mx-auto">
+                  {user.online_status 
+                    ? "Vous n'avez pas de nouvelles demandes pour le moment. Restez en ligne pour recevoir des demandes de clients."
+                    : "Passez en ligne pour commencer à recevoir des demandes de clients."
+                  }
+                </p>
+              </div>
             )}
           </div>
         )}
