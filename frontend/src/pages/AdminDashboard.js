@@ -1816,6 +1816,80 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                     </div>
                   </div>
 
+                  {/* Admin Documents Upload Section */}
+                  <div className="mb-4 p-4 bg-slate-700/50 rounded-lg border border-amber-500/30">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-sm font-medium text-amber-400 flex items-center gap-2">
+                        <FileText className="h-4 w-4" />
+                        Documents Admin
+                      </h4>
+                      <label className="cursor-pointer">
+                        <input
+                          type="file"
+                          className="hidden"
+                          accept=".pdf,.jpg,.jpeg,.png,.webp"
+                          onChange={(e) => handleAdminDocUpload(selectedSale.id, e)}
+                          disabled={uploadingAdminDoc}
+                        />
+                        <span className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                          uploadingAdminDoc 
+                            ? 'bg-slate-600 text-slate-400 cursor-not-allowed' 
+                            : 'bg-amber-600 hover:bg-amber-700 text-white'
+                        }`}>
+                          {uploadingAdminDoc ? (
+                            <>
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                              Envoi...
+                            </>
+                          ) : (
+                            <>
+                              <FileText className="h-3 w-3" />
+                              Ajouter un document
+                            </>
+                          )}
+                        </span>
+                      </label>
+                    </div>
+                    
+                    {/* List of admin uploaded documents */}
+                    {selectedSale.admin_documents && selectedSale.admin_documents.length > 0 ? (
+                      <div className="space-y-2">
+                        {selectedSale.admin_documents.map((doc, idx) => (
+                          <div
+                            key={idx}
+                            className="flex items-center justify-between p-2 bg-slate-600/50 rounded hover:bg-slate-600 transition-colors"
+                          >
+                            <a
+                              href={`${BACKEND_URL}${doc}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 text-sm text-slate-300 hover:text-white"
+                            >
+                              <FileText className="h-4 w-4 text-amber-400" />
+                              Document Admin {idx + 1}
+                              <ExternalLink className="h-3 w-3 text-slate-500" />
+                            </a>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteAdminDoc(selectedSale.id, doc)}
+                              className="h-6 w-6 p-0 text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-slate-500 text-center py-2">
+                        Aucun document admin ajouté
+                      </p>
+                    )}
+                    <p className="text-xs text-slate-500 mt-2">
+                      Formats acceptés: PDF, JPG, PNG, WEBP (max 10MB)
+                    </p>
+                  </div>
+
                   <div className="text-xs text-slate-500 mb-4">
                     Créée le {new Date(selectedSale.created_at).toLocaleDateString('fr-FR')}
                   </div>
