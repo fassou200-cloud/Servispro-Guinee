@@ -271,15 +271,15 @@ const CompanyAuth = ({ setIsCompanyAuthenticated }) => {
           <div className="hidden lg:block flex-1">
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-3xl blur-2xl"></div>
-              <div className="relative bg-slate-800/50 rounded-3xl p-6 border border-slate-700">
+              <div className="relative bg-slate-800/50 rounded-3xl p-8 border border-slate-700">
                 <img 
-                  src="https://images.unsplash.com/photo-1668642538782-9579e75b0f4b?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzB8MHwxfHNlYXJjaHwyfHxyZWFsJTIwZXN0YXRlJTIwYWdlbnQlMjBob3VzZSUyMHByb3BlcnR5JTIwbW9kZXJuJTIwaG9tZSUyMGJ1aWxkaW5nfGVufDB8fHx8MTc2OTI5MzQ3OXww&ixlib=rb-4.1.0&q=85&w=600"
+                  src="https://images.unsplash.com/photo-1668642538782-9579e75b0f4b?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzB8MHwxfHNlYXJjaHwyfHxyZWFsJTIwZXN0YXRlJTIwYWdlbnQlMjBob3VzZSUyMHByb3BlcnR5JTIwbW9kZXJuJTIwaG9tZSUyMGJ1aWxkaW5nfGVufDB8fHx8MTc2OTI5MzQ3OXww&ixlib=rb-4.1.0&q=85&w=800"
                   alt="Maison moderne avec piscine"
-                  className="w-full h-auto rounded-2xl object-cover"
+                  className="w-full h-80 rounded-2xl object-cover"
                 />
                 <div className="mt-6 text-center">
-                  <h3 className="text-xl font-bold text-white mb-2">Rejoignez ServisPro</h3>
-                  <p className="text-slate-400 text-sm">
+                  <h3 className="text-2xl font-bold text-white mb-3">Rejoignez ServisPro</h3>
+                  <p className="text-slate-300 text-base">
                     Publiez vos offres d'emploi et trouvez les meilleurs talents en Guinée
                   </p>
                 </div>
