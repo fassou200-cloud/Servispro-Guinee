@@ -859,6 +859,7 @@ const CompanyAuth = ({ setIsCompanyAuthenticated }) => {
             </div>
           )}
         </Card>
+        </div>
       </div>
     </div>
   );
