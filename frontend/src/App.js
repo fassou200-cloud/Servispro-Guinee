@@ -46,8 +46,8 @@ function App() {
       <BrowserRouter>
         <Routes>
           {/* Public Routes */}
-          <Route path="/" element={<CustomerHome isCustomerAuthenticated={isCustomerAuthenticated} />} />
-          <Route path="/old-landing" element={<LandingPage isCustomerAuthenticated={isCustomerAuthenticated} />} />
+          <Route path="/" element={<LandingPage isCustomerAuthenticated={isCustomerAuthenticated} />} />
+          <Route path="/new-home" element={<CustomerHome isCustomerAuthenticated={isCustomerAuthenticated} />} />
           <Route path="/browse" element={<BrowseProviders isCustomerAuthenticated={isCustomerAuthenticated} />} />
           <Route path="/provider/:providerId" element={<ProviderProfile isCustomerAuthenticated={isCustomerAuthenticated} />} />
           <Route path="/rentals" element={<BrowseRentals isCustomerAuthenticated={isCustomerAuthenticated} />} />
