@@ -1844,11 +1844,6 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
           </div>
         )}
 
-        {/* Vehicle Sales Tab - Managed by AdminSalesManager */}
-        {activeTab === 'vehicle-sales' && (
-          <AdminSalesManager />
-        )}
-
         {/* Companies Tab */}
         {activeTab === 'companies' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
