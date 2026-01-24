@@ -17,7 +17,6 @@ const API = `${BACKEND_URL}/api`;
 
 const translateProfession = (profession) => {
   const translations = {
-    'Logisticien': 'Logisticien',
     'Electromecanicien': 'Électromécanicien',
     'Mecanicien': 'Mécanicien',
     'Plombier': 'Plombier',
@@ -25,21 +24,16 @@ const translateProfession = (profession) => {
     'Menuisier': 'Menuisier',
     'AgentImmobilier': 'Propriétaire immobilier',
     'Soudeur': 'Soudeur',
-    'Camionneur': 'Camionneur (Location)',
-    'Tracteur': 'Tracteur (Location)',
-    'Voiture': 'Voiture (Location)',
     'Autres': 'Autres Métiers',
     'Electrician': 'Électricien',
     'Mechanic': 'Mécanicien',
     'Plumber': 'Plombier',
-    'Logistics': 'Logistique',
     'Other': 'Autres'
   };
   return translations[profession] || profession;
 };
 
 const categoryIcons = {
-  'Logisticien': Truck,
   'Electromecanicien': Settings,
   'Mecanicien': Wrench,
   'Plombier': Droplet,
@@ -47,14 +41,10 @@ const categoryIcons = {
   'Menuisier': Hammer,
   'AgentImmobilier': Building,
   'Soudeur': Flame,
-  'Camionneur': Truck,
-  'Tracteur': Truck,
-  'Voiture': Truck,
   'Autres': MoreHorizontal
 };
 
 const categoryColors = {
-  'Logisticien': 'from-blue-500 to-blue-600',
   'Electromecanicien': 'from-purple-500 to-purple-600',
   'Mecanicien': 'from-orange-500 to-orange-600',
   'Plombier': 'from-cyan-500 to-cyan-600',
@@ -62,15 +52,11 @@ const categoryColors = {
   'Menuisier': 'from-yellow-500 to-yellow-600',
   'AgentImmobilier': 'from-emerald-500 to-emerald-600',
   'Soudeur': 'from-red-500 to-red-600',
-  'Camionneur': 'from-slate-500 to-slate-600',
-  'Tracteur': 'from-green-500 to-green-600',
-  'Voiture': 'from-indigo-500 to-indigo-600',
   'Autres': 'from-gray-500 to-gray-600'
 };
 
 const categories = [
   { value: 'All', label: 'Toutes', icon: Sparkles },
-  { value: 'Logisticien', label: 'Logisticien', icon: Truck },
   { value: 'Electromecanicien', label: 'Électromécanicien', icon: Settings },
   { value: 'Mecanicien', label: 'Mécanicien', icon: Wrench },
   { value: 'Plombier', label: 'Plombier', icon: Droplet },
@@ -78,9 +64,6 @@ const categories = [
   { value: 'Menuisier', label: 'Menuisier', icon: Hammer },
   { value: 'AgentImmobilier', label: 'Propriétaire immobilier', icon: Building },
   { value: 'Soudeur', label: 'Soudeur', icon: Flame },
-  { value: 'Camionneur', label: 'Camionneur', icon: Truck },
-  { value: 'Tracteur', label: 'Tracteur', icon: Truck },
-  { value: 'Voiture', label: 'Voiture', icon: Truck },
   { value: 'Autres', label: 'Autres', icon: MoreHorizontal }
 ];
 
