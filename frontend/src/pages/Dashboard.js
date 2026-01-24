@@ -30,7 +30,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 // Traduction des professions en français
-const translateProfession = (profession) => {
+const translateProfession = (profession, customProfession = null) => {
   const translations = {
     'Electromecanicien': 'Électromécanicien',
     'Mecanicien': 'Mécanicien',
@@ -45,6 +45,12 @@ const translateProfession = (profession) => {
     'Plumber': 'Plombier',
     'Other': 'Autres'
   };
+  
+  // If profession is "Autres" and customProfession is provided, use custom profession
+  if (profession === 'Autres' && customProfession) {
+    return customProfession;
+  }
+  
   return translations[profession] || profession;
 };
 
