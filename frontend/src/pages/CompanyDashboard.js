@@ -794,23 +794,6 @@ const CompanyDashboard = () => {
           >
             <Plus className="h-4 w-4" /> + Service
           </Button>
-          <Button 
-            variant={activeTab === 'jobs' ? 'default' : 'outline'} 
-            onClick={() => setActiveTab('jobs')} 
-            className="gap-2 bg-blue-50 border-blue-200 hover:bg-blue-100"
-            data-testid="tab-jobs"
-          >
-            <Users className="h-4 w-4 text-blue-600" /> Offres Emploi
-          </Button>
-          <Button 
-            variant={activeTab === 'create-job' ? 'default' : 'outline'} 
-            onClick={() => setActiveTab('create-job')} 
-            className="gap-2 bg-blue-50 border-blue-200 hover:bg-blue-100"
-            disabled={!isApproved}
-            data-testid="tab-create-job"
-          >
-            <Plus className="h-4 w-4 text-blue-600" /> + Offre
-          </Button>
         </div>
 
         {/* Profile Tab */}
