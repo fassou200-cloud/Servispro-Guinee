@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import '@/App.css';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import CustomerHome from '@/pages/CustomerHome';
 import LandingPage from '@/pages/LandingPage';
 import BrowseProviders from '@/pages/BrowseProviders';
 import ProviderProfile from '@/pages/ProviderProfile';
