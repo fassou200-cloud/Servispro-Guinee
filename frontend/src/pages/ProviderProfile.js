@@ -20,7 +20,12 @@ import ServiceFeesDisplay from '@/components/ServiceFeesDisplay';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-const translateProfession = (profession) => {
+const translateProfession = (profession, customProfession = null) => {
+  // If profession is "Autres" and custom_profession is provided, use it
+  if (profession === 'Autres' && customProfession) {
+    return customProfession;
+  }
+  
   const translations = {
     'Electromecanicien': 'Électromécanicien',
     'Mecanicien': 'Mécanicien',
