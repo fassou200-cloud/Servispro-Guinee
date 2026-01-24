@@ -125,12 +125,14 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
   const fetchBalance = async () => {
     try {
       const token = localStorage.getItem('customerToken');
+      if (!token) return;
       const response = await axios.get(`${API}/customer/balance`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setBalance(response.data.balance || 0);
     } catch (error) {
       console.error('Failed to fetch balance:', error);
+      setBalance(0);
     }
   };
 
@@ -138,15 +140,54 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
     setLoadingBalance(true);
     try {
       const token = localStorage.getItem('customerToken');
+      if (!token) {
+        setCreditHistory([]);
+        return;
+      }
       const response = await axios.get(`${API}/customer/credit-history`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setCreditHistory(response.data || []);
     } catch (error) {
       console.error('Failed to fetch credit history:', error);
-      toast.error('Erreur lors du chargement de l\'historique');
+      setCreditHistory([]);
     } finally {
       setLoadingBalance(false);
+    }
+  };
+
+  const fetchRefundRequests = async () => {
+    try {
+      const token = localStorage.getItem('customerToken');
+      if (!token) return;
+      const response = await axios.get(`${API}/customer/refund-requests`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setRefundRequests(response.data || []);
+    } catch (error) {
+      console.error('Failed to fetch refund requests:', error);
+    }
+  };
+
+  const requestRefund = async (amount, reason) => {
+    try {
+      const token = localStorage.getItem('customerToken');
+      const response = await axios.post(`${API}/customer/request-refund`, {
+        amount: parseFloat(amount),
+        reason: reason
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.id) {
+        toast.success('Demande de remboursement envoyée');
+        setShowRefundForm(false);
+        setRefundAmount('');
+        setRefundReason('');
+        fetchRefundRequests();
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Erreur lors de la demande');
     }
   };
 
