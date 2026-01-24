@@ -268,7 +268,7 @@ const ProfileForm = ({ user, setUser, onUpdate }) => {
           </Label>
           <Select
             value={formData.profession}
-            onValueChange={(value) => setFormData({ ...formData, profession: value })}
+            onValueChange={(value) => setFormData({ ...formData, profession: value, custom_profession: value === 'Autres' ? formData.custom_profession : '' })}
           >
             <SelectTrigger data-testid="profile-profession-select" className="h-12">
               <SelectValue />
@@ -285,6 +285,23 @@ const ProfileForm = ({ user, setUser, onUpdate }) => {
             </SelectContent>
           </Select>
         </div>
+
+        {/* Custom Profession Field - Only shows when "Autres" is selected */}
+        {formData.profession === 'Autres' && (
+          <div className="space-y-2">
+            <Label htmlFor="custom_profession" className="font-heading text-xs uppercase tracking-wide">
+              Précisez votre métier
+            </Label>
+            <Input
+              id="custom_profession"
+              name="custom_profession"
+              value={formData.custom_profession || ''}
+              onChange={(e) => setFormData({ ...formData, custom_profession: e.target.value })}
+              className="h-12"
+              placeholder="Ex: Coiffeur, Photographe, Peintre..."
+            />
+          </div>
+        )}
 
         {/* Pricing Section - Hidden for Agent Immobilier */}
         {!isAgentImmobilier && (
