@@ -273,8 +273,8 @@ const CompanyAuth = ({ setIsCompanyAuthenticated }) => {
               <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-3xl blur-2xl"></div>
               <div className="relative bg-slate-800/50 rounded-3xl p-6 border border-slate-700">
                 <img 
-                  src="https://images.unsplash.com/photo-1758518731468-98e90ffd7430?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODd8MHwxfHNlYXJjaHw0fHxidXNpbmVzcyUyMHRlYW0lMjBtZWV0aW5nJTIwb2ZmaWNlJTIwcHJvZmVzc2lvbmFsJTIwY29tcGFueSUyMGNvcnBvcmF0ZXxlbnwwfHx8fDE3NjkyOTMzNDB8MA&ixlib=rb-4.1.0&q=85&w=600"
-                  alt="Équipe d'entreprise professionnelle"
+                  src="https://images.unsplash.com/photo-1668642538782-9579e75b0f4b?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzB8MHwxfHNlYXJjaHwyfHxyZWFsJTIwZXN0YXRlJTIwYWdlbnQlMjBob3VzZSUyMHByb3BlcnR5JTIwbW9kZXJuJTIwaG9tZSUyMGJ1aWxkaW5nfGVufDB8fHx8MTc2OTI5MzQ3OXww&ixlib=rb-4.1.0&q=85&w=600"
+                  alt="Maison moderne avec piscine"
                   className="w-full h-auto rounded-2xl object-cover"
                 />
                 <div className="mt-6 text-center">
