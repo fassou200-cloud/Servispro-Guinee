@@ -132,7 +132,7 @@ Construire une plateforme nommée "ServisPro" pour les prestataires de services 
 
 ## Changelog
 
-### 2026-01-24 - "Mot de passe oublié" + Suppression de Catégories
+### 2026-01-24 - "Mot de passe oublié" + Suppression de Catégories + Autres Métiers
 - ✅ **Fonctionnalité "Mot de passe oublié"** pour les prestataires et clients :
   - Composant ForgotPassword.js avec flux en 3 étapes (téléphone → OTP → nouveau mot de passe)
   - Backend endpoints : POST /api/auth/forgot-password, POST /api/auth/reset-password
@@ -142,7 +142,11 @@ Construire une plateforme nommée "ServisPro" pour les prestataires de services 
   - Supprimé du backend (ProfessionType enum)
   - Supprimé de tous les fichiers frontend (AuthPage, LandingPage, BrowseProviders, etc.)
   - 7 catégories de prestataires au lieu de 11
-- ✅ **Tests** : 11/13 tests backend passés, 100% frontend
+- ✅ **Profession personnalisée pour "Autres Métiers"** :
+  - Champ `custom_profession` ajouté au backend (RegisterInput, ProfileUpdate, ServiceProvider)
+  - Champ texte visible lors de l'inscription quand "Autres" est sélectionné
+  - Affichage de la profession personnalisée sur les pages BrowseProviders et ProviderProfile
+- ✅ **Tests** : Backend et frontend fonctionnels
 
 ### 2026-01-19 - Système de Conversation Client-Admin pour Demandes d'Achat (NOUVEAU)
 - ✅ **Connexion obligatoire** pour soumettre une demande d'achat
