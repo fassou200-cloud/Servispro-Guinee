@@ -4823,6 +4823,168 @@ async def get_customer_credit_history(current_customer: dict = Depends(get_curre
     
     return transactions
 
+class RefundRequest(BaseModel):
+    amount: float
+    reason: str
+
+@api_router.post("/customer/request-refund")
+async def request_refund(refund_data: RefundRequest, current_customer: dict = Depends(get_current_customer)):
+    """Request a refund of accumulated credits"""
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Get customer balance
+    customer = await db.customers.find_one({'id': current_customer['id']}, {'_id': 0})
+    if not customer:
+        raise HTTPException(status_code=404, detail="Client non trouvé")
+    
+    current_balance = customer.get('balance', 0) or 0
+    
+    if refund_data.amount <= 0:
+        raise HTTPException(status_code=400, detail="Le montant doit être positif")
+    
+    if refund_data.amount > current_balance:
+        raise HTTPException(status_code=400, detail=f"Montant supérieur au solde disponible ({current_balance} GNF)")
+    
+    # Create refund request
+    refund_id = str(uuid.uuid4())
+    refund_doc = {
+        'id': refund_id,
+        'customer_id': current_customer['id'],
+        'customer_phone': current_customer.get('phone_number'),
+        'customer_name': f"{customer.get('first_name', '')} {customer.get('last_name', '')}",
+        'amount': refund_data.amount,
+        'reason': refund_data.reason,
+        'status': 'pending',  # pending, approved, rejected
+        'admin_note': None,
+        'processed_by': None,
+        'processed_at': None,
+        'created_at': now,
+        'updated_at': now
+    }
+    
+    await db.refund_requests.insert_one(refund_doc)
+    
+    return {
+        'id': refund_id,
+        'amount': refund_data.amount,
+        'status': 'pending',
+        'message': 'Demande de remboursement envoyée'
+    }
+
+@api_router.get("/customer/refund-requests")
+async def get_customer_refund_requests(current_customer: dict = Depends(get_current_customer)):
+    """Get refund requests for a customer"""
+    requests = await db.refund_requests.find(
+        {'customer_id': current_customer['id']},
+        {'_id': 0}
+    ).sort('created_at', -1).to_list(20)
+    
+    return requests
+
+@api_router.get("/admin/refund-requests")
+async def get_all_refund_requests():
+    """Get all refund requests for admin"""
+    requests = await db.refund_requests.find(
+        {},
+        {'_id': 0}
+    ).sort('created_at', -1).to_list(100)
+    
+    return requests
+
+class RefundDecision(BaseModel):
+    status: str  # 'approved' or 'rejected'
+    admin_note: Optional[str] = None
+
+@api_router.put("/admin/refund-requests/{request_id}")
+async def process_refund_request(request_id: str, decision: RefundDecision):
+    """Approve or reject a refund request"""
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Find the refund request
+    refund_request = await db.refund_requests.find_one({'id': request_id}, {'_id': 0})
+    if not refund_request:
+        raise HTTPException(status_code=404, detail="Demande non trouvée")
+    
+    if refund_request['status'] != 'pending':
+        raise HTTPException(status_code=400, detail="Cette demande a déjà été traitée")
+    
+    if decision.status not in ['approved', 'rejected']:
+        raise HTTPException(status_code=400, detail="Statut invalide")
+    
+    # Update refund request
+    await db.refund_requests.update_one(
+        {'id': request_id},
+        {'$set': {
+            'status': decision.status,
+            'admin_note': decision.admin_note,
+            'processed_at': now,
+            'updated_at': now
+        }}
+    )
+    
+    # If approved, deduct from customer balance and create transaction
+    if decision.status == 'approved':
+        customer = await db.customers.find_one({'id': refund_request['customer_id']}, {'_id': 0})
+        if customer:
+            current_balance = customer.get('balance', 0) or 0
+            new_balance = max(0, current_balance - refund_request['amount'])
+            
+            # Update customer balance
+            await db.customers.update_one(
+                {'id': refund_request['customer_id']},
+                {'$set': {'balance': new_balance}}
+            )
+            
+            # Create credit transaction (negative = debit for refund)
+            credit_transaction = {
+                'id': str(uuid.uuid4()),
+                'customer_id': refund_request['customer_id'],
+                'customer_phone': refund_request['customer_phone'],
+                'amount': -refund_request['amount'],
+                'transaction_type': 'refund',
+                'description': f"Remboursement approuvé - {decision.admin_note or 'Sans note'}",
+                'related_id': request_id,
+                'balance_after': new_balance,
+                'created_at': now
+            }
+            await db.credit_transactions.insert_one(credit_transaction)
+            
+            # Create notification for customer
+            notification_doc = {
+                'id': str(uuid.uuid4()),
+                'customer_phone': refund_request['customer_phone'],
+                'customer_id': refund_request['customer_id'],
+                'user_type': 'customer',
+                'title': '✅ Remboursement approuvé',
+                'message': f"Votre demande de remboursement de {refund_request['amount']:,.0f} GNF a été approuvée.",
+                'notification_type': 'refund_approved',
+                'related_id': request_id,
+                'is_read': False,
+                'created_at': now
+            }
+            await db.customer_notifications.insert_one(notification_doc)
+    else:
+        # Rejected - notify customer
+        notification_doc = {
+            'id': str(uuid.uuid4()),
+            'customer_phone': refund_request['customer_phone'],
+            'customer_id': refund_request['customer_id'],
+            'user_type': 'customer',
+            'title': '❌ Remboursement refusé',
+            'message': f"Votre demande de remboursement de {refund_request['amount']:,.0f} GNF a été refusée. {decision.admin_note or ''}",
+            'notification_type': 'refund_rejected',
+            'related_id': request_id,
+            'is_read': False,
+            'created_at': now
+        }
+        await db.customer_notifications.insert_one(notification_doc)
+    
+    return {
+        'id': request_id,
+        'status': decision.status,
+        'message': f"Demande {'approuvée' if decision.status == 'approved' else 'refusée'}"
+    }
+
 @api_router.post("/customer/report-no-show/{job_id}")
 async def report_provider_no_show(job_id: str, current_customer: dict = Depends(get_current_customer)):
     """Report that a provider didn't show up for a paid service - credits the customer"""
