@@ -303,33 +303,6 @@ const ProfileForm = ({ user, setUser, onUpdate }) => {
           </div>
         )}
 
-        {/* Pricing Section - Hidden for Agent Immobilier */}
-        {!isAgentImmobilier && (
-          <div className="space-y-2">
-            <Label htmlFor="investigation_fee" className="font-heading text-xs uppercase tracking-wide">
-              Tarif d'Investigation (GNF)
-            </Label>
-            <div className="relative">
-              <Input
-                id="investigation_fee"
-                name="investigation_fee"
-                type="number"
-                data-testid="profile-investigation-fee-input"
-                value={formData.investigation_fee}
-                onChange={handleChange}
-                placeholder="Ex: 10000"
-                className="h-12 pr-16"
-              />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">
-                GNF
-              </span>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Ce tarif sera demandé au client avant chaque demande de service
-            </p>
-          </div>
-        )}
-
         <div className="space-y-2">
           <Label htmlFor="about_me" className="font-heading text-xs uppercase tracking-wide">
             À Propos de Moi
