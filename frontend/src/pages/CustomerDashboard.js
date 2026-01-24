@@ -9,7 +9,7 @@ import {
   Home, LogOut, Search, Building, User, CheckCircle, Clock, Briefcase,
   ArrowRight, MapPin, Calendar, Star, Bell, Settings, ChevronRight,
   Phone, Shield, Sparkles, TrendingUp, MessageCircle, DollarSign, 
-  Mail, RefreshCw, Eye, Send, Loader2, Wallet, AlertTriangle, CreditCard
+  Mail, RefreshCw, Eye, Send, Loader2, Wallet, AlertTriangle, CreditCard, Banknote, X
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
