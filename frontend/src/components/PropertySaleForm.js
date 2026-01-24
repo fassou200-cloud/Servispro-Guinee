@@ -646,35 +646,35 @@ const PropertySaleForm = ({ onSuccess }) => {
             </div>
           </div>
 
-          {/* Seller ID */}
+          {/* Document Ministère de l'Habitat */}
           <div className="space-y-2">
             <Label className="text-sm font-medium text-slate-700 flex items-center gap-2">
-              <User className="h-4 w-4 text-red-500" />
-              Pièce d'Identité du Vendeur (CNI ou Passeport) *
+              <Building className="h-4 w-4 text-amber-500" />
+              Document du Ministère de l'Habitat *
             </Label>
             <div className="flex gap-2">
               <input
-                id="seller-id"
+                id="ministry-doc"
                 type="file"
                 accept=".pdf,.jpg,.jpeg,.png"
-                onChange={(e) => handleDocumentSelect('seller_id_document', e)}
+                onChange={(e) => handleDocumentSelect('document_ministere_habitat', e)}
                 className="hidden"
               />
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => document.getElementById('seller-id').click()}
+                onClick={() => document.getElementById('ministry-doc').click()}
                 className="flex-1 h-12 gap-2 rounded-xl"
               >
                 <Upload className="h-4 w-4" />
-                {documentNames.seller_id_document || 'Choisir le fichier'}
+                {documentNames.document_ministere_habitat || 'Choisir le fichier'}
               </Button>
-              {documents.seller_id_document && (
+              {documents.document_ministere_habitat && (
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
-                  onClick={() => removeDocument('seller_id_document')}
+                  onClick={() => removeDocument('document_ministere_habitat')}
                   className="text-red-500"
                 >
                   <X className="h-4 w-4" />
@@ -683,35 +683,35 @@ const PropertySaleForm = ({ onSuccess }) => {
             </div>
           </div>
 
-          {/* Ministry Registration */}
+          {/* Document du Bâtiment */}
           <div className="space-y-2">
             <Label className="text-sm font-medium text-slate-700 flex items-center gap-2">
-              <Building className="h-4 w-4 text-amber-500" />
-              Enregistrement Ministère de l'Habitat
+              <Home className="h-4 w-4 text-blue-500" />
+              Document du Bâtiment (Permis de construire, Plan, etc.) *
             </Label>
             <div className="flex gap-2">
               <input
-                id="ministry-reg"
+                id="building-doc"
                 type="file"
                 accept=".pdf,.jpg,.jpeg,.png"
-                onChange={(e) => handleDocumentSelect('registration_ministere', e)}
+                onChange={(e) => handleDocumentSelect('document_batiment', e)}
                 className="hidden"
               />
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => document.getElementById('ministry-reg').click()}
+                onClick={() => document.getElementById('building-doc').click()}
                 className="flex-1 h-12 gap-2 rounded-xl"
               >
                 <Upload className="h-4 w-4" />
-                {documentNames.registration_ministere || 'Choisir le fichier'}
+                {documentNames.document_batiment || 'Choisir le fichier'}
               </Button>
-              {documents.registration_ministere && (
+              {documents.document_batiment && (
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
-                  onClick={() => removeDocument('registration_ministere')}
+                  onClick={() => removeDocument('document_batiment')}
                   className="text-red-500"
                 >
                   <X className="h-4 w-4" />
@@ -724,7 +724,7 @@ const PropertySaleForm = ({ onSuccess }) => {
           <div className="space-y-2">
             <Label className="text-sm font-medium text-slate-700 flex items-center gap-2">
               <FileText className="h-4 w-4 text-slate-500" />
-              Autres Documents (Permis de construire, Plan cadastral, etc.)
+              Autres Documents (Facultatif)
             </Label>
             <input
               id="additional-docs"
