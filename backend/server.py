@@ -955,6 +955,103 @@ async def get_company_profile(current_company: dict = Depends(get_current_compan
     """Get current company profile"""
     return current_company
 
+# ==================== PASSWORD RESET ENDPOINTS ====================
+
+class PasswordResetRequest(BaseModel):
+    phone_number: str
+    user_type: str  # 'provider', 'customer', 'company'
+
+class PasswordResetVerify(BaseModel):
+    phone_number: str
+    user_type: str
+    otp: str
+    new_password: str
+
+# Store OTPs temporarily (in production, use Redis or similar)
+password_reset_otps = {}
+
+@api_router.post("/auth/forgot-password")
+async def request_password_reset(request: PasswordResetRequest):
+    """Request a password reset - sends OTP to phone"""
+    phone = request.phone_number
+    user_type = request.user_type
+    
+    # Find user based on type
+    user = None
+    if user_type == 'provider':
+        user = await db.service_providers.find_one({'phone_number': phone})
+    elif user_type == 'customer':
+        user = await db.customers.find_one({'phone_number': phone})
+    elif user_type == 'company':
+        user = await db.companies.find_one({'phone_number': phone})
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="Aucun compte trouvé avec ce numéro de téléphone")
+    
+    # Generate OTP (6 digits)
+    import random
+    otp = ''.join([str(random.randint(0, 9)) for _ in range(6)])
+    
+    # Store OTP with expiration (10 minutes)
+    password_reset_otps[f"{user_type}_{phone}"] = {
+        'otp': otp,
+        'expires_at': datetime.now(timezone.utc) + timedelta(minutes=10)
+    }
+    
+    # In production, send SMS here. For now, return OTP in response (dev mode)
+    return {
+        'message': f'Code OTP envoyé au {phone}',
+        'otp_for_testing': otp,  # Remove this in production!
+        'expires_in_minutes': 10
+    }
+
+@api_router.post("/auth/reset-password")
+async def reset_password(request: PasswordResetVerify):
+    """Verify OTP and reset password"""
+    phone = request.phone_number
+    user_type = request.user_type
+    otp = request.otp
+    new_password = request.new_password
+    
+    # Check OTP
+    otp_key = f"{user_type}_{phone}"
+    stored_otp = password_reset_otps.get(otp_key)
+    
+    if not stored_otp:
+        raise HTTPException(status_code=400, detail="Aucune demande de réinitialisation en cours")
+    
+    if datetime.now(timezone.utc) > stored_otp['expires_at']:
+        del password_reset_otps[otp_key]
+        raise HTTPException(status_code=400, detail="Le code OTP a expiré")
+    
+    if stored_otp['otp'] != otp:
+        raise HTTPException(status_code=400, detail="Code OTP incorrect")
+    
+    # Hash new password
+    hashed_pwd = hash_password(new_password)
+    
+    # Update password based on user type
+    if user_type == 'provider':
+        await db.service_providers.update_one(
+            {'phone_number': phone},
+            {'$set': {'password': hashed_pwd, 'updated_at': datetime.now(timezone.utc).isoformat()}}
+        )
+    elif user_type == 'customer':
+        await db.customers.update_one(
+            {'phone_number': phone},
+            {'$set': {'password': hashed_pwd, 'updated_at': datetime.now(timezone.utc).isoformat()}}
+        )
+    elif user_type == 'company':
+        await db.companies.update_one(
+            {'phone_number': phone},
+            {'$set': {'password': hashed_pwd, 'updated_at': datetime.now(timezone.utc).isoformat()}}
+        )
+    
+    # Remove used OTP
+    del password_reset_otps[otp_key]
+    
+    return {'message': 'Mot de passe réinitialisé avec succès'}
+
 @api_router.put("/company/profile/me")
 async def update_company_profile(update_data: CompanyProfileUpdate, current_company: dict = Depends(get_current_company)):
     """Update company profile"""
