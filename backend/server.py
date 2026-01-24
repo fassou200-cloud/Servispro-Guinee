@@ -1359,7 +1359,7 @@ async def upload_company_rental_document(
     if rental['service_provider_id'] != current_company['id']:
         raise HTTPException(status_code=403, detail="Non autorisé")
     
-    valid_doc_types = ['titre_foncier', 'registration_ministere', 'seller_id_document', 'documents_additionnels']
+    valid_doc_types = ['titre_foncier', 'registration_ministere', 'seller_id_document', 'document_ministere_habitat', 'document_batiment', 'documents_additionnels', 'autres_documents']
     if doc_type not in valid_doc_types:
         raise HTTPException(status_code=400, detail=f"Type de document invalide. Types valides: {valid_doc_types}")
     
@@ -1514,7 +1514,7 @@ async def upload_company_sale_document(
     if sale['agent_id'] != current_company['id']:
         raise HTTPException(status_code=403, detail="Non autorisé")
     
-    valid_doc_types = ['titre_foncier', 'registration_ministere', 'seller_id_document', 'documents_additionnels']
+    valid_doc_types = ['titre_foncier', 'registration_ministere', 'seller_id_document', 'document_ministere_habitat', 'document_batiment', 'documents_additionnels', 'autres_documents']
     if doc_type not in valid_doc_types:
         raise HTTPException(status_code=400, detail=f"Type de document invalide. Types valides: {valid_doc_types}")
     
@@ -1934,7 +1934,7 @@ async def upload_rental_document(
     if rental['service_provider_id'] != current_user['id']:
         raise HTTPException(status_code=403, detail="Non autorisé")
     
-    valid_doc_types = ['titre_foncier', 'registration_ministere', 'seller_id_document', 'documents_additionnels']
+    valid_doc_types = ['titre_foncier', 'registration_ministere', 'seller_id_document', 'document_ministere_habitat', 'document_batiment', 'documents_additionnels', 'autres_documents']
     if doc_type not in valid_doc_types:
         raise HTTPException(status_code=400, detail=f"Type de document invalide. Types valides: {valid_doc_types}")
     
@@ -3198,7 +3198,7 @@ async def upload_property_sale_document(
     if sale['agent_id'] != current_user['id']:
         raise HTTPException(status_code=403, detail="Non autorisé")
     
-    valid_doc_types = ['titre_foncier', 'registration_ministere', 'seller_id_document', 'documents_additionnels']
+    valid_doc_types = ['titre_foncier', 'registration_ministere', 'seller_id_document', 'document_ministere_habitat', 'document_batiment', 'documents_additionnels', 'autres_documents']
     if doc_type not in valid_doc_types:
         raise HTTPException(status_code=400, detail=f"Type de document invalide. Types valides: {valid_doc_types}")
     
