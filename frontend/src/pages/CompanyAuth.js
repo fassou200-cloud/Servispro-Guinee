@@ -278,10 +278,7 @@ const CompanyAuth = ({ setIsCompanyAuthenticated }) => {
                   className="w-full h-80 rounded-2xl object-cover"
                 />
                 <div className="mt-6 text-center">
-                  <h3 className="text-2xl font-bold text-white mb-3">Rejoignez ServisPro</h3>
-                  <p className="text-slate-300 text-base">
-                    Publiez vos offres d'emploi et trouvez les meilleurs talents en Guinée
-                  </p>
+                  <h3 className="text-2xl font-bold text-white">Rejoignez ServisPro</h3>
                 </div>
               </div>
             </div>
