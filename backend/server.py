@@ -4405,14 +4405,10 @@ async def get_all_service_fees():
             {'profession': 'Menuisier', 'frais_visite': 50000, 'frais_prestation': 120000, 'label': 'Menuisier'},
             {'profession': 'AgentImmobilier', 'frais_visite': 100000, 'frais_prestation': 0, 'label': 'Propriétaire immobilier'},
             {'profession': 'Soudeur', 'frais_visite': 50000, 'frais_prestation': 100000, 'label': 'Soudeur'},
-            {'profession': 'Camionneur', 'frais_visite': 0, 'frais_prestation': 200000, 'label': 'Camionneur'},
-            {'profession': 'Tracteur', 'frais_visite': 0, 'frais_prestation': 150000, 'label': 'Tracteur'},
-            {'profession': 'Voiture', 'frais_visite': 0, 'frais_prestation': 100000, 'label': 'Voiture'},
             {'profession': 'Autres', 'frais_visite': 50000, 'frais_prestation': 100000, 'label': 'Autres'},
             {'profession': 'Electrician', 'frais_visite': 50000, 'frais_prestation': 100000, 'label': 'Électricien'},
             {'profession': 'Mechanic', 'frais_visite': 50000, 'frais_prestation': 100000, 'label': 'Mécanicien'},
             {'profession': 'Plumber', 'frais_visite': 50000, 'frais_prestation': 100000, 'label': 'Plombier'},
-            {'profession': 'Logistics', 'frais_visite': 50000, 'frais_prestation': 100000, 'label': 'Logistique'},
             {'profession': 'Other', 'frais_visite': 50000, 'frais_prestation': 100000, 'label': 'Autres'},
         ]
         # Insert defaults
