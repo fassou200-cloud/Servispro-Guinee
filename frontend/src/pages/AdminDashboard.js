@@ -1781,27 +1781,20 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                         </div>
                       )}
                       
-                      {selectedSale.seller_id_document ? (
+                      {selectedSale.document_ministere_habitat ? (
                         <a
-                          href={`${BACKEND_URL}${selectedSale.seller_id_document}`}
+                          href={`${BACKEND_URL}${selectedSale.document_ministere_habitat}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex items-center justify-between p-2 bg-slate-600/50 rounded hover:bg-slate-600 transition-colors"
                         >
                           <span className="flex items-center gap-2 text-sm text-slate-300">
                             <CheckCircle className="h-4 w-4 text-green-400" />
-                            Pièce d'Identité Vendeur
+                            Document Ministère de l'Habitat
                           </span>
                           <Eye className="h-4 w-4 text-slate-400" />
                         </a>
-                      ) : (
-                        <div className="flex items-center gap-2 p-2 text-sm text-slate-500">
-                          <XCircle className="h-4 w-4" />
-                          Pièce d'Identité - Non fournie
-                        </div>
-                      )}
-                      
-                      {selectedSale.registration_ministere ? (
+                      ) : selectedSale.registration_ministere ? (
                         <a
                           href={`${BACKEND_URL}${selectedSale.registration_ministere}`}
                           target="_blank"
@@ -1817,13 +1810,48 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                       ) : (
                         <div className="flex items-center gap-2 p-2 text-sm text-slate-500">
                           <XCircle className="h-4 w-4" />
-                          Enregistrement Ministère - Non fourni
+                          Document Ministère - Non fourni
                         </div>
+                      )}
+                      
+                      {selectedSale.document_batiment ? (
+                        <a
+                          href={`${BACKEND_URL}${selectedSale.document_batiment}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-between p-2 bg-slate-600/50 rounded hover:bg-slate-600 transition-colors"
+                        >
+                          <span className="flex items-center gap-2 text-sm text-slate-300">
+                            <CheckCircle className="h-4 w-4 text-green-400" />
+                            Document du Bâtiment
+                          </span>
+                          <Eye className="h-4 w-4 text-slate-400" />
+                        </a>
+                      ) : (
+                        <div className="flex items-center gap-2 p-2 text-sm text-slate-500">
+                          <XCircle className="h-4 w-4" />
+                          Document du Bâtiment - Non fourni
+                        </div>
+                      )}
+                      
+                      {selectedSale.seller_id_document && (
+                        <a
+                          href={`${BACKEND_URL}${selectedSale.seller_id_document}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-between p-2 bg-slate-600/50 rounded hover:bg-slate-600 transition-colors"
+                        >
+                          <span className="flex items-center gap-2 text-sm text-slate-300">
+                            <CheckCircle className="h-4 w-4 text-green-400" />
+                            Pièce d'Identité Vendeur
+                          </span>
+                          <Eye className="h-4 w-4 text-slate-400" />
+                        </a>
                       )}
                       
                       {selectedSale.documents_additionnels && selectedSale.documents_additionnels.length > 0 && (
                         <div className="pt-2 border-t border-slate-600">
-                          <span className="text-xs text-slate-400 mb-2 block">Documents Additionnels</span>
+                          <span className="text-xs text-slate-400 mb-2 block">Autres Documents</span>
                           {selectedSale.documents_additionnels.map((doc, idx) => (
                             <a
                               key={idx}
