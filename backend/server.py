@@ -87,9 +87,6 @@ class ProfessionType(str, Enum):
     MENUISIER = "Menuisier"
     AGENT_IMMOBILIER = "AgentImmobilier"
     SOUDEUR = "Soudeur"
-    CAMIONNEUR = "Camionneur"
-    TRACTEUR = "Tracteur"
-    VOITURE = "Voiture"
     AUTRES = "Autres"
 
 class UserType(str, Enum):
