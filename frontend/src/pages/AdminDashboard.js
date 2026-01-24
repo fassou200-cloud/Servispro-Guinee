@@ -95,6 +95,10 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
   const [visitFeesStats, setVisitFeesStats] = useState(null);
   const [loadingVisitFees, setLoadingVisitFees] = useState(false);
   
+  // Demand statistics by profession and location
+  const [demandStats, setDemandStats] = useState(null);
+  const [loadingDemandStats, setLoadingDemandStats] = useState(false);
+  
   // Refund requests state
   const [refundRequests, setRefundRequests] = useState([]);
   const [loadingRefunds, setLoadingRefunds] = useState(false);
