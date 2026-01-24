@@ -3996,6 +3996,89 @@ async def get_visit_fees_stats():
         }
     }
 
+@api_router.get("/admin/demand-stats")
+async def get_demand_stats():
+    """Get statistics for service demands by profession and by location"""
+    
+    # Get all jobs/demands
+    jobs = await db.job_offers.find({}, {'_id': 0}).to_list(1000)
+    
+    # Stats by profession
+    by_profession = {}
+    # Stats by location
+    by_location = {}
+    
+    for job in jobs:
+        # Get provider info
+        provider_id = job.get('service_provider_id')
+        if provider_id:
+            provider = await db.service_providers.find_one({'id': provider_id}, {'_id': 0})
+            if provider:
+                profession = provider.get('profession', 'Autres')
+                custom_profession = provider.get('custom_profession')
+                
+                # Use custom profession if set and profession is "Autres"
+                display_profession = custom_profession if profession == 'Autres' and custom_profession else profession
+                
+                # Count by profession
+                if display_profession not in by_profession:
+                    by_profession[display_profession] = {
+                        'count': 0,
+                        'pending': 0,
+                        'accepted': 0,
+                        'completed': 0,
+                        'rejected': 0
+                    }
+                by_profession[display_profession]['count'] += 1
+                
+                status = job.get('status', 'Pending')
+                if status == 'Pending':
+                    by_profession[display_profession]['pending'] += 1
+                elif status == 'Accepted':
+                    by_profession[display_profession]['accepted'] += 1
+                elif status in ['Completed', 'ProviderCompleted']:
+                    by_profession[display_profession]['completed'] += 1
+                elif status == 'Rejected':
+                    by_profession[display_profession]['rejected'] += 1
+        
+        # Count by location
+        location = job.get('location', 'Non spécifié')
+        if location:
+            # Normalize location (extract main area/city)
+            location_key = location.strip()
+            if ',' in location_key:
+                location_key = location_key.split(',')[0].strip()
+            
+            if location_key not in by_location:
+                by_location[location_key] = {
+                    'count': 0,
+                    'pending': 0,
+                    'accepted': 0,
+                    'completed': 0,
+                    'rejected': 0
+                }
+            by_location[location_key]['count'] += 1
+            
+            status = job.get('status', 'Pending')
+            if status == 'Pending':
+                by_location[location_key]['pending'] += 1
+            elif status == 'Accepted':
+                by_location[location_key]['accepted'] += 1
+            elif status in ['Completed', 'ProviderCompleted']:
+                by_location[location_key]['completed'] += 1
+            elif status == 'Rejected':
+                by_location[location_key]['rejected'] += 1
+    
+    # Sort by count descending
+    sorted_by_profession = dict(sorted(by_profession.items(), key=lambda x: x[1]['count'], reverse=True))
+    sorted_by_location = dict(sorted(by_location.items(), key=lambda x: x[1]['count'], reverse=True))
+    
+    return {
+        'total_demands': len(jobs),
+        'by_profession': sorted_by_profession,
+        'by_location': sorted_by_location
+    }
+
 @api_router.get("/admin/providers")
 async def get_all_providers_admin():
     """Get all providers with their verification status for admin review"""
