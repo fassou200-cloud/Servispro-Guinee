@@ -32,7 +32,6 @@ const API = `${BACKEND_URL}/api`;
 // Traduction des professions en français
 const translateProfession = (profession) => {
   const translations = {
-    'Logisticien': 'Logisticien',
     'Electromecanicien': 'Électromécanicien',
     'Mecanicien': 'Mécanicien',
     'Plombier': 'Plombier',
@@ -40,14 +39,10 @@ const translateProfession = (profession) => {
     'Menuisier': 'Menuisier',
     'AgentImmobilier': 'Propriétaire immobilier',
     'Soudeur': 'Soudeur',
-    'Camionneur': 'Camionneur (Location)',
-    'Tracteur': 'Tracteur (Location)',
-    'Voiture': 'Voiture (Location)',
     'Autres': 'Autres Métiers',
     'Electrician': 'Électricien',
     'Mechanic': 'Mécanicien',
     'Plumber': 'Plombier',
-    'Logistics': 'Logistique',
     'Other': 'Autres'
   };
   return translations[profession] || profession;
@@ -70,19 +65,14 @@ const isAgentImmobilier = (profession) => {
   return profession === 'AgentImmobilier';
 };
 
-// Check if user is a Vehicle Provider (Camionneur, Tracteur, Voiture)
+// Check if user is a Vehicle Provider (deprecated - categories removed)
 const isVehicleProvider = (profession) => {
-  return ['Camionneur', 'Tracteur', 'Voiture'].includes(profession);
+  return false;
 };
 
-// Get vehicle type icon
+// Get vehicle type icon (deprecated - categories removed)
 const getVehicleIcon = (profession) => {
-  const icons = {
-    'Camionneur': Truck,
-    'Tracteur': Tractor,
-    'Voiture': Car
-  };
-  return icons[profession] || Truck;
+  return Truck;
 };
 
 const Dashboard = ({ setIsAuthenticated }) => {
