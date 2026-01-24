@@ -472,6 +472,15 @@ const AuthPage = ({ setIsAuthenticated }) => {
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
+                {isLogin && (
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotPassword(true)}
+                    className="text-sm text-orange-600 hover:text-orange-700 hover:underline"
+                  >
+                    Mot de passe oublié ?
+                  </button>
+                )}
               </div>
 
               <Button 
