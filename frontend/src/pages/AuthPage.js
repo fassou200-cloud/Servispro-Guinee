@@ -47,7 +47,6 @@ const AuthPage = ({ setIsAuthenticated }) => {
       setVilles(getVillesByRegion(formData.region));
       setFormData(prev => ({ ...prev, ville: '', commune: '', quartier: '' }));
       setCommunes([]);
-      setQuartiers([]);
     }
   }, [formData.region]);
 
@@ -56,17 +55,8 @@ const AuthPage = ({ setIsAuthenticated }) => {
     if (formData.region && formData.ville) {
       setCommunes(getCommunesByVille(formData.region, formData.ville));
       setFormData(prev => ({ ...prev, commune: '', quartier: '' }));
-      setQuartiers([]);
     }
   }, [formData.ville]);
-
-  // Update quartiers when commune changes
-  useEffect(() => {
-    if (formData.region && formData.ville && formData.commune) {
-      setQuartiers(getQuartiersByCommune(formData.region, formData.ville, formData.commune));
-      setFormData(prev => ({ ...prev, quartier: '' }));
-    }
-  }, [formData.commune]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
