@@ -179,6 +179,62 @@ const CustomerHome = ({ isCustomerAuthenticated }) => {
         </div>
       </section>
 
+      {/* Categories Section */}
+      <section className="py-10 px-6 bg-gray-50">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-xl md:text-2xl font-bold text-gray-900 text-center mb-8">
+            Catégories populaires
+          </h2>
+          <div className="flex flex-wrap justify-center gap-6 md:gap-10">
+            <button
+              onClick={() => navigate('/browse?category=Electromecanicien')}
+              className="flex flex-col items-center gap-2 group"
+            >
+              <div className="h-16 w-16 rounded-full bg-yellow-500 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                <Zap className="h-7 w-7 text-white" />
+              </div>
+              <span className="text-sm font-medium text-gray-700">Électricien</span>
+            </button>
+            <button
+              onClick={() => navigate('/browse?category=Plombier')}
+              className="flex flex-col items-center gap-2 group"
+            >
+              <div className="h-16 w-16 rounded-full bg-blue-500 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                <Droplet className="h-7 w-7 text-white" />
+              </div>
+              <span className="text-sm font-medium text-gray-700">Plombier</span>
+            </button>
+            <button
+              onClick={() => navigate('/browse?category=Mecanicien')}
+              className="flex flex-col items-center gap-2 group"
+            >
+              <div className="h-16 w-16 rounded-full bg-orange-500 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                <Wrench className="h-7 w-7 text-white" />
+              </div>
+              <span className="text-sm font-medium text-gray-700">Mécanicien</span>
+            </button>
+            <button
+              onClick={() => navigate('/browse?category=Macon')}
+              className="flex flex-col items-center gap-2 group"
+            >
+              <div className="h-16 w-16 rounded-full bg-amber-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                <Hammer className="h-7 w-7 text-white" />
+              </div>
+              <span className="text-sm font-medium text-gray-700">Maçon</span>
+            </button>
+            <button
+              onClick={() => navigate('/rentals')}
+              className="flex flex-col items-center gap-2 group"
+            >
+              <div className="h-16 w-16 rounded-full bg-green-500 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                <Home className="h-7 w-7 text-white" />
+              </div>
+              <span className="text-sm font-medium text-gray-700">Location</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
       {/* What are you looking for Section */}
       <section className="py-12 md:py-16 px-6">
         <div className="max-w-7xl mx-auto">
