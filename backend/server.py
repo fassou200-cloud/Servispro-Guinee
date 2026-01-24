@@ -2949,6 +2949,66 @@ async def admin_update_property_inquiry(inquiry_id: str, update_data: AdminPrope
     
     return {'message': 'Demande mise à jour', 'inquiry_id': inquiry_id}
 
+@api_router.post("/admin/property-inquiries/{inquiry_id}/documents")
+async def admin_upload_inquiry_document(inquiry_id: str, document: UploadFile = File(...)):
+    """Admin: Upload a document for a property inquiry"""
+    # Verify inquiry exists
+    inquiry = await db.property_inquiries.find_one({'id': inquiry_id})
+    if not inquiry:
+        raise HTTPException(status_code=404, detail="Demande non trouvée")
+    
+    # Validate file type
+    allowed_types = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp']
+    if document.content_type not in allowed_types:
+        raise HTTPException(status_code=400, detail="Type de fichier non autorisé")
+    
+    # Save file
+    file_ext = document.filename.split('.')[-1] if '.' in document.filename else 'pdf'
+    filename = f"inquiry_doc_{inquiry_id}_{uuid.uuid4().hex[:8]}.{file_ext}"
+    file_path = f"/app/uploads/property_inquiries/{filename}"
+    
+    os.makedirs("/app/uploads/property_inquiries", exist_ok=True)
+    
+    content = await document.read()
+    with open(file_path, "wb") as f:
+        f.write(content)
+    
+    # Add to admin_documents array
+    document_url = f"/uploads/property_inquiries/{filename}"
+    await db.property_inquiries.update_one(
+        {'id': inquiry_id},
+        {
+            '$push': {'admin_documents': document_url},
+            '$set': {'updated_at': datetime.now(timezone.utc).isoformat()}
+        }
+    )
+    
+    return {'message': 'Document téléchargé', 'document_path': document_url}
+
+@api_router.delete("/admin/property-inquiries/{inquiry_id}/documents")
+async def admin_delete_inquiry_document(inquiry_id: str, document_path: str = Body(..., embed=True)):
+    """Admin: Delete a document from a property inquiry"""
+    # Verify inquiry exists
+    inquiry = await db.property_inquiries.find_one({'id': inquiry_id})
+    if not inquiry:
+        raise HTTPException(status_code=404, detail="Demande non trouvée")
+    
+    # Remove from array
+    await db.property_inquiries.update_one(
+        {'id': inquiry_id},
+        {
+            '$pull': {'admin_documents': document_path},
+            '$set': {'updated_at': datetime.now(timezone.utc).isoformat()}
+        }
+    )
+    
+    # Delete file from disk
+    full_path = f"/app{document_path}"
+    if os.path.exists(full_path):
+        os.remove(full_path)
+    
+    return {'message': 'Document supprimé'}
+
 # ==================== PROPERTY SALE ROUTES (Vente Immobilière) ====================
 
 @api_router.post("/property-sales")
