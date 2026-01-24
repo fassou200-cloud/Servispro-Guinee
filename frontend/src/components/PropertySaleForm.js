@@ -59,14 +59,14 @@ const PropertySaleForm = ({ onSuccess }) => {
   const [photoPreviewUrls, setPhotoPreviewUrls] = useState([]);
   const [documents, setDocuments] = useState({
     titre_foncier: null,
-    registration_ministere: null,
-    seller_id_document: null,
+    document_ministere_habitat: null,
+    document_batiment: null,
     documents_additionnels: []
   });
   const [documentNames, setDocumentNames] = useState({
     titre_foncier: '',
-    registration_ministere: '',
-    seller_id_document: '',
+    document_ministere_habitat: '',
+    document_batiment: '',
     documents_additionnels: []
   });
 
