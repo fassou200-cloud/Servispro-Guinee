@@ -167,12 +167,15 @@ const CustomerHome = ({ isCustomerAuthenticated }) => {
 
             {/* Right - Illustration */}
             <div className="flex-1 flex justify-center lg:justify-end">
-              <div className="bg-white rounded-3xl shadow-lg p-4 md:p-6">
-                <img 
-                  src="https://customer-assets.emergentagent.com/job_servispro-guinea-3/artifacts/26crrdv7_image.png"
-                  alt="Équipe de professionnels ServisPro"
-                  className="w-full max-w-sm md:max-w-md h-auto object-contain"
-                />
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-green-200 to-blue-200 rounded-3xl blur-2xl opacity-50"></div>
+                <div className="relative bg-white rounded-3xl shadow-2xl p-6 md:p-8">
+                  <img 
+                    src="https://customer-assets.emergentagent.com/job_servispro-guinea-3/artifacts/26crrdv7_image.png"
+                    alt="Équipe de professionnels ServisPro - Électricien, Plombier, Mécanicien"
+                    className="w-full max-w-sm md:max-w-lg h-auto object-contain"
+                  />
+                </div>
               </div>
             </div>
           </div>
