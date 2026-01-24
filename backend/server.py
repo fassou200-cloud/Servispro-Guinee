@@ -2613,34 +2613,106 @@ async def admin_get_pending_property_sales():
 @api_router.put("/admin/property-sales/{sale_id}/approve")
 async def admin_approve_property_sale(sale_id: str):
     """Admin: Approve a property sale"""
+    sale = await db.property_sales.find_one({'id': sale_id})
+    if not sale:
+        raise HTTPException(status_code=404, detail="Vente non trouvée")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
     result = await db.property_sales.update_one(
         {'id': sale_id},
         {'$set': {
             'status': 'approved',
-            'updated_at': datetime.now(timezone.utc).isoformat()
+            'approved_at': now,
+            'approved_by': 'admin',
+            'updated_at': now
         }}
     )
     
     if result.modified_count == 0:
         raise HTTPException(status_code=404, detail="Vente non trouvée")
+    
+    # Create notification for the property owner
+    notification_id = str(uuid.uuid4())
+    await db.notifications.insert_one({
+        'id': notification_id,
+        'user_id': sale.get('agent_id') or sale.get('company_id'),
+        'user_type': 'provider' if sale.get('agent_id') else 'company',
+        'title': 'Vente approuvée',
+        'message': f'Votre annonce de vente "{sale.get("title", "Propriété")}" a été approuvée et est maintenant visible au public.',
+        'notification_type': 'property_sale_approved',
+        'related_id': sale_id,
+        'is_read': False,
+        'created_at': now
+    })
     
     return {'message': 'Vente immobilière approuvée', 'sale_id': sale_id}
 
 @api_router.put("/admin/property-sales/{sale_id}/reject")
-async def admin_reject_property_sale(sale_id: str):
+async def admin_reject_property_sale(sale_id: str, reason: Optional[str] = None):
     """Admin: Reject a property sale"""
+    sale = await db.property_sales.find_one({'id': sale_id})
+    if not sale:
+        raise HTTPException(status_code=404, detail="Vente non trouvée")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
     result = await db.property_sales.update_one(
         {'id': sale_id},
         {'$set': {
             'status': 'rejected',
-            'updated_at': datetime.now(timezone.utc).isoformat()
+            'rejection_reason': reason or 'Annonce non conforme aux conditions d\'utilisation',
+            'updated_at': now
         }}
     )
     
     if result.modified_count == 0:
         raise HTTPException(status_code=404, detail="Vente non trouvée")
     
+    # Create notification for the property owner
+    notification_id = str(uuid.uuid4())
+    rejection_msg = reason or 'Annonce non conforme aux conditions d\'utilisation'
+    await db.notifications.insert_one({
+        'id': notification_id,
+        'user_id': sale.get('agent_id') or sale.get('company_id'),
+        'user_type': 'provider' if sale.get('agent_id') else 'company',
+        'title': 'Vente rejetée',
+        'message': f'Votre annonce de vente "{sale.get("title", "Propriété")}" a été rejetée. Raison: {rejection_msg}',
+        'notification_type': 'property_sale_rejected',
+        'related_id': sale_id,
+        'is_read': False,
+        'created_at': now
+    })
+    
     return {'message': 'Vente immobilière rejetée', 'sale_id': sale_id}
+
+@api_router.delete("/admin/property-sales/{sale_id}")
+async def admin_delete_property_sale(sale_id: str):
+    """Admin: Delete a property sale"""
+    sale = await db.property_sales.find_one({'id': sale_id})
+    if not sale:
+        raise HTTPException(status_code=404, detail="Vente non trouvée")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Create notification for the property owner before deletion
+    notification_id = str(uuid.uuid4())
+    await db.notifications.insert_one({
+        'id': notification_id,
+        'user_id': sale.get('agent_id') or sale.get('company_id'),
+        'user_type': 'provider' if sale.get('agent_id') else 'company',
+        'title': 'Vente supprimée',
+        'message': f'Votre annonce de vente "{sale.get("title", "Propriété")}" a été supprimée par l\'administrateur.',
+        'notification_type': 'property_sale_deleted',
+        'related_id': sale_id,
+        'is_read': False,
+        'created_at': now
+    })
+    
+    # Delete the sale
+    await db.property_sales.delete_one({'id': sale_id})
+    
+    return {'message': 'Vente immobilière supprimée', 'sale_id': sale_id}
 
 @api_router.put("/admin/property-sales/{sale_id}/sold")
 async def admin_mark_property_sold(sale_id: str):
