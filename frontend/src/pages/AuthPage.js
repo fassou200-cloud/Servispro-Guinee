@@ -90,6 +90,7 @@ const AuthPage = ({ setIsAuthenticated }) => {
             phone_number: formData.phone_number,
             password: formData.password,
             profession: formData.profession,
+            custom_profession: formData.profession === 'Autres' ? formData.custom_profession : '',
             location: locationParts.join(', '),
             region: formData.region,
             ville: formData.ville,
