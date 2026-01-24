@@ -7,12 +7,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card } from '@/components/ui/card';
 import { 
   ArrowLeft, User, Phone, Lock, Eye, EyeOff, Briefcase, Shield, 
-  Sparkles, Wrench, Truck, Home, Zap, Settings, MapPin
+  Sparkles, Wrench, Home, Zap, Settings, MapPin
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
-import { getRegions, getVillesByRegion, getCommunesByVille, getQuartiersByCommune } from '@/data/guineaLocations';
+import { getRegions, getVillesByRegion, getCommunesByVille } from '@/data/guineaLocations';
 import { getErrorMessage } from '@/utils/helpers';
+import ForgotPassword from '@/components/ForgotPassword';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -20,6 +21,7 @@ const API = `${BACKEND_URL}/api`;
 const AuthPage = ({ setIsAuthenticated }) => {
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
