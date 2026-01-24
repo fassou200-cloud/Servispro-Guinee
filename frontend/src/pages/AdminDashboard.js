@@ -2727,32 +2727,12 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
 
                   {/* Commission Breakdown by Domain */}
                   <div className="mt-4 pt-4 border-t border-purple-700/50">
-                    <p className="text-sm text-slate-400 mb-3">Répartition des commissions par domaine:</p>
-                    <div className="grid grid-cols-1 md:grid-cols-5 gap-3 text-sm">
+                    <p className="text-sm text-slate-400 mb-3">Commissions sur les ventes immobilières:</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                       <div className="bg-slate-800/30 p-3 rounded-lg">
-                        <span className="text-orange-400 font-semibold block">Prestation</span>
-                        <span className="text-white font-bold">{(commissionRevenue?.commission_breakdown?.prestation || 0).toLocaleString('fr-FR')} {commissionRevenue?.devise || settings.devise}</span>
-                        <span className="text-slate-500 text-xs block">({commissionRevenue?.transaction_counts?.prestation || 0} trans.)</span>
-                      </div>
-                      <div className="bg-slate-800/30 p-3 rounded-lg">
-                        <span className="text-cyan-400 font-semibold block">Loc. Courte</span>
-                        <span className="text-white font-bold">{(commissionRevenue?.commission_breakdown?.location_courte || 0).toLocaleString('fr-FR')} {commissionRevenue?.devise || settings.devise}</span>
-                        <span className="text-slate-500 text-xs block">({commissionRevenue?.transaction_counts?.location_courte || 0} trans.)</span>
-                      </div>
-                      <div className="bg-slate-800/30 p-3 rounded-lg">
-                        <span className="text-green-400 font-semibold block">Loc. Longue</span>
-                        <span className="text-white font-bold">{(commissionRevenue?.commission_breakdown?.location_longue || 0).toLocaleString('fr-FR')} {commissionRevenue?.devise || settings.devise}</span>
-                        <span className="text-slate-500 text-xs block">({commissionRevenue?.transaction_counts?.location_longue || 0} trans.)</span>
-                      </div>
-                      <div className="bg-slate-800/30 p-3 rounded-lg">
-                        <span className="text-amber-400 font-semibold block">Vente</span>
+                        <span className="text-amber-400 font-semibold block">Vente Immobilière</span>
                         <span className="text-white font-bold">{(commissionRevenue?.commission_breakdown?.vente || 0).toLocaleString('fr-FR')} {commissionRevenue?.devise || settings.devise}</span>
                         <span className="text-slate-500 text-xs block">({commissionRevenue?.transaction_counts?.vente || 0} ventes)</span>
-                      </div>
-                      <div className="bg-slate-800/30 p-3 rounded-lg">
-                        <span className="text-purple-400 font-semibold block">Loc. Véhicule</span>
-                        <span className="text-white font-bold">{(commissionRevenue?.commission_breakdown?.location_vehicule || 0).toLocaleString('fr-FR')} {commissionRevenue?.devise || settings.devise}</span>
-                        <span className="text-slate-500 text-xs block">({commissionRevenue?.transaction_counts?.location_vehicule || 0} trans.)</span>
                       </div>
                     </div>
                   </div>
