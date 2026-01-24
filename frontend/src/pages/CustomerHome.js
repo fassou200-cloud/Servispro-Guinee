@@ -67,6 +67,21 @@ const CustomerHome = ({ isCustomerAuthenticated }) => {
 
       {/* Main Content */}
       <main className="flex-1 px-4 py-6 max-w-lg mx-auto w-full">
+        {/* Hero Image Section */}
+        <div className="relative mb-6 rounded-2xl overflow-hidden">
+          <img 
+            src="https://images.unsplash.com/photo-1621905251918-48416bd8575a?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODl8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBzZXJ2aWNlJTIwd29ya2VyJTIwdGVjaG5pY2lhbiUyMHBsdW1iZXIlMjBlbGVjdHJpY2lhbnxlbnwwfHx8fDE3NjkyODQ5MDV8MA&ixlib=rb-4.1.0&q=85&w=800"
+            alt="Professionnel ServisPro"
+            className="w-full h-40 md:h-48 object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4">
+            <div>
+              <h1 className="text-white font-bold text-xl md:text-2xl">Des experts à votre service</h1>
+              <p className="text-white/80 text-sm">Trouvez le professionnel qu'il vous faut</p>
+            </div>
+          </div>
+        </div>
+
         {/* Search Bar */}
         <form onSubmit={handleSearch} className="mb-8">
           <div className="relative">
