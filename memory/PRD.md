@@ -4,12 +4,23 @@
 Construire une plateforme nommée "ServisPro" pour les prestataires de services et clients en Guinée. La plateforme nécessite des rôles utilisateurs distincts (Prestataire, Client, Admin, Entreprise), la gestion des profils, la vérification d'identité et de documents, les annonces de location et vente, les demandes de service et un système de notation.
 
 ## Personas Utilisateurs
-1. **Prestataires de Services** - Professionnels offrant divers services
-2. **Agents Immobiliers** - Gestion des locations et ventes de propriétés
-3. **Prestataires Véhicules** (Camionneur, Tracteur, Voiture) - Location de véhicules
-4. **Clients** - Recherche et réservation de services
-5. **Entreprises** - Sociétés avec documents légaux (RCCM, NIF, Licence)
-6. **Administrateurs** - Gestion de la plateforme
+1. **Prestataires de Services** - Professionnels offrant divers services (8 catégories)
+2. **Agents Immobiliers (Propriétaire Immobilier)** - Gestion des locations et ventes de propriétés
+3. **Clients** - Recherche et réservation de services
+4. **Entreprises** - Sociétés avec documents légaux (RCCM, NIF, Licence)
+5. **Administrateurs** - Gestion de la plateforme
+
+## Catégories de Prestataires
+- Électromécanicien
+- Mécanicien
+- Plombier
+- Maçon
+- Menuisier
+- Propriétaire immobilier
+- Soudeur
+- Autres Métiers
+
+**Note:** Les catégories "Logisticien", "Camionneur", "Tracteur", "Voiture" ont été supprimées (2026-01-24).
 
 ## Exigences Principales
 
@@ -120,6 +131,18 @@ Construire une plateforme nommée "ServisPro" pour les prestataires de services 
 ---
 
 ## Changelog
+
+### 2026-01-24 - "Mot de passe oublié" + Suppression de Catégories
+- ✅ **Fonctionnalité "Mot de passe oublié"** pour les prestataires et clients :
+  - Composant ForgotPassword.js avec flux en 3 étapes (téléphone → OTP → nouveau mot de passe)
+  - Backend endpoints : POST /api/auth/forgot-password, POST /api/auth/reset-password
+  - OTP stocké en mémoire avec expiration de 10 minutes
+  - Lien visible sur les pages de connexion /auth et /customer/auth
+- ✅ **Suppression des catégories** : Logisticien, Camionneur, Tracteur, Voiture
+  - Supprimé du backend (ProfessionType enum)
+  - Supprimé de tous les fichiers frontend (AuthPage, LandingPage, BrowseProviders, etc.)
+  - 7 catégories de prestataires au lieu de 11
+- ✅ **Tests** : 11/13 tests backend passés, 100% frontend
 
 ### 2026-01-19 - Système de Conversation Client-Admin pour Demandes d'Achat (NOUVEAU)
 - ✅ **Connexion obligatoire** pour soumettre une demande d'achat
