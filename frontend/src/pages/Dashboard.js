@@ -518,98 +518,109 @@ const Dashboard = ({ setIsAuthenticated }) => {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 md:px-8 py-6">
-        {/* Service Fees Info */}
-        <div className="mb-6">
-          <ProviderFeesCard profession={user.profession} />
-        </div>
-
-        {/* Welcome Banner with Quick Stats */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
-          {/* Profile Card */}
-          <Card className="lg:col-span-1 p-6">
-            <div className="flex flex-col items-center text-center">
-              <Avatar className="h-24 w-24 ring-4 ring-primary/20 mb-4">
-                <AvatarImage src={user.profile_picture ? `${BACKEND_URL}${user.profile_picture}` : undefined} />
-                <AvatarFallback className="text-3xl font-heading bg-primary text-primary-foreground">
-                  {user.first_name[0]}{user.last_name[0]}
-                </AvatarFallback>
-              </Avatar>
-              <h2 className="text-xl font-heading font-bold text-foreground">
-                {user.first_name} {user.last_name}
-              </h2>
-              <p className="text-sm text-muted-foreground mb-3">{translateProfession(user.profession)}</p>
-              <div className="flex flex-wrap gap-2 justify-center">
-                <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-                  user.online_status ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'
-                }`}>
-                  <div className={`h-2 w-2 rounded-full ${user.online_status ? 'bg-green-500' : 'bg-slate-400'}`} />
-                  {user.online_status ? 'Disponible' : 'Indisponible'}
-                </span>
-                {user.id_verification_picture && (
-                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
-                    <ShieldCheck className="h-3 w-3" /> Vérifié
-                  </span>
+      <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
+        {/* Hero Section with Profile */}
+        <div className="relative mb-8">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-pink-600/20 rounded-3xl blur-3xl" />
+          <div className="relative bg-slate-800/50 backdrop-blur-sm rounded-3xl border border-slate-700/50 p-8">
+            <div className="flex flex-col lg:flex-row items-center lg:items-start gap-8">
+              {/* Avatar */}
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full blur-xl opacity-50" />
+                <Avatar className="relative h-32 w-32 ring-4 ring-slate-700 shadow-2xl">
+                  <AvatarImage src={user.profile_picture ? `${BACKEND_URL}${user.profile_picture}` : undefined} />
+                  <AvatarFallback className="text-4xl font-heading bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                    {user.first_name[0]}{user.last_name[0]}
+                  </AvatarFallback>
+                </Avatar>
+                {user.online_status && (
+                  <div className="absolute bottom-2 right-2 h-5 w-5 bg-green-500 rounded-full ring-4 ring-slate-800 animate-pulse" />
                 )}
               </div>
-            </div>
-          </Card>
+              
+              {/* Profile Info */}
+              <div className="flex-1 text-center lg:text-left">
+                <h2 className="text-3xl font-heading font-bold text-white mb-2">
+                  {user.first_name} {user.last_name}
+                </h2>
+                <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 mb-4">
+                  <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-slate-700/50 rounded-full text-slate-300 text-sm">
+                    <Briefcase className="h-4 w-4 text-blue-400" />
+                    {translateProfession(user.profession, user.custom_profession)}
+                  </span>
+                  {user.id_verification_picture && (
+                    <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-blue-500/20 rounded-full text-blue-400 text-sm border border-blue-500/30">
+                      <ShieldCheck className="h-4 w-4" />
+                      Vérifié
+                    </span>
+                  )}
+                </div>
+                
+                {/* Price Info */}
+                {user.price && (
+                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/20 rounded-xl text-emerald-400 border border-emerald-500/30">
+                    <DollarSign className="h-5 w-5" />
+                    <span className="text-lg font-bold">{new Intl.NumberFormat('fr-GN').format(user.price)} GNF</span>
+                    <span className="text-sm text-emerald-300/70">/ service</span>
+                  </div>
+                )}
+              </div>
 
-          {/* Stats Cards */}
-          <Card className="p-6 bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-orange-600 font-medium">En Attente</p>
-                <p className="text-4xl font-bold text-orange-700">{stats.pending}</p>
-                <p className="text-xs text-orange-600">Nouvelles demandes</p>
-              </div>
-              <div className="h-14 w-14 rounded-full bg-orange-200 flex items-center justify-center">
-                <Clock className="h-7 w-7 text-orange-600" />
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-6 bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-blue-600 font-medium">En Cours</p>
-                <p className="text-4xl font-bold text-blue-700">{stats.accepted}</p>
-                <p className="text-xs text-blue-600">Travaux acceptés</p>
-              </div>
-              <div className="h-14 w-14 rounded-full bg-blue-200 flex items-center justify-center">
-                <Briefcase className="h-7 w-7 text-blue-600" />
+              {/* Quick Stats - Desktop */}
+              <div className="hidden lg:grid grid-cols-3 gap-4">
+                <div className="text-center p-4 bg-slate-700/30 rounded-2xl border border-slate-600/30">
+                  <div className="text-4xl font-bold text-orange-400 mb-1">{stats.pending}</div>
+                  <div className="text-xs text-slate-400 uppercase tracking-wide">En attente</div>
+                </div>
+                <div className="text-center p-4 bg-slate-700/30 rounded-2xl border border-slate-600/30">
+                  <div className="text-4xl font-bold text-blue-400 mb-1">{stats.accepted}</div>
+                  <div className="text-xs text-slate-400 uppercase tracking-wide">En cours</div>
+                </div>
+                <div className="text-center p-4 bg-slate-700/30 rounded-2xl border border-slate-600/30">
+                  <div className="text-4xl font-bold text-green-400 mb-1">{stats.completed}</div>
+                  <div className="text-xs text-slate-400 uppercase tracking-wide">Terminés</div>
+                </div>
               </div>
             </div>
-          </Card>
-
-          <Card className="p-6 bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-green-600 font-medium">Terminés</p>
-                <p className="text-4xl font-bold text-green-700">{stats.completed}</p>
-                <p className="text-xs text-green-600">Travaux complétés</p>
-              </div>
-              <div className="h-14 w-14 rounded-full bg-green-200 flex items-center justify-center">
-                <CheckCircle className="h-7 w-7 text-green-600" />
-              </div>
-            </div>
-          </Card>
+          </div>
         </div>
 
-        {/* Alert for Offline Status */}
+        {/* Mobile Stats Cards */}
+        <div className="grid grid-cols-3 gap-3 mb-6 lg:hidden">
+          <div className="bg-gradient-to-br from-orange-500/20 to-orange-600/10 rounded-2xl p-4 border border-orange-500/20">
+            <Clock className="h-6 w-6 text-orange-400 mb-2" />
+            <div className="text-2xl font-bold text-orange-400">{stats.pending}</div>
+            <div className="text-xs text-orange-300/70">En attente</div>
+          </div>
+          <div className="bg-gradient-to-br from-blue-500/20 to-blue-600/10 rounded-2xl p-4 border border-blue-500/20">
+            <Briefcase className="h-6 w-6 text-blue-400 mb-2" />
+            <div className="text-2xl font-bold text-blue-400">{stats.accepted}</div>
+            <div className="text-xs text-blue-300/70">En cours</div>
+          </div>
+          <div className="bg-gradient-to-br from-green-500/20 to-green-600/10 rounded-2xl p-4 border border-green-500/20">
+            <CheckCircle className="h-6 w-6 text-green-400 mb-2" />
+            <div className="text-2xl font-bold text-green-400">{stats.completed}</div>
+            <div className="text-xs text-green-300/70">Terminés</div>
+          </div>
+        </div>
+
+        {/* Offline Alert */}
         {!user.online_status && (
-          <Card className="p-4 mb-6 bg-amber-50 border-amber-200">
-            <div className="flex items-center gap-3">
-              <AlertCircle className="h-5 w-5 text-amber-600" />
-              <div>
-                <p className="font-medium text-amber-800">Vous êtes actuellement hors ligne</p>
-                <p className="text-sm text-amber-600">Les clients ne peuvent pas vous envoyer de demandes. Activez votre statut pour recevoir des travaux.</p>
-              </div>
-              <Button size="sm" onClick={toggleOnlineStatus} className="ml-auto bg-amber-600 hover:bg-amber-700">
-                Passer en ligne
-              </Button>
+          <div className="mb-6 p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-center gap-4">
+            <div className="h-12 w-12 rounded-xl bg-amber-500/20 flex items-center justify-center">
+              <AlertCircle className="h-6 w-6 text-amber-400" />
             </div>
-          </Card>
+            <div className="flex-1">
+              <p className="font-medium text-amber-400">Mode hors ligne activé</p>
+              <p className="text-sm text-amber-300/70">Les clients ne peuvent pas vous contacter. Passez en ligne pour recevoir des demandes.</p>
+            </div>
+            <Button 
+              onClick={toggleOnlineStatus} 
+              className="bg-amber-500 hover:bg-amber-600 text-slate-900 font-medium"
+            >
+              Passer en ligne
+            </Button>
+          </div>
         )}
 
         {/* Quick Navigation Tabs */}
