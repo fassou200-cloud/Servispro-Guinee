@@ -1527,7 +1527,7 @@ async def upload_company_sale_document(
     
     doc_url = f"/api/uploads/{filename}"
     
-    if doc_type == 'documents_additionnels':
+    if doc_type in ['documents_additionnels', 'autres_documents']:
         await db.property_sales.update_one(
             {'id': sale_id},
             {
