@@ -79,7 +79,6 @@ security = HTTPBearer()
 
 # Enums
 class ProfessionType(str, Enum):
-    LOGISTICIEN = "Logisticien"
     ELECTROMECANICIEN = "Electromecanicien"
     MECANICIEN = "Mecanicien"
     PLOMBIER = "Plombier"
