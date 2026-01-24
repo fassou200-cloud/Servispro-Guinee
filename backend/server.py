@@ -177,6 +177,7 @@ class ProfileUpdate(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     profession: Optional[ProfessionType] = None
+    custom_profession: Optional[str] = None
     about_me: Optional[str] = None
     online_status: Optional[bool] = None
     price: Optional[int] = None
@@ -190,6 +191,7 @@ class ServiceProvider(BaseModel):
     last_name: str
     phone_number: str
     profession: str
+    custom_profession: Optional[str] = None
     about_me: Optional[str] = None
     profile_picture: Optional[str] = None
     id_verification_picture: Optional[str] = None
