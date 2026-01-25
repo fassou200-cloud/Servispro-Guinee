@@ -426,9 +426,40 @@ const CustomerAuth = ({ setIsCustomerAuthenticated }) => {
                   </div>
                 )}
 
+                {/* Terms and Conditions for Registration */}
+                {!isLogin && (
+                  <div className="flex items-start gap-3 p-4 bg-green-50 rounded-xl border border-green-200">
+                    <Checkbox 
+                      id="terms-customer"
+                      checked={termsAccepted}
+                      onCheckedChange={setTermsAccepted}
+                      className="mt-0.5 border-green-500 data-[state=checked]:bg-green-500"
+                    />
+                    <div className="flex-1">
+                      <label 
+                        htmlFor="terms-customer" 
+                        className="text-sm text-gray-700 cursor-pointer"
+                      >
+                        J'accepte les{' '}
+                        <button
+                          type="button"
+                          onClick={() => setShowTermsModal(true)}
+                          className="text-green-600 hover:text-green-700 underline font-medium inline-flex items-center gap-1"
+                        >
+                          <FileText className="h-3.5 w-3.5" />
+                          Conditions Générales d'Utilisation
+                        </button>
+                      </label>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Vous devez accepter les CGU pour créer votre compte
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 <Button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || (!isLogin && !termsAccepted)}
                   className="w-full h-12 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold text-lg shadow-lg shadow-green-500/25"
                 >
                   {loading ? (
@@ -446,6 +477,7 @@ const CustomerAuth = ({ setIsCustomerAuthenticated }) => {
                     type="button"
                     onClick={() => {
                       setIsLogin(!isLogin);
+                      setTermsAccepted(false);
                       setFormData({ first_name: '', last_name: '', phone_number: '', password: '', region: '', ville: '', commune: '', quartier: '' });
                     }}
                     className="ml-1 text-green-600 hover:text-green-700 font-semibold"
