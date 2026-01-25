@@ -81,6 +81,10 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
   const [showRefundForm, setShowRefundForm] = useState(false);
   const [refundAmount, setRefundAmount] = useState('');
   const [refundReason, setRefundReason] = useState('');
+  
+  // Rating popup state
+  const [showRatingPopup, setShowRatingPopup] = useState(false);
+  const [ratingJobData, setRatingJobData] = useState(null);
 
   useEffect(() => {
     const storedCustomer = localStorage.getItem('customer');
