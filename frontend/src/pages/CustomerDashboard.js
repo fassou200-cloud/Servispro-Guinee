@@ -274,7 +274,7 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
 
   const handleConfirmComplete = async (jobId) => {
     try {
-      const token = localStorage.getItem('customer_token');
+      const token = localStorage.getItem('customerToken');
       const response = await axios.put(`${API}/jobs/${jobId}/customer-confirm`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
