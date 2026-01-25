@@ -610,8 +610,58 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
           </div>
         )}
 
-        {/* Active Jobs */}
-        {activeJobs.length > 0 && (
+        {/* Pending Jobs - Waiting for provider response */}
+        {pendingJobs.length > 0 && (
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center">
+                <Clock className="h-5 w-5 text-orange-600" />
+              </div>
+              <div>
+                <h3 className="text-xl font-heading font-bold text-gray-900">
+                  Demandes en Attente
+                </h3>
+                <p className="text-sm text-gray-500">{pendingJobs.length} demande(s) en attente de réponse du prestataire</p>
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              {pendingJobs.map((job) => (
+                <Card key={job.id} className="p-6 rounded-2xl border-2 border-orange-200 bg-orange-50/50 shadow-lg">
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <div className="flex items-center gap-3 mb-1">
+                        <h4 className="text-lg font-bold text-gray-900">{job.service_type}</h4>
+                        <span className="px-3 py-1 rounded-full text-xs font-semibold border bg-orange-100 text-orange-700 border-orange-200">
+                          En attente
+                        </span>
+                      </div>
+                      <p className="text-gray-600 text-sm">
+                        Prestataire: <strong>{job.provider_name}</strong>
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-orange-100 rounded-lg">
+                      <Clock className="h-4 w-4 text-orange-600" />
+                      <span className="text-sm text-orange-700 font-medium">En attente de réponse</span>
+                    </div>
+                  </div>
+                  <p className="text-gray-600 text-sm mb-3">{job.description}</p>
+                  <div className="flex items-center gap-4 text-sm text-gray-500">
+                    {job.location && (
+                      <span className="flex items-center gap-1">
+                        <MapPin className="h-4 w-4" />
+                        {job.location}
+                      </span>
+                    )}
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* In Progress Jobs - Provider accepted, work in progress */}
+        {inProgressJobs.length > 0 && (
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
@@ -621,24 +671,28 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
                 <h3 className="text-xl font-heading font-bold text-gray-900">
                   Services en Cours
                 </h3>
-                <p className="text-sm text-gray-500">{activeJobs.length} service(s) actif(s)</p>
+                <p className="text-sm text-gray-500">{inProgressJobs.length} service(s) en cours de réalisation</p>
               </div>
             </div>
             
             <div className="space-y-4">
-              {activeJobs.map((job) => (
-                <Card key={job.id} className="p-6 rounded-2xl border-0 shadow-lg bg-white">
+              {inProgressJobs.map((job) => (
+                <Card key={job.id} className="p-6 rounded-2xl border-2 border-blue-200 bg-blue-50/50 shadow-lg">
                   <div className="flex items-start justify-between mb-3">
                     <div>
                       <div className="flex items-center gap-3 mb-1">
                         <h4 className="text-lg font-bold text-gray-900">{job.service_type}</h4>
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(job.status)}`}>
-                          {translateStatus(job.status)}
+                        <span className="px-3 py-1 rounded-full text-xs font-semibold border bg-blue-100 text-blue-700 border-blue-200">
+                          En cours
                         </span>
                       </div>
                       <p className="text-gray-600 text-sm">
                         Prestataire: <strong>{job.provider_name}</strong>
                       </p>
+                    </div>
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-100 rounded-lg">
+                      <Briefcase className="h-4 w-4 text-blue-600" />
+                      <span className="text-sm text-blue-700 font-medium">Travail en cours</span>
                     </div>
                   </div>
                   <p className="text-gray-600 text-sm mb-3">{job.description}</p>
