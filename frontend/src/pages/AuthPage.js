@@ -520,11 +520,42 @@ const AuthPage = ({ setIsAuthenticated }) => {
                 )}
               </div>
 
+              {/* Terms and Conditions for Registration */}
+              {!isLogin && (
+                <div className="flex items-start gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                  <Checkbox 
+                    id="terms-provider"
+                    checked={termsAccepted}
+                    onCheckedChange={setTermsAccepted}
+                    className="mt-0.5 border-orange-500 data-[state=checked]:bg-orange-500"
+                  />
+                  <div className="flex-1">
+                    <label 
+                      htmlFor="terms-provider" 
+                      className="text-sm text-slate-700 cursor-pointer"
+                    >
+                      J'accepte les{' '}
+                      <button
+                        type="button"
+                        onClick={() => setShowTermsModal(true)}
+                        className="text-orange-600 hover:text-orange-700 underline font-medium inline-flex items-center gap-1"
+                      >
+                        <FileText className="h-3.5 w-3.5" />
+                        Conditions Générales d'Utilisation
+                      </button>
+                    </label>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Vous devez accepter les CGU pour créer votre compte
+                    </p>
+                  </div>
+                </div>
+              )}
+
               <Button 
                 type="submit" 
                 data-testid="auth-submit-button"
                 className="w-full h-12 font-heading font-bold text-base rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 shadow-lg shadow-orange-500/30"
-                disabled={loading}
+                disabled={loading || (!isLogin && !termsAccepted)}
               >
                 {loading ? (
                   <div className="flex items-center gap-2">
@@ -545,6 +576,7 @@ const AuthPage = ({ setIsAuthenticated }) => {
                   data-testid="auth-toggle-button"
                   onClick={() => {
                     setIsLogin(!isLogin);
+                    setTermsAccepted(false);
                     setFormData({ first_name: '', last_name: '', phone_number: '', password: '', profession: '', custom_profession: '', region: '', ville: '', commune: '', quartier: '' });
                   }}
                   className="ml-1 text-orange-600 hover:text-orange-700 font-medium"
