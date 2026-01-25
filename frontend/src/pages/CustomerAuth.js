@@ -504,6 +504,13 @@ const CustomerAuth = ({ setIsCustomerAuthenticated }) => {
           </div>
         </div>
       </div>
+
+      {/* Terms and Conditions Modal */}
+      <TermsConditionsModal 
+        open={showTermsModal}
+        onOpenChange={setShowTermsModal}
+        onAccept={() => setTermsAccepted(true)}
+      />
     </div>
   );
 };
