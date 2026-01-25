@@ -699,7 +699,7 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
           </div>
         )}
 
-        {/* Completed Jobs */}
+        {/* Completed Jobs - With Rating Option */}
         {completedJobs.length > 0 && (
           <div>
             <div className="flex items-center gap-3 mb-4">
@@ -710,23 +710,60 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
                 <h3 className="text-xl font-heading font-bold text-gray-900">
                   Services Terminés
                 </h3>
-                <p className="text-sm text-gray-500">{completedJobs.length} service(s) complété(s)</p>
+                <p className="text-sm text-gray-500">{completedJobs.length} service(s) complété(s) - Notez vos prestataires !</p>
               </div>
             </div>
             
-            <div className="grid md:grid-cols-2 gap-4">
-              {completedJobs.slice(0, 4).map((job) => (
-                <Card key={job.id} className="p-5 rounded-2xl border-0 shadow bg-white">
-                  <div className="flex items-center gap-3 mb-2">
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                    <h4 className="font-bold text-gray-900">{job.service_type}</h4>
+            <div className="space-y-4">
+              {completedJobs.map((job) => (
+                <Card key={job.id} className="p-5 rounded-2xl border-2 border-green-200 bg-green-50/30 shadow">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <CheckCircle className="h-5 w-5 text-green-500" />
+                        <h4 className="font-bold text-gray-900">{job.service_type}</h4>
+                        {job.has_review ? (
+                          <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-full flex items-center gap-1">
+                            <Star className="h-3 w-3 fill-yellow-500 text-yellow-500" />
+                            Noté
+                          </span>
+                        ) : (
+                          <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs font-medium rounded-full">
+                            À noter
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-gray-600 text-sm mb-1">
+                        Prestataire: <strong>{job.provider_name}</strong>
+                        {job.provider_profession && ` • ${job.provider_profession}`}
+                      </p>
+                      <p className="text-gray-500 text-sm mb-2">{job.description}</p>
+                      <p className="text-xs text-gray-400">
+                        Terminé le {job.completed_at ? new Date(job.completed_at).toLocaleDateString('fr-FR') : new Date(job.created_at).toLocaleDateString('fr-FR')}
+                      </p>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      {job.has_review ? (
+                        <div className="flex items-center gap-1 px-4 py-2 bg-yellow-100 rounded-xl">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star 
+                              key={star} 
+                              className={`h-4 w-4 ${star <= (job.review_rating || 0) ? 'fill-yellow-500 text-yellow-500' : 'text-gray-300'}`} 
+                            />
+                          ))}
+                        </div>
+                      ) : (
+                        <Button
+                          onClick={() => handleOpenRating(job)}
+                          className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white shadow-lg shadow-orange-500/25 rounded-xl"
+                        >
+                          <Star className="h-4 w-4 mr-2" />
+                          Noter le Prestataire
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                  <p className="text-gray-600 text-sm mb-2">
-                    {job.provider_name}
-                  </p>
-                  <p className="text-xs text-gray-400">
-                    {new Date(job.created_at).toLocaleDateString('fr-FR')}
-                  </p>
                 </Card>
               ))}
             </div>
