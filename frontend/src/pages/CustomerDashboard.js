@@ -308,7 +308,8 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
   };
 
   const pendingConfirmation = jobs.filter(j => j.status === 'ProviderCompleted');
-  const activeJobs = jobs.filter(j => j.status === 'Accepted' || j.status === 'Pending');
+  const inProgressJobs = jobs.filter(j => j.status === 'Accepted');
+  const pendingJobs = jobs.filter(j => j.status === 'Pending');
   const completedJobs = jobs.filter(j => j.status === 'Completed');
 
   if (!customer) {
