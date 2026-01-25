@@ -186,9 +186,15 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
           break;
         case 'revenus':
           setLoadingVisitFees(true);
-          const visitFeesRes = await axios.get(`${API}/admin/visit-fees-stats`);
+          setLoadingDemandStats(true);
+          const [visitFeesRes, demandStatsRes] = await Promise.all([
+            axios.get(`${API}/admin/visit-fees-stats`),
+            axios.get(`${API}/admin/demand-stats`)
+          ]);
           setVisitFeesStats(visitFeesRes.data);
+          setDemandStats(demandStatsRes.data);
           setLoadingVisitFees(false);
+          setLoadingDemandStats(false);
           break;
         default:
           break;
