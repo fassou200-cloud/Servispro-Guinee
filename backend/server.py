@@ -463,6 +463,8 @@ class ReviewCreate(BaseModel):
     reviewer_name: str
     rating: int
     comment: str
+    job_id: str  # Required: the completed job ID
+    customer_id: str  # Required: the customer who completed the job
     
     @field_validator('rating')
     def validate_rating(cls, v):
@@ -479,6 +481,8 @@ class Review(BaseModel):
     rating: int
     comment: str
     created_at: str
+    job_id: Optional[str] = None
+    customer_id: Optional[str] = None
 
 # Chat Models for Rental Listings
 class ChatMessageCreate(BaseModel):
