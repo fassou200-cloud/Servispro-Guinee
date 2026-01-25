@@ -393,27 +393,6 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
           </div>
         </div>
 
-        {/* Leave Review */}
-        {customer && (
-          <Card className="rounded-3xl border-0 shadow-lg mt-8 overflow-hidden">
-            <div className="bg-gradient-to-r from-blue-500 to-indigo-600 px-8 py-6">
-              <h3 className="text-2xl font-heading font-bold text-white flex items-center gap-3">
-                <Star className="h-6 w-6" />
-                Laisser un Avis
-              </h3>
-              <p className="text-blue-100 mt-1">Partagez votre expérience avec ce prestataire</p>
-            </div>
-            <div className="p-8">
-              <ReviewForm
-                providerId={providerId}
-                onSuccess={() => {
-                  setRefreshReviews(prev => prev + 1);
-                  fetchReviewStats();
-                }}
-              />
-            </div>
-          </Card>
-        )}
       </div>
 
       {/* Investigation Fee Payment Popup */}
