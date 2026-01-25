@@ -602,6 +602,13 @@ const AuthPage = ({ setIsAuthenticated }) => {
           </Card>
         </div>
       </div>
+
+      {/* Terms and Conditions Modal */}
+      <TermsConditionsModal 
+        open={showTermsModal}
+        onOpenChange={setShowTermsModal}
+        onAccept={() => setTermsAccepted(true)}
+      />
     </div>
   );
 };
