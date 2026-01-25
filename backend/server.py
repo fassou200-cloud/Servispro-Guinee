@@ -1723,6 +1723,8 @@ async def create_job_offer(job_data: JobOfferCreate):
         'description': job_data.description,
         'location': job_data.location,
         'scheduled_date': job_data.scheduled_date,
+        'customer_id': job_data.customer_id,
+        'customer_phone': job_data.customer_phone,
         'status': JobStatus.PENDING.value,
         'created_at': datetime.now(timezone.utc).isoformat()
     }
