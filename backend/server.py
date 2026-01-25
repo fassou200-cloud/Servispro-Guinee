@@ -4502,7 +4502,7 @@ async def get_customer_jobs():
         {'_id': 0}
     ).sort('created_at', -1).to_list(100)
     
-    # Enrich with provider info
+    # Enrich with provider info and review status
     for job in jobs:
         provider = await db.service_providers.find_one(
             {'id': job.get('service_provider_id')}, 
@@ -4511,6 +4511,11 @@ async def get_customer_jobs():
         if provider:
             job['provider_name'] = f"{provider.get('first_name', '')} {provider.get('last_name', '')}"
             job['provider_profession'] = provider.get('profession', '')
+        
+        # Check if this job has been reviewed
+        review = await db.reviews.find_one({'job_id': job.get('id')}, {'_id': 0, 'rating': 1})
+        job['has_review'] = review is not None
+        job['review_rating'] = review.get('rating') if review else None
     
     return jobs
 
