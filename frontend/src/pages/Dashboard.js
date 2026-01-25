@@ -199,7 +199,9 @@ const Dashboard = ({ setIsAuthenticated }) => {
   };
 
   const pendingJobs = jobs.filter(j => j.status === 'Pending');
-  const activeJobs = jobs.filter(j => j.status === 'Accepted' || j.status === 'ProviderCompleted');
+  const activeJobs = jobs.filter(j => j.status === 'Accepted');
+  const awaitingConfirmationJobs = jobs.filter(j => j.status === 'ProviderCompleted');
+  const completedJobs = jobs.filter(j => j.status === 'Completed');
 
   if (loading) {
     return (
