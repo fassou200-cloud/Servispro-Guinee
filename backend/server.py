@@ -4439,8 +4439,8 @@ async def provider_mark_complete(job_id: str, current_user: dict = Depends(get_c
     return {"message": "Travail marqué comme terminé. En attente de confirmation du client."}
 
 @api_router.put("/jobs/{job_id}/customer-confirm")
-async def customer_confirm_complete(job_id: str):
-    """Customer confirms job is completed"""
+async def customer_confirm_complete(job_id: str, current_user: dict = Depends(get_current_customer)):
+    """Customer confirms job is completed - returns data for rating popup"""
     job = await db.job_offers.find_one({'id': job_id}, {'_id': 0})
     if not job:
         raise HTTPException(status_code=404, detail="Travail non trouvé")
@@ -4448,11 +4448,34 @@ async def customer_confirm_complete(job_id: str):
     if job['status'] != 'ProviderCompleted':
         raise HTTPException(status_code=400, detail="Le prestataire doit d'abord marquer le travail comme terminé")
     
+    # Verify this is the customer who requested the job
+    if job.get('customer_id') != current_user['id']:
+        raise HTTPException(status_code=403, detail="Non autorisé - ce n'est pas votre demande")
+    
     await db.job_offers.update_one(
         {'id': job_id},
-        {'$set': {'status': JobStatus.COMPLETED.value}}
+        {'$set': {'status': JobStatus.COMPLETED.value, 'completed_at': datetime.now(timezone.utc).isoformat()}}
     )
-    return {"message": "Service confirmé comme terminé. Merci !"}
+    
+    # Get provider info for the rating popup
+    provider = await db.service_providers.find_one({'id': job['service_provider_id']}, {'_id': 0, 'password': 0})
+    
+    # Check if already reviewed
+    existing_review = await db.reviews.find_one({
+        'job_id': job_id,
+        'customer_id': current_user['id']
+    })
+    
+    return {
+        "message": "Service confirmé comme terminé. Merci !",
+        "job_id": job_id,
+        "provider_id": job['service_provider_id'],
+        "provider_name": f"{provider.get('first_name', '')} {provider.get('last_name', '')}".strip() if provider else "Prestataire",
+        "provider_profession": provider.get('profession', '') if provider else '',
+        "service_description": job.get('description', ''),
+        "can_review": existing_review is None,
+        "already_reviewed": existing_review is not None
+    }
 
 @api_router.get("/customer/jobs")
 async def get_customer_jobs():
