@@ -1254,6 +1254,18 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
           </div>
         )}
       </div>
+
+      {/* Rating Popup */}
+      <RatingPopup
+        open={showRatingPopup}
+        onOpenChange={setShowRatingPopup}
+        jobData={ratingJobData}
+        customerInfo={customer}
+        onReviewSubmitted={() => {
+          setRatingJobData(null);
+          fetchJobs();
+        }}
+      />
     </div>
   );
 };
