@@ -41,7 +41,7 @@ const RatingPopup = ({
 
     setSubmitting(true);
     try {
-      const token = localStorage.getItem('customer_token');
+      const token = localStorage.getItem('customerToken');
       await axios.post(`${API}/reviews`, {
         service_provider_id: jobData.provider_id,
         reviewer_name: `${customerInfo.first_name} ${customerInfo.last_name}`,
