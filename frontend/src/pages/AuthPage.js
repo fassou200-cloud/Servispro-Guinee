@@ -65,6 +65,13 @@ const AuthPage = ({ setIsAuthenticated }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Check terms acceptance for registration
+    if (!isLogin && !termsAccepted) {
+      toast.error('Vous devez accepter les Conditions Générales d\'Utilisation pour créer un compte');
+      return;
+    }
+    
     setLoading(true);
 
     try {
