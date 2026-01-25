@@ -238,6 +238,8 @@ class JobOfferCreate(BaseModel):
     description: str
     location: Optional[str] = None
     scheduled_date: Optional[str] = None
+    customer_id: Optional[str] = None  # Link to customer who requested the job
+    customer_phone: Optional[str] = None
 
 class JobOfferUpdate(BaseModel):
     status: JobStatus
@@ -254,6 +256,8 @@ class JobOffer(BaseModel):
     scheduled_date: Optional[str] = None
     status: str
     created_at: str
+    customer_id: Optional[str] = None
+    customer_phone: Optional[str] = None
 
 # Visit Request Models for Rentals
 class VisitRequestStatus(str, Enum):
