@@ -275,11 +275,24 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
   const handleConfirmComplete = async (jobId) => {
     try {
       const token = localStorage.getItem('customerToken');
-      await axios.put(`${API}/jobs/${jobId}/customer-confirm`, {}, {
+      const response = await axios.put(`${API}/jobs/${jobId}/customer-confirm`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      toast.success('Service confirmé comme terminé ! Vous pouvez maintenant noter le prestataire dans la section "Services Terminés".');
+      toast.success('Service confirmé comme terminé !');
+      
+      // Show rating popup automatically if can review
+      if (response.data.can_review) {
+        setRatingJobData({
+          job_id: response.data.job_id,
+          provider_id: response.data.provider_id,
+          provider_name: response.data.provider_name,
+          provider_profession: response.data.provider_profession,
+          service_description: response.data.service_description
+        });
+        setShowRatingPopup(true);
+      }
+      
       fetchJobs();
     } catch (error) {
       toast.error(getErrorMessage(error, 'Erreur lors de la confirmation'));
