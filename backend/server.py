@@ -4454,13 +4454,23 @@ async def customer_confirm_complete(job_id: str, current_user: dict = Depends(ge
     if job['status'] != 'ProviderCompleted':
         raise HTTPException(status_code=400, detail="Le prestataire doit d'abord marquer le travail comme terminé")
     
-    # Verify this is the customer who requested the job
-    if job.get('customer_id') != current_user['id']:
+    # If job has a customer_id, verify it matches the current user
+    # If job doesn't have customer_id (legacy job), assign current customer to it
+    job_customer_id = job.get('customer_id')
+    if job_customer_id and job_customer_id != current_user['id']:
         raise HTTPException(status_code=403, detail="Non autorisé - ce n'est pas votre demande")
+    
+    # Update job with completion status and assign customer_id if not present
+    update_data = {
+        'status': JobStatus.COMPLETED.value, 
+        'completed_at': datetime.now(timezone.utc).isoformat()
+    }
+    if not job_customer_id:
+        update_data['customer_id'] = current_user['id']
     
     await db.job_offers.update_one(
         {'id': job_id},
-        {'$set': {'status': JobStatus.COMPLETED.value, 'completed_at': datetime.now(timezone.utc).isoformat()}}
+        {'$set': update_data}
     )
     
     # Get provider info for the rating popup
