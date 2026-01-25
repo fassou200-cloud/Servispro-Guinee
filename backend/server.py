@@ -462,6 +462,12 @@ class PropertySale(BaseModel):
     created_at: str
     updated_at: str
 
+class SurveyData(BaseModel):
+    punctuality: Optional[str] = None  # excellent, good, average, poor
+    quality: Optional[str] = None
+    communication: Optional[str] = None
+    recommend: Optional[str] = None  # yes, no
+
 class ReviewCreate(BaseModel):
     service_provider_id: str
     reviewer_name: str
@@ -469,6 +475,7 @@ class ReviewCreate(BaseModel):
     comment: str
     job_id: str  # Required: the completed job ID
     customer_id: str  # Required: the customer who completed the job
+    survey: Optional[SurveyData] = None  # Survey data
     
     @field_validator('rating')
     def validate_rating(cls, v):
@@ -487,6 +494,7 @@ class Review(BaseModel):
     created_at: str
     job_id: Optional[str] = None
     customer_id: Optional[str] = None
+    survey: Optional[dict] = None
 
 # Chat Models for Rental Listings
 class ChatMessageCreate(BaseModel):
