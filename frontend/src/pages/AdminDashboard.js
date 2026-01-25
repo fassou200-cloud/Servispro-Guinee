@@ -2457,6 +2457,98 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                   </Card>
                 </div>
 
+                {/* Demand Statistics by Profession and Location */}
+                {demandStats && (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Demands by Profession */}
+                    <Card className="p-6 bg-slate-800 border-slate-700">
+                      <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <Briefcase className="h-5 w-5 text-purple-400" />
+                        Demandes par Profession
+                        <span className="ml-auto text-sm text-slate-400 font-normal">
+                          Total: {demandStats.total_demands}
+                        </span>
+                      </h3>
+                      {Object.keys(demandStats.by_profession).length === 0 ? (
+                        <div className="text-center py-8 text-slate-400">
+                          <Briefcase className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                          <p>Aucune demande enregistrée</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+                          {Object.entries(demandStats.by_profession).map(([profession, stats]) => (
+                            <div key={profession} className="p-3 bg-slate-700/50 rounded-lg">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="font-medium text-white">{translateProfession(profession)}</span>
+                                <span className="text-lg font-bold text-purple-400">{stats.count}</span>
+                              </div>
+                              <div className="flex flex-wrap gap-2 text-xs">
+                                <span className="px-2 py-1 rounded bg-orange-600/20 text-orange-400">
+                                  En attente: {stats.pending}
+                                </span>
+                                <span className="px-2 py-1 rounded bg-blue-600/20 text-blue-400">
+                                  Acceptées: {stats.accepted}
+                                </span>
+                                <span className="px-2 py-1 rounded bg-green-600/20 text-green-400">
+                                  Terminées: {stats.completed}
+                                </span>
+                                <span className="px-2 py-1 rounded bg-red-600/20 text-red-400">
+                                  Refusées: {stats.rejected}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </Card>
+
+                    {/* Demands by Location */}
+                    <Card className="p-6 bg-slate-800 border-slate-700">
+                      <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <MapPin className="h-5 w-5 text-teal-400" />
+                        Demandes par Localisation
+                        <span className="ml-auto text-sm text-slate-400 font-normal">
+                          {Object.keys(demandStats.by_location).length} zones
+                        </span>
+                      </h3>
+                      {Object.keys(demandStats.by_location).length === 0 ? (
+                        <div className="text-center py-8 text-slate-400">
+                          <MapPin className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                          <p>Aucune localisation enregistrée</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+                          {Object.entries(demandStats.by_location).map(([location, stats]) => (
+                            <div key={location} className="p-3 bg-slate-700/50 rounded-lg">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="font-medium text-white flex items-center gap-2">
+                                  <MapPin className="h-4 w-4 text-teal-400" />
+                                  {location}
+                                </span>
+                                <span className="text-lg font-bold text-teal-400">{stats.count}</span>
+                              </div>
+                              <div className="flex flex-wrap gap-2 text-xs">
+                                <span className="px-2 py-1 rounded bg-orange-600/20 text-orange-400">
+                                  En attente: {stats.pending}
+                                </span>
+                                <span className="px-2 py-1 rounded bg-blue-600/20 text-blue-400">
+                                  Acceptées: {stats.accepted}
+                                </span>
+                                <span className="px-2 py-1 rounded bg-green-600/20 text-green-400">
+                                  Terminées: {stats.completed}
+                                </span>
+                                <span className="px-2 py-1 rounded bg-red-600/20 text-red-400">
+                                  Refusées: {stats.rejected}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </Card>
+                  </div>
+                )}
+
                 {/* Recent Payments Tables */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Recent Location Payments */}
