@@ -3380,6 +3380,7 @@ async def create_review(review_data: ReviewCreate):
         'comment': review_data.comment,
         'job_id': review_data.job_id,
         'customer_id': review_data.customer_id,
+        'survey': review_data.survey.model_dump() if review_data.survey else None,
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     
