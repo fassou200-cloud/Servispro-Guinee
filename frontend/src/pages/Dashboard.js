@@ -803,8 +803,68 @@ const Dashboard = ({ setIsAuthenticated }) => {
               </div>
             )}
 
+            {/* Awaiting Client Confirmation Section */}
+            {awaitingConfirmationJobs.length > 0 && (
+              <div>
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="h-10 w-10 rounded-xl bg-purple-100 flex items-center justify-center">
+                    <Clock className="h-5 w-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-heading font-bold text-gray-900">
+                      En Attente de Confirmation Client
+                    </h3>
+                    <p className="text-sm text-purple-600">{awaitingConfirmationJobs.length} travaux terminés</p>
+                  </div>
+                </div>
+                <div className="grid gap-4">
+                  {awaitingConfirmationJobs.map((job) => (
+                    <div 
+                      key={job.id} 
+                      className="group relative bg-white rounded-2xl border-2 border-purple-200 p-6 hover:border-purple-300 transition-all"
+                    >
+                      <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-purple-500 to-pink-500 rounded-l-2xl" />
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-3">
+                            <h4 className="text-xl font-heading font-bold text-gray-900">
+                              {job.service_type}
+                            </h4>
+                            <span className="px-3 py-1 bg-purple-100 text-purple-600 rounded-full text-sm font-medium border border-purple-200">
+                              En attente de confirmation
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <User className="h-4 w-4 text-gray-400" />
+                            <span className="text-gray-700">{job.client_name}</span>
+                          </div>
+                          <p className="text-gray-600 mb-4">{job.description}</p>
+                          <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+                            {job.location && (
+                              <div className="flex items-center gap-1">
+                                <MapPin className="h-4 w-4" />
+                                {job.location}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-2">
+                          <div className="flex items-center gap-2 px-4 py-2 bg-purple-50 rounded-xl border border-purple-200">
+                            <Clock className="h-4 w-4 text-purple-500" />
+                            <span className="text-purple-700 font-medium text-sm">
+                              Le client doit confirmer
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Empty State */}
-            {pendingJobs.length === 0 && activeJobs.length === 0 && (
+            {pendingJobs.length === 0 && activeJobs.length === 0 && awaitingConfirmationJobs.length === 0 && (
               <div className="text-center py-16 bg-white rounded-2xl border border-gray-200">
                 <div className="h-20 w-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-6">
                   <Briefcase className="h-10 w-10 text-gray-400" />
