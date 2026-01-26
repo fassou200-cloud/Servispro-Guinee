@@ -97,6 +97,7 @@ function App() {
         </Routes>
       </BrowserRouter>
       <Toaster />
+      <FeedbackButton />
     </div>
   );
 }
