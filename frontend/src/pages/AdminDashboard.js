@@ -200,6 +200,14 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
           setLoadingVisitFees(false);
           setLoadingDemandStats(false);
           break;
+        case 'feedbacks':
+          const [feedbacksRes, feedbackStatsRes] = await Promise.all([
+            axios.get(`${API}/admin/feedbacks`),
+            axios.get(`${API}/admin/feedbacks/stats`)
+          ]);
+          setFeedbacks(feedbacksRes.data);
+          setFeedbackStats(feedbackStatsRes.data);
+          break;
         default:
           break;
       }
