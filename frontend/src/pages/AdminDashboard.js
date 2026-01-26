@@ -768,6 +768,19 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
             Revenus
           </Button>
           <Button
+            variant={activeTab === 'feedbacks' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('feedbacks')}
+            className={activeTab === 'feedbacks' ? 'bg-pink-600 hover:bg-pink-700' : 'border-slate-600 text-slate-300'}
+          >
+            <MessageSquare className="h-4 w-4 mr-2" />
+            Feedbacks
+            {feedbackStats?.by_status?.new > 0 && (
+              <span className="ml-2 px-2 py-0.5 bg-red-500 text-white text-xs rounded-full">
+                {feedbackStats.by_status.new}
+              </span>
+            )}
+          </Button>
+          <Button
             variant={activeTab === 'refunds' ? 'default' : 'outline'}
             onClick={() => { setActiveTab('refunds'); fetchRefundRequests(); }}
             className={activeTab === 'refunds' ? 'bg-orange-600 hover:bg-orange-700' : 'border-slate-600 text-slate-300'}
