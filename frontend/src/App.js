@@ -17,6 +17,7 @@ import AdminDashboard from '@/pages/AdminDashboard';
 import CompanyAuth from '@/pages/CompanyAuth';
 import CompanyDashboard from '@/pages/CompanyDashboard';
 import { Toaster } from '@/components/ui/sonner';
+import FeedbackButton from '@/components/FeedbackButton';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
