@@ -3430,6 +3430,102 @@ async def create_review(review_data: ReviewCreate):
     review_response = {k: v for k, v in review_doc.items() if k != '_id'}
     return Review(**review_response)
 
+# ==================== FEEDBACK SYSTEM ====================
+@api_router.post("/feedback", response_model=Feedback)
+async def submit_feedback(feedback_data: FeedbackCreate):
+    """Submit feedback about platform issues, bugs, or feature requests"""
+    feedback_id = str(uuid.uuid4())
+    feedback_doc = {
+        'id': feedback_id,
+        'type': feedback_data.type.value,
+        'title': feedback_data.title,
+        'description': feedback_data.description,
+        'user_name': feedback_data.user_name,
+        'user_email': feedback_data.user_email,
+        'user_phone': feedback_data.user_phone,
+        'user_type': feedback_data.user_type,
+        'page_url': feedback_data.page_url,
+        'status': FeedbackStatus.NEW.value,
+        'admin_notes': None,
+        'created_at': datetime.now(timezone.utc).isoformat(),
+        'updated_at': None
+    }
+    
+    await db.feedbacks.insert_one(feedback_doc)
+    
+    feedback_response = {k: v for k, v in feedback_doc.items() if k != '_id'}
+    return Feedback(**feedback_response)
+
+@api_router.get("/admin/feedbacks")
+async def get_all_feedbacks(status: Optional[str] = None, type: Optional[str] = None):
+    """Get all feedbacks for admin review"""
+    query = {}
+    if status:
+        query['status'] = status
+    if type:
+        query['type'] = type
+    
+    feedbacks = await db.feedbacks.find(query, {'_id': 0}).sort('created_at', -1).to_list(500)
+    return feedbacks
+
+@api_router.get("/admin/feedbacks/stats")
+async def get_feedback_stats():
+    """Get feedback statistics for admin dashboard"""
+    all_feedbacks = await db.feedbacks.find({}, {'_id': 0, 'type': 1, 'status': 1}).to_list(1000)
+    
+    stats = {
+        'total': len(all_feedbacks),
+        'by_status': {
+            'new': 0,
+            'in_progress': 0,
+            'resolved': 0,
+            'closed': 0
+        },
+        'by_type': {
+            'bug': 0,
+            'issue': 0,
+            'feature': 0,
+            'improvement': 0,
+            'other': 0
+        }
+    }
+    
+    for fb in all_feedbacks:
+        status = fb.get('status', 'new')
+        fb_type = fb.get('type', 'other')
+        if status in stats['by_status']:
+            stats['by_status'][status] += 1
+        if fb_type in stats['by_type']:
+            stats['by_type'][fb_type] += 1
+    
+    return stats
+
+@api_router.put("/admin/feedbacks/{feedback_id}")
+async def update_feedback(feedback_id: str, status: Optional[str] = None, admin_notes: Optional[str] = None):
+    """Update feedback status and admin notes"""
+    feedback = await db.feedbacks.find_one({'id': feedback_id}, {'_id': 0})
+    if not feedback:
+        raise HTTPException(status_code=404, detail="Feedback non trouvé")
+    
+    update_data = {'updated_at': datetime.now(timezone.utc).isoformat()}
+    if status:
+        update_data['status'] = status
+    if admin_notes is not None:
+        update_data['admin_notes'] = admin_notes
+    
+    await db.feedbacks.update_one({'id': feedback_id}, {'$set': update_data})
+    
+    updated_feedback = await db.feedbacks.find_one({'id': feedback_id}, {'_id': 0})
+    return updated_feedback
+
+@api_router.delete("/admin/feedbacks/{feedback_id}")
+async def delete_feedback(feedback_id: str):
+    """Delete a feedback"""
+    result = await db.feedbacks.delete_one({'id': feedback_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Feedback non trouvé")
+    return {"message": "Feedback supprimé avec succès"}
+
 @api_router.get("/reviews/{provider_id}", response_model=List[Review])
 async def get_provider_reviews(provider_id: str):
     reviews = await db.reviews.find({'service_provider_id': provider_id}, {'_id': 0}).sort('created_at', -1).to_list(100)
