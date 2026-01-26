@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Textarea } from '@/components/ui/textarea';
 import { 
   Shield, LogOut, Users, Briefcase, CheckCircle, XCircle, 
   Clock, Eye, Home, Building, UserCheck, UserX, AlertCircle, Trash2, UserCircle,
   MapPin, Calendar, Moon, DollarSign, Star, MessageCircle, FileText, ExternalLink,
-  Loader2, RefreshCw, Settings, Percent, TrendingUp, Save, Car, Banknote, Wallet
+  Loader2, RefreshCw, Settings, Percent, TrendingUp, Save, Car, Banknote, Wallet,
+  MessageSquare, Bug, AlertTriangle, Lightbulb, Sparkles, HelpCircle, Send
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
