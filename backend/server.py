@@ -496,6 +496,47 @@ class Review(BaseModel):
     customer_id: Optional[str] = None
     survey: Optional[dict] = None
 
+# Feedback Models for Platform Issues/Suggestions
+class FeedbackType(str, Enum):
+    BUG = "bug"
+    ISSUE = "issue"
+    FEATURE = "feature"
+    IMPROVEMENT = "improvement"
+    OTHER = "other"
+
+class FeedbackStatus(str, Enum):
+    NEW = "new"
+    IN_PROGRESS = "in_progress"
+    RESOLVED = "resolved"
+    CLOSED = "closed"
+
+class FeedbackCreate(BaseModel):
+    type: FeedbackType
+    title: str
+    description: str
+    user_name: Optional[str] = None
+    user_email: Optional[str] = None
+    user_phone: Optional[str] = None
+    user_type: Optional[str] = None  # client, provider, company, visitor
+    page_url: Optional[str] = None  # Where the issue occurred
+
+class Feedback(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str
+    type: str
+    title: str
+    description: str
+    user_name: Optional[str] = None
+    user_email: Optional[str] = None
+    user_phone: Optional[str] = None
+    user_type: Optional[str] = None
+    page_url: Optional[str] = None
+    status: str
+    admin_notes: Optional[str] = None
+    created_at: str
+    updated_at: Optional[str] = None
+
 # Chat Models for Rental Listings
 class ChatMessageCreate(BaseModel):
     rental_id: str
