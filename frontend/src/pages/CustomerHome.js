@@ -292,13 +292,41 @@ const CustomerHome = ({ isCustomerAuthenticated }) => {
       </section>
 
       {/* Footer */}
-      <footer className="py-6 px-6 border-t border-gray-100">
-        <div className="max-w-7xl mx-auto flex items-center justify-center md:justify-end">
-          <div className="flex items-center gap-2 text-gray-400 text-sm">
-            <div className="h-6 w-6 rounded-lg bg-green-500 flex items-center justify-center">
-              <span className="text-white font-bold text-xs">S</span>
+      <footer className="py-8 px-6 bg-gray-50 border-t border-gray-200">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            {/* Logo & Copyright */}
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-green-500/20">
+                <span className="text-white font-bold text-lg">S</span>
+              </div>
+              <div>
+                <span className="font-bold text-gray-800">ServisPro</span>
+                <p className="text-xs text-gray-500">© 2025 Tous droits réservés</p>
+              </div>
             </div>
-            <span>Made by ServisPro</span>
+
+            {/* Social Links */}
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-gray-500">Suivez-nous :</span>
+              <a 
+                href="https://www.facebook.com/profile.php?id=100090427284060&sk=directory_intro" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-all hover:scale-105 shadow-lg shadow-blue-600/20"
+              >
+                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                </svg>
+                <span className="font-medium">Facebook</span>
+              </a>
+            </div>
+
+            {/* Contact */}
+            <div className="text-center md:text-right">
+              <p className="text-sm text-gray-600">Conakry, Guinée</p>
+              <p className="text-xs text-gray-400">Plateforme de services professionnels</p>
+            </div>
           </div>
         </div>
       </footer>
