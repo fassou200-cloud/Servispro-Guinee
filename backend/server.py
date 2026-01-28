@@ -4211,16 +4211,50 @@ async def admin_register(input_data: AdminRegisterInput):
     }
 
 @api_router.post("/admin/login")
-async def admin_login(input_data: AdminLoginInput):
+async def admin_login(input_data: AdminLoginInput, request: Request):
+    client_ip = get_client_ip(request)
+    
+    # Check if IP is blocked
+    if is_ip_blocked(client_ip):
+        await log_audit_event(
+            event_type="ADMIN_LOGIN_BLOCKED",
+            ip_address=client_ip,
+            user_type="admin",
+            details={"username": input_data.username, "reason": "rate_limited"},
+            success=False
+        )
+        raise HTTPException(
+            status_code=429, 
+            detail="Trop de tentatives de connexion. Veuillez réessayer dans 15 minutes."
+        )
+    
     # Check fixed super-admin first
     if input_data.username == ADMIN_USERNAME and input_data.password == ADMIN_PASSWORD:
+        clear_failed_attempts(client_ip)
         token = create_token("admin")
+        await log_audit_event(
+            event_type="ADMIN_LOGIN_SUCCESS",
+            user_id="admin",
+            ip_address=client_ip,
+            user_type="super-admin",
+            details={"username": input_data.username},
+            success=True
+        )
         return {"token": token, "user": {"id": "admin", "username": "admin", "role": "super-admin"}}
     
     # Check database admins
     admin = await db.admins.find_one({'username': input_data.username}, {'_id': 0})
     if admin and bcrypt.checkpw(input_data.password.encode('utf-8'), admin['password'].encode('utf-8')):
+        clear_failed_attempts(client_ip)
         token = create_token(admin['id'])
+        await log_audit_event(
+            event_type="ADMIN_LOGIN_SUCCESS",
+            user_id=admin['id'],
+            ip_address=client_ip,
+            user_type="admin",
+            details={"username": input_data.username},
+            success=True
+        )
         return {
             "token": token, 
             "user": {
@@ -4230,6 +4264,15 @@ async def admin_login(input_data: AdminLoginInput):
             }
         }
     
+    # Record failed attempt
+    was_blocked = record_failed_attempt(client_ip)
+    await log_audit_event(
+        event_type="ADMIN_LOGIN_FAILED",
+        ip_address=client_ip,
+        user_type="admin",
+        details={"username": input_data.username, "reason": "invalid_credentials", "blocked": was_blocked},
+        success=False
+    )
     raise HTTPException(status_code=401, detail="Identifiants admin invalides")
 
 @api_router.get("/admin/visit-fees-stats")
