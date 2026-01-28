@@ -5900,12 +5900,31 @@ app.include_router(api_router)
 from fastapi.staticfiles import StaticFiles
 app.mount("/api/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
 
+# ============================================
+# SECURITY MIDDLEWARES
+# ============================================
+
+# Add Security Headers Middleware (must be added first)
+app.add_middleware(SecurityHeadersMiddleware)
+
+# Add Rate Limiting Middleware
+app.add_middleware(RateLimitMiddleware)
+
+# CORS Configuration - Restrictive
+ALLOWED_ORIGINS = [
+    os.environ.get('FRONTEND_URL', 'https://guinea-services-1.preview.emergentagent.com'),
+    "https://guinea-services-1.preview.emergentagent.com",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=ALLOWED_ORIGINS,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allow_headers=["Authorization", "Content-Type", "X-Requested-With"],
+    expose_headers=["X-Request-ID"],
 )
 
 logging.basicConfig(
