@@ -4321,6 +4321,103 @@ async def admin_login(input_data: AdminLoginInput, request: Request):
     )
     raise HTTPException(status_code=401, detail="Identifiants admin invalides")
 
+# ============================================
+# AUDIT LOGS ENDPOINT
+# ============================================
+
+@api_router.get("/admin/audit-logs")
+async def get_audit_logs(
+    limit: int = Query(100, ge=1, le=500),
+    event_type: Optional[str] = None,
+    success: Optional[bool] = None,
+    user_type: Optional[str] = None
+):
+    """Get audit logs for admin review"""
+    query = {}
+    if event_type:
+        query["event_type"] = {"$regex": event_type, "$options": "i"}
+    if success is not None:
+        query["success"] = success
+    if user_type:
+        query["user_type"] = user_type
+    
+    logs = await db.audit_logs.find(query, {'_id': 0}).sort('timestamp', -1).limit(limit).to_list(limit)
+    
+    # Get summary stats
+    total_logs = await db.audit_logs.count_documents({})
+    failed_logins = await db.audit_logs.count_documents({"success": False, "event_type": {"$regex": "LOGIN", "$options": "i"}})
+    blocked_ips = await db.audit_logs.count_documents({"event_type": {"$regex": "BLOCKED", "$options": "i"}})
+    
+    return {
+        "logs": logs,
+        "stats": {
+            "total_logs": total_logs,
+            "failed_logins_count": failed_logins,
+            "blocked_attempts": blocked_ips
+        }
+    }
+
+@api_router.get("/admin/security-status")
+async def get_security_status():
+    """Get current security status including blocked IPs"""
+    now = datetime.now(timezone.utc)
+    
+    # Get currently blocked IPs
+    active_blocks = [
+        {"ip": ip, "blocked_until": block_time.isoformat()}
+        for ip, block_time in blocked_ips.items()
+        if block_time > now
+    ]
+    
+    # Get recent failed attempts
+    recent_attempts = []
+    for ip, attempts in login_attempts.items():
+        if attempts:
+            recent_attempts.append({
+                "ip": ip,
+                "attempt_count": len(attempts),
+                "last_attempt": max(attempts).isoformat() if attempts else None
+            })
+    
+    # Get stats from last 24 hours
+    yesterday = now - timedelta(hours=24)
+    recent_failures = await db.audit_logs.count_documents({
+        "success": False,
+        "timestamp": {"$gte": yesterday}
+    })
+    recent_successes = await db.audit_logs.count_documents({
+        "success": True,
+        "event_type": {"$regex": "LOGIN_SUCCESS", "$options": "i"},
+        "timestamp": {"$gte": yesterday}
+    })
+    
+    return {
+        "blocked_ips": active_blocks,
+        "pending_attempts": recent_attempts,
+        "last_24h": {
+            "failed_attempts": recent_failures,
+            "successful_logins": recent_successes
+        },
+        "rate_limit_config": {
+            "window_seconds": RATE_LIMIT_WINDOW,
+            "max_attempts": RATE_LIMIT_MAX_ATTEMPTS,
+            "block_duration_seconds": RATE_LIMIT_BLOCK_DURATION
+        }
+    }
+
+@api_router.delete("/admin/unblock-ip/{ip_address}")
+async def unblock_ip(ip_address: str):
+    """Manually unblock an IP address"""
+    if ip_address in blocked_ips:
+        del blocked_ips[ip_address]
+        await log_audit_event(
+            event_type="IP_UNBLOCKED",
+            details={"unblocked_ip": ip_address},
+            success=True
+        )
+        return {"message": f"IP {ip_address} débloquée avec succès"}
+    return {"message": f"IP {ip_address} n'était pas bloquée"}
+
 @api_router.get("/admin/visit-fees-stats")
 async def get_visit_fees_stats():
     """Get statistics for visit fees paid (frais de visite) for locations and services"""
