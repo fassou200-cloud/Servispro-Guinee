@@ -27,44 +27,41 @@ const CustomerHome = ({ isCustomerAuthenticated }) => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="bg-slate-900/95 backdrop-blur-sm px-6 py-4 border-b border-orange-500/20 sticky top-0 z-50">
+      <header className="bg-white px-6 py-4 border-b border-gray-100">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-2">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center shadow-lg shadow-orange-500/30">
-              <Home className="h-5 w-5 text-white" />
+            <div className="h-10 w-10 rounded-xl bg-green-500 flex items-center justify-center">
+              <span className="text-white font-bold text-xl">S</span>
             </div>
-            <span className="font-bold text-xl">
-              <span className="text-emerald-500">Servis</span>
-              <span className="text-orange-500">Pro</span>
-            </span>
+            <span className="font-bold text-xl text-gray-900">ServisPro</span>
           </div>
 
           {/* Navigation Links - Desktop */}
           <nav className="hidden md:flex items-center gap-8">
             <button 
               onClick={() => navigate('/browse')}
-              className="text-gray-300 hover:text-orange-400 font-medium transition-colors"
+              className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
             >
               Professionnels
             </button>
             <button 
               onClick={() => navigate('/rentals')}
-              className="text-gray-300 hover:text-orange-400 font-medium transition-colors"
+              className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
             >
               Locations
             </button>
             <button 
               onClick={() => navigate('/property-sales')}
-              className="text-gray-300 hover:text-orange-400 font-medium transition-colors"
+              className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
             >
               Ventes
             </button>
             <button 
               onClick={() => navigate('/company/auth')}
-              className="text-gray-300 hover:text-orange-400 font-medium transition-colors"
+              className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
             >
               Entreprise
             </button>
@@ -72,7 +69,7 @@ const CustomerHome = ({ isCustomerAuthenticated }) => {
               href="https://www.facebook.com/profile.php?id=100090427284060&sk=directory_intro" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-blue-400 hover:text-blue-300 font-medium transition-colors"
+              className="flex items-center gap-1.5 text-blue-600 hover:text-blue-700 font-medium transition-colors"
             >
               <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
@@ -83,7 +80,7 @@ const CustomerHome = ({ isCustomerAuthenticated }) => {
               href="https://www.instagram.com/servisproguinee/" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-pink-400 hover:text-pink-300 font-medium transition-colors"
+              className="flex items-center gap-1.5 text-pink-600 hover:text-pink-700 font-medium transition-colors"
             >
               <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
@@ -94,22 +91,22 @@ const CustomerHome = ({ isCustomerAuthenticated }) => {
 
           {/* Right side */}
           <div className="flex items-center gap-4">
-            <div className="hidden md:flex items-center gap-1.5 text-gray-400">
-              <MapPin className="h-4 w-4 text-orange-500" />
-              <span className="text-sm font-medium">Guinée</span>
+            <div className="hidden md:flex items-center gap-1.5 text-gray-600">
+              <MapPin className="h-4 w-4 text-green-500" />
+              <span className="text-sm font-medium">Conakry</span>
             </div>
             
             {!isCustomerAuthenticated ? (
               <>
                 <button 
                   onClick={() => navigate('/customer/auth')}
-                  className="hidden md:block text-gray-300 hover:text-white font-medium transition-colors"
+                  className="hidden md:block text-gray-600 hover:text-gray-900 font-medium transition-colors"
                 >
                   Se connecter
                 </button>
                 <button 
                   onClick={() => navigate('/customer/auth')}
-                  className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-4 py-2 rounded-lg font-medium transition-all shadow-lg shadow-orange-500/30"
+                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
                 >
                   S'inscrire
                 </button>
@@ -117,7 +114,7 @@ const CustomerHome = ({ isCustomerAuthenticated }) => {
             ) : (
               <button 
                 onClick={() => navigate('/customer/dashboard')}
-                className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-4 py-2 rounded-lg font-medium transition-all shadow-lg shadow-orange-500/30"
+                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
               >
                 Mon compte
               </button>
@@ -126,80 +123,87 @@ const CustomerHome = ({ isCustomerAuthenticated }) => {
         </div>
       </header>
 
-      {/* Hero Section with Image */}
-      <section className="relative overflow-hidden">
-        {/* Background Image */}
-        <div className="absolute inset-0">
-          <img 
-            src="https://customer-assets.emergentagent.com/job_guinea-services-1/artifacts/vsxvbrdp_ChatGPT%20Image%20Jan%2028%2C%202026%2C%2012_51_06%20PM.png"
-            alt="Professionnels ServisPro en Guinée"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/70 to-transparent"></div>
-        </div>
+      {/* Hero Section */}
+      <section className="bg-gradient-to-b from-gray-50 to-white">
+        <div className="max-w-7xl mx-auto px-6 py-12 md:py-16">
+          <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
+            {/* Left Content */}
+            <div className="flex-1 text-center lg:text-left">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight mb-4">
+                Trouvez le <span className="text-green-500">professionnel</span>
+                <br />
+                idéal près de chez vous
+              </h1>
+              <p className="text-gray-600 text-base md:text-lg mb-8 max-w-xl mx-auto lg:mx-0">
+                Des milliers de professionnels vérifiés en Guinée. Électriciens, plombiers, mécaniciens et plus encore.
+              </p>
 
-        {/* Content */}
-        <div className="relative max-w-7xl mx-auto px-6 pt-8 pb-16 md:pt-12 md:pb-24 min-h-[500px] md:min-h-[600px] flex flex-col justify-end">
-          {/* Search Bar - Floating */}
-          <div className="mb-8 max-w-2xl mx-auto w-full">
-            <form onSubmit={handleSearch}>
-              <div className="flex items-center bg-white/95 backdrop-blur-sm rounded-2xl border-2 border-orange-500/50 shadow-2xl shadow-orange-500/20 overflow-hidden">
-                <div className="flex items-center flex-1 px-4">
-                  <Search className="h-5 w-5 text-orange-500 mr-3" />
-                  <input
-                    type="text"
-                    placeholder="Rechercher un professionnel ou un logement..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="flex-1 h-14 bg-transparent border-0 focus:outline-none text-gray-900 text-base placeholder-gray-500"
+              {/* Search Bar */}
+              <form onSubmit={handleSearch} className="mb-8 max-w-xl mx-auto lg:mx-0">
+                <div className="flex items-center bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                  <div className="flex items-center flex-1 px-4">
+                    <Search className="h-5 w-5 text-gray-400 mr-3" />
+                    <input
+                      type="text"
+                      placeholder="Rechercher un service ou un logement..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="flex-1 h-12 md:h-14 bg-transparent border-0 focus:outline-none text-gray-900 text-sm md:text-base placeholder-gray-400"
+                    />
+                  </div>
+                  <button 
+                    type="submit"
+                    className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 md:py-4 font-medium transition-colors"
+                  >
+                    Rechercher
+                  </button>
+                </div>
+              </form>
+
+              {/* Stats */}
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-6 md:gap-8">
+                <div className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-green-500" />
+                  <div>
+                    <span className="font-bold text-gray-900">500+</span>
+                    <p className="text-xs text-gray-500">Professionnels</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Star className="h-5 w-5 text-green-500" />
+                  <div>
+                    <span className="font-bold text-gray-900">4.8</span>
+                    <p className="text-xs text-gray-500">Note moyenne</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-green-500" />
+                  <div>
+                    <span className="font-bold text-gray-900">100%</span>
+                    <p className="text-xs text-gray-500">Vérifiés</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-5 w-5 text-green-500" />
+                  <div>
+                    <span className="font-bold text-gray-900">24h</span>
+                    <p className="text-xs text-gray-500">Réponse rapide</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right - Illustration */}
+            <div className="flex-1 flex justify-center lg:justify-end">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-green-200 to-blue-200 rounded-3xl blur-2xl opacity-50"></div>
+                <div className="relative bg-white rounded-3xl shadow-2xl p-6 md:p-8">
+                  <img 
+                    src="https://customer-assets.emergentagent.com/job_servispro-guinea-3/artifacts/26crrdv7_image.png"
+                    alt="Équipe de professionnels ServisPro - Électricien, Plombier, Mécanicien"
+                    className="w-full max-w-sm md:max-w-lg h-auto object-contain"
                   />
                 </div>
-                <button 
-                  type="submit"
-                  className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-8 py-4 font-semibold transition-all"
-                >
-                  Rechercher
-                </button>
-              </div>
-            </form>
-          </div>
-
-          {/* Stats Bar */}
-          <div className="flex flex-wrap items-center justify-center gap-6 md:gap-12 bg-slate-900/80 backdrop-blur-sm rounded-2xl p-4 md:p-6 border border-orange-500/20">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-orange-500/20 flex items-center justify-center">
-                <Users className="h-5 w-5 text-orange-400" />
-              </div>
-              <div>
-                <span className="font-bold text-white text-lg">500+</span>
-                <p className="text-xs text-gray-400">Professionnels</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-amber-500/20 flex items-center justify-center">
-                <Star className="h-5 w-5 text-amber-400" />
-              </div>
-              <div>
-                <span className="font-bold text-white text-lg">4.8</span>
-                <p className="text-xs text-gray-400">Note moyenne</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                <Shield className="h-5 w-5 text-emerald-400" />
-              </div>
-              <div>
-                <span className="font-bold text-white text-lg">100%</span>
-                <p className="text-xs text-gray-400">Vérifiés</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-blue-500/20 flex items-center justify-center">
-                <Clock className="h-5 w-5 text-blue-400" />
-              </div>
-              <div>
-                <span className="font-bold text-white text-lg">24h</span>
-                <p className="text-xs text-gray-400">Réponse rapide</p>
               </div>
             </div>
           </div>
@@ -207,65 +211,65 @@ const CustomerHome = ({ isCustomerAuthenticated }) => {
       </section>
 
       {/* Categories Section */}
-      <section className="py-12 px-6 bg-slate-800">
+      <section className="py-10 px-6 bg-gray-50">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-xl md:text-2xl font-bold text-white text-center mb-8">
+          <h2 className="text-xl md:text-2xl font-bold text-gray-900 text-center mb-8">
             Catégories populaires
           </h2>
           <div className="flex flex-wrap justify-center gap-6 md:gap-10">
             <button
               onClick={() => navigate('/browse?category=Electromecanicien')}
-              className="flex flex-col items-center gap-3 group"
+              className="flex flex-col items-center gap-2 group"
             >
-              <div className="h-16 w-16 rounded-full bg-gradient-to-br from-yellow-500 to-amber-600 flex items-center justify-center shadow-lg shadow-yellow-500/30 group-hover:scale-110 transition-transform">
+              <div className="h-16 w-16 rounded-full bg-yellow-500 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                 <Zap className="h-7 w-7 text-white" />
               </div>
-              <span className="text-sm font-medium text-gray-300">Électricien</span>
+              <span className="text-sm font-medium text-gray-700">Électricien</span>
             </button>
             <button
               onClick={() => navigate('/browse?category=Plombier')}
-              className="flex flex-col items-center gap-3 group"
+              className="flex flex-col items-center gap-2 group"
             >
-              <div className="h-16 w-16 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30 group-hover:scale-110 transition-transform">
+              <div className="h-16 w-16 rounded-full bg-blue-500 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                 <Droplet className="h-7 w-7 text-white" />
               </div>
-              <span className="text-sm font-medium text-gray-300">Plombier</span>
+              <span className="text-sm font-medium text-gray-700">Plombier</span>
             </button>
             <button
               onClick={() => navigate('/browse?category=Mecanicien')}
-              className="flex flex-col items-center gap-3 group"
+              className="flex flex-col items-center gap-2 group"
             >
-              <div className="h-16 w-16 rounded-full bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shadow-lg shadow-orange-500/30 group-hover:scale-110 transition-transform">
+              <div className="h-16 w-16 rounded-full bg-orange-500 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                 <Wrench className="h-7 w-7 text-white" />
               </div>
-              <span className="text-sm font-medium text-gray-300">Mécanicien</span>
+              <span className="text-sm font-medium text-gray-700">Mécanicien</span>
             </button>
             <button
               onClick={() => navigate('/browse?category=Macon')}
-              className="flex flex-col items-center gap-3 group"
+              className="flex flex-col items-center gap-2 group"
             >
-              <div className="h-16 w-16 rounded-full bg-gradient-to-br from-amber-600 to-orange-700 flex items-center justify-center shadow-lg shadow-amber-600/30 group-hover:scale-110 transition-transform">
+              <div className="h-16 w-16 rounded-full bg-amber-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                 <Hammer className="h-7 w-7 text-white" />
               </div>
-              <span className="text-sm font-medium text-gray-300">Maçon</span>
+              <span className="text-sm font-medium text-gray-700">Maçon</span>
             </button>
             <button
               onClick={() => navigate('/rentals')}
-              className="flex flex-col items-center gap-3 group"
+              className="flex flex-col items-center gap-2 group"
             >
-              <div className="h-16 w-16 rounded-full bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center shadow-lg shadow-emerald-500/30 group-hover:scale-110 transition-transform">
+              <div className="h-16 w-16 rounded-full bg-green-500 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                 <Home className="h-7 w-7 text-white" />
               </div>
-              <span className="text-sm font-medium text-gray-300">Location</span>
+              <span className="text-sm font-medium text-gray-700">Location</span>
             </button>
           </div>
         </div>
       </section>
 
       {/* What are you looking for Section */}
-      <section className="py-12 md:py-16 px-6 bg-slate-900">
+      <section className="py-12 md:py-16 px-6">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-2xl md:text-3xl font-bold text-white text-center mb-8 md:mb-12">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 text-center mb-8 md:mb-12">
             Que recherchez-vous ?
           </h2>
 
@@ -274,7 +278,7 @@ const CustomerHome = ({ isCustomerAuthenticated }) => {
             <button
               onClick={() => navigate('/browse')}
               data-testid="find-professional-card"
-              className="group relative bg-gradient-to-br from-orange-500 to-amber-600 rounded-2xl p-6 md:p-8 text-left transition-all hover:shadow-2xl hover:shadow-orange-500/30 hover:scale-[1.02] active:scale-[0.98]"
+              className="group relative bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 md:p-8 text-left transition-all hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
             >
               <div className="h-12 w-12 rounded-xl bg-white/20 flex items-center justify-center mb-4">
                 <User className="h-6 w-6 text-white" />
@@ -282,7 +286,7 @@ const CustomerHome = ({ isCustomerAuthenticated }) => {
               <h3 className="text-xl md:text-2xl font-bold text-white mb-2">
                 Trouver un professionnel
               </h3>
-              <p className="text-orange-100 text-sm md:text-base">
+              <p className="text-green-100 text-sm md:text-base">
                 Électriciens, plombiers, mécaniciens...
               </p>
               <ChevronRight className="absolute right-6 top-1/2 -translate-y-1/2 h-6 w-6 text-white/70 group-hover:translate-x-1 transition-transform" />
@@ -292,7 +296,7 @@ const CustomerHome = ({ isCustomerAuthenticated }) => {
             <button
               onClick={() => navigate('/rentals')}
               data-testid="find-house-card"
-              className="group relative bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl p-6 md:p-8 text-left transition-all hover:shadow-2xl hover:shadow-emerald-500/30 hover:scale-[1.02] active:scale-[0.98]"
+              className="group relative bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 md:p-8 text-left transition-all hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
             >
               <div className="h-12 w-12 rounded-xl bg-white/20 flex items-center justify-center mb-4">
                 <Building className="h-6 w-6 text-white" />
@@ -300,7 +304,7 @@ const CustomerHome = ({ isCustomerAuthenticated }) => {
               <h3 className="text-xl md:text-2xl font-bold text-white mb-2">
                 Trouver une maison
               </h3>
-              <p className="text-emerald-100 text-sm md:text-base">
+              <p className="text-blue-100 text-sm md:text-base">
                 Locations et ventes immobilières
               </p>
               <ChevronRight className="absolute right-6 top-1/2 -translate-y-1/2 h-6 w-6 text-white/70 group-hover:translate-x-1 transition-transform" />
@@ -310,26 +314,23 @@ const CustomerHome = ({ isCustomerAuthenticated }) => {
       </section>
 
       {/* Footer */}
-      <footer className="py-8 px-6 bg-slate-800 border-t border-orange-500/20">
+      <footer className="py-8 px-6 bg-gray-50 border-t border-gray-200">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             {/* Logo & Copyright */}
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center shadow-lg shadow-orange-500/30">
-                <Home className="h-5 w-5 text-white" />
+              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-green-500/20">
+                <span className="text-white font-bold text-lg">S</span>
               </div>
               <div>
-                <span className="font-bold">
-                  <span className="text-emerald-400">Servis</span>
-                  <span className="text-orange-400">Pro</span>
-                </span>
+                <span className="font-bold text-gray-800">ServisPro</span>
                 <p className="text-xs text-gray-500">© 2025 Tous droits réservés</p>
               </div>
             </div>
 
             {/* Social Links */}
             <div className="flex items-center gap-4 flex-wrap justify-center md:justify-start">
-              <span className="text-sm text-gray-400">Suivez-nous :</span>
+              <span className="text-sm text-gray-500">Suivez-nous :</span>
               <a 
                 href="https://www.facebook.com/profile.php?id=100090427284060&sk=directory_intro" 
                 target="_blank" 
@@ -356,8 +357,8 @@ const CustomerHome = ({ isCustomerAuthenticated }) => {
 
             {/* Contact */}
             <div className="text-center md:text-right">
-              <p className="text-sm text-gray-300">Conakry, Guinée</p>
-              <p className="text-xs text-gray-500">Plateforme de services professionnels</p>
+              <p className="text-sm text-gray-600">Conakry, Guinée</p>
+              <p className="text-xs text-gray-400">Plateforme de services professionnels</p>
             </div>
           </div>
         </div>
