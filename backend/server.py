@@ -28,6 +28,140 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
+# ============================================
+# SECURITY CONFIGURATION
+# ============================================
+
+# Rate Limiting Configuration
+RATE_LIMIT_WINDOW = 300  # 5 minutes window
+RATE_LIMIT_MAX_ATTEMPTS = 5  # Max failed attempts before blocking
+RATE_LIMIT_BLOCK_DURATION = 900  # 15 minutes block
+
+# In-memory storage for rate limiting (consider Redis for production)
+login_attempts: Dict[str, list] = defaultdict(list)
+blocked_ips: Dict[str, datetime] = {}
+
+# Audit log collection
+audit_logs_collection = db.audit_logs
+
+async def log_audit_event(
+    event_type: str,
+    user_id: str = None,
+    user_type: str = None,
+    ip_address: str = None,
+    details: dict = None,
+    success: bool = True
+):
+    """Log security-relevant events to the database"""
+    try:
+        audit_entry = {
+            "event_type": event_type,
+            "user_id": user_id,
+            "user_type": user_type,
+            "ip_address": ip_address,
+            "details": details or {},
+            "success": success,
+            "timestamp": datetime.now(timezone.utc),
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await audit_logs_collection.insert_one(audit_entry)
+    except Exception as e:
+        logger.error(f"Failed to log audit event: {e}")
+
+def get_client_ip(request: Request) -> str:
+    """Extract client IP from request, considering proxies"""
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
+
+def is_ip_blocked(ip: str) -> bool:
+    """Check if an IP is currently blocked"""
+    if ip in blocked_ips:
+        if datetime.now(timezone.utc) < blocked_ips[ip]:
+            return True
+        else:
+            del blocked_ips[ip]
+    return False
+
+def record_failed_attempt(ip: str):
+    """Record a failed login attempt"""
+    now = datetime.now(timezone.utc)
+    # Clean old attempts
+    login_attempts[ip] = [
+        attempt for attempt in login_attempts[ip]
+        if (now - attempt).total_seconds() < RATE_LIMIT_WINDOW
+    ]
+    login_attempts[ip].append(now)
+    
+    # Block IP if too many attempts
+    if len(login_attempts[ip]) >= RATE_LIMIT_MAX_ATTEMPTS:
+        blocked_ips[ip] = now + timedelta(seconds=RATE_LIMIT_BLOCK_DURATION)
+        login_attempts[ip] = []
+        return True
+    return False
+
+def clear_failed_attempts(ip: str):
+    """Clear failed attempts on successful login"""
+    if ip in login_attempts:
+        del login_attempts[ip]
+
+# Security Headers Middleware
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        
+        # Strict Transport Security (HSTS)
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        
+        # Content Security Policy
+        response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:;"
+        
+        # Prevent clickjacking
+        response.headers["X-Frame-Options"] = "SAMEORIGIN"
+        
+        # Prevent MIME type sniffing
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        
+        # XSS Protection
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        
+        # Referrer Policy
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        
+        # Permissions Policy
+        response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+        
+        return response
+
+# Rate Limiting Middleware for login endpoints
+class RateLimitMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        # Only apply rate limiting to authentication endpoints
+        login_paths = ["/api/auth/login", "/api/admin/login", "/api/customer/login", "/api/company/login"]
+        
+        if request.method == "POST" and any(request.url.path.endswith(path) for path in login_paths):
+            client_ip = get_client_ip(request)
+            
+            # Check if IP is blocked
+            if is_ip_blocked(client_ip):
+                await log_audit_event(
+                    event_type="RATE_LIMIT_BLOCKED",
+                    ip_address=client_ip,
+                    details={"path": str(request.url.path)},
+                    success=False
+                )
+                return JSONResponse(
+                    status_code=429,
+                    content={
+                        "detail": "Trop de tentatives de connexion. Veuillez réessayer dans 15 minutes.",
+                        "error_code": "RATE_LIMITED"
+                    }
+                )
+        
+        response = await call_next(request)
+        return response
+
 # JWT Configuration
 JWT_SECRET = os.environ.get('JWT_SECRET', 'your-secret-key-change-in-production')
 JWT_ALGORITHM = 'HS256'
