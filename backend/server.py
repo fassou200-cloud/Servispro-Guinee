@@ -1177,17 +1177,63 @@ async def register_company(input_data: CompanyRegisterInput):
     return AuthResponse(token=token, user=company_response)
 
 @api_router.post("/auth/company/login", response_model=AuthResponse)
-async def login_company(input_data: CompanyLoginInput):
+async def login_company(input_data: CompanyLoginInput, request: Request):
     """Login for companies using RCCM number"""
+    client_ip = get_client_ip(request)
+    
+    # Check if IP is blocked
+    if is_ip_blocked(client_ip):
+        await log_audit_event(
+            event_type="COMPANY_LOGIN_BLOCKED",
+            ip_address=client_ip,
+            user_type="company",
+            details={"rccm": input_data.rccm_number, "reason": "rate_limited"},
+            success=False
+        )
+        raise HTTPException(
+            status_code=429, 
+            detail="Trop de tentatives de connexion. Veuillez réessayer dans 15 minutes."
+        )
+    
     company = await db.companies.find_one({'rccm_number': input_data.rccm_number})
     if not company:
+        was_blocked = record_failed_attempt(client_ip)
+        await log_audit_event(
+            event_type="COMPANY_LOGIN_FAILED",
+            ip_address=client_ip,
+            user_type="company",
+            details={"rccm": input_data.rccm_number, "reason": "not_found", "blocked": was_blocked},
+            success=False
+        )
         raise HTTPException(status_code=401, detail="Numéro RCCM ou mot de passe incorrect")
     
     if not verify_password(input_data.password, company['password']):
+        was_blocked = record_failed_attempt(client_ip)
+        await log_audit_event(
+            event_type="COMPANY_LOGIN_FAILED",
+            user_id=company['id'],
+            ip_address=client_ip,
+            user_type="company",
+            details={"rccm": input_data.rccm_number, "reason": "invalid_password", "blocked": was_blocked},
+            success=False
+        )
         raise HTTPException(status_code=401, detail="Numéro RCCM ou mot de passe incorrect")
+    
+    # Clear failed attempts on successful login
+    clear_failed_attempts(client_ip)
     
     # Generate token
     token = create_token(company['id'])
+    
+    # Log successful login
+    await log_audit_event(
+        event_type="COMPANY_LOGIN_SUCCESS",
+        user_id=company['id'],
+        ip_address=client_ip,
+        user_type="company",
+        details={"rccm": input_data.rccm_number, "company_name": company.get('company_name')},
+        success=True
+    )
     
     # Return company without password and _id
     company_response = {k: v for k, v in company.items() if k not in ['password', '_id']}
