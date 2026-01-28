@@ -1012,7 +1012,23 @@ async def register(input_data: RegisterInput):
     return AuthResponse(token=token, user=user_response)
 
 @api_router.post("/auth/login", response_model=AuthResponse)
-async def login(input_data: LoginInput):
+async def login(input_data: LoginInput, request: Request):
+    client_ip = get_client_ip(request)
+    
+    # Check if IP is blocked
+    if is_ip_blocked(client_ip):
+        await log_audit_event(
+            event_type="LOGIN_BLOCKED",
+            ip_address=client_ip,
+            user_type=input_data.user_type.value,
+            details={"phone": input_data.phone_number, "reason": "rate_limited"},
+            success=False
+        )
+        raise HTTPException(
+            status_code=429, 
+            detail="Trop de tentatives de connexion. Veuillez réessayer dans 15 minutes."
+        )
+    
     # Determine which collection to search
     if input_data.user_type == UserType.PROVIDER:
         collection = db.service_providers
@@ -1022,14 +1038,46 @@ async def login(input_data: LoginInput):
     # Find user
     user = await collection.find_one({'phone_number': input_data.phone_number})
     if not user:
+        # Record failed attempt
+        was_blocked = record_failed_attempt(client_ip)
+        await log_audit_event(
+            event_type="LOGIN_FAILED",
+            ip_address=client_ip,
+            user_type=input_data.user_type.value,
+            details={"phone": input_data.phone_number, "reason": "user_not_found", "blocked": was_blocked},
+            success=False
+        )
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
     # Verify password
     if not verify_password(input_data.password, user['password']):
+        # Record failed attempt
+        was_blocked = record_failed_attempt(client_ip)
+        await log_audit_event(
+            event_type="LOGIN_FAILED",
+            user_id=user['id'],
+            ip_address=client_ip,
+            user_type=input_data.user_type.value,
+            details={"phone": input_data.phone_number, "reason": "invalid_password", "blocked": was_blocked},
+            success=False
+        )
         raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    # Clear failed attempts on successful login
+    clear_failed_attempts(client_ip)
     
     # Generate token
     token = create_token(user['id'])
+    
+    # Log successful login
+    await log_audit_event(
+        event_type="LOGIN_SUCCESS",
+        user_id=user['id'],
+        ip_address=client_ip,
+        user_type=input_data.user_type.value,
+        details={"phone": input_data.phone_number},
+        success=True
+    )
     
     # Return user without password
     user_response = {k: v for k, v in user.items() if k not in ['password', '_id']}
