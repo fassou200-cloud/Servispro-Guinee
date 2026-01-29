@@ -24,13 +24,38 @@
             /* Hide emergent badge */
             #emergent-badge,
             a[href*="emergent.sh"],
-            a[href*="emergentagent.com/?utm"] {
+            a[href*="emergentagent.com/?utm"],
+            a[id="emergent-badge"] {
                 display: none !important;
                 visibility: hidden !important;
                 opacity: 0 !important;
                 pointer-events: none !important;
+                width: 0 !important;
+                height: 0 !important;
+                overflow: hidden !important;
+                position: absolute !important;
+                left: -9999px !important;
             }
         </style>
+        <script>
+            // Remove emergent badge on load
+            function removeEmergentBadge() {
+                var badge = document.getElementById('emergent-badge');
+                if (badge) {
+                    badge.remove();
+                }
+                // Also check for any links to emergent
+                document.querySelectorAll('a[href*="emergent"]').forEach(function(el) {
+                    if (el.textContent.toLowerCase().includes('made by') || el.id === 'emergent-badge') {
+                        el.remove();
+                    }
+                });
+            }
+            // Run on load and periodically
+            document.addEventListener('DOMContentLoaded', removeEmergentBadge);
+            window.addEventListener('load', removeEmergentBadge);
+            setInterval(removeEmergentBadge, 1000);
+        </script>
         <!--
         These two scripts have been added for the Visual Edits, please do not edit or remove them
         -->
