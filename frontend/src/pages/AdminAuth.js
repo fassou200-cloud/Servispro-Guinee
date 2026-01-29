@@ -175,7 +175,7 @@ const AdminAuth = ({ setIsAdminAuthenticated }) => {
                 Administration
               </h1>
               <p className="text-slate-400">
-                {isLogin ? 'Connectez-vous pour accéder au panneau' : 'Créez un compte administrateur'}
+                Connectez-vous pour accéder au panneau
               </p>
             </div>
 
