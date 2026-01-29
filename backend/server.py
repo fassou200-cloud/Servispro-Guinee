@@ -6148,6 +6148,10 @@ app.add_middleware(RateLimitMiddleware)
 ALLOWED_ORIGINS = [
     os.environ.get('FRONTEND_URL', 'https://guinea-services-1.preview.emergentagent.com'),
     "https://guinea-services-1.preview.emergentagent.com",
+    "https://servisprogn.com",
+    "https://www.servisprogn.com",
+    "http://servisprogn.com",
+    "http://www.servisprogn.com",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
