@@ -237,8 +237,8 @@ const AdminAuth = ({ setIsAdminAuthenticated }) => {
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
-                    {isLogin ? <LogIn className="h-5 w-5" /> : <UserPlus className="h-5 w-5" />}
-                    {isLogin ? 'Se Connecter' : 'Créer le Compte'}
+                    <LogIn className="h-5 w-5" />
+                    Se Connecter
                   </div>
                 )}
               </Button>
