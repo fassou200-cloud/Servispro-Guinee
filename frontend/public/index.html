@@ -19,42 +19,68 @@
         Learn how to configure a non-root public URL by running `npm run build`.
         -->
         <title>ServisPro | Guinée</title>
-        <script src="https://assets.emergent.sh/scripts/emergent-main.js"></script>
         <style>
-            /* Hide emergent badge */
+            /* Hide emergent badge - comprehensive targeting */
             #emergent-badge,
+            a[id="emergent-badge"],
             a[href*="emergent.sh"],
             a[href*="emergentagent.com/?utm"],
-            a[id="emergent-badge"] {
+            body > a[style*="position: fixed"][style*="bottom"],
+            body > a[style*="z-index: 9999"] {
                 display: none !important;
                 visibility: hidden !important;
                 opacity: 0 !important;
                 pointer-events: none !important;
                 width: 0 !important;
                 height: 0 !important;
+                max-width: 0 !important;
+                max-height: 0 !important;
                 overflow: hidden !important;
                 position: absolute !important;
-                left: -9999px !important;
+                left: -99999px !important;
+                top: -99999px !important;
+                clip: rect(0, 0, 0, 0) !important;
             }
         </style>
+        <script src="https://assets.emergent.sh/scripts/emergent-main.js"></script>
         <script>
-            // Remove emergent badge on load
+            // Remove emergent badge aggressively
             function removeEmergentBadge() {
+                // Remove by ID
                 var badge = document.getElementById('emergent-badge');
-                if (badge) {
-                    badge.remove();
-                }
-                // Also check for any links to emergent
-                document.querySelectorAll('a[href*="emergent"]').forEach(function(el) {
-                    if (el.textContent.toLowerCase().includes('made by') || el.id === 'emergent-badge') {
+                if (badge) badge.remove();
+                
+                // Remove any fixed position links at bottom right
+                document.querySelectorAll('body > a').forEach(function(el) {
+                    var style = el.getAttribute('style') || '';
+                    if (style.includes('position: fixed') && style.includes('bottom')) {
+                        el.remove();
+                    }
+                    if (el.href && el.href.includes('emergent')) {
                         el.remove();
                     }
                 });
             }
-            // Run on load and periodically
+            
+            // Run immediately and on various events
+            removeEmergentBadge();
             document.addEventListener('DOMContentLoaded', removeEmergentBadge);
-            window.addEventListener('load', removeEmergentBadge);
-            setInterval(removeEmergentBadge, 1000);
+            window.addEventListener('load', function() {
+                removeEmergentBadge();
+                setTimeout(removeEmergentBadge, 100);
+                setTimeout(removeEmergentBadge, 500);
+                setTimeout(removeEmergentBadge, 1000);
+                setTimeout(removeEmergentBadge, 2000);
+            });
+            
+            // Use MutationObserver to catch dynamically added badges
+            var observer = new MutationObserver(function(mutations) {
+                removeEmergentBadge();
+            });
+            observer.observe(document.body || document.documentElement, {
+                childList: true,
+                subtree: true
+            });
         </script>
         <!--
         These two scripts have been added for the Visual Edits, please do not edit or remove them
