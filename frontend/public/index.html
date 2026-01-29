@@ -18,70 +18,8 @@
         work correctly both with client-side routing and a non-root public URL.
         Learn how to configure a non-root public URL by running `npm run build`.
         -->
-        <title>ServisPro | Guinée</title>
-        <style>
-            /* Hide emergent badge - comprehensive targeting */
-            #emergent-badge,
-            a[id="emergent-badge"],
-            a[href*="emergent.sh"],
-            a[href*="emergentagent.com/?utm"],
-            body > a[style*="position: fixed"][style*="bottom"],
-            body > a[style*="z-index: 9999"] {
-                display: none !important;
-                visibility: hidden !important;
-                opacity: 0 !important;
-                pointer-events: none !important;
-                width: 0 !important;
-                height: 0 !important;
-                max-width: 0 !important;
-                max-height: 0 !important;
-                overflow: hidden !important;
-                position: absolute !important;
-                left: -99999px !important;
-                top: -99999px !important;
-                clip: rect(0, 0, 0, 0) !important;
-            }
-        </style>
+        <title>Emergent | Fullstack App</title>
         <script src="https://assets.emergent.sh/scripts/emergent-main.js"></script>
-        <script>
-            // Remove emergent badge aggressively
-            function removeEmergentBadge() {
-                // Remove by ID
-                var badge = document.getElementById('emergent-badge');
-                if (badge) badge.remove();
-                
-                // Remove any fixed position links at bottom right
-                document.querySelectorAll('body > a').forEach(function(el) {
-                    var style = el.getAttribute('style') || '';
-                    if (style.includes('position: fixed') && style.includes('bottom')) {
-                        el.remove();
-                    }
-                    if (el.href && el.href.includes('emergent')) {
-                        el.remove();
-                    }
-                });
-            }
-            
-            // Run immediately and on various events
-            removeEmergentBadge();
-            document.addEventListener('DOMContentLoaded', removeEmergentBadge);
-            window.addEventListener('load', function() {
-                removeEmergentBadge();
-                setTimeout(removeEmergentBadge, 100);
-                setTimeout(removeEmergentBadge, 500);
-                setTimeout(removeEmergentBadge, 1000);
-                setTimeout(removeEmergentBadge, 2000);
-            });
-            
-            // Use MutationObserver to catch dynamically added badges
-            var observer = new MutationObserver(function(mutations) {
-                removeEmergentBadge();
-            });
-            observer.observe(document.body || document.documentElement, {
-                childList: true,
-                subtree: true
-            });
-        </script>
         <!--
         These two scripts have been added for the Visual Edits, please do not edit or remove them
         -->
@@ -118,7 +56,55 @@
 
       To begin the development, run `npm start` or `yarn start`.
       To create a production bundle, use `npm run build` or `yarn build`.
-    -->
+ 
+        <a
+            id="emergent-badge"
+            target="_blank"
+            href="https://app.emergent.sh/?utm_source=emergent-badge"
+            style="
+                display: flex !important;
+                align-items: center !important;
+                position: fixed !important;
+                bottom: 20px;
+                right: 20px;
+                text-decoration: none;
+                padding: 6px 10px;
+                font-family: -apple-system, BlinkMacSystemFont,
+                    &quot;Segoe UI&quot;, Roboto, Oxygen, Ubuntu, Cantarell,
+                    &quot;Open Sans&quot;, &quot;Helvetica Neue&quot;,
+                    sans-serif !important;
+                font-size: 12px !important;
+                z-index: 9999 !important;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+                border-radius: 8px !important;
+                background-color: #ffffff !important;
+                border: 1px solid rgba(255, 255, 255, 0.25) !important;
+            "
+        >
+            <div
+                style="display: flex; flex-direction: row; align-items: center"
+            >
+                <img
+                    style="width: 20px; height: 20px; margin-right: 8px"
+                    src="logo.png"
+                />
+                <p
+                    style="
+                        color: #000000;
+                        font-family: -apple-system, BlinkMacSystemFont,
+                            &quot;Segoe UI&quot;, Roboto, Oxygen, Ubuntu,
+                            Cantarell, &quot;Open Sans&quot;,
+                            &quot;Helvetica Neue&quot;, sans-serif !important;
+                        font-size: 12px !important;
+                        align-items: center;
+                        margin-bottom: 0;
+                    "
+                >
+                    Made by ServisPro
+                </p>
+            </div>
+        </a>
+           -->
         <script>
             !(function (t, e) {
                 var o, n, p, r;
