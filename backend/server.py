@@ -167,9 +167,24 @@ JWT_SECRET = os.environ.get('JWT_SECRET', 'your-secret-key-change-in-production'
 JWT_ALGORITHM = 'HS256'
 JWT_EXPIRATION_HOURS = 24
 
-# Admin credentials from environment variables
-ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
-ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
+# Admin accounts configuration (multiple admins supported)
+ADMIN_ACCOUNTS = [
+    {
+        "username": "herman.haba@servisprogn.com",
+        "password": "Servisproguinea2026$2027",
+        "role": "super-admin"
+    },
+    {
+        "username": "barthelemy.haba@servisprogn.com",
+        "password": "DDraper2026Servisprogn",
+        "role": "super-admin"
+    },
+    {
+        "username": "servispro@servisprogn.com",
+        "password": "Servisproguinea2026#",
+        "role": "super-admin"
+    }
+]
 
 # Admin invitation code for registration
 ADMIN_INVITE_CODE = os.environ.get('ADMIN_INVITE_CODE', 'SERVISPRO2024')
