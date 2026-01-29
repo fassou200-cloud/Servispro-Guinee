@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { 
-  Shield, ArrowLeft, UserPlus, LogIn, User, Lock, Eye, EyeOff, 
+  Shield, ArrowLeft, LogIn, User, Lock, Eye, EyeOff, 
   Settings, BarChart3, Users, CheckCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -17,13 +17,11 @@ const API = `${BACKEND_URL}/api`;
 
 const AdminAuth = ({ setIsAdminAuthenticated }) => {
   const navigate = useNavigate();
-  const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     username: '',
-    password: '',
-    confirmPassword: ''
+    password: ''
   });
 
   const handleSubmit = async (e) => {
@@ -31,45 +29,22 @@ const AdminAuth = ({ setIsAdminAuthenticated }) => {
     setLoading(true);
 
     try {
-      if (isLogin) {
-        const response = await axios.post(`${API}/admin/login`, {
-          username: formData.username,
-          password: formData.password
-        });
-        
-        localStorage.setItem('adminToken', response.data.token);
-        localStorage.setItem('admin', JSON.stringify(response.data.user));
-        
-        if (setIsAdminAuthenticated) {
-          setIsAdminAuthenticated(true);
-        }
-        
-        toast.success(`Bienvenue ${response.data.user.username} !`);
-        navigate('/admin/dashboard');
-      } else {
-        if (formData.password !== formData.confirmPassword) {
-          toast.error('Les mots de passe ne correspondent pas');
-          setLoading(false);
-          return;
-        }
-
-        const response = await axios.post(`${API}/admin/register`, {
-          username: formData.username,
-          password: formData.password
-        });
-        
-        localStorage.setItem('adminToken', response.data.token);
-        localStorage.setItem('admin', JSON.stringify(response.data.user));
-        
-        if (setIsAdminAuthenticated) {
-          setIsAdminAuthenticated(true);
-        }
-        
-        toast.success('Compte admin créé avec succès !');
-        navigate('/admin/dashboard');
+      const response = await axios.post(`${API}/admin/login`, {
+        username: formData.username,
+        password: formData.password
+      });
+      
+      localStorage.setItem('adminToken', response.data.token);
+      localStorage.setItem('admin', JSON.stringify(response.data.user));
+      
+      if (setIsAdminAuthenticated) {
+        setIsAdminAuthenticated(true);
       }
+      
+      toast.success(`Bienvenue ${response.data.user.username} !`);
+      navigate('/admin/dashboard');
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Une erreur est survenue'));
+      toast.error(getErrorMessage(error, 'Identifiants incorrects'));
     } finally {
       setLoading(false);
     }
