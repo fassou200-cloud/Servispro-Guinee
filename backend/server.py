@@ -167,12 +167,12 @@ JWT_SECRET = os.environ.get('JWT_SECRET', 'your-secret-key-change-in-production'
 JWT_ALGORITHM = 'HS256'
 JWT_EXPIRATION_HOURS = 24
 
-# Admin credentials (fixed super-admin)
-ADMIN_USERNAME = "admin"
-ADMIN_PASSWORD = "admin123"
+# Admin credentials from environment variables
+ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
 
 # Admin invitation code for registration
-ADMIN_INVITE_CODE = "SERVISPRO2024"
+ADMIN_INVITE_CODE = os.environ.get('ADMIN_INVITE_CODE', 'SERVISPRO2024')
 
 # File upload configuration
 UPLOAD_DIR = Path("/app/backend/uploads")
