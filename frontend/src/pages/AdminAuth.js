@@ -179,34 +179,6 @@ const AdminAuth = ({ setIsAdminAuthenticated }) => {
               </p>
             </div>
 
-            {/* Toggle Login/Register */}
-            <div className="flex gap-2 mb-8 p-1 bg-slate-700 rounded-2xl">
-              <button
-                type="button"
-                onClick={() => setIsLogin(true)}
-                className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2 ${
-                  isLogin 
-                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg' 
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <LogIn className="h-4 w-4" />
-                Connexion
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsLogin(false)}
-                className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2 ${
-                  !isLogin 
-                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg' 
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <UserPlus className="h-4 w-4" />
-                Inscription
-              </button>
-            </div>
-
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
                 <Label htmlFor="username" className="text-slate-300 font-medium text-sm">
@@ -252,29 +224,6 @@ const AdminAuth = ({ setIsAdminAuthenticated }) => {
                   </button>
                 </div>
               </div>
-
-              {!isLogin && (
-                <>
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmPassword" className="text-slate-300 font-medium text-sm">
-                      Confirmer le mot de passe
-                    </Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
-                      <Input
-                        id="confirmPassword"
-                        name="confirmPassword"
-                        type="password"
-                        value={formData.confirmPassword}
-                        onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                        required
-                        className="h-12 pl-10 rounded-xl bg-slate-700 border-slate-600 text-white placeholder:text-slate-500"
-                        placeholder="••••••••"
-                      />
-                    </div>
-                  </div>
-                </>
-              )}
 
               <Button 
                 type="submit" 
