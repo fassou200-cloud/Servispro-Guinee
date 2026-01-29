@@ -4289,21 +4289,29 @@ async def admin_login(input_data: AdminLoginInput, request: Request):
             detail="Trop de tentatives de connexion. Veuillez réessayer dans 15 minutes."
         )
     
-    # Check fixed super-admin first
-    if input_data.username == ADMIN_USERNAME and input_data.password == ADMIN_PASSWORD:
-        clear_failed_attempts(client_ip)
-        token = create_token("admin")
-        await log_audit_event(
-            event_type="ADMIN_LOGIN_SUCCESS",
-            user_id="admin",
-            ip_address=client_ip,
-            user_type="super-admin",
-            details={"username": input_data.username},
-            success=True
-        )
-        return {"token": token, "user": {"id": "admin", "username": "admin", "role": "super-admin"}}
+    # Check predefined admin accounts
+    for admin_account in ADMIN_ACCOUNTS:
+        if input_data.username == admin_account["username"] and input_data.password == admin_account["password"]:
+            clear_failed_attempts(client_ip)
+            token = create_token(admin_account["username"])
+            await log_audit_event(
+                event_type="ADMIN_LOGIN_SUCCESS",
+                user_id=admin_account["username"],
+                ip_address=client_ip,
+                user_type="super-admin",
+                details={"username": input_data.username},
+                success=True
+            )
+            return {
+                "token": token, 
+                "user": {
+                    "id": admin_account["username"], 
+                    "username": admin_account["username"],
+                    "role": admin_account["role"]
+                }
+            }
     
-    # Check database admins
+    # Check database admins as fallback
     admin = await db.admins.find_one({'username': input_data.username}, {'_id': 0})
     if admin and bcrypt.checkpw(input_data.password.encode('utf-8'), admin['password'].encode('utf-8')):
         clear_failed_attempts(client_ip)
