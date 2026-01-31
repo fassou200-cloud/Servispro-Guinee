@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { 
@@ -10,34 +10,71 @@ import axios from 'axios';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-// Create a pleasant notification sound using Web Audio API
-const createNotificationSound = () => {
+// Notification sound as base64 MP3 - a pleasant "ding" sound
+const NOTIFICATION_SOUND_BASE64 = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAABhgC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAAAAYZDqUxRAAAAAAAAAAAAAAAAAAAA//tQZAAP8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAETEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//tQZB8P8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAEVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV';
+
+// Global audio context that persists across component renders
+let globalAudioContext = null;
+let audioBuffer = null;
+let isAudioUnlocked = false;
+
+// Initialize audio context and load sound
+const initAudio = async () => {
+  if (globalAudioContext) return;
+  
   try {
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
+    globalAudioContext = new (window.AudioContext || window.webkitAudioContext)();
     
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
+    // Decode the notification sound
+    const response = await fetch(NOTIFICATION_SOUND_BASE64);
+    const arrayBuffer = await response.arrayBuffer();
+    audioBuffer = await globalAudioContext.decodeAudioData(arrayBuffer);
+  } catch (e) {
+    console.log('Audio init error:', e);
+  }
+};
+
+// Unlock audio context (must be called from user interaction)
+const unlockAudio = async () => {
+  if (isAudioUnlocked) return;
+  
+  try {
+    await initAudio();
+    if (globalAudioContext && globalAudioContext.state === 'suspended') {
+      await globalAudioContext.resume();
+    }
+    isAudioUnlocked = true;
+    console.log('Audio unlocked successfully');
+  } catch (e) {
+    console.log('Audio unlock error:', e);
+  }
+};
+
+// Play the notification sound
+const playSound = () => {
+  if (!globalAudioContext || !audioBuffer || !isAudioUnlocked) {
+    console.log('Audio not ready:', { context: !!globalAudioContext, buffer: !!audioBuffer, unlocked: isAudioUnlocked });
+    return false;
+  }
+  
+  try {
+    // Resume context if suspended
+    if (globalAudioContext.state === 'suspended') {
+      globalAudioContext.resume();
+    }
     
-    // Pleasant two-tone notification sound
-    oscillator.frequency.setValueAtTime(587.33, audioContext.currentTime); // D5
-    oscillator.frequency.setValueAtTime(880, audioContext.currentTime + 0.15); // A5
+    const source = globalAudioContext.createBufferSource();
+    const gainNode = globalAudioContext.createGain();
     
-    // Envelope for smooth sound
-    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0.4, audioContext.currentTime + 0.02);
-    gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.15);
-    gainNode.gain.linearRampToValueAtTime(0.4, audioContext.currentTime + 0.17);
-    gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.4);
+    source.buffer = audioBuffer;
+    source.connect(gainNode);
+    gainNode.connect(globalAudioContext.destination);
+    gainNode.gain.value = 0.7;
     
-    oscillator.type = 'sine';
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.4);
-    
+    source.start(0);
     return true;
   } catch (e) {
-    console.log('Web Audio API not supported:', e);
+    console.log('Play sound error:', e);
     return false;
   }
 };
