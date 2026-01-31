@@ -79,6 +79,11 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
   
   // Check if current user is the owner of this profile (provider viewing their own profile)
   const [isOwnProfile, setIsOwnProfile] = useState(false);
+  
+  // Document management states
+  const [deletingDocIndex, setDeletingDocIndex] = useState(null);
+  const [uploadingDoc, setUploadingDoc] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     fetchProvider();
