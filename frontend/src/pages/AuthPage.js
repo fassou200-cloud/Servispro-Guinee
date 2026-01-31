@@ -47,6 +47,7 @@ const AuthPage = ({ setIsAuthenticated }) => {
     password: '',
     profession_group: '',
     profession: '',
+    years_experience: '',
     region: '',
     ville: '',
     commune: '',
