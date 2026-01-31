@@ -189,11 +189,11 @@ const VisitRequestsList = ({ userType = 'provider' }) => {
                 </div>
               )}
 
-              {/* Frais de déplacement */}
+              {/* Frais de visite */}
               <div className="flex items-center gap-2 text-sm">
                 <AlertCircle className="h-4 w-4 text-green-600" />
                 <span className="text-slate-600">
-                  Frais de déplacement: <strong className="text-green-700">{new Intl.NumberFormat('fr-FR').format(request.frais_visite || 0)} GNF</strong>
+                  Frais de visite: <strong className="text-green-700">{new Intl.NumberFormat('fr-FR').format(request.frais_visite || 0)} GNF</strong>
                 </span>
               </div>
             </div>
