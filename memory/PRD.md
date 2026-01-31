@@ -3,6 +3,17 @@
 ## Énoncé du Problème Original
 Construire une plateforme nommée "ServisPro" pour les prestataires de services et clients en Guinée. La plateforme nécessite des rôles utilisateurs distincts (Prestataire, Client, Admin, Entreprise), la gestion des profils, la vérification d'identité et de documents, les annonces de location et vente, les demandes de service et un système de notation.
 
+## Dernière mise à jour - 31 Janvier 2026
+
+### Bug corrigé : Documents non visibles (P0)
+- **Problème** : Les documents téléchargés par les prestataires n'étaient pas visibles sur le profil public ni dans le tableau de bord admin, malgré leur présence correcte dans la base de données et l'API.
+- **Cause** : Conflit CSS avec le wrapper de debug d'Emergent qui causait une hauteur de 0px sur les conteneurs avec `<a>` tags en combinaison avec `space-y-*` ou `grid`.
+- **Solution** : Remplacer les `<a>` tags par des `<div>` avec `onClick={() => window.open(url, '_blank')}` et utiliser `<ul>/<li>` au lieu de `grid` ou `space-y-*`.
+- **Fichiers modifiés** :
+  - `/app/frontend/src/pages/ProviderProfile.js` - Section documents déplacée dans une Card séparée
+  - `/app/frontend/src/pages/AdminDashboard.js` - Section documents justificatifs
+- **Statut** : ✅ Corrigé et testé visuellement
+
 ## Personas Utilisateurs
 1. **Prestataires de Services** - Professionnels offrant divers services (8 catégories)
 2. **Agents Immobiliers (Propriétaire Immobilier)** - Gestion des locations et ventes de propriétés
