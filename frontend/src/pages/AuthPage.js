@@ -296,7 +296,7 @@ const AuthPage = ({ setIsAuthenticated }) => {
   const resetForm = () => {
     setFormData({ 
       first_name: '', last_name: '', phone_number: '', password: '', 
-      profession_group: '', profession: '', region: '', ville: '', 
+      profession_group: '', profession: '', years_experience: '', region: '', ville: '', 
       commune: '', quartier: '', about: '' 
     });
     setProfessionGroup('');
