@@ -188,11 +188,11 @@ const TermsConditionsModal = ({ open, onOpenChange, onAccept }) => {
             <section>
               <h3 className="flex items-center gap-2 text-lg font-bold text-white mb-3">
                 <CheckCircle2 className="h-5 w-5 text-green-500" />
-                Frais de Visite (Location & Services)
+                Frais de déplacement (Location & Services)
               </h3>
               <div className="bg-green-900/20 border border-green-700/50 rounded-lg p-4">
                 <p className="text-slate-300 mb-3">
-                  Les frais de visite correspondent au montant payé par le Client afin de couvrir :
+                  Les frais de déplacement correspondent au montant payé par le Client afin de couvrir :
                 </p>
                 <ul className="list-disc list-inside space-y-1 text-slate-300 mb-3">
                   <li>le déplacement du professionnel ou de l'agent</li>
