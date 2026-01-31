@@ -994,6 +994,7 @@ async def register(
     phone_number: str = Form(...),
     password: str = Form(...),
     profession: str = Form(...),
+    profession_group: str = Form(""),
     custom_profession: str = Form(""),
     location: str = Form(""),
     region: str = Form(""),
