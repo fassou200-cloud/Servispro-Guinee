@@ -3,14 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { 
-  ArrowLeft, User, Phone, Lock, Eye, EyeOff, Briefcase, Shield, 
-  Sparkles, Wrench, Home, Zap, Settings, MapPin, FileText
+  ArrowLeft, ArrowRight, User, Phone, Lock, Eye, EyeOff, Briefcase, Shield, 
+  Sparkles, Wrench, Home, Zap, Settings, MapPin, FileText, Upload, X, CheckCircle, Image
 } from 'lucide-react';
-// Note: Truck import removed as Logisticien category was removed
 import { toast } from 'sonner';
 import axios from 'axios';
 import { getRegions, getVillesByRegion, getCommunesByVille } from '@/data/guineaLocations';
@@ -29,6 +29,12 @@ const AuthPage = ({ setIsAuthenticated }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
+  
+  // Multi-step registration
+  const [registrationStep, setRegistrationStep] = useState(1);
+  const [documents, setDocuments] = useState([]);
+  const [profilePhoto, setProfilePhoto] = useState(null);
+  
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
@@ -39,7 +45,8 @@ const AuthPage = ({ setIsAuthenticated }) => {
     region: '',
     ville: '',
     commune: '',
-    quartier: ''
+    quartier: '',
+    about: ''
   });
 
   // Location options based on selections
@@ -63,21 +70,125 @@ const AuthPage = ({ setIsAuthenticated }) => {
     }
   }, [formData.ville]);
 
+  // Validate Step 1 before proceeding
+  const validateStep1 = () => {
+    if (!formData.first_name.trim()) {
+      toast.error('Veuillez entrer votre prénom');
+      return false;
+    }
+    if (!formData.last_name.trim()) {
+      toast.error('Veuillez entrer votre nom');
+      return false;
+    }
+    if (!formData.profession) {
+      toast.error('Veuillez sélectionner votre profession');
+      return false;
+    }
+    if (formData.profession === 'Autres' && !formData.custom_profession.trim()) {
+      toast.error('Veuillez préciser votre métier');
+      return false;
+    }
+    if (!formData.region || !formData.ville || !formData.commune) {
+      toast.error('Veuillez compléter votre localisation');
+      return false;
+    }
+    if (!formData.phone_number.trim()) {
+      toast.error('Veuillez entrer votre numéro de téléphone');
+      return false;
+    }
+    if (!formData.password || formData.password.length < 6) {
+      toast.error('Le mot de passe doit contenir au moins 6 caractères');
+      return false;
+    }
+    if (!termsAccepted) {
+      toast.error('Vous devez accepter les Conditions Générales d\'Utilisation');
+      return false;
+    }
+    return true;
+  };
+
+  const handleNextStep = () => {
+    if (validateStep1()) {
+      setRegistrationStep(2);
+    }
+  };
+
+  const handlePreviousStep = () => {
+    setRegistrationStep(1);
+  };
+
+  // Handle document upload
+  const handleDocumentUpload = (e) => {
+    const files = Array.from(e.target.files);
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    
+    files.forEach(file => {
+      if (file.size > maxSize) {
+        toast.error(`${file.name} est trop volumineux (max 5MB)`);
+        return;
+      }
+      
+      if (documents.length >= 5) {
+        toast.error('Maximum 5 documents autorisés');
+        return;
+      }
+      
+      setDocuments(prev => [...prev, file]);
+    });
+  };
+
+  const removeDocument = (index) => {
+    setDocuments(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Handle profile photo upload
+  const handleProfilePhotoUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const maxSize = 2 * 1024 * 1024; // 2MB
+      if (file.size > maxSize) {
+        toast.error('La photo est trop volumineuse (max 2MB)');
+        return;
+      }
+      setProfilePhoto(file);
+    }
+  };
+
+  const removeProfilePhoto = () => {
+    setProfilePhoto(null);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Check terms acceptance for registration
-    if (!isLogin && !termsAccepted) {
-      toast.error('Vous devez accepter les Conditions Générales d\'Utilisation pour créer un compte');
+    if (isLogin) {
+      // Login flow
+      setLoading(true);
+      try {
+        const response = await axios.post(`${API}/auth/login`, {
+          phone_number: formData.phone_number,
+          password: formData.password,
+          user_type: 'provider'
+        });
+        
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        
+        toast.success(`Bienvenue ${response.data.user.first_name} !`);
+        setIsAuthenticated(true);
+      } catch (error) {
+        toast.error(getErrorMessage(error, 'Une erreur est survenue'));
+      } finally {
+        setLoading(false);
+      }
       return;
     }
     
+    // Registration flow - Step 2 submit
     setLoading(true);
 
     try {
-      const endpoint = isLogin ? `${API}/auth/login` : `${API}/auth/register`;
-      
-      // Build location string for registration
+      // Build location string
       const locationParts = [];
       if (formData.quartier) locationParts.push(formData.quartier);
       if (formData.commune) {
@@ -93,28 +204,41 @@ const AuthPage = ({ setIsAuthenticated }) => {
         if (regionObj) locationParts.push(regionObj.name);
       }
       
-      const payload = isLogin 
-        ? { phone_number: formData.phone_number, password: formData.password, user_type: 'provider' }
-        : {
-            first_name: formData.first_name,
-            last_name: formData.last_name,
-            phone_number: formData.phone_number,
-            password: formData.password,
-            profession: formData.profession,
-            custom_profession: formData.profession === 'Autres' ? formData.custom_profession : '',
-            location: locationParts.join(', '),
-            region: formData.region,
-            ville: formData.ville,
-            commune: formData.commune,
-            quartier: formData.quartier
-          };
+      // Create FormData for file upload
+      const submitData = new FormData();
+      submitData.append('first_name', formData.first_name);
+      submitData.append('last_name', formData.last_name);
+      submitData.append('phone_number', formData.phone_number);
+      submitData.append('password', formData.password);
+      submitData.append('profession', formData.profession);
+      submitData.append('custom_profession', formData.profession === 'Autres' ? formData.custom_profession : '');
+      submitData.append('location', locationParts.join(', '));
+      submitData.append('region', formData.region);
+      submitData.append('ville', formData.ville);
+      submitData.append('commune', formData.commune);
+      submitData.append('quartier', formData.quartier || '');
+      submitData.append('about', formData.about || '');
+      
+      // Add profile photo
+      if (profilePhoto) {
+        submitData.append('profile_photo', profilePhoto);
+      }
+      
+      // Add documents
+      documents.forEach((doc, index) => {
+        submitData.append(`documents`, doc);
+      });
 
-      const response = await axios.post(endpoint, payload);
+      const response = await axios.post(`${API}/auth/register`, submitData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
       
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
       
-      toast.success(isLogin ? `Bienvenue ${response.data.user.first_name} !` : 'Inscription réussie !');
+      toast.success('Inscription réussie ! Bienvenue sur ServisPro.');
       setIsAuthenticated(true);
     } catch (error) {
       toast.error(getErrorMessage(error, 'Une erreur est survenue'));
@@ -145,6 +269,19 @@ const AuthPage = ({ setIsAuthenticated }) => {
   ];
 
   const regions = getRegions();
+
+  // Reset form when switching between login/register
+  const resetForm = () => {
+    setFormData({ 
+      first_name: '', last_name: '', phone_number: '', password: '', 
+      profession: '', custom_profession: '', region: '', ville: '', 
+      commune: '', quartier: '', about: '' 
+    });
+    setTermsAccepted(false);
+    setRegistrationStep(1);
+    setDocuments([]);
+    setProfilePhoto(null);
+  };
 
   // Show Forgot Password form
   if (showForgotPassword) {
@@ -251,41 +388,138 @@ const AuthPage = ({ setIsAuthenticated }) => {
 
             <div className="text-center mb-8 hidden lg:block">
               <h1 className="text-3xl font-heading font-bold text-slate-900 mb-2">
-                {isLogin ? 'Connexion' : 'Inscription'}
+                {isLogin ? 'Connexion' : `Inscription - Étape ${registrationStep}/2`}
               </h1>
               <p className="text-slate-500">
-                {isLogin ? 'Accédez à votre espace prestataire' : 'Créez votre profil professionnel'}
+                {isLogin 
+                  ? 'Accédez à votre espace prestataire' 
+                  : registrationStep === 1 
+                    ? 'Informations de base' 
+                    : 'Complétez votre profil'
+                }
               </p>
             </div>
 
-            {/* Toggle Login/Register */}
-            <div className="flex gap-2 mb-8 p-1 bg-slate-100 rounded-2xl">
-              <button
-                type="button"
-                onClick={() => setIsLogin(true)}
-                className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-all ${
-                  isLogin 
-                    ? 'bg-white text-slate-900 shadow-md' 
-                    : 'text-slate-500 hover:text-slate-700'
-                }`}
-              >
-                Connexion
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsLogin(false)}
-                className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-all ${
-                  !isLogin 
-                    ? 'bg-white text-slate-900 shadow-md' 
-                    : 'text-slate-500 hover:text-slate-700'
-                }`}
-              >
-                Inscription
-              </button>
-            </div>
+            {/* Progress indicator for registration */}
+            {!isLogin && (
+              <div className="flex items-center justify-center gap-2 mb-6">
+                <div className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold ${
+                  registrationStep >= 1 ? 'bg-orange-500 text-white' : 'bg-slate-200 text-slate-500'
+                }`}>
+                  {registrationStep > 1 ? <CheckCircle className="h-5 w-5" /> : '1'}
+                </div>
+                <div className={`w-12 h-1 rounded ${registrationStep >= 2 ? 'bg-orange-500' : 'bg-slate-200'}`} />
+                <div className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold ${
+                  registrationStep >= 2 ? 'bg-orange-500 text-white' : 'bg-slate-200 text-slate-500'
+                }`}>
+                  2
+                </div>
+              </div>
+            )}
+
+            {/* Toggle Login/Register - Only show in Step 1 or Login mode */}
+            {(isLogin || registrationStep === 1) && (
+              <div className="flex gap-2 mb-8 p-1 bg-slate-100 rounded-2xl">
+                <button
+                  type="button"
+                  onClick={() => { setIsLogin(true); resetForm(); }}
+                  className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-all ${
+                    isLogin 
+                      ? 'bg-white text-slate-900 shadow-md' 
+                      : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  Connexion
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setIsLogin(false); resetForm(); }}
+                  className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-all ${
+                    !isLogin 
+                      ? 'bg-white text-slate-900 shadow-md' 
+                      : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  Inscription
+                </button>
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              {!isLogin && (
+              {/* LOGIN FORM */}
+              {isLogin && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone_number" className="text-slate-700 font-medium text-sm">
+                      Numéro de Téléphone *
+                    </Label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                      <Input
+                        id="phone_number"
+                        name="phone_number"
+                        data-testid="auth-phone-input"
+                        value={formData.phone_number}
+                        onChange={handleChange}
+                        required
+                        className="h-12 pl-10 rounded-xl border-slate-200 font-mono"
+                        placeholder="+224 620 00 00 00"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="password" className="text-slate-700 font-medium text-sm">
+                      Mot de Passe *
+                    </Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                      <Input
+                        id="password"
+                        name="password"
+                        type={showPassword ? 'text' : 'password'}
+                        data-testid="auth-password-input"
+                        value={formData.password}
+                        onChange={handleChange}
+                        required
+                        className="h-12 pl-10 pr-12 rounded-xl border-slate-200"
+                        placeholder="••••••••"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                      >
+                        {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                      </button>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowForgotPassword(true)}
+                      className="text-sm text-orange-600 hover:text-orange-700 hover:underline"
+                    >
+                      Mot de passe oublié ?
+                    </button>
+                  </div>
+
+                  <Button 
+                    type="submit" 
+                    data-testid="auth-submit-button"
+                    className="w-full h-12 font-heading font-bold text-base rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 shadow-lg shadow-orange-500/30"
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Veuillez patienter...
+                      </div>
+                    ) : 'Se Connecter'}
+                  </Button>
+                </>
+              )}
+
+              {/* REGISTRATION STEP 1 */}
+              {!isLogin && registrationStep === 1 && (
                 <>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -300,7 +534,6 @@ const AuthPage = ({ setIsAuthenticated }) => {
                           data-testid="register-first-name-input"
                           value={formData.first_name}
                           onChange={handleChange}
-                          required={!isLogin}
                           className="h-12 pl-10 rounded-xl border-slate-200"
                           placeholder="Jean"
                         />
@@ -319,7 +552,6 @@ const AuthPage = ({ setIsAuthenticated }) => {
                           data-testid="register-last-name-input"
                           value={formData.last_name}
                           onChange={handleChange}
-                          required={!isLogin}
                           className="h-12 pl-10 rounded-xl border-slate-200"
                           placeholder="Dupont"
                         />
@@ -334,7 +566,6 @@ const AuthPage = ({ setIsAuthenticated }) => {
                     <Select
                       value={formData.profession}
                       onValueChange={(value) => setFormData({ ...formData, profession: value, custom_profession: '' })}
-                      required={!isLogin}
                     >
                       <SelectTrigger data-testid="register-profession-select" className="h-12 rounded-xl border-slate-200">
                         <div className="flex items-center gap-2">
@@ -358,7 +589,7 @@ const AuthPage = ({ setIsAuthenticated }) => {
                     </Select>
                   </div>
 
-                  {/* Custom Profession Field - Only shows when "Autres" is selected */}
+                  {/* Custom Profession Field */}
                   {formData.profession === 'Autres' && (
                     <div className="space-y-2">
                       <Label htmlFor="custom_profession" className="text-slate-700 font-medium text-sm">
@@ -369,7 +600,6 @@ const AuthPage = ({ setIsAuthenticated }) => {
                         name="custom_profession"
                         value={formData.custom_profession}
                         onChange={(e) => setFormData({ ...formData, custom_profession: e.target.value })}
-                        required
                         className="h-12 rounded-xl border-slate-200 focus:border-orange-500 focus:ring-orange-500"
                         placeholder="Ex: Coiffeur, Photographe, Peintre..."
                       />
@@ -384,13 +614,11 @@ const AuthPage = ({ setIsAuthenticated }) => {
                     </div>
                     
                     <div className="grid grid-cols-2 gap-3">
-                      {/* Region */}
                       <div className="space-y-1">
                         <Label className="text-xs text-slate-500">Région *</Label>
                         <Select
                           value={formData.region}
                           onValueChange={(value) => setFormData({ ...formData, region: value })}
-                          required={!isLogin}
                         >
                           <SelectTrigger className="h-10 rounded-lg border-slate-200 text-sm">
                             <SelectValue placeholder="Région" />
@@ -405,14 +633,12 @@ const AuthPage = ({ setIsAuthenticated }) => {
                         </Select>
                       </div>
 
-                      {/* Ville */}
                       <div className="space-y-1">
                         <Label className="text-xs text-slate-500">Ville *</Label>
                         <Select
                           value={formData.ville}
                           onValueChange={(value) => setFormData({ ...formData, ville: value })}
                           disabled={!formData.region}
-                          required={!isLogin}
                         >
                           <SelectTrigger className="h-10 rounded-lg border-slate-200 text-sm">
                             <SelectValue placeholder="Ville" />
@@ -427,14 +653,12 @@ const AuthPage = ({ setIsAuthenticated }) => {
                         </Select>
                       </div>
 
-                      {/* Commune */}
                       <div className="space-y-1">
                         <Label className="text-xs text-slate-500">Commune *</Label>
                         <Select
                           value={formData.commune}
                           onValueChange={(value) => setFormData({ ...formData, commune: value })}
                           disabled={!formData.ville}
-                          required={!isLogin}
                         >
                           <SelectTrigger className="h-10 rounded-lg border-slate-200 text-sm">
                             <SelectValue placeholder="Commune" />
@@ -449,7 +673,6 @@ const AuthPage = ({ setIsAuthenticated }) => {
                         </Select>
                       </div>
 
-                      {/* Quartier - Plain text input */}
                       <div className="space-y-1">
                         <Label className="text-xs text-slate-500">Quartier</Label>
                         <Input
@@ -462,143 +685,274 @@ const AuthPage = ({ setIsAuthenticated }) => {
                       </div>
                     </div>
                   </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="phone_number" className="text-slate-700 font-medium text-sm">
+                      Numéro de Téléphone *
+                    </Label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                      <Input
+                        id="phone_number"
+                        name="phone_number"
+                        data-testid="auth-phone-input"
+                        value={formData.phone_number}
+                        onChange={handleChange}
+                        className="h-12 pl-10 rounded-xl border-slate-200 font-mono"
+                        placeholder="+224 620 00 00 00"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="password" className="text-slate-700 font-medium text-sm">
+                      Mot de Passe *
+                    </Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                      <Input
+                        id="password"
+                        name="password"
+                        type={showPassword ? 'text' : 'password'}
+                        data-testid="auth-password-input"
+                        value={formData.password}
+                        onChange={handleChange}
+                        className="h-12 pl-10 pr-12 rounded-xl border-slate-200"
+                        placeholder="••••••••"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                      >
+                        {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Terms and Conditions */}
+                  <div className="flex items-start gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                    <Checkbox 
+                      id="terms-provider"
+                      checked={termsAccepted}
+                      onCheckedChange={setTermsAccepted}
+                      className="mt-0.5 border-orange-500 data-[state=checked]:bg-orange-500"
+                    />
+                    <div className="flex-1">
+                      <label 
+                        htmlFor="terms-provider" 
+                        className="text-sm text-slate-700 cursor-pointer"
+                      >
+                        J'accepte les{' '}
+                        <button
+                          type="button"
+                          onClick={() => setShowTermsModal(true)}
+                          className="text-orange-600 hover:text-orange-700 underline font-medium inline-flex items-center gap-1"
+                        >
+                          <FileText className="h-3.5 w-3.5" />
+                          Conditions Générales d'Utilisation
+                        </button>
+                      </label>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Vous devez accepter les CGU pour créer votre compte
+                      </p>
+                    </div>
+                  </div>
+
+                  <Button 
+                    type="button"
+                    onClick={handleNextStep}
+                    className="w-full h-12 font-heading font-bold text-base rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 shadow-lg shadow-orange-500/30"
+                  >
+                    <span className="flex items-center gap-2">
+                      Continuer
+                      <ArrowRight className="h-5 w-5" />
+                    </span>
+                  </Button>
                 </>
               )}
 
-              <div className="space-y-2">
-                <Label htmlFor="phone_number" className="text-slate-700 font-medium text-sm">
-                  Numéro de Téléphone *
-                </Label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-                  <Input
-                    id="phone_number"
-                    name="phone_number"
-                    data-testid="auth-phone-input"
-                    value={formData.phone_number}
-                    onChange={handleChange}
-                    required
-                    className="h-12 pl-10 rounded-xl border-slate-200 font-mono"
-                    placeholder="+224 620 00 00 00"
-                  />
-                </div>
-              </div>
+              {/* REGISTRATION STEP 2 */}
+              {!isLogin && registrationStep === 2 && (
+                <>
+                  {/* Profile Photo Upload */}
+                  <div className="space-y-3">
+                    <Label className="text-slate-700 font-medium text-sm flex items-center gap-2">
+                      <Image className="h-4 w-4 text-orange-500" />
+                      Photo de profil (optionnel)
+                    </Label>
+                    
+                    {profilePhoto ? (
+                      <div className="relative w-24 h-24 mx-auto">
+                        <img 
+                          src={URL.createObjectURL(profilePhoto)} 
+                          alt="Profile preview" 
+                          className="w-24 h-24 rounded-full object-cover border-4 border-orange-500"
+                        />
+                        <button
+                          type="button"
+                          onClick={removeProfilePhoto}
+                          className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <label className="flex flex-col items-center justify-center w-24 h-24 mx-auto rounded-full border-2 border-dashed border-slate-300 bg-slate-50 cursor-pointer hover:border-orange-500 hover:bg-orange-50 transition-colors">
+                        <User className="h-8 w-8 text-slate-400" />
+                        <span className="text-xs text-slate-500 mt-1">Ajouter</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleProfilePhotoUpload}
+                          className="hidden"
+                        />
+                      </label>
+                    )}
+                  </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-slate-700 font-medium text-sm">
-                  Mot de Passe *
-                </Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-                  <Input
-                    id="password"
-                    name="password"
-                    type={showPassword ? 'text' : 'password'}
-                    data-testid="auth-password-input"
-                    value={formData.password}
-                    onChange={handleChange}
-                    required
-                    className="h-12 pl-10 pr-12 rounded-xl border-slate-200"
-                    placeholder="••••••••"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                  >
-                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                  </button>
-                </div>
-                {isLogin && (
-                  <button
-                    type="button"
-                    onClick={() => setShowForgotPassword(true)}
-                    className="text-sm text-orange-600 hover:text-orange-700 hover:underline"
-                  >
-                    Mot de passe oublié ?
-                  </button>
-                )}
-              </div>
-
-              {/* Terms and Conditions for Registration */}
-              {!isLogin && (
-                <div className="flex items-start gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
-                  <Checkbox 
-                    id="terms-provider"
-                    checked={termsAccepted}
-                    onCheckedChange={setTermsAccepted}
-                    className="mt-0.5 border-orange-500 data-[state=checked]:bg-orange-500"
-                  />
-                  <div className="flex-1">
-                    <label 
-                      htmlFor="terms-provider" 
-                      className="text-sm text-slate-700 cursor-pointer"
-                    >
-                      J'accepte les{' '}
-                      <button
-                        type="button"
-                        onClick={() => setShowTermsModal(true)}
-                        className="text-orange-600 hover:text-orange-700 underline font-medium inline-flex items-center gap-1"
-                      >
-                        <FileText className="h-3.5 w-3.5" />
-                        Conditions Générales d'Utilisation
-                      </button>
-                    </label>
-                    <p className="text-xs text-slate-500 mt-1">
-                      Vous devez accepter les CGU pour créer votre compte
+                  {/* About Section */}
+                  <div className="space-y-2">
+                    <Label htmlFor="about" className="text-slate-700 font-medium text-sm flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-orange-500" />
+                      À propos de vous
+                    </Label>
+                    <Textarea
+                      id="about"
+                      name="about"
+                      value={formData.about}
+                      onChange={handleChange}
+                      className="min-h-[120px] rounded-xl border-slate-200 resize-none"
+                      placeholder="Décrivez votre expérience, vos compétences et vos services..."
+                    />
+                    <p className="text-xs text-slate-500">
+                      Une bonne description augmente vos chances d'être contacté
                     </p>
                   </div>
-                </div>
-              )}
 
-              <Button 
-                type="submit" 
-                data-testid="auth-submit-button"
-                className="w-full h-12 font-heading font-bold text-base rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 shadow-lg shadow-orange-500/30"
-                disabled={loading || (!isLogin && !termsAccepted)}
-              >
-                {loading ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Veuillez patienter...
+                  {/* Documents Upload */}
+                  <div className="space-y-3">
+                    <Label className="text-slate-700 font-medium text-sm flex items-center gap-2">
+                      <Upload className="h-4 w-4 text-orange-500" />
+                      Documents justificatifs (optionnel)
+                    </Label>
+                    <p className="text-xs text-slate-500">
+                      Ajoutez des certificats, diplômes ou attestations pour renforcer votre crédibilité
+                    </p>
+                    
+                    {/* Upload Zone */}
+                    <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-300 rounded-xl bg-slate-50 cursor-pointer hover:border-orange-500 hover:bg-orange-50 transition-colors">
+                      <Upload className="h-8 w-8 text-slate-400 mb-2" />
+                      <span className="text-sm text-slate-600 font-medium">Cliquez pour ajouter des documents</span>
+                      <span className="text-xs text-slate-500 mt-1">PDF, JPG, PNG (max 5MB par fichier)</span>
+                      <input
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        multiple
+                        onChange={handleDocumentUpload}
+                        className="hidden"
+                      />
+                    </label>
+
+                    {/* Uploaded Documents List */}
+                    {documents.length > 0 && (
+                      <div className="space-y-2">
+                        {documents.map((doc, index) => (
+                          <div key={index} className="flex items-center justify-between p-3 bg-white border border-slate-200 rounded-lg">
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 bg-orange-100 rounded-lg">
+                                <FileText className="h-4 w-4 text-orange-600" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-slate-700 truncate max-w-[180px]">
+                                  {doc.name}
+                                </p>
+                                <p className="text-xs text-slate-500">
+                                  {(doc.size / 1024).toFixed(1)} KB
+                                </p>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => removeDocument(index)}
+                              className="p-1 text-slate-400 hover:text-red-500 transition-colors"
+                            >
+                              <X className="h-5 w-5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                ) : (
-                  isLogin ? 'Se Connecter' : 'Créer mon Compte'
-                )}
-              </Button>
+
+                  {/* Navigation Buttons */}
+                  <div className="flex gap-3">
+                    <Button 
+                      type="button"
+                      variant="outline"
+                      onClick={handlePreviousStep}
+                      className="flex-1 h-12 font-heading font-bold text-base rounded-xl"
+                    >
+                      <ArrowLeft className="h-5 w-5 mr-2" />
+                      Retour
+                    </Button>
+                    <Button 
+                      type="submit"
+                      data-testid="auth-submit-button"
+                      className="flex-1 h-12 font-heading font-bold text-base rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 shadow-lg shadow-orange-500/30"
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <div className="flex items-center gap-2">
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Création...
+                        </div>
+                      ) : (
+                        <span className="flex items-center gap-2">
+                          <CheckCircle className="h-5 w-5" />
+                          Créer mon compte
+                        </span>
+                      )}
+                    </Button>
+                  </div>
+                </>
+              )}
             </form>
 
-            <div className="mt-6 text-center">
-              <p className="text-sm text-slate-500">
-                {isLogin ? "Pas encore inscrit ?" : "Déjà inscrit ?"}
-                <button
-                  type="button"
-                  data-testid="auth-toggle-button"
-                  onClick={() => {
-                    setIsLogin(!isLogin);
-                    setTermsAccepted(false);
-                    setFormData({ first_name: '', last_name: '', phone_number: '', password: '', profession: '', custom_profession: '', region: '', ville: '', commune: '', quartier: '' });
-                  }}
-                  className="ml-1 text-orange-600 hover:text-orange-700 font-medium"
-                >
-                  {isLogin ? "Créez un compte" : "Connectez-vous"}
-                </button>
-              </p>
-            </div>
+            {/* Footer links - Only in Login or Step 1 */}
+            {(isLogin || registrationStep === 1) && (
+              <>
+                <div className="mt-6 text-center">
+                  <p className="text-sm text-slate-500">
+                    {isLogin ? "Pas encore inscrit ?" : "Déjà inscrit ?"}
+                    <button
+                      type="button"
+                      data-testid="auth-toggle-button"
+                      onClick={() => {
+                        setIsLogin(!isLogin);
+                        resetForm();
+                      }}
+                      className="ml-1 text-orange-600 hover:text-orange-700 font-medium"
+                    >
+                      {isLogin ? "Créez un compte" : "Connectez-vous"}
+                    </button>
+                  </p>
+                </div>
 
-            {/* Link to Customer Auth */}
-            <div className="mt-6 pt-6 border-t border-slate-100 text-center">
-              <p className="text-sm text-slate-500">
-                Vous êtes un client ?
-                <button
-                  type="button"
-                  onClick={() => navigate('/customer/auth')}
-                  className="ml-1 text-green-600 hover:text-green-700 font-medium"
-                >
-                  Espace Client
-                </button>
-              </p>
-            </div>
+                <div className="mt-6 pt-6 border-t border-slate-100 text-center">
+                  <p className="text-sm text-slate-500">
+                    Vous êtes un client ?
+                    <button
+                      type="button"
+                      onClick={() => navigate('/customer/auth')}
+                      className="ml-1 text-green-600 hover:text-green-700 font-medium"
+                    >
+                      Espace Client
+                    </button>
+                  </p>
+                </div>
+              </>
+            )}
           </Card>
         </div>
       </div>
