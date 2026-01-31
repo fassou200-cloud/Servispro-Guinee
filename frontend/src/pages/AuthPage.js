@@ -243,6 +243,7 @@ const AuthPage = ({ setIsAuthenticated }) => {
       submitData.append('password', formData.password);
       submitData.append('profession', professionName);
       submitData.append('profession_group', groupName);
+      submitData.append('years_experience', formData.years_experience);
       submitData.append('custom_profession', '');
       submitData.append('location', locationParts.join(', '));
       submitData.append('region', formData.region);
