@@ -458,7 +458,7 @@ const VisitRequestForm = ({ rental, onSuccess, onClose }) => {
               <CreditCard className="h-5 w-5 text-green-600" />
             </div>
             <h3 className="text-xl font-heading font-bold text-slate-900">
-              Paiement des Frais de déplacement
+              Paiement des Frais de visite
             </h3>
           </div>
         </div>
