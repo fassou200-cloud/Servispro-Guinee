@@ -5,31 +5,38 @@ Construire une plateforme nommée "ServisPro" pour les prestataires de services 
 
 ## Dernière mise à jour - 31 Janvier 2026
 
+### Nouvelles fonctionnalités - 31 Janvier 2026
+
+1. **Gestion des documents par le prestataire**
+   - Le prestataire peut ajouter de nouveaux documents (max 10)
+   - Le prestataire peut supprimer ses propres documents
+   - Formats acceptés : PDF, DOC, DOCX, JPG, PNG (max 10 Mo)
+   - Nouveaux endpoints API :
+     - `POST /api/providers/{id}/documents` - Ajouter un document
+     - `DELETE /api/providers/{id}/documents/{index}` - Supprimer un document
+   - Fichiers modifiés :
+     - `/app/backend/server.py` - Nouveaux endpoints
+     - `/app/frontend/src/pages/ProviderProfile.js` - UI de gestion
+
+2. **Terminologie Frais différenciée**
+   - **Location immobilière** : "Frais de visite" (avec icône maison)
+   - **Autres services** : "Frais de déplacement" (avec icône camion)
+   - Le composant `ServiceFeesDisplay` accepte maintenant `isRental` prop
+   - Fichiers modifiés :
+     - `/app/frontend/src/components/ServiceFeesDisplay.js`
+     - `/app/frontend/src/components/VisitRequestForm.js`
+     - `/app/frontend/src/components/InvestigationFeePopup.js`
+
 ### Bug corrigé : Documents non visibles (P0)
-- **Problème** : Les documents téléchargés par les prestataires n'étaient pas visibles sur le profil public ni dans le tableau de bord admin, malgré leur présence correcte dans la base de données et l'API.
-- **Cause** : Conflit CSS avec le wrapper de debug d'Emergent qui causait une hauteur de 0px sur les conteneurs avec `<a>` tags en combinaison avec `space-y-*` ou `grid`.
-- **Solution** : Remplacer les `<a>` tags par des `<div>` avec `onClick={() => window.open(url, '_blank')}` et utiliser `<ul>/<li>` au lieu de `grid` ou `space-y-*`.
-- **Fichiers modifiés** :
-  - `/app/frontend/src/pages/ProviderProfile.js` - Section documents déplacée dans une Card séparée
-  - `/app/frontend/src/pages/AdminDashboard.js` - Section documents justificatifs
-- **Statut** : ✅ Corrigé et testé visuellement
+- **Problème** : Les documents téléchargés par les prestataires n'étaient pas visibles sur le profil public ni dans le tableau de bord admin.
+- **Cause** : Conflit CSS avec le wrapper de debug d'Emergent.
+- **Solution** : Utiliser `<div>` avec `onClick` au lieu de `<a>` tags.
+- **Statut** : ✅ Corrigé et testé
 
 ### Modifications UI/UX - 31 Janvier 2026
 1. **Visibilité des sections sur le profil prestataire**
-   - Les clients ne voient plus les sections "Catégorie" et "Documents" sur le profil d'un prestataire
-   - Seul le prestataire propriétaire peut voir ses propres documents et sa catégorie
-   - Fichier modifié : `/app/frontend/src/pages/ProviderProfile.js`
-
-2. **Renommage "Frais de Visite" → "Frais de déplacement"**
-   - Le terme "Frais de Visite" a été remplacé par "Frais de déplacement" dans toute l'application
-   - Fichiers modifiés :
-     - `/app/frontend/src/components/ServiceFeesDisplay.js`
-     - `/app/frontend/src/components/ProviderFeesCard.js`
-     - `/app/frontend/src/components/CommissionRatesCard.js`
-     - `/app/frontend/src/components/VisitRequestsList.js`
-     - `/app/frontend/src/components/VisitRequestForm.js`
-     - `/app/frontend/src/components/InvestigationFeePopup.js`
-     - `/app/frontend/src/components/TermsConditionsModal.js`
+   - Les clients ne voient plus les sections "Catégorie" et "Documents"
+   - Seul le prestataire propriétaire peut voir et gérer ses documents
 
 ## Personas Utilisateurs
 1. **Prestataires de Services** - Professionnels offrant divers services (8 catégories)
