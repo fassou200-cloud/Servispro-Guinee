@@ -144,7 +144,7 @@ const CommissionRatesCard = ({ profession, sector, compact = false }) => {
               <div className="bg-background/80 p-3 rounded-lg border border-blue-200">
                 <div className="flex items-center gap-1.5 text-blue-600 mb-1">
                   <Clock className="h-3.5 w-3.5" />
-                  <span className="text-xs font-medium">Frais de Visite</span>
+                  <span className="text-xs font-medium">Frais de déplacement</span>
                 </div>
                 <p className="text-lg font-bold text-foreground">
                   {formatPrice(serviceFees.frais_visite)}
