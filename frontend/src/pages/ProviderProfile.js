@@ -359,8 +359,8 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
                 </div>
               )}
 
-              {/* Profession Group */}
-              {provider.profession_group && (
+              {/* Profession Group - Only visible to the provider themselves */}
+              {isOwnProfile && provider.profession_group && (
                 <div className="flex items-start gap-3">
                   <div className="p-2 rounded-lg bg-purple-100">
                     <Briefcase className="h-5 w-5 text-purple-600" />
