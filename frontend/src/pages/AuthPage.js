@@ -107,6 +107,10 @@ const AuthPage = ({ setIsAuthenticated }) => {
       toast.error('Veuillez sélectionner votre métier');
       return false;
     }
+    if (!formData.years_experience) {
+      toast.error('Veuillez sélectionner vos années d\'expérience');
+      return false;
+    }
     if (!formData.region || !formData.ville || !formData.commune) {
       toast.error('Veuillez compléter votre localisation');
       return false;
