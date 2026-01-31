@@ -2065,6 +2065,96 @@ async def get_provider_by_id(provider_id: str):
         raise HTTPException(status_code=404, detail="Provider not found")
     return ServiceProvider(**provider)
 
+# Provider Document Management
+@api_router.delete("/providers/{provider_id}/documents/{doc_index}")
+async def delete_provider_document(provider_id: str, doc_index: int, current_user: dict = Depends(get_current_user)):
+    """Delete a document from a provider's profile - only the provider can delete their own documents"""
+    # Verify the current user is the owner of this provider profile
+    if current_user.get('id') != provider_id:
+        raise HTTPException(status_code=403, detail="Vous ne pouvez supprimer que vos propres documents")
+    
+    # Get the provider
+    provider = await db.service_providers.find_one({'id': provider_id})
+    if not provider:
+        raise HTTPException(status_code=404, detail="Prestataire non trouvé")
+    
+    documents = provider.get('documents', [])
+    if doc_index < 0 or doc_index >= len(documents):
+        raise HTTPException(status_code=404, detail="Document non trouvé")
+    
+    # Get the document to delete
+    doc_to_delete = documents[doc_index]
+    
+    # Try to delete the physical file
+    try:
+        file_path = doc_to_delete.get('path', '')
+        if file_path.startswith('/api/uploads/'):
+            file_name = file_path.replace('/api/uploads/', '')
+            full_path = os.path.join(UPLOAD_DIR, file_name)
+            if os.path.exists(full_path):
+                os.remove(full_path)
+    except Exception as e:
+        print(f"Error deleting file: {e}")
+    
+    # Remove the document from the array
+    documents.pop(doc_index)
+    
+    # Update the provider
+    await db.service_providers.update_one(
+        {'id': provider_id},
+        {'$set': {'documents': documents}}
+    )
+    
+    return {"message": "Document supprimé avec succès", "remaining_documents": len(documents)}
+
+@api_router.post("/providers/{provider_id}/documents")
+async def add_provider_document(
+    provider_id: str,
+    document: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Add a new document to a provider's profile - only the provider can add to their own documents"""
+    # Verify the current user is the owner of this provider profile
+    if current_user.get('id') != provider_id:
+        raise HTTPException(status_code=403, detail="Vous ne pouvez ajouter des documents qu'à votre propre profil")
+    
+    # Get the provider
+    provider = await db.service_providers.find_one({'id': provider_id})
+    if not provider:
+        raise HTTPException(status_code=404, detail="Prestataire non trouvé")
+    
+    documents = provider.get('documents', [])
+    
+    # Limit to 10 documents max
+    if len(documents) >= 10:
+        raise HTTPException(status_code=400, detail="Vous ne pouvez pas télécharger plus de 10 documents")
+    
+    # Save the file
+    try:
+        file_ext = os.path.splitext(document.filename)[1]
+        safe_filename = f"doc_{provider_id}_{len(documents)}_{document.filename}"
+        file_path = os.path.join(UPLOAD_DIR, safe_filename)
+        
+        with open(file_path, "wb") as buffer:
+            content = await document.read()
+            buffer.write(content)
+        
+        new_doc = {
+            "path": f"/api/uploads/{safe_filename}",
+            "filename": document.filename,
+            "uploaded_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        # Add to documents array
+        await db.service_providers.update_one(
+            {'id': provider_id},
+            {'$push': {'documents': new_doc}}
+        )
+        
+        return {"message": "Document ajouté avec succès", "document": new_doc}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lors du téléchargement: {str(e)}")
+
 # Job Offer Routes
 @api_router.post("/jobs", response_model=JobOffer)
 async def create_job_offer(job_data: JobOfferCreate):
