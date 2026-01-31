@@ -265,9 +265,6 @@ const NotificationBell = ({ userType = 'provider' }) => {
 
   return (
     <div className="relative">
-      {/* Hidden audio element for better compatibility */}
-      <audio ref={audioRef} preload="auto" />
-      
       {/* Bell Button */}
       <Button
         variant="ghost"
