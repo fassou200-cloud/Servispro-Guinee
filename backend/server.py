@@ -988,31 +988,81 @@ async def get_current_customer(credentials: HTTPAuthorizationCredentials = Depen
 
 # Auth Routes
 @api_router.post("/auth/register", response_model=AuthResponse)
-async def register(input_data: RegisterInput):
+async def register(
+    first_name: str = Form(...),
+    last_name: str = Form(...),
+    phone_number: str = Form(...),
+    password: str = Form(...),
+    profession: str = Form(...),
+    custom_profession: str = Form(""),
+    location: str = Form(""),
+    region: str = Form(""),
+    ville: str = Form(""),
+    commune: str = Form(""),
+    quartier: str = Form(""),
+    about: str = Form(""),
+    profile_photo: Optional[UploadFile] = File(None),
+    documents: List[UploadFile] = File(default=[])
+):
     # Check if phone number already exists
-    existing_user = await db.service_providers.find_one({'phone_number': input_data.phone_number})
+    existing_user = await db.service_providers.find_one({'phone_number': phone_number})
     if existing_user:
-        raise HTTPException(status_code=400, detail="Phone number already registered")
+        raise HTTPException(status_code=400, detail="Ce numéro de téléphone est déjà enregistré")
     
     # Create user
     user_id = str(uuid.uuid4())
-    hashed_pwd = hash_password(input_data.password)
+    hashed_pwd = hash_password(password)
+    
+    # Handle profile photo upload
+    profile_photo_path = None
+    if profile_photo and profile_photo.filename:
+        file_ext = profile_photo.filename.split('.')[-1].lower()
+        if file_ext in ['jpg', 'jpeg', 'png', 'webp']:
+            photo_filename = f"profile_{user_id}.{file_ext}"
+            photo_path = UPLOAD_DIR / photo_filename
+            with open(photo_path, "wb") as f:
+                content = await profile_photo.read()
+                f.write(content)
+            profile_photo_path = f"/api/uploads/{photo_filename}"
+    
+    # Handle documents upload
+    uploaded_documents = []
+    for idx, doc in enumerate(documents):
+        if doc and doc.filename:
+            file_ext = doc.filename.split('.')[-1].lower()
+            if file_ext in ['jpg', 'jpeg', 'png', 'pdf', 'webp']:
+                doc_filename = f"doc_{user_id}_{idx}_{doc.filename}"
+                doc_path = UPLOAD_DIR / doc_filename
+                with open(doc_path, "wb") as f:
+                    content = await doc.read()
+                    f.write(content)
+                uploaded_documents.append({
+                    "filename": doc.filename,
+                    "path": f"/api/uploads/{doc_filename}",
+                    "uploaded_at": datetime.now(timezone.utc).isoformat()
+                })
     
     user_doc = {
         'id': user_id,
-        'first_name': input_data.first_name,
-        'last_name': input_data.last_name,
-        'phone_number': input_data.phone_number,
+        'first_name': first_name,
+        'last_name': last_name,
+        'phone_number': phone_number,
         'password': hashed_pwd,
-        'profession': input_data.profession.value,
-        'custom_profession': input_data.custom_profession if input_data.profession == ProfessionType.AUTRES else None,
-        'about_me': '',
-        'profile_picture': None,
+        'profession': profession,
+        'custom_profession': custom_profession if profession == 'Autres' else None,
+        'location': location,
+        'region': region,
+        'ville': ville,
+        'commune': commune,
+        'quartier': quartier,
+        'about_me': about,
+        'profile_picture': profile_photo_path,
+        'documents': uploaded_documents,
         'id_verification_picture': None,
         'online_status': False,
         'verification_status': ProviderStatus.PENDING.value,
-        'price': None,  # Tarif en GNF
-        'investigation_fee': None,  # Tarif d'investigation en GNF
+        'price': None,
+        'investigation_fee': None,
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     
