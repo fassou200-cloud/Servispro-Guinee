@@ -300,6 +300,85 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
           </div>
         </Card>
 
+        {/* Provider Details Card - Location, Experience, About */}
+        <Card className="rounded-3xl border-0 shadow-lg mb-8 p-8">
+          <h3 className="text-xl font-heading font-bold text-gray-900 mb-6 flex items-center gap-2">
+            <User className="h-5 w-5 text-orange-500" />
+            Informations du Prestataire
+          </h3>
+          
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Location Info */}
+            <div className="space-y-4">
+              <div className="flex items-start gap-3">
+                <div className="p-2 rounded-lg bg-blue-100">
+                  <MapPin className="h-5 w-5 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Localisation</p>
+                  <p className="font-semibold text-gray-900">
+                    {provider.location || 'Non spécifiée'}
+                  </p>
+                  {provider.quartier && (
+                    <p className="text-sm text-gray-600">Quartier: {provider.quartier}</p>
+                  )}
+                </div>
+              </div>
+              
+              {/* Years of Experience */}
+              {provider.years_experience && (
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-lg bg-green-100">
+                    <Award className="h-5 w-5 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Expérience</p>
+                    <p className="font-semibold text-gray-900">
+                      {provider.years_experience === '0-1' && "Moins d'1 an"}
+                      {provider.years_experience === '1-2' && '1 - 2 ans'}
+                      {provider.years_experience === '2-5' && '2 - 5 ans'}
+                      {provider.years_experience === '5-10' && '5 - 10 ans'}
+                      {provider.years_experience === '10-15' && '10 - 15 ans'}
+                      {provider.years_experience === '15-20' && '15 - 20 ans'}
+                      {provider.years_experience === '20+' && 'Plus de 20 ans'}
+                      {!['0-1', '1-2', '2-5', '5-10', '10-15', '15-20', '20+'].includes(provider.years_experience) && provider.years_experience}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Profession Group */}
+              {provider.profession_group && (
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-lg bg-purple-100">
+                    <Briefcase className="h-5 w-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Catégorie</p>
+                    <p className="font-semibold text-gray-900">{provider.profession_group}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* About Section */}
+            <div>
+              {provider.about_me ? (
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <p className="text-sm text-gray-500 mb-2 font-medium">À propos</p>
+                  <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                    {provider.about_me}
+                  </p>
+                </div>
+              ) : (
+                <div className="bg-gray-50 rounded-xl p-4 text-center">
+                  <p className="text-gray-400 italic">Aucune description disponible</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </Card>
+
         {/* Service Request Form */}
         {showRequestForm && provider.profession !== 'AgentImmobilier' && provider.online_status && (
           <Card className="rounded-3xl border-0 shadow-xl mb-8 overflow-hidden">
