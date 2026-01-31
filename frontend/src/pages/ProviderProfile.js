@@ -389,34 +389,38 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
               <FileText className="h-5 w-5 text-orange-500" />
               Certifications & Documents ({provider.documents.length})
             </h3>
-            <div className="grid gap-3">
-              {provider.documents.map((doc, idx) => (
-                <a
-                  key={idx}
-                  href={`${BACKEND_URL}${doc.path}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-4 p-4 bg-gradient-to-r from-orange-50 to-amber-50 text-orange-800 rounded-xl hover:from-orange-100 hover:to-amber-100 transition-all border border-orange-200 shadow-sm"
-                  data-testid={`provider-doc-${idx}`}
-                >
-                  <div className="p-3 bg-white rounded-xl shadow-sm">
-                    <FileText className="h-6 w-6 text-orange-600" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold truncate text-gray-900">{doc.filename || `Document ${idx + 1}`}</p>
-                    {doc.uploaded_at && (
-                      <p className="text-sm text-orange-600/80">
-                        Ajouté le {new Date(doc.uploaded_at).toLocaleDateString('fr-FR')}
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2 text-orange-600">
-                    <span className="text-sm font-medium">Voir</span>
-                    <ExternalLink className="h-5 w-5" />
-                  </div>
-                </a>
-              ))}
-            </div>
+            <ul className="list-none m-0 p-0">
+              {provider.documents.map((doc, idx) => {
+                const docUrl = `${BACKEND_URL}${doc.path}`;
+                return (
+                  <li key={idx} className="mb-3 last:mb-0">
+                    <div 
+                      onClick={() => window.open(docUrl, '_blank')}
+                      className="flex items-center gap-4 p-4 bg-gradient-to-r from-orange-50 to-amber-50 text-orange-800 rounded-xl hover:from-orange-100 hover:to-amber-100 transition-all border border-orange-200 shadow-sm cursor-pointer"
+                      data-testid={`provider-doc-${idx}`}
+                      role="button"
+                      tabIndex={0}
+                    >
+                      <div className="p-3 bg-white rounded-xl shadow-sm flex-shrink-0">
+                        <FileText className="h-6 w-6 text-orange-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold truncate text-gray-900">{doc.filename || `Document ${idx + 1}`}</p>
+                        {doc.uploaded_at && (
+                          <p className="text-sm text-orange-600/80">
+                            Ajouté le {new Date(doc.uploaded_at).toLocaleDateString('fr-FR')}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 text-orange-600 flex-shrink-0">
+                        <span className="text-sm font-medium">Voir</span>
+                        <ExternalLink className="h-5 w-5" />
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
           </Card>
         )}
 
