@@ -468,44 +468,109 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
         </Card>
 
         {/* Documents Section - Only visible to the provider themselves */}
-        {isOwnProfile && provider.documents && provider.documents.length > 0 && (
+        {isOwnProfile && (
           <Card className="rounded-3xl border-0 shadow-lg mb-8 p-8" data-testid="provider-documents-section">
-            <h3 className="text-xl font-heading font-bold text-gray-900 mb-6 flex items-center gap-2">
-              <FileText className="h-5 w-5 text-orange-500" />
-              Mes Certifications & Documents ({provider.documents.length})
-            </h3>
-            <ul className="list-none m-0 p-0">
-              {provider.documents.map((doc, idx) => {
-                const docUrl = `${BACKEND_URL}${doc.path}`;
-                return (
-                  <li key={idx} className="mb-3 last:mb-0">
-                    <div 
-                      onClick={() => window.open(docUrl, '_blank')}
-                      className="flex items-center gap-4 p-4 bg-gradient-to-r from-orange-50 to-amber-50 text-orange-800 rounded-xl hover:from-orange-100 hover:to-amber-100 transition-all border border-orange-200 shadow-sm cursor-pointer"
-                      data-testid={`provider-doc-${idx}`}
-                      role="button"
-                      tabIndex={0}
-                    >
-                      <div className="p-3 bg-white rounded-xl shadow-sm flex-shrink-0">
-                        <FileText className="h-6 w-6 text-orange-600" />
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-heading font-bold text-gray-900 flex items-center gap-2">
+                <FileText className="h-5 w-5 text-orange-500" />
+                Mes Certifications & Documents ({provider.documents?.length || 0})
+              </h3>
+              
+              {/* Add Document Button */}
+              <div>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleAddDocument}
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                  className="hidden"
+                  id="document-upload"
+                />
+                <Button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingDoc || (provider.documents?.length || 0) >= 10}
+                  className="bg-orange-500 hover:bg-orange-600 text-white"
+                  size="sm"
+                >
+                  {uploadingDoc ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Téléchargement...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Ajouter
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+            
+            {provider.documents && provider.documents.length > 0 ? (
+              <ul className="list-none m-0 p-0">
+                {provider.documents.map((doc, idx) => {
+                  const docUrl = `${BACKEND_URL}${doc.path}`;
+                  return (
+                    <li key={idx} className="mb-3 last:mb-0">
+                      <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-orange-50 to-amber-50 text-orange-800 rounded-xl border border-orange-200 shadow-sm">
+                        <div 
+                          onClick={() => window.open(docUrl, '_blank')}
+                          className="flex items-center gap-4 flex-1 cursor-pointer hover:opacity-80 transition-opacity"
+                          role="button"
+                          tabIndex={0}
+                          data-testid={`provider-doc-${idx}`}
+                        >
+                          <div className="p-3 bg-white rounded-xl shadow-sm flex-shrink-0">
+                            <FileText className="h-6 w-6 text-orange-600" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold truncate text-gray-900">{doc.filename || `Document ${idx + 1}`}</p>
+                            {doc.uploaded_at && (
+                              <p className="text-sm text-orange-600/80">
+                                Ajouté le {new Date(doc.uploaded_at).toLocaleDateString('fr-FR')}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 text-orange-600 flex-shrink-0">
+                            <span className="text-sm font-medium">Voir</span>
+                            <ExternalLink className="h-5 w-5" />
+                          </div>
+                        </div>
+                        
+                        {/* Delete Button */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteDocument(idx);
+                          }}
+                          disabled={deletingDocIndex === idx}
+                          className="p-2 bg-red-100 hover:bg-red-200 rounded-lg transition-colors flex-shrink-0"
+                          title="Supprimer ce document"
+                          data-testid={`delete-doc-${idx}`}
+                        >
+                          {deletingDocIndex === idx ? (
+                            <Loader2 className="h-5 w-5 text-red-600 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-5 w-5 text-red-600" />
+                          )}
+                        </button>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold truncate text-gray-900">{doc.filename || `Document ${idx + 1}`}</p>
-                        {doc.uploaded_at && (
-                          <p className="text-sm text-orange-600/80">
-                            Ajouté le {new Date(doc.uploaded_at).toLocaleDateString('fr-FR')}
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2 text-orange-600 flex-shrink-0">
-                        <span className="text-sm font-medium">Voir</span>
-                        <ExternalLink className="h-5 w-5" />
-                      </div>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <div className="text-center py-8 bg-gray-50 rounded-xl">
+                <Upload className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-500">Aucun document téléchargé</p>
+                <p className="text-sm text-gray-400 mt-1">Cliquez sur "Ajouter" pour télécharger vos certifications</p>
+              </div>
+            )}
+            
+            <p className="text-xs text-gray-500 mt-4">
+              Formats acceptés : PDF, DOC, DOCX, JPG, PNG. Taille max : 10 Mo. Maximum 10 documents.
+            </p>
           </Card>
         )}
 
