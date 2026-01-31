@@ -258,17 +258,7 @@ const NotificationBell = ({ userType = 'provider' }) => {
   // Initialize and fetch notifications
   useEffect(() => {
     // Initialize audio system
-    initAudio();
-    
-    // Add global click listener to unlock audio on first interaction
-    const unlockOnInteraction = () => {
-      unlockAudio().then(() => setAudioReady(true));
-      document.removeEventListener('click', unlockOnInteraction);
-      document.removeEventListener('touchstart', unlockOnInteraction);
-    };
-    
-    document.addEventListener('click', unlockOnInteraction);
-    document.addEventListener('touchstart', unlockOnInteraction);
+    initNotificationAudio();
     
     // Initial fetch
     fetchUnreadCount();
@@ -278,8 +268,6 @@ const NotificationBell = ({ userType = 'provider' }) => {
     
     return () => {
       clearInterval(interval);
-      document.removeEventListener('click', unlockOnInteraction);
-      document.removeEventListener('touchstart', unlockOnInteraction);
     };
   }, [userType]);
 
@@ -305,9 +293,13 @@ const NotificationBell = ({ userType = 'provider' }) => {
   // Toggle sound
   const toggleSound = (e) => {
     e.stopPropagation();
-    setSoundEnabled(!soundEnabled);
-    if (!soundEnabled) {
+    const newState = !soundEnabled;
+    setSoundEnabled(newState);
+    if (newState) {
       // Play a test sound when enabling
+      playNotificationSound(true);
+    }
+  };
       playNotificationSound();
     }
   };
