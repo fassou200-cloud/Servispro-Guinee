@@ -133,6 +133,76 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
     }
   };
 
+  // Document management functions
+  const handleDeleteDocument = async (docIndex) => {
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce document ?')) {
+      return;
+    }
+    
+    setDeletingDocIndex(docIndex);
+    try {
+      const token = localStorage.getItem('providerToken');
+      await axios.delete(`${API}/providers/${providerId}/documents/${docIndex}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Update local state
+      setProvider(prev => ({
+        ...prev,
+        documents: prev.documents.filter((_, idx) => idx !== docIndex)
+      }));
+      
+      toast.success('Document supprimé avec succès');
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      toast.error(error.response?.data?.detail || 'Erreur lors de la suppression');
+    } finally {
+      setDeletingDocIndex(null);
+    }
+  };
+
+  const handleAddDocument = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    // Check file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Le fichier ne doit pas dépasser 10 Mo');
+      return;
+    }
+    
+    setUploadingDoc(true);
+    try {
+      const token = localStorage.getItem('providerToken');
+      const formData = new FormData();
+      formData.append('document', file);
+      
+      const response = await axios.post(`${API}/providers/${providerId}/documents`, formData, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      // Update local state with the new document
+      setProvider(prev => ({
+        ...prev,
+        documents: [...(prev.documents || []), response.data.document]
+      }));
+      
+      toast.success('Document ajouté avec succès');
+    } catch (error) {
+      console.error('Error uploading document:', error);
+      toast.error(error.response?.data?.detail || 'Erreur lors du téléchargement');
+    } finally {
+      setUploadingDoc(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   const handleRequestService = () => {
     if (provider?.profession === 'AgentImmobilier') {
       navigate('/rentals');
