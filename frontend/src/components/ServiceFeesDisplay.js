@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
-import { Eye, Briefcase, DollarSign, Info } from 'lucide-react';
+import { Eye, Briefcase, DollarSign, Info, Truck } from 'lucide-react';
 import axios from 'axios';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -60,8 +60,8 @@ const ServiceFeesDisplay = ({ profession, showTitle = true, compact = false }) =
       <div className="flex flex-wrap gap-3 text-sm">
         {fees.frais_visite > 0 && (
           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full">
-            <Eye className="h-3.5 w-3.5" />
-            <span className="font-medium">Frais de Visite: {formatPrice(fees.frais_visite)} {settings.devise}</span>
+            <Truck className="h-3.5 w-3.5" />
+            <span className="font-medium">Frais de déplacement: {formatPrice(fees.frais_visite)} {settings.devise}</span>
           </div>
         )}
       </div>
@@ -72,9 +72,9 @@ const ServiceFeesDisplay = ({ profession, showTitle = true, compact = false }) =
     <Card className="p-4 bg-gradient-to-r from-blue-50 to-green-50 border-blue-200">
       {showTitle && (
         <div className="flex items-center gap-2 mb-3">
-          <DollarSign className="h-5 w-5 text-green-600" />
+          <Truck className="h-5 w-5 text-green-600" />
           <h3 className="font-heading font-semibold text-slate-800">
-            Frais de Visite
+            Frais de déplacement
           </h3>
         </div>
       )}
@@ -83,8 +83,8 @@ const ServiceFeesDisplay = ({ profession, showTitle = true, compact = false }) =
         {fees.frais_visite > 0 && (
           <div className="bg-white/80 p-3 rounded-lg border border-blue-100">
             <div className="flex items-center gap-2 text-blue-600 mb-1">
-              <Eye className="h-4 w-4" />
-              <span className="text-xs font-medium uppercase tracking-wide">Frais de Visite</span>
+              <Truck className="h-4 w-4" />
+              <span className="text-xs font-medium uppercase tracking-wide">Frais de déplacement</span>
             </div>
             <p className="text-xl font-bold text-slate-800">
               {formatPrice(fees.frais_visite)}
@@ -100,7 +100,7 @@ const ServiceFeesDisplay = ({ profession, showTitle = true, compact = false }) =
       <div className="mt-3 flex items-start gap-2 text-xs text-slate-500">
         <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
         <span>
-          Ce tarif est défini par la plateforme ServisPro. Le client doit payer les frais de visite avant le déplacement du prestataire.
+          Ce tarif est défini par la plateforme ServisPro. Le client doit payer les frais de déplacement avant le déplacement du prestataire.
         </span>
       </div>
     </Card>
