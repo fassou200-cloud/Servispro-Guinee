@@ -7,7 +7,7 @@ import {
   ArrowLeft, ShieldCheck, Briefcase, Phone, Home, Building, Star, 
   MapPin, Clock, CheckCircle, MessageCircle, Calendar, User,
   Truck, Settings, Wrench, Droplet, Hammer, Flame, MoreHorizontal,
-  ChevronRight, Award, ThumbsUp
+  ChevronRight, Award, ThumbsUp, FileText
 } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
