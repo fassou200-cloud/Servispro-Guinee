@@ -377,6 +377,30 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
               )}
             </div>
           </div>
+
+          {/* Documents Section */}
+          {provider.documents && provider.documents.length > 0 && (
+            <div className="mt-6 pt-6 border-t border-gray-100">
+              <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                <FileText className="h-4 w-4 text-orange-500" />
+                Certifications & Documents
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {provider.documents.map((doc, idx) => (
+                  <a
+                    key={idx}
+                    href={`${BACKEND_URL}${doc.path}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-3 py-2 bg-orange-50 text-orange-700 rounded-lg hover:bg-orange-100 transition-colors text-sm"
+                  >
+                    <FileText className="h-4 w-4" />
+                    {doc.filename || `Document ${idx + 1}`}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
         </Card>
 
         {/* Service Request Form */}
