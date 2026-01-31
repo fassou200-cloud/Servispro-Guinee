@@ -9,11 +9,12 @@ import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { 
   ArrowLeft, ArrowRight, User, Phone, Lock, Eye, EyeOff, Briefcase, Shield, 
-  Sparkles, Wrench, Home, Zap, Settings, MapPin, FileText, Upload, X, CheckCircle, Image
+  Sparkles, MapPin, FileText, Upload, X, CheckCircle, Image
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
 import { getRegions, getVillesByRegion, getCommunesByVille } from '@/data/guineaLocations';
+import { getProfessionGroups, getProfessionsByGroup } from '@/data/professions';
 import { getErrorMessage } from '@/utils/helpers';
 import ForgotPassword from '@/components/ForgotPassword';
 import TermsConditionsModal from '@/components/TermsConditionsModal';
@@ -35,13 +36,17 @@ const AuthPage = ({ setIsAuthenticated }) => {
   const [documents, setDocuments] = useState([]);
   const [profilePhoto, setProfilePhoto] = useState(null);
   
+  // Profession selection
+  const [professionGroup, setProfessionGroup] = useState('');
+  const [availableProfessions, setAvailableProfessions] = useState([]);
+  
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
     phone_number: '',
     password: '',
+    profession_group: '',
     profession: '',
-    custom_profession: '',
     region: '',
     ville: '',
     commune: '',
@@ -52,6 +57,19 @@ const AuthPage = ({ setIsAuthenticated }) => {
   // Location options based on selections
   const [villes, setVilles] = useState([]);
   const [communes, setCommunes] = useState([]);
+
+  // Profession groups
+  const professionGroups = getProfessionGroups();
+
+  // Update available professions when group changes
+  useEffect(() => {
+    if (professionGroup) {
+      setAvailableProfessions(getProfessionsByGroup(professionGroup));
+      setFormData(prev => ({ ...prev, profession: '', profession_group: professionGroup }));
+    } else {
+      setAvailableProfessions([]);
+    }
+  }, [professionGroup]);
 
   // Update villes when region changes
   useEffect(() => {
@@ -80,12 +98,12 @@ const AuthPage = ({ setIsAuthenticated }) => {
       toast.error('Veuillez entrer votre nom');
       return false;
     }
-    if (!formData.profession) {
-      toast.error('Veuillez sélectionner votre profession');
+    if (!professionGroup) {
+      toast.error('Veuillez sélectionner un groupe de métier');
       return false;
     }
-    if (formData.profession === 'Autres' && !formData.custom_profession.trim()) {
-      toast.error('Veuillez préciser votre métier');
+    if (!formData.profession) {
+      toast.error('Veuillez sélectionner votre métier');
       return false;
     }
     if (!formData.region || !formData.ville || !formData.commune) {
@@ -203,6 +221,14 @@ const AuthPage = ({ setIsAuthenticated }) => {
         const regionObj = getRegions().find(r => r.id === formData.region);
         if (regionObj) locationParts.push(regionObj.name);
       }
+
+      // Get profession display name
+      const selectedProfession = availableProfessions.find(p => p.id === formData.profession);
+      const professionName = selectedProfession ? selectedProfession.name : formData.profession;
+      
+      // Get group display name
+      const selectedGroup = professionGroups.find(g => g.id === professionGroup);
+      const groupName = selectedGroup ? selectedGroup.name : professionGroup;
       
       // Create FormData for file upload
       const submitData = new FormData();
@@ -210,8 +236,9 @@ const AuthPage = ({ setIsAuthenticated }) => {
       submitData.append('last_name', formData.last_name);
       submitData.append('phone_number', formData.phone_number);
       submitData.append('password', formData.password);
-      submitData.append('profession', formData.profession);
-      submitData.append('custom_profession', formData.profession === 'Autres' ? formData.custom_profession : '');
+      submitData.append('profession', professionName);
+      submitData.append('profession_group', groupName);
+      submitData.append('custom_profession', '');
       submitData.append('location', locationParts.join(', '));
       submitData.append('region', formData.region);
       submitData.append('ville', formData.ville);
@@ -225,7 +252,7 @@ const AuthPage = ({ setIsAuthenticated }) => {
       }
       
       // Add documents
-      documents.forEach((doc, index) => {
+      documents.forEach((doc) => {
         submitData.append(`documents`, doc);
       });
 
@@ -251,17 +278,6 @@ const AuthPage = ({ setIsAuthenticated }) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const professions = [
-    { value: 'Electromecanicien', label: 'Électromécanicien', icon: Settings },
-    { value: 'Mecanicien', label: 'Mécanicien', icon: Wrench },
-    { value: 'Plombier', label: 'Plombier', icon: Zap },
-    { value: 'Macon', label: 'Maçon', icon: Home },
-    { value: 'Menuisier', label: 'Menuisier', icon: Home },
-    { value: 'AgentImmobilier', label: 'Propriétaire immobilier', icon: Home },
-    { value: 'Soudeur', label: 'Soudeur', icon: Zap },
-    { value: 'Autres', label: 'Autres Métiers', icon: Briefcase },
-  ];
-
   const features = [
     { icon: Briefcase, text: 'Gérez vos demandes de service' },
     { icon: Shield, text: 'Profil professionnel vérifié' },
@@ -274,9 +290,11 @@ const AuthPage = ({ setIsAuthenticated }) => {
   const resetForm = () => {
     setFormData({ 
       first_name: '', last_name: '', phone_number: '', password: '', 
-      profession: '', custom_profession: '', region: '', ville: '', 
+      profession_group: '', profession: '', region: '', ville: '', 
       commune: '', quartier: '', about: '' 
     });
+    setProfessionGroup('');
+    setAvailableProfessions([]);
     setTermsAccepted(false);
     setRegistrationStep(1);
     setDocuments([]);
@@ -296,11 +314,14 @@ const AuthPage = ({ setIsAuthenticated }) => {
     );
   }
 
+  // Check if immobilier profession selected
+  const isImmobilier = professionGroup === 'immobilier';
+
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Branding */}
       <div className={`hidden lg:flex lg:w-1/2 relative overflow-hidden ${
-        formData.profession === 'AgentImmobilier' 
+        isImmobilier 
           ? 'bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-600' 
           : 'bg-gradient-to-br from-amber-500 via-orange-500 to-red-500'
       }`}>
@@ -322,10 +343,10 @@ const AuthPage = ({ setIsAuthenticated }) => {
           </div>
           
           <h2 className="text-4xl font-heading font-bold mb-6">
-            {formData.profession === 'AgentImmobilier' ? 'Espace Propriétaire Immobilier' : 'Espace Prestataire'}
+            {isImmobilier ? 'Espace Propriétaire Immobilier' : 'Espace Prestataire'}
           </h2>
           <p className="text-xl opacity-90 mb-10 leading-relaxed">
-            {formData.profession === 'AgentImmobilier' 
+            {isImmobilier 
               ? 'Publiez vos biens immobiliers et trouvez des locataires ou acheteurs en Guinée.'
               : 'Rejoignez la première plateforme de services professionnels en Guinée. Développez votre activité et trouvez de nouveaux clients.'
             }
@@ -559,52 +580,57 @@ const AuthPage = ({ setIsAuthenticated }) => {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="profession" className="text-slate-700 font-medium text-sm">
-                      Profession *
-                    </Label>
-                    <Select
-                      value={formData.profession}
-                      onValueChange={(value) => setFormData({ ...formData, profession: value, custom_profession: '' })}
-                    >
-                      <SelectTrigger data-testid="register-profession-select" className="h-12 rounded-xl border-slate-200">
-                        <div className="flex items-center gap-2">
-                          <Briefcase className="h-5 w-5 text-slate-400" />
-                          <SelectValue placeholder="Sélectionnez votre profession" />
-                        </div>
-                      </SelectTrigger>
-                      <SelectContent className="rounded-xl">
-                        {professions.map((profession) => {
-                          const Icon = profession.icon;
-                          return (
-                            <SelectItem key={profession.value} value={profession.value} className="rounded-lg">
+                  {/* Profession Group & Profession - Two Dropdowns */}
+                  <div className="space-y-3 p-4 bg-orange-50 rounded-xl border border-orange-200">
+                    <div className="flex items-center gap-2 text-slate-700 font-medium text-sm mb-2">
+                      <Briefcase className="h-4 w-4 text-orange-500" />
+                      Profession
+                    </div>
+                    
+                    {/* Profession Group Dropdown */}
+                    <div className="space-y-2">
+                      <Label className="text-xs text-slate-500">Groupe de métier *</Label>
+                      <Select
+                        value={professionGroup}
+                        onValueChange={(value) => setProfessionGroup(value)}
+                      >
+                        <SelectTrigger className="h-11 rounded-xl border-slate-200 bg-white">
+                          <SelectValue placeholder="Sélectionnez un groupe de métier" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl max-h-[300px]">
+                          {professionGroups.map((group) => (
+                            <SelectItem key={group.id} value={group.id} className="rounded-lg">
                               <div className="flex items-center gap-2">
-                                <Icon className="h-4 w-4" />
-                                {profession.label}
+                                <span>{group.icon}</span>
+                                <span>{group.name}</span>
                               </div>
                             </SelectItem>
-                          );
-                        })}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Custom Profession Field */}
-                  {formData.profession === 'Autres' && (
-                    <div className="space-y-2">
-                      <Label htmlFor="custom_profession" className="text-slate-700 font-medium text-sm">
-                        Précisez votre métier *
-                      </Label>
-                      <Input
-                        id="custom_profession"
-                        name="custom_profession"
-                        value={formData.custom_profession}
-                        onChange={(e) => setFormData({ ...formData, custom_profession: e.target.value })}
-                        className="h-12 rounded-xl border-slate-200 focus:border-orange-500 focus:ring-orange-500"
-                        placeholder="Ex: Coiffeur, Photographe, Peintre..."
-                      />
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
-                  )}
+
+                    {/* Specific Profession Dropdown */}
+                    <div className="space-y-2">
+                      <Label className="text-xs text-slate-500">Métier spécifique *</Label>
+                      <Select
+                        value={formData.profession}
+                        onValueChange={(value) => setFormData({ ...formData, profession: value })}
+                        disabled={!professionGroup}
+                      >
+                        <SelectTrigger className="h-11 rounded-xl border-slate-200 bg-white">
+                          <SelectValue placeholder={professionGroup ? "Sélectionnez votre métier" : "Choisissez d'abord un groupe"} />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl max-h-[300px]">
+                          {availableProfessions.map((profession) => (
+                            <SelectItem key={profession.id} value={profession.id} className="rounded-lg">
+                              {profession.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
 
                   {/* Location Section */}
                   <div className="space-y-3 p-4 bg-slate-50 rounded-xl">
