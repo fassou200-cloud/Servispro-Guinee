@@ -644,12 +644,12 @@ const VisitRequestForm = ({ rental, onSuccess, onClose }) => {
         </div>
       </div>
 
-      {/* Frais de déplacement info */}
+      {/* Frais de visite info */}
       <div className="mb-6 p-4 bg-amber-50 rounded-xl border border-amber-200">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <AlertCircle className="h-5 w-5 text-amber-600" />
-            <span className="font-medium text-amber-800">Frais de déplacement à Payer</span>
+            <span className="font-medium text-amber-800">Frais de visite à Payer</span>
           </div>
           <span className="text-xl font-bold text-amber-700">
             {formatPrice(fraisVisite)} {settings.devise}
