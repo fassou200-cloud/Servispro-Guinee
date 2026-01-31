@@ -380,41 +380,45 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
             </div>
           </div>
 
-          {/* Documents Section */}
-          {provider.documents && provider.documents.length > 0 && (
-            <div className="mt-6 pt-6 border-t border-gray-100">
-              <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                <FileText className="h-4 w-4 text-orange-500" />
-                Certifications & Documents ({provider.documents.length})
-              </h4>
-              <div className="space-y-2">
-                {provider.documents.map((doc, idx) => (
-                  <a
-                    key={idx}
-                    href={`${BACKEND_URL}${doc.path}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3 p-3 bg-orange-50 text-orange-700 rounded-lg hover:bg-orange-100 transition-colors border border-orange-200"
-                    data-testid={`provider-doc-${idx}`}
-                  >
-                    <div className="p-2 bg-orange-100 rounded-lg">
-                      <FileText className="h-5 w-5 text-orange-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{doc.filename || `Document ${idx + 1}`}</p>
-                      {doc.uploaded_at && (
-                        <p className="text-xs text-orange-600/70">
-                          Ajouté le {new Date(doc.uploaded_at).toLocaleDateString('fr-FR')}
-                        </p>
-                      )}
-                    </div>
-                    <ExternalLink className="h-4 w-4 text-orange-500 flex-shrink-0" />
-                  </a>
-                ))}
-              </div>
-            </div>
-          )}
         </Card>
+
+        {/* Documents Section - Separate Card */}
+        {provider.documents && provider.documents.length > 0 && (
+          <Card className="rounded-3xl border-0 shadow-lg mb-8 p-8" data-testid="provider-documents-section">
+            <h3 className="text-xl font-heading font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <FileText className="h-5 w-5 text-orange-500" />
+              Certifications & Documents ({provider.documents.length})
+            </h3>
+            <div className="grid gap-3">
+              {provider.documents.map((doc, idx) => (
+                <a
+                  key={idx}
+                  href={`${BACKEND_URL}${doc.path}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-4 p-4 bg-gradient-to-r from-orange-50 to-amber-50 text-orange-800 rounded-xl hover:from-orange-100 hover:to-amber-100 transition-all border border-orange-200 shadow-sm"
+                  data-testid={`provider-doc-${idx}`}
+                >
+                  <div className="p-3 bg-white rounded-xl shadow-sm">
+                    <FileText className="h-6 w-6 text-orange-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold truncate text-gray-900">{doc.filename || `Document ${idx + 1}`}</p>
+                    {doc.uploaded_at && (
+                      <p className="text-sm text-orange-600/80">
+                        Ajouté le {new Date(doc.uploaded_at).toLocaleDateString('fr-FR')}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 text-orange-600">
+                    <span className="text-sm font-medium">Voir</span>
+                    <ExternalLink className="h-5 w-5" />
+                  </div>
+                </a>
+              ))}
+            </div>
+          </Card>
+        )}
 
         {/* Service Request Form */}
         {showRequestForm && provider.profession !== 'AgentImmobilier' && provider.online_status && (
