@@ -10,8 +10,37 @@ import axios from 'axios';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-// Notification sound (base64 encoded short beep)
-const NOTIFICATION_SOUND_URL = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJOVpJaGaV1gdH2LmJyXi3lkYGR0hI6Wl5KHdmVjZ3R+iZKWlI+BcmdlZ3J9iI+TkYt+cGdma3B6hIuQjoqAc2xqbHF4gYmNjIiAfnduam1xeH+FiYmGgX54c3BucHZ8gYaHhYJ+enZ0cnF0eH2BhISDgH16eHZ1dHV4e36BgoGAfnx6eXh3d3h6fH5/gIB/fnx7enl5eXl6e3x9fn5+fX18fHt7e3t7fHx9fX19fX19fX19fXx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8';
+// Create a pleasant notification sound using Web Audio API
+const createNotificationSound = () => {
+  try {
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    // Pleasant two-tone notification sound
+    oscillator.frequency.setValueAtTime(587.33, audioContext.currentTime); // D5
+    oscillator.frequency.setValueAtTime(880, audioContext.currentTime + 0.15); // A5
+    
+    // Envelope for smooth sound
+    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+    gainNode.gain.linearRampToValueAtTime(0.4, audioContext.currentTime + 0.02);
+    gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.15);
+    gainNode.gain.linearRampToValueAtTime(0.4, audioContext.currentTime + 0.17);
+    gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.4);
+    
+    oscillator.type = 'sine';
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.4);
+    
+    return true;
+  } catch (e) {
+    console.log('Web Audio API not supported:', e);
+    return false;
+  }
+};
 
 const NotificationIcon = ({ type }) => {
   switch (type) {
