@@ -995,6 +995,7 @@ async def register(
     password: str = Form(...),
     profession: str = Form(...),
     profession_group: str = Form(""),
+    years_experience: str = Form(""),
     custom_profession: str = Form(""),
     location: str = Form(""),
     region: str = Form(""),
