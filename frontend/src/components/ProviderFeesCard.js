@@ -61,11 +61,11 @@ const ProviderFeesCard = ({ profession }) => {
       </div>
 
       <div className="grid grid-cols-1 gap-4">
-        {/* Frais de Visite */}
+        {/* Frais de déplacement */}
         <div className="bg-background/80 p-4 rounded-xl border border-blue-200">
           <div className="flex items-center gap-2 text-blue-600 mb-2">
             <Eye className="h-4 w-4" />
-            <span className="text-sm font-medium">Frais de Visite</span>
+            <span className="text-sm font-medium">Frais de déplacement</span>
           </div>
           <p className="text-2xl font-bold text-foreground">
             {formatPrice(fees.frais_visite)}
