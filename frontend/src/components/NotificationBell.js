@@ -221,12 +221,8 @@ const NotificationBell = ({ userType = 'provider' }) => {
     }
   };
 
-  // Initialize audio and fetch notifications
+  // Initialize and fetch notifications
   useEffect(() => {
-    // Create audio element
-    audioRef.current = new Audio(NOTIFICATION_SOUND_URL);
-    audioRef.current.volume = 0.5;
-    
     // Initial fetch
     fetchUnreadCount();
     
@@ -235,9 +231,6 @@ const NotificationBell = ({ userType = 'provider' }) => {
     
     return () => {
       clearInterval(interval);
-      if (audioRef.current) {
-        audioRef.current = null;
-      }
     };
   }, [userType]);
 
