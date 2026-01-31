@@ -300,9 +300,6 @@ const NotificationBell = ({ userType = 'provider' }) => {
       playNotificationSound(true);
     }
   };
-      playNotificationSound();
-    }
-  };
 
   return (
     <div className="relative">
