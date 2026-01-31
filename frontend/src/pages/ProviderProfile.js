@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -7,7 +7,7 @@ import {
   ArrowLeft, ShieldCheck, Briefcase, Phone, Home, Building, Star, 
   MapPin, Clock, CheckCircle, MessageCircle, Calendar, User,
   Truck, Settings, Wrench, Droplet, Hammer, Flame, MoreHorizontal,
-  ChevronRight, Award, ThumbsUp, FileText, ExternalLink
+  ChevronRight, Award, ThumbsUp, FileText, ExternalLink, Trash2, Plus, Upload, Loader2
 } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
