@@ -117,6 +117,7 @@ const NotificationBell = ({ userType = 'provider' }) => {
   const [selectedNotification, setSelectedNotification] = useState(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [lastNotificationCount, setLastNotificationCount] = useState(0);
+  const [audioReady, setAudioReady] = useState(false);
 
   const getToken = () => {
     if (userType === 'provider') {
@@ -127,12 +128,26 @@ const NotificationBell = ({ userType = 'provider' }) => {
     return null;
   };
 
+  // Initialize audio on first user interaction
+  const handleUserInteraction = useCallback(async () => {
+    if (!audioReady) {
+      await unlockAudio();
+      setAudioReady(true);
+    }
+  }, [audioReady]);
+
   // Play notification sound
   const playNotificationSound = useCallback(() => {
     if (!soundEnabled) return;
     
     try {
-      createNotificationSound();
+      const played = playSound();
+      if (!played) {
+        // Fallback: try to play using HTML Audio element
+        const audio = new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU1vT08A');
+        audio.volume = 0.5;
+        audio.play().catch(() => {});
+      }
     } catch (e) {
       console.log('Sound error:', e);
     }
