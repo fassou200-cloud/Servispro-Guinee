@@ -10,46 +10,76 @@ import axios from 'axios';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-// Global audio element for notification sound
+// Global audio element for notification sound - using local file
 let notificationAudio = null;
-let isAudioInitialized = false;
+let isAudioReady = false;
 
-// Initialize the audio element
+// Initialize the audio element with local file
 const initNotificationAudio = () => {
-  if (notificationAudio) return;
+  if (notificationAudio) return notificationAudio;
   
-  notificationAudio = new Audio();
-  // Use a pleasant notification sound from a reliable CDN
-  notificationAudio.src = 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3';
-  notificationAudio.volume = 0.6;
+  notificationAudio = new Audio('/notification.mp3');
+  notificationAudio.volume = 0.7;
   notificationAudio.preload = 'auto';
   
-  // Fallback: create sound using Web Audio API if external file fails
-  notificationAudio.onerror = () => {
-    console.log('External audio failed, using Web Audio API fallback');
-  };
+  // Mark as ready when loaded
+  notificationAudio.addEventListener('canplaythrough', () => {
+    isAudioReady = true;
+    console.log('Notification sound ready');
+  });
+  
+  notificationAudio.addEventListener('error', (e) => {
+    console.log('Audio load error, will use Web Audio fallback');
+  });
+  
+  // Start loading
+  notificationAudio.load();
+  
+  return notificationAudio;
+};
+
+// Unlock audio on user interaction (required by browsers)
+const unlockAudio = async () => {
+  if (!notificationAudio) {
+    initNotificationAudio();
+  }
+  
+  try {
+    // Play and immediately pause to unlock
+    notificationAudio.volume = 0;
+    await notificationAudio.play();
+    notificationAudio.pause();
+    notificationAudio.currentTime = 0;
+    notificationAudio.volume = 0.7;
+    console.log('Audio unlocked successfully');
+    return true;
+  } catch (e) {
+    console.log('Audio unlock failed:', e.message);
+    return false;
+  }
 };
 
 // Play notification sound
 const playNotificationSound = async (enabled) => {
-  if (!enabled) return;
+  if (!enabled) return false;
   
-  try {
-    // Try HTML Audio first
-    if (notificationAudio) {
+  // Try HTML Audio first (preferred for reliability)
+  if (notificationAudio) {
+    try {
       notificationAudio.currentTime = 0;
+      notificationAudio.volume = 0.7;
       await notificationAudio.play();
+      console.log('Sound played via HTML Audio');
       return true;
+    } catch (e) {
+      console.log('HTML Audio play failed:', e.message);
     }
-  } catch (e) {
-    console.log('HTML Audio failed, trying Web Audio API:', e.message);
   }
   
   // Fallback to Web Audio API
   try {
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     
-    // Resume if suspended (required by browser policy)
     if (audioContext.state === 'suspended') {
       await audioContext.resume();
     }
@@ -60,24 +90,31 @@ const playNotificationSound = async (enabled) => {
     oscillator.connect(gainNode);
     gainNode.connect(audioContext.destination);
     
-    // Two-tone notification sound
+    // Pleasant three-tone notification
     const now = audioContext.currentTime;
-    oscillator.frequency.setValueAtTime(523.25, now); // C5
-    oscillator.frequency.setValueAtTime(659.25, now + 0.1); // E5
-    oscillator.frequency.setValueAtTime(783.99, now + 0.2); // G5
+    oscillator.frequency.setValueAtTime(523.25, now);      // C5
+    oscillator.frequency.setValueAtTime(659.25, now + 0.12); // E5
+    oscillator.frequency.setValueAtTime(783.99, now + 0.24); // G5
     
     gainNode.gain.setValueAtTime(0, now);
-    gainNode.gain.linearRampToValueAtTime(0.5, now + 0.02);
-    gainNode.gain.linearRampToValueAtTime(0.3, now + 0.15);
-    gainNode.gain.linearRampToValueAtTime(0, now + 0.35);
+    gainNode.gain.linearRampToValueAtTime(0.6, now + 0.02);
+    gainNode.gain.linearRampToValueAtTime(0.4, now + 0.12);
+    gainNode.gain.linearRampToValueAtTime(0.5, now + 0.14);
+    gainNode.gain.linearRampToValueAtTime(0.3, now + 0.24);
+    gainNode.gain.linearRampToValueAtTime(0.4, now + 0.26);
+    gainNode.gain.linearRampToValueAtTime(0, now + 0.45);
     
     oscillator.type = 'sine';
     oscillator.start(now);
-    oscillator.stop(now + 0.35);
+    oscillator.stop(now + 0.45);
     
+    console.log('Sound played via Web Audio API');
     return true;
   } catch (e) {
     console.log('Web Audio API also failed:', e.message);
+    return false;
+  }
+};
     return false;
   }
 };
