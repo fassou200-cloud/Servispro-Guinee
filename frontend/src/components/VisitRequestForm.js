@@ -271,7 +271,7 @@ const VisitRequestForm = ({ rental, onSuccess, onClose }) => {
           
           <div className="p-4 bg-blue-50 rounded-xl mb-6">
             <p className="text-sm text-blue-700">
-              <strong>Frais de déplacement :</strong> {formatPrice(fraisVisite)} {settings.devise}
+              <strong>Frais de visite :</strong> {formatPrice(fraisVisite)} {settings.devise}
             </p>
             <p className="text-xs text-blue-600 mt-1">
               Ce montant sera à payer lors de la demande
