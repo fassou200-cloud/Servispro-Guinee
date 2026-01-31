@@ -344,6 +344,8 @@ class ServiceProvider(BaseModel):
     last_name: str
     phone_number: str
     profession: str
+    profession_group: Optional[str] = None
+    years_experience: Optional[str] = None
     custom_profession: Optional[str] = None
     about_me: Optional[str] = None
     profile_picture: Optional[str] = None
@@ -351,6 +353,13 @@ class ServiceProvider(BaseModel):
     online_status: bool = False
     price: Optional[int] = None
     investigation_fee: Optional[int] = None
+    location: Optional[str] = None
+    region: Optional[str] = None
+    ville: Optional[str] = None
+    commune: Optional[str] = None
+    quartier: Optional[str] = None
+    documents: Optional[List[Dict]] = None
+    verification_status: Optional[str] = None
     created_at: str
 
 # Notification Models
