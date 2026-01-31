@@ -1052,6 +1052,7 @@ async def register(
         'password': hashed_pwd,
         'profession': profession,
         'profession_group': profession_group,
+        'years_experience': years_experience,
         'custom_profession': custom_profession if custom_profession else None,
         'location': location,
         'region': region,
