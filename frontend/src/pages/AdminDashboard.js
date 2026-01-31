@@ -949,6 +949,80 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                     )}
                   </div>
 
+                  {/* Provider Documents */}
+                  <div className="mb-6">
+                    <h4 className="text-sm font-bold text-slate-300 uppercase mb-2">Documents Justificatifs</h4>
+                    {selectedProvider.documents && selectedProvider.documents.length > 0 ? (
+                      <div className="space-y-2">
+                        {selectedProvider.documents.map((doc, idx) => (
+                          <a
+                            key={idx}
+                            href={`${BACKEND_URL}${doc.path}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-3 p-3 bg-slate-700/50 rounded-lg hover:bg-slate-700 transition-colors"
+                          >
+                            <div className="p-2 bg-amber-500/20 rounded-lg">
+                              <FileText className="h-5 w-5 text-amber-400" />
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-slate-200 text-sm font-medium">{doc.filename || `Document ${idx + 1}`}</p>
+                              {doc.uploaded_at && (
+                                <p className="text-slate-500 text-xs">
+                                  Ajouté le {new Date(doc.uploaded_at).toLocaleDateString('fr-FR')}
+                                </p>
+                              )}
+                            </div>
+                            <ExternalLink className="h-4 w-4 text-slate-400" />
+                          </a>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 text-slate-500 bg-slate-700/30 p-3 rounded-lg">
+                        <FileText className="h-5 w-5" />
+                        <span>Aucun document justificatif fourni</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Profile Photo */}
+                  {selectedProvider.profile_picture && (
+                    <div className="mb-6">
+                      <h4 className="text-sm font-bold text-slate-300 uppercase mb-2">Photo de Profil</h4>
+                      <img 
+                        src={`${BACKEND_URL}${selectedProvider.profile_picture}`}
+                        alt="Photo de profil"
+                        className="w-32 h-32 rounded-xl object-cover border border-slate-600"
+                      />
+                    </div>
+                  )}
+
+                  {/* Additional Info */}
+                  {(selectedProvider.years_experience || selectedProvider.profession_group) && (
+                    <div className="mb-6 grid grid-cols-2 gap-3">
+                      {selectedProvider.years_experience && (
+                        <div className="bg-slate-700/50 p-3 rounded-lg">
+                          <p className="text-xs text-slate-500 uppercase">Expérience</p>
+                          <p className="text-slate-200 font-medium">
+                            {selectedProvider.years_experience === '0-1' && "Moins d'1 an"}
+                            {selectedProvider.years_experience === '1-2' && '1 - 2 ans'}
+                            {selectedProvider.years_experience === '2-5' && '2 - 5 ans'}
+                            {selectedProvider.years_experience === '5-10' && '5 - 10 ans'}
+                            {selectedProvider.years_experience === '10-15' && '10 - 15 ans'}
+                            {selectedProvider.years_experience === '15-20' && '15 - 20 ans'}
+                            {selectedProvider.years_experience === '20+' && 'Plus de 20 ans'}
+                          </p>
+                        </div>
+                      )}
+                      {selectedProvider.profession_group && (
+                        <div className="bg-slate-700/50 p-3 rounded-lg">
+                          <p className="text-xs text-slate-500 uppercase">Catégorie</p>
+                          <p className="text-slate-200 font-medium">{selectedProvider.profession_group}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {/* Actions */}
                   {(selectedProvider.verification_status === 'pending' || !selectedProvider.verification_status) && (
                     <div className="flex gap-3 pt-4 border-t border-slate-700">
