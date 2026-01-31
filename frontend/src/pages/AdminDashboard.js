@@ -953,30 +953,35 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                   <div className="mb-6">
                     <h4 className="text-sm font-bold text-slate-300 uppercase mb-2">Documents Justificatifs</h4>
                     {selectedProvider.documents && selectedProvider.documents.length > 0 ? (
-                      <div className="space-y-2">
-                        {selectedProvider.documents.map((doc, idx) => (
-                          <a
-                            key={idx}
-                            href={`${BACKEND_URL}${doc.path}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-3 p-3 bg-slate-700/50 rounded-lg hover:bg-slate-700 transition-colors"
-                          >
-                            <div className="p-2 bg-amber-500/20 rounded-lg">
-                              <FileText className="h-5 w-5 text-amber-400" />
-                            </div>
-                            <div className="flex-1">
-                              <p className="text-slate-200 text-sm font-medium">{doc.filename || `Document ${idx + 1}`}</p>
-                              {doc.uploaded_at && (
-                                <p className="text-slate-500 text-xs">
-                                  Ajouté le {new Date(doc.uploaded_at).toLocaleDateString('fr-FR')}
-                                </p>
-                              )}
-                            </div>
-                            <ExternalLink className="h-4 w-4 text-slate-400" />
-                          </a>
-                        ))}
-                      </div>
+                      <ul className="list-none m-0 p-0">
+                        {selectedProvider.documents.map((doc, idx) => {
+                          const docUrl = `${BACKEND_URL}${doc.path}`;
+                          return (
+                            <li key={idx} className="mb-2 last:mb-0">
+                              <div
+                                onClick={() => window.open(docUrl, '_blank')}
+                                className="flex items-center gap-3 p-3 bg-slate-700/50 rounded-lg hover:bg-slate-700 transition-colors cursor-pointer"
+                                role="button"
+                                tabIndex={0}
+                                data-testid={`admin-provider-doc-${idx}`}
+                              >
+                                <div className="p-2 bg-amber-500/20 rounded-lg flex-shrink-0">
+                                  <FileText className="h-5 w-5 text-amber-400" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-slate-200 text-sm font-medium truncate">{doc.filename || `Document ${idx + 1}`}</p>
+                                  {doc.uploaded_at && (
+                                    <p className="text-slate-500 text-xs">
+                                      Ajouté le {new Date(doc.uploaded_at).toLocaleDateString('fr-FR')}
+                                    </p>
+                                  )}
+                                </div>
+                                <ExternalLink className="h-4 w-4 text-slate-400 flex-shrink-0" />
+                              </div>
+                            </li>
+                          );
+                        })}
+                      </ul>
                     ) : (
                       <div className="flex items-center gap-2 text-slate-500 bg-slate-700/30 p-3 rounded-lg">
                         <FileText className="h-5 w-5" />
