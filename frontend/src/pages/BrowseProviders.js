@@ -374,10 +374,37 @@ const BrowseProviders = ({ isCustomerAuthenticated }) => {
 
                     {/* About */}
                     {provider.about_me && (
-                      <p className="text-sm text-gray-600 line-clamp-2 mb-4">
+                      <p className="text-sm text-gray-600 line-clamp-2 mb-3">
                         {provider.about_me}
                       </p>
                     )}
+
+                    {/* Location & Experience Info */}
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {provider.location && (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs">
+                          <MapPin className="h-3 w-3" />
+                          {provider.ville || provider.location.split(',')[0]}
+                        </span>
+                      )}
+                      {provider.quartier && (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-gray-100 text-gray-600 text-xs">
+                          {provider.quartier}
+                        </span>
+                      )}
+                      {provider.years_experience && (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-green-50 text-green-700 text-xs">
+                          <Clock className="h-3 w-3" />
+                          {provider.years_experience === '0-1' && "<1 an"}
+                          {provider.years_experience === '1-2' && '1-2 ans'}
+                          {provider.years_experience === '2-5' && '2-5 ans'}
+                          {provider.years_experience === '5-10' && '5-10 ans'}
+                          {provider.years_experience === '10-15' && '10-15 ans'}
+                          {provider.years_experience === '15-20' && '15-20 ans'}
+                          {provider.years_experience === '20+' && '20+ ans'}
+                        </span>
+                      )}
+                    </div>
 
                     {/* Pricing - Not for Agent Immobilier */}
                     {provider.profession !== 'AgentImmobilier' && provider.price && (
