@@ -10,71 +10,74 @@ import axios from 'axios';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-// Notification sound as base64 MP3 - a pleasant "ding" sound
-const NOTIFICATION_SOUND_BASE64 = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAABhgC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAAAAYZDqUxRAAAAAAAAAAAAAAAAAAAA//tQZAAP8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAETEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//tQZB8P8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAEVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV';
+// Global audio element for notification sound
+let notificationAudio = null;
+let isAudioInitialized = false;
 
-// Global audio context that persists across component renders
-let globalAudioContext = null;
-let audioBuffer = null;
-let isAudioUnlocked = false;
-
-// Initialize audio context and load sound
-const initAudio = async () => {
-  if (globalAudioContext) return;
+// Initialize the audio element
+const initNotificationAudio = () => {
+  if (notificationAudio) return;
   
-  try {
-    globalAudioContext = new (window.AudioContext || window.webkitAudioContext)();
-    
-    // Decode the notification sound
-    const response = await fetch(NOTIFICATION_SOUND_BASE64);
-    const arrayBuffer = await response.arrayBuffer();
-    audioBuffer = await globalAudioContext.decodeAudioData(arrayBuffer);
-  } catch (e) {
-    console.log('Audio init error:', e);
-  }
+  notificationAudio = new Audio();
+  // Use a pleasant notification sound from a reliable CDN
+  notificationAudio.src = 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3';
+  notificationAudio.volume = 0.6;
+  notificationAudio.preload = 'auto';
+  
+  // Fallback: create sound using Web Audio API if external file fails
+  notificationAudio.onerror = () => {
+    console.log('External audio failed, using Web Audio API fallback');
+  };
 };
 
-// Unlock audio context (must be called from user interaction)
-const unlockAudio = async () => {
-  if (isAudioUnlocked) return;
+// Play notification sound
+const playNotificationSound = async (enabled) => {
+  if (!enabled) return;
   
   try {
-    await initAudio();
-    if (globalAudioContext && globalAudioContext.state === 'suspended') {
-      await globalAudioContext.resume();
+    // Try HTML Audio first
+    if (notificationAudio) {
+      notificationAudio.currentTime = 0;
+      await notificationAudio.play();
+      return true;
     }
-    isAudioUnlocked = true;
-    console.log('Audio unlocked successfully');
   } catch (e) {
-    console.log('Audio unlock error:', e);
-  }
-};
-
-// Play the notification sound
-const playSound = () => {
-  if (!globalAudioContext || !audioBuffer || !isAudioUnlocked) {
-    console.log('Audio not ready:', { context: !!globalAudioContext, buffer: !!audioBuffer, unlocked: isAudioUnlocked });
-    return false;
+    console.log('HTML Audio failed, trying Web Audio API:', e.message);
   }
   
+  // Fallback to Web Audio API
   try {
-    // Resume context if suspended
-    if (globalAudioContext.state === 'suspended') {
-      globalAudioContext.resume();
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    
+    // Resume if suspended (required by browser policy)
+    if (audioContext.state === 'suspended') {
+      await audioContext.resume();
     }
     
-    const source = globalAudioContext.createBufferSource();
-    const gainNode = globalAudioContext.createGain();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
     
-    source.buffer = audioBuffer;
-    source.connect(gainNode);
-    gainNode.connect(globalAudioContext.destination);
-    gainNode.gain.value = 0.7;
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
     
-    source.start(0);
+    // Two-tone notification sound
+    const now = audioContext.currentTime;
+    oscillator.frequency.setValueAtTime(523.25, now); // C5
+    oscillator.frequency.setValueAtTime(659.25, now + 0.1); // E5
+    oscillator.frequency.setValueAtTime(783.99, now + 0.2); // G5
+    
+    gainNode.gain.setValueAtTime(0, now);
+    gainNode.gain.linearRampToValueAtTime(0.5, now + 0.02);
+    gainNode.gain.linearRampToValueAtTime(0.3, now + 0.15);
+    gainNode.gain.linearRampToValueAtTime(0, now + 0.35);
+    
+    oscillator.type = 'sine';
+    oscillator.start(now);
+    oscillator.stop(now + 0.35);
+    
     return true;
   } catch (e) {
-    console.log('Play sound error:', e);
+    console.log('Web Audio API also failed:', e.message);
     return false;
   }
 };
