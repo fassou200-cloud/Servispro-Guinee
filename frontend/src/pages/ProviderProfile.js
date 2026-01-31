@@ -98,6 +98,8 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
   const fetchProvider = async () => {
     try {
       const response = await axios.get(`${API}/providers/${providerId}`);
+      console.log('Provider data:', response.data);
+      console.log('Documents:', response.data.documents);
       setProvider(response.data);
     } catch (error) {
       toast.error('Échec du chargement du profil');
