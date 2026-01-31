@@ -584,14 +584,14 @@ const InvestigationFeePopup = ({
           <div className="relative">
             <img 
               src={BANNER_URL} 
-              alt="Frais de déplacement" 
+              alt="Frais de visite" 
               className="w-full h-40 object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
             <div className="absolute bottom-4 left-4 right-4">
               <h2 className="text-xl font-heading font-bold text-white flex items-center gap-2">
                 <Shield className="h-5 w-5 text-amber-400" />
-                Frais de déplacement
+                Frais de visite
               </h2>
             </div>
             <button
