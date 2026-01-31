@@ -14,6 +14,23 @@ Construire une plateforme nommée "ServisPro" pour les prestataires de services 
   - `/app/frontend/src/pages/AdminDashboard.js` - Section documents justificatifs
 - **Statut** : ✅ Corrigé et testé visuellement
 
+### Modifications UI/UX - 31 Janvier 2026
+1. **Visibilité des sections sur le profil prestataire**
+   - Les clients ne voient plus les sections "Catégorie" et "Documents" sur le profil d'un prestataire
+   - Seul le prestataire propriétaire peut voir ses propres documents et sa catégorie
+   - Fichier modifié : `/app/frontend/src/pages/ProviderProfile.js`
+
+2. **Renommage "Frais de Visite" → "Frais de déplacement"**
+   - Le terme "Frais de Visite" a été remplacé par "Frais de déplacement" dans toute l'application
+   - Fichiers modifiés :
+     - `/app/frontend/src/components/ServiceFeesDisplay.js`
+     - `/app/frontend/src/components/ProviderFeesCard.js`
+     - `/app/frontend/src/components/CommissionRatesCard.js`
+     - `/app/frontend/src/components/VisitRequestsList.js`
+     - `/app/frontend/src/components/VisitRequestForm.js`
+     - `/app/frontend/src/components/InvestigationFeePopup.js`
+     - `/app/frontend/src/components/TermsConditionsModal.js`
+
 ## Personas Utilisateurs
 1. **Prestataires de Services** - Professionnels offrant divers services (8 catégories)
 2. **Agents Immobiliers (Propriétaire Immobilier)** - Gestion des locations et ventes de propriétés
