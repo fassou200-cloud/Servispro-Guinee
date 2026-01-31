@@ -115,9 +115,6 @@ const playNotificationSound = async (enabled) => {
     return false;
   }
 };
-    return false;
-  }
-};
 
 const NotificationIcon = ({ type }) => {
   switch (type) {
