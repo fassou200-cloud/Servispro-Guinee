@@ -403,19 +403,6 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
           </Card>
         )}
 
-        {/* About Section */}
-        {provider.about_me && (
-          <Card className="rounded-3xl border-0 shadow-lg mb-8 p-8">
-            <h3 className="text-xl font-heading font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <User className="h-5 w-5 text-gray-400" />
-              À Propos
-            </h3>
-            <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">
-              {provider.about_me}
-            </p>
-          </Card>
-        )}
-
         {/* Reviews Section */}
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Reviews Stats */}
