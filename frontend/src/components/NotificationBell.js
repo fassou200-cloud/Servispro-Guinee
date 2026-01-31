@@ -80,7 +80,6 @@ const NotificationBell = ({ userType = 'provider' }) => {
   const [selectedNotification, setSelectedNotification] = useState(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [lastNotificationCount, setLastNotificationCount] = useState(0);
-  const audioRef = useRef(null);
 
   const getToken = () => {
     if (userType === 'provider') {
