@@ -392,12 +392,12 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
 
         </Card>
 
-        {/* Documents Section - Separate Card */}
-        {provider.documents && provider.documents.length > 0 && (
+        {/* Documents Section - Only visible to the provider themselves */}
+        {isOwnProfile && provider.documents && provider.documents.length > 0 && (
           <Card className="rounded-3xl border-0 shadow-lg mb-8 p-8" data-testid="provider-documents-section">
             <h3 className="text-xl font-heading font-bold text-gray-900 mb-6 flex items-center gap-2">
               <FileText className="h-5 w-5 text-orange-500" />
-              Certifications & Documents ({provider.documents.length})
+              Mes Certifications & Documents ({provider.documents.length})
             </h3>
             <ul className="list-none m-0 p-0">
               {provider.documents.map((doc, idx) => {
