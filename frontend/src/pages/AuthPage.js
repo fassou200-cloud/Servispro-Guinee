@@ -631,6 +631,28 @@ const AuthPage = ({ setIsAuthenticated }) => {
                         </SelectContent>
                       </Select>
                     </div>
+
+                    {/* Years of Experience */}
+                    <div className="space-y-2">
+                      <Label className="text-xs text-slate-500">Années d'expérience *</Label>
+                      <Select
+                        value={formData.years_experience}
+                        onValueChange={(value) => setFormData({ ...formData, years_experience: value })}
+                      >
+                        <SelectTrigger className="h-11 rounded-xl border-slate-200 bg-white">
+                          <SelectValue placeholder="Sélectionnez vos années d'expérience" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl">
+                          <SelectItem value="0-1" className="rounded-lg">Moins d'1 an</SelectItem>
+                          <SelectItem value="1-2" className="rounded-lg">1 - 2 ans</SelectItem>
+                          <SelectItem value="2-5" className="rounded-lg">2 - 5 ans</SelectItem>
+                          <SelectItem value="5-10" className="rounded-lg">5 - 10 ans</SelectItem>
+                          <SelectItem value="10-15" className="rounded-lg">10 - 15 ans</SelectItem>
+                          <SelectItem value="15-20" className="rounded-lg">15 - 20 ans</SelectItem>
+                          <SelectItem value="20+" className="rounded-lg">Plus de 20 ans</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
 
                   {/* Location Section */}
