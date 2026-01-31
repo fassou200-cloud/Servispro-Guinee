@@ -7,7 +7,7 @@ import uuid
 from datetime import datetime
 
 class ServisProAPITester:
-    def __init__(self, base_url="https://guinea-services-1.preview.emergentagent.com"):
+    def __init__(self, base_url="https://service-marketplace-49.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.token = None
