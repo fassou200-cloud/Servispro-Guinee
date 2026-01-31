@@ -205,7 +205,7 @@ const NotificationBell = ({ userType = 'provider' }) => {
       // Check if we have new notifications
       if (newCount > lastNotificationCount && lastNotificationCount > 0) {
         // New notification arrived!
-        playNotificationSound();
+        triggerNotificationSound();
         triggerVibration();
         
         // Try to show browser notification
