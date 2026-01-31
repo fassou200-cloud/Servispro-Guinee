@@ -76,6 +76,9 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
   const [showPaymentPopup, setShowPaymentPopup] = useState(false);
   const [paymentCompleted, setPaymentCompleted] = useState(false);
   const [serviceFees, setServiceFees] = useState(null);
+  
+  // Check if current user is the owner of this profile (provider viewing their own profile)
+  const [isOwnProfile, setIsOwnProfile] = useState(false);
 
   useEffect(() => {
     fetchProvider();
@@ -83,6 +86,13 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
     const storedCustomer = localStorage.getItem('customer');
     if (storedCustomer) {
       setCustomer(JSON.parse(storedCustomer));
+    }
+    
+    // Check if provider is viewing their own profile
+    const storedProvider = localStorage.getItem('provider');
+    if (storedProvider) {
+      const providerData = JSON.parse(storedProvider);
+      setIsOwnProfile(providerData.id === providerId);
     }
   }, [providerId]);
 
