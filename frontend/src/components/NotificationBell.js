@@ -96,10 +96,7 @@ const NotificationBell = ({ userType = 'provider' }) => {
     if (!soundEnabled) return;
     
     try {
-      if (audioRef.current) {
-        audioRef.current.currentTime = 0;
-        audioRef.current.play().catch(e => console.log('Audio play failed:', e));
-      }
+      createNotificationSound();
     } catch (e) {
       console.log('Sound error:', e);
     }
