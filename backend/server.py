@@ -1049,10 +1049,29 @@ async def register(
                     detail="La section 'À propos' ne doit pas contenir d'informations de contact. Cela est contraire aux règles de la plateforme."
                 )
     
-    # Check if phone number already exists
-    existing_user = await db.service_providers.find_one({'phone_number': phone_number})
-    if existing_user:
-        raise HTTPException(status_code=400, detail="Ce numéro de téléphone est déjà enregistré")
+    # Normalize phone number
+    phone = phone_number.strip().replace(" ", "").replace("-", "").replace(".", "")
+    
+    # Check if phone number already exists in service_providers collection
+    existing_provider = await db.service_providers.find_one({'phone_number': phone})
+    if existing_provider:
+        raise HTTPException(status_code=400, detail="Ce numéro de téléphone est déjà enregistré comme prestataire")
+    
+    # Also check without country code prefix if present
+    phone_variants = [phone]
+    if phone.startswith('+224'):
+        phone_variants.append(phone[4:])
+    elif phone.startswith('224'):
+        phone_variants.append(phone[3:])
+        phone_variants.append('+' + phone)
+    else:
+        phone_variants.append('224' + phone)
+        phone_variants.append('+224' + phone)
+    
+    for variant in phone_variants:
+        existing = await db.service_providers.find_one({'phone_number': variant})
+        if existing:
+            raise HTTPException(status_code=400, detail="Ce numéro de téléphone est déjà enregistré comme prestataire")
     
     # Create user
     user_id = str(uuid.uuid4())
