@@ -128,17 +128,17 @@ const NotificationBell = ({ userType = 'provider' }) => {
     return null;
   };
 
-  // Play notification sound wrapper
-  const triggerNotificationSound = useCallback(() => {
+  // Play notification sound
+  const triggerNotificationSound = useCallback(async () => {
     if (!soundEnabled) return;
-    playNotificationSound(true);
+    await playNotificationBeep();
   }, [soundEnabled]);
 
   // Trigger vibration
   const triggerVibration = useCallback(() => {
     try {
       if ('vibrate' in navigator) {
-        navigator.vibrate([200, 100, 200]); // Vibrate pattern: 200ms, pause 100ms, 200ms
+        navigator.vibrate([200, 100, 200]);
       }
     } catch (e) {
       console.log('Vibration not supported');
