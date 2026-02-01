@@ -1,24 +1,49 @@
 <!doctype html>
-<html lang="en">
+<html lang="fr">
     <head>
         <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="theme-color" content="#000000" />
-        <meta name="description" content="A product of emergent.sh" />
-        <!--
-        manifest.json provides metadata used when your web app is installed on a
-        user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
-        -->
-        <!--
-        Notice the use of %PUBLIC_URL% in the tags above.
-        It will be replaced with the URL of the `public` folder during the build.
-        Only files inside the `public` folder can be referenced from the HTML.
-
-        Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
-        work correctly both with client-side routing and a non-root public URL.
-        Learn how to configure a non-root public URL by running `npm run build`.
-        -->
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+        
+        <!-- PWA Meta Tags -->
+        <meta name="theme-color" content="#f97316" />
+        <meta name="description" content="ServisPro - Plateforme de services professionnels en Guinée. Trouvez des prestataires qualifiés : plombiers, électriciens, menuisiers et plus." />
+        <meta name="application-name" content="ServisPro" />
+        
+        <!-- PWA Manifest -->
+        <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+        
+        <!-- Favicon -->
+        <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="%PUBLIC_URL%/icons/icon-96x96.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="%PUBLIC_URL%/icons/icon-72x72.png" />
+        
+        <!-- Apple PWA Meta Tags -->
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="ServisPro" />
+        <link rel="apple-touch-icon" href="%PUBLIC_URL%/apple-touch-icon.png" />
+        <link rel="apple-touch-icon" sizes="152x152" href="%PUBLIC_URL%/icons/icon-152x152.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="%PUBLIC_URL%/icons/apple-touch-icon.png" />
+        <link rel="apple-touch-icon" sizes="167x167" href="%PUBLIC_URL%/icons/icon-192x192.png" />
+        
+        <!-- Apple Splash Screens -->
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <link rel="apple-touch-startup-image" href="%PUBLIC_URL%/icons/icon-512x512.png" />
+        
+        <!-- Microsoft Tiles -->
+        <meta name="msapplication-TileColor" content="#f97316" />
+        <meta name="msapplication-TileImage" content="%PUBLIC_URL%/icons/icon-144x144.png" />
+        <meta name="msapplication-config" content="none" />
+        
+        <!-- Open Graph / Social -->
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="ServisPro Guinée" />
+        <meta property="og:description" content="Trouvez des prestataires de services qualifiés en Guinée" />
+        <meta property="og:image" content="%PUBLIC_URL%/icons/icon-512x512.png" />
+        <meta property="og:locale" content="fr_GN" />
+        
         <title>ServisPro | Guinée</title>
+        
         <style>
             /* Hide injected badge */
             #emergent-badge,
@@ -30,26 +55,84 @@
                 visibility: hidden !important;
                 opacity: 0 !important;
             }
+            
+            /* PWA Install Banner Styles */
+            .pwa-install-banner {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+                color: white;
+                padding: 16px 20px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                z-index: 10000;
+                box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+                transform: translateY(100%);
+                transition: transform 0.3s ease;
+            }
+            .pwa-install-banner.show {
+                transform: translateY(0);
+            }
+            .pwa-install-banner-content {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+            .pwa-install-banner-icon {
+                width: 48px;
+                height: 48px;
+                border-radius: 12px;
+                background: white;
+                padding: 4px;
+            }
+            .pwa-install-banner-text h4 {
+                margin: 0 0 4px 0;
+                font-size: 16px;
+                font-weight: 600;
+            }
+            .pwa-install-banner-text p {
+                margin: 0;
+                font-size: 13px;
+                opacity: 0.9;
+            }
+            .pwa-install-btn {
+                background: white;
+                color: #ea580c;
+                border: none;
+                padding: 12px 24px;
+                border-radius: 10px;
+                font-weight: 600;
+                font-size: 14px;
+                cursor: pointer;
+                white-space: nowrap;
+            }
+            .pwa-install-close {
+                background: transparent;
+                border: none;
+                color: white;
+                font-size: 24px;
+                cursor: pointer;
+                padding: 8px;
+                opacity: 0.8;
+            }
         </style>
+        
         <script src="https://assets.emergent.sh/scripts/emergent-main.js"></script>
-        <!--
-        These two scripts have been added for the Visual Edits, please do not edit or remove them
-        -->
         <script>
             // Only load visual edit scripts when inside an iframe
             if (window.self !== window.top) {
-                // Load debug monitor script
                 var debugMonitorScript = document.createElement('script');
                 debugMonitorScript.src = 'https://assets.emergent.sh/scripts/debug-monitor.js';
                 document.head.appendChild(debugMonitorScript);
 
-                // Configure Tailwind
                 window.tailwind = window.tailwind || {};
                 tailwind.config = {
                     corePlugins: { preflight: false },
                 };
 
-                // Load Tailwind CDN
                 var tailwindScript = document.createElement('script');
                 tailwindScript.src = 'https://cdn.tailwindcss.com';
                 document.head.appendChild(tailwindScript);
@@ -57,66 +140,92 @@
         </script>
     </head>
     <body>
-        <noscript>You need to enable JavaScript to run this app.</noscript>
+        <noscript>Vous devez activer JavaScript pour utiliser cette application.</noscript>
         <div id="root"></div>
-        <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
-
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
-
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
- 
-        <a
-            id="emergent-badge"
-            target="_blank"
-            href="https://app.emergent.sh/?utm_source=emergent-badge"
-            style="
-                display: flex !important;
-                align-items: center !important;
-                position: fixed !important;
-                bottom: 20px;
-                right: 20px;
-                text-decoration: none;
-                padding: 6px 10px;
-                font-family: -apple-system, BlinkMacSystemFont,
-                    &quot;Segoe UI&quot;, Roboto, Oxygen, Ubuntu, Cantarell,
-                    &quot;Open Sans&quot;, &quot;Helvetica Neue&quot;,
-                    sans-serif !important;
-                font-size: 12px !important;
-                z-index: 9999 !important;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
-                border-radius: 8px !important;
-                background-color: #ffffff !important;
-                border: 1px solid rgba(255, 255, 255, 0.25) !important;
-            "
-        >
-            <div
-                style="display: flex; flex-direction: row; align-items: center"
-            >
-                <img
-                    style="width: 20px; height: 20px; margin-right: 8px"
-                    src="logo.png"
-                />
-                <p
-                    style="
-                        color: #000000;
-                        font-family: -apple-system, BlinkMacSystemFont,
-                            &quot;Segoe UI&quot;, Roboto, Oxygen, Ubuntu,
-                            Cantarell, &quot;Open Sans&quot;,
-                            &quot;Helvetica Neue&quot;, sans-serif !important;
-                        font-size: 12px !important;
-                        align-items: center;
-                        margin-bottom: 0;
-                    "
-                >
-                    Made by ServisPro
-                </p>
+        
+        <!-- PWA Install Banner (hidden by default) -->
+        <div id="pwa-install-banner" class="pwa-install-banner">
+            <div class="pwa-install-banner-content">
+                <img src="/icons/icon-96x96.png" alt="ServisPro" class="pwa-install-banner-icon" />
+                <div class="pwa-install-banner-text">
+                    <h4>Installer ServisPro</h4>
+                    <p>Ajoutez l'app à votre écran d'accueil</p>
+                </div>
             </div>
-        </a>
-           -->
+            <button id="pwa-install-btn" class="pwa-install-btn">Installer</button>
+            <button id="pwa-install-close" class="pwa-install-close">&times;</button>
+        </div>
+        
+        <!-- Service Worker Registration -->
+        <script>
+            // Register Service Worker
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                    navigator.serviceWorker.register('/service-worker.js')
+                        .then(function(registration) {
+                            console.log('ServiceWorker registered:', registration.scope);
+                        })
+                        .catch(function(error) {
+                            console.log('ServiceWorker registration failed:', error);
+                        });
+                });
+            }
+            
+            // PWA Install Prompt
+            let deferredPrompt;
+            const installBanner = document.getElementById('pwa-install-banner');
+            const installBtn = document.getElementById('pwa-install-btn');
+            const installClose = document.getElementById('pwa-install-close');
+            
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                
+                // Show install banner after 3 seconds
+                setTimeout(() => {
+                    // Don't show if already installed or dismissed
+                    if (!localStorage.getItem('pwa-install-dismissed')) {
+                        installBanner.classList.add('show');
+                    }
+                }, 3000);
+            });
+            
+            if (installBtn) {
+                installBtn.addEventListener('click', async () => {
+                    if (!deferredPrompt) return;
+                    
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    
+                    if (outcome === 'accepted') {
+                        console.log('PWA installed');
+                    }
+                    
+                    deferredPrompt = null;
+                    installBanner.classList.remove('show');
+                });
+            }
+            
+            if (installClose) {
+                installClose.addEventListener('click', () => {
+                    installBanner.classList.remove('show');
+                    localStorage.setItem('pwa-install-dismissed', 'true');
+                });
+            }
+            
+            // Hide banner if app is already installed
+            window.addEventListener('appinstalled', () => {
+                installBanner.classList.remove('show');
+                deferredPrompt = null;
+            });
+            
+            // Check if running as standalone PWA
+            if (window.matchMedia('(display-mode: standalone)').matches) {
+                console.log('Running as installed PWA');
+            }
+        </script>
+        
+        <!-- Analytics -->
         <script>
             !(function (t, e) {
                 var o, n, p, r;
@@ -167,7 +276,7 @@
                                     return u.toString(1) + ".people (stub)";
                                 },
                                 o =
-                                    "init me ws ys ps bs capture je Di ks register register_once register_for_session unregister unregister_for_session Ps getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSurveysLoaded onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey canRenderSurveyAsync identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty Es $s createPersonProfile Is opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing Ss debug xs getPageViewId captureTraceFeedback captureTraceMetric".split(
+                                    "init capture register unregister identify setPersonProperties reset get_distinct_id".split(
                                         " ",
                                     ),
                                 n = 0;
@@ -181,7 +290,7 @@
             })(document, window.posthog || []);
             posthog.init("phc_yJW1VjHGGwmCbbrtczfqqNxgBDbhlhOWcdzcIJEOTFE", {
                 api_host: "https://us.i.posthog.com",
-                person_profiles: "identified_only", // or 'always' to create profiles for anonymous users as well
+                person_profiles: "identified_only",
             });
         </script>
     </body>
