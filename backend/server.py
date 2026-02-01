@@ -1218,21 +1218,28 @@ async def login(input_data: LoginInput, request: Request):
 
 @api_router.post("/auth/customer/register", response_model=AuthResponse)
 async def register_customer(input_data: CustomerRegisterInput):
-    # Normalize phone number (remove spaces, dashes, etc.)
-    phone = input_data.phone_number.strip().replace(" ", "").replace("-", "").replace(".", "")
+    # Normalize phone number (remove spaces, dashes, +, etc.)
+    phone = input_data.phone_number.strip().replace(" ", "").replace("-", "").replace(".", "").replace("+", "")
     
-    # Check if phone number already exists in customers collection
-    existing_customer = await db.customers.find_one({'phone_number': phone})
-    if existing_customer:
-        raise HTTPException(status_code=400, detail="Ce numéro de téléphone est déjà enregistré comme client")
+    # Extract the base number without country code
+    if phone.startswith('224'):
+        base_phone = phone[3:]
+    else:
+        base_phone = phone
     
-    # Also check without country code prefix if present
-    phone_variants = [phone]
-    if phone.startswith('+224'):
-        phone_variants.append(phone[4:])
-    elif phone.startswith('224'):
-        phone_variants.append(phone[3:])
-        phone_variants.append('+' + phone)
+    # Create all possible variants to check
+    phone_variants = [
+        phone,                    # As provided (normalized)
+        base_phone,               # Without country code
+        '224' + base_phone,       # With 224 prefix
+        '+224' + base_phone,      # With +224 prefix
+    ]
+    
+    # Check all variants in the database
+    for variant in phone_variants:
+        existing = await db.customers.find_one({'phone_number': variant})
+        if existing:
+            raise HTTPException(status_code=400, detail="Ce numéro de téléphone est déjà enregistré comme client")
     else:
         phone_variants.append('224' + phone)
         phone_variants.append('+224' + phone)
