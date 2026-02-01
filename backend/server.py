@@ -1015,6 +1015,40 @@ async def register(
     profile_photo: Optional[UploadFile] = File(None),
     documents: List[UploadFile] = File(default=[])
 ):
+    # Validate "about" field doesn't contain contact information
+    if about:
+        import re
+        # Phone number patterns
+        phone_patterns = [
+            r'\+?\d{3}[\s.-]?\d{2,3}[\s.-]?\d{2,3}[\s.-]?\d{2,3}',
+            r'\d{9,}',
+            r'\d{2,4}[\s.-]\d{2,4}[\s.-]\d{2,4}',
+        ]
+        # Email pattern
+        email_pattern = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
+        
+        for pattern in phone_patterns:
+            if re.search(pattern, about):
+                raise HTTPException(
+                    status_code=400, 
+                    detail="La section 'À propos' ne doit pas contenir de numéro de téléphone. Cela est contraire aux règles de la plateforme."
+                )
+        
+        if re.search(email_pattern, about, re.IGNORECASE):
+            raise HTTPException(
+                status_code=400, 
+                detail="La section 'À propos' ne doit pas contenir d'adresse email. Cela est contraire aux règles de la plateforme."
+            )
+        
+        # Check for contact phrases
+        contact_phrases = [r'whatsapp', r'telegram', r'appel[ez]?\s*moi', r'contact[ez]?\s*moi']
+        for phrase in contact_phrases:
+            if re.search(phrase, about, re.IGNORECASE):
+                raise HTTPException(
+                    status_code=400, 
+                    detail="La section 'À propos' ne doit pas contenir d'informations de contact. Cela est contraire aux règles de la plateforme."
+                )
+    
     # Check if phone number already exists
     existing_user = await db.service_providers.find_one({'phone_number': phone_number})
     if existing_user:
