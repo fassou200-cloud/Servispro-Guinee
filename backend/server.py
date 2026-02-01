@@ -1112,7 +1112,7 @@ async def register(
         'id': user_id,
         'first_name': first_name,
         'last_name': last_name,
-        'phone_number': phone_number,
+        'phone_number': normalized_phone,
         'password': hashed_pwd,
         'profession': profession,
         'profession_group': profession_group,
