@@ -10,74 +10,75 @@ import axios from 'axios';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-// Global audio element for notification sound - using local file
-let notificationAudio = null;
-let isAudioReady = false;
+// Audio context for Web Audio API
+let audioContext = null;
+let isAudioUnlocked = false;
 
-// Initialize the audio element with local file
-const initNotificationAudio = () => {
-  if (notificationAudio) return notificationAudio;
-  
-  notificationAudio = new Audio('/notification.mp3');
-  notificationAudio.volume = 0.7;
-  notificationAudio.preload = 'auto';
-  
-  // Mark as ready when loaded
-  notificationAudio.addEventListener('canplaythrough', () => {
-    isAudioReady = true;
-    console.log('Notification sound ready');
-  });
-  
-  notificationAudio.addEventListener('error', (e) => {
-    console.log('Audio load error, will use Web Audio fallback');
-  });
-  
-  // Start loading
-  notificationAudio.load();
-  
-  return notificationAudio;
+// Create and play notification sound using Web Audio API
+const playNotificationBeep = async () => {
+  try {
+    // Create or resume audio context
+    if (!audioContext) {
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    
+    // Resume if suspended (browser policy)
+    if (audioContext.state === 'suspended') {
+      await audioContext.resume();
+    }
+    
+    const now = audioContext.currentTime;
+    
+    // Create oscillator for the sound
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    // Pleasant two-tone notification (C5 -> E5 -> G5)
+    oscillator.frequency.setValueAtTime(523.25, now);        // C5
+    oscillator.frequency.setValueAtTime(659.25, now + 0.12); // E5
+    oscillator.frequency.setValueAtTime(783.99, now + 0.24); // G5
+    
+    // Volume envelope (fade in, sustain, fade out)
+    gainNode.gain.setValueAtTime(0, now);
+    gainNode.gain.linearRampToValueAtTime(0.4, now + 0.03);
+    gainNode.gain.setValueAtTime(0.4, now + 0.12);
+    gainNode.gain.linearRampToValueAtTime(0.35, now + 0.24);
+    gainNode.gain.linearRampToValueAtTime(0, now + 0.4);
+    
+    oscillator.type = 'sine';
+    oscillator.start(now);
+    oscillator.stop(now + 0.45);
+    
+    isAudioUnlocked = true;
+    return true;
+  } catch (e) {
+    console.log('Web Audio error:', e.message);
+    return false;
+  }
 };
 
-// Unlock audio on user interaction (required by browsers)
+// Unlock audio on first user interaction
 const unlockAudio = async () => {
-  if (!notificationAudio) {
-    initNotificationAudio();
-  }
+  if (isAudioUnlocked) return true;
   
   try {
-    // Play and immediately pause to unlock
-    notificationAudio.volume = 0;
-    await notificationAudio.play();
-    notificationAudio.pause();
-    notificationAudio.currentTime = 0;
-    notificationAudio.volume = 0.7;
-    console.log('Audio unlocked successfully');
+    if (!audioContext) {
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioContext.state === 'suspended') {
+      await audioContext.resume();
+    }
+    isAudioUnlocked = true;
+    console.log('Audio context unlocked');
     return true;
   } catch (e) {
     console.log('Audio unlock failed:', e.message);
     return false;
   }
 };
-
-// Play notification sound
-const playNotificationSound = async (enabled) => {
-  if (!enabled) return false;
-  
-  // Try HTML Audio first (preferred for reliability)
-  if (notificationAudio) {
-    try {
-      notificationAudio.currentTime = 0;
-      notificationAudio.volume = 0.7;
-      await notificationAudio.play();
-      console.log('Sound played via HTML Audio');
-      return true;
-    } catch (e) {
-      console.log('HTML Audio play failed:', e.message);
-    }
-  }
-  
-  // Fallback to Web Audio API
-  try {
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     
     if (audioContext.state === 'suspended') {
