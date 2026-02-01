@@ -255,9 +255,6 @@ const NotificationBell = ({ userType = 'provider' }) => {
 
   // Initialize and fetch notifications
   useEffect(() => {
-    // Initialize audio system
-    initNotificationAudio();
-    
     // Unlock audio on first user interaction (required by browsers)
     const handleFirstInteraction = () => {
       unlockAudio();
