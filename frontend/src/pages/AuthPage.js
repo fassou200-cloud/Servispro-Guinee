@@ -935,12 +935,21 @@ const AuthPage = ({ setIsAuthenticated }) => {
                       name="about"
                       value={formData.about}
                       onChange={handleChange}
-                      className="min-h-[120px] rounded-xl border-slate-200 resize-none"
+                      className={`min-h-[120px] rounded-xl border-slate-200 resize-none ${
+                        containsContactInfo(formData.about).found ? 'border-red-500 focus:ring-red-500' : ''
+                      }`}
                       placeholder="Décrivez votre expérience, vos compétences et vos services..."
                     />
-                    <p className="text-xs text-slate-500">
-                      Une bonne description augmente vos chances d'être contacté
-                    </p>
+                    {containsContactInfo(formData.about).found ? (
+                      <p className="text-xs text-red-600 font-medium flex items-center gap-1">
+                        <X className="h-3 w-3" />
+                        Ne pas inclure de numéro de téléphone, email ou coordonnées de contact. Cela est contraire aux règles de la plateforme.
+                      </p>
+                    ) : (
+                      <p className="text-xs text-slate-500">
+                        Une bonne description augmente vos chances d'être contacté. Ne pas inclure de coordonnées personnelles.
+                      </p>
+                    )}
                   </div>
 
                   {/* Documents Upload */}
