@@ -89,6 +89,51 @@ const AuthPage = ({ setIsAuthenticated }) => {
     }
   }, [formData.ville]);
 
+  // Validate that text doesn't contain phone numbers or emails
+  const containsContactInfo = (text) => {
+    if (!text) return false;
+    
+    // Phone number patterns (various formats)
+    const phonePatterns = [
+      /\+?\d{3}[\s.-]?\d{2,3}[\s.-]?\d{2,3}[\s.-]?\d{2,3}/g,  // +224 XXX XX XX XX
+      /\d{9,}/g,  // 9+ consecutive digits
+      /\d{2,4}[\s.-]\d{2,4}[\s.-]\d{2,4}/g,  // XX-XX-XX-XX format
+      /(?:zéro|zero|un|deux|trois|quatre|cinq|six|sept|huit|neuf)[\s]+(?:zéro|zero|un|deux|trois|quatre|cinq|six|sept|huit|neuf)/gi, // Numbers written in words
+    ];
+    
+    // Email pattern
+    const emailPattern = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+    
+    // Check for phone numbers
+    for (const pattern of phonePatterns) {
+      if (pattern.test(text)) {
+        return { found: true, type: 'phone' };
+      }
+    }
+    
+    // Check for email
+    if (emailPattern.test(text)) {
+      return { found: true, type: 'email' };
+    }
+    
+    // Check for common contact phrases
+    const contactPhrases = [
+      /appel[ez]?[\s-]*moi/gi,
+      /contact[ez]?[\s-]*moi/gi,
+      /mon[\s]+(numéro|numero|tel|téléphone|telephone|mail|email|e-mail)/gi,
+      /whatsapp/gi,
+      /telegram/gi,
+    ];
+    
+    for (const phrase of contactPhrases) {
+      if (phrase.test(text)) {
+        return { found: true, type: 'contact_phrase' };
+      }
+    }
+    
+    return { found: false };
+  };
+
   // Validate Step 1 before proceeding
   const validateStep1 = () => {
     if (!formData.first_name.trim()) {
