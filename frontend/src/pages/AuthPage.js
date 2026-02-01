@@ -253,6 +253,20 @@ const AuthPage = ({ setIsAuthenticated }) => {
     }
     
     // Registration flow - Step 2 submit
+    
+    // Validate "About" field doesn't contain contact information
+    const contactCheck = containsContactInfo(formData.about);
+    if (contactCheck.found) {
+      if (contactCheck.type === 'phone') {
+        toast.error('La section "À propos" ne doit pas contenir de numéro de téléphone. Cela est contraire aux règles de la plateforme.');
+      } else if (contactCheck.type === 'email') {
+        toast.error('La section "À propos" ne doit pas contenir d\'adresse email. Cela est contraire aux règles de la plateforme.');
+      } else {
+        toast.error('La section "À propos" ne doit pas contenir d\'informations de contact. Cela est contraire aux règles de la plateforme.');
+      }
+      return;
+    }
+    
     setLoading(true);
 
     try {
