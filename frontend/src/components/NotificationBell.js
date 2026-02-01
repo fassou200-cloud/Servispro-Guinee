@@ -301,13 +301,13 @@ const NotificationBell = ({ userType = 'provider' }) => {
   };
 
   // Toggle sound
-  const toggleSound = (e) => {
+  const toggleSound = async (e) => {
     e.stopPropagation();
     const newState = !soundEnabled;
     setSoundEnabled(newState);
     if (newState) {
       // Play a test sound when enabling
-      playNotificationSound(true);
+      await playNotificationBeep();
     }
   };
 
