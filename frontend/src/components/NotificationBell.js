@@ -79,43 +79,6 @@ const unlockAudio = async () => {
     return false;
   }
 };
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    
-    if (audioContext.state === 'suspended') {
-      await audioContext.resume();
-    }
-    
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    
-    // Pleasant three-tone notification
-    const now = audioContext.currentTime;
-    oscillator.frequency.setValueAtTime(523.25, now);      // C5
-    oscillator.frequency.setValueAtTime(659.25, now + 0.12); // E5
-    oscillator.frequency.setValueAtTime(783.99, now + 0.24); // G5
-    
-    gainNode.gain.setValueAtTime(0, now);
-    gainNode.gain.linearRampToValueAtTime(0.6, now + 0.02);
-    gainNode.gain.linearRampToValueAtTime(0.4, now + 0.12);
-    gainNode.gain.linearRampToValueAtTime(0.5, now + 0.14);
-    gainNode.gain.linearRampToValueAtTime(0.3, now + 0.24);
-    gainNode.gain.linearRampToValueAtTime(0.4, now + 0.26);
-    gainNode.gain.linearRampToValueAtTime(0, now + 0.45);
-    
-    oscillator.type = 'sine';
-    oscillator.start(now);
-    oscillator.stop(now + 0.45);
-    
-    console.log('Sound played via Web Audio API');
-    return true;
-  } catch (e) {
-    console.log('Web Audio API also failed:', e.message);
-    return false;
-  }
-};
 
 const NotificationIcon = ({ type }) => {
   switch (type) {
