@@ -1240,24 +1240,19 @@ async def register_customer(input_data: CustomerRegisterInput):
         existing = await db.customers.find_one({'phone_number': variant})
         if existing:
             raise HTTPException(status_code=400, detail="Ce numéro de téléphone est déjà enregistré comme client")
-    else:
-        phone_variants.append('224' + phone)
-        phone_variants.append('+224' + phone)
-    
-    for variant in phone_variants:
-        existing = await db.customers.find_one({'phone_number': variant})
-        if existing:
-            raise HTTPException(status_code=400, detail="Ce numéro de téléphone est déjà enregistré comme client")
     
     # Create customer
     customer_id = str(uuid.uuid4())
     hashed_pwd = hash_password(input_data.password)
     
+    # Store phone number in normalized format (with 224 prefix)
+    normalized_phone = '224' + base_phone if not phone.startswith('224') else phone
+    
     customer_doc = {
         'id': customer_id,
         'first_name': input_data.first_name,
         'last_name': input_data.last_name,
-        'phone_number': input_data.phone_number,
+        'phone_number': normalized_phone,
         'password': hashed_pwd,
         'created_at': datetime.now(timezone.utc).isoformat()
     }
