@@ -267,6 +267,18 @@ const AuthPage = ({ setIsAuthenticated }) => {
       return;
     }
     
+    // Validate "À propos" is not empty
+    if (!formData.about || formData.about.trim().length < 20) {
+      toast.error('Veuillez remplir la section "À propos" (minimum 20 caractères). Cette information est obligatoire.');
+      return;
+    }
+    
+    // Validate at least one document is uploaded
+    if (!documents || documents.length === 0) {
+      toast.error('Veuillez télécharger au moins un document justificatif (diplôme, certificat, pièce d\'identité, etc.)');
+      return;
+    }
+    
     setLoading(true);
 
     try {
