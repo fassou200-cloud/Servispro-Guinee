@@ -940,7 +940,7 @@ const AuthPage = ({ setIsAuthenticated }) => {
                   <div className="space-y-2">
                     <Label htmlFor="about" className="text-slate-700 font-medium text-sm flex items-center gap-2">
                       <FileText className="h-4 w-4 text-orange-500" />
-                      À propos de vous
+                      À propos de vous <span className="text-red-500">*</span>
                     </Label>
                     <Textarea
                       id="about"
@@ -950,7 +950,8 @@ const AuthPage = ({ setIsAuthenticated }) => {
                       className={`min-h-[120px] rounded-xl border-slate-200 resize-none ${
                         containsContactInfo(formData.about).found ? 'border-red-500 focus:ring-red-500' : ''
                       }`}
-                      placeholder="Décrivez votre expérience, vos compétences et vos services..."
+                      placeholder="Décrivez votre expérience, vos compétences et vos services... (minimum 20 caractères)"
+                      required
                     />
                     {containsContactInfo(formData.about).found ? (
                       <p className="text-xs text-red-600 font-medium flex items-center gap-1">
@@ -959,7 +960,7 @@ const AuthPage = ({ setIsAuthenticated }) => {
                       </p>
                     ) : (
                       <p className="text-xs text-slate-500">
-                        Une bonne description augmente vos chances d'être contacté. Ne pas inclure de coordonnées personnelles.
+                        <span className="text-red-500 font-medium">Obligatoire.</span> Une bonne description augmente vos chances d'être contacté. Minimum 20 caractères.
                       </p>
                     )}
                   </div>
@@ -968,6 +969,7 @@ const AuthPage = ({ setIsAuthenticated }) => {
                   <div className="space-y-3">
                     <Label className="text-slate-700 font-medium text-sm flex items-center gap-2">
                       <Upload className="h-4 w-4 text-orange-500" />
+                      Documents justificatifs <span className="text-red-500">*</span>
                       Documents justificatifs (optionnel)
                     </Label>
                     <p className="text-xs text-slate-500">
