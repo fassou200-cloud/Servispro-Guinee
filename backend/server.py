@@ -1049,6 +1049,20 @@ async def register(
                     detail="La section 'À propos' ne doit pas contenir d'informations de contact. Cela est contraire aux règles de la plateforme."
                 )
     
+    # Validate "about" field is not empty (minimum 20 characters)
+    if not about or len(about.strip()) < 20:
+        raise HTTPException(
+            status_code=400,
+            detail="La section 'À propos' est obligatoire (minimum 20 caractères)"
+        )
+    
+    # Validate at least one document is provided
+    if not documents or len(documents) == 0 or all(doc.filename == '' for doc in documents):
+        raise HTTPException(
+            status_code=400,
+            detail="Veuillez télécharger au moins un document justificatif"
+        )
+    
     # Normalize phone number (remove spaces, dashes, +, etc.)
     phone = phone_number.strip().replace(" ", "").replace("-", "").replace(".", "").replace("+", "")
     
