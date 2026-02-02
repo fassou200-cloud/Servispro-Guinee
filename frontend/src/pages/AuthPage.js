@@ -970,16 +970,19 @@ const AuthPage = ({ setIsAuthenticated }) => {
                     <Label className="text-slate-700 font-medium text-sm flex items-center gap-2">
                       <Upload className="h-4 w-4 text-orange-500" />
                       Documents justificatifs <span className="text-red-500">*</span>
-                      Documents justificatifs (optionnel)
                     </Label>
                     <p className="text-xs text-slate-500">
-                      Ajoutez des certificats, diplômes ou attestations pour renforcer votre crédibilité
+                      <span className="text-red-500 font-medium">Obligatoire.</span> Ajoutez au moins un document : certificat, diplôme, pièce d'identité ou attestation
                     </p>
                     
                     {/* Upload Zone */}
-                    <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-300 rounded-xl bg-slate-50 cursor-pointer hover:border-orange-500 hover:bg-orange-50 transition-colors">
-                      <Upload className="h-8 w-8 text-slate-400 mb-2" />
-                      <span className="text-sm text-slate-600 font-medium">Cliquez pour ajouter des documents</span>
+                    <label className={`flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-xl cursor-pointer transition-colors ${
+                      documents.length === 0 ? 'border-orange-400 bg-orange-50 hover:border-orange-500' : 'border-slate-300 bg-slate-50 hover:border-orange-500 hover:bg-orange-50'
+                    }`}>
+                      <Upload className={`h-8 w-8 mb-2 ${documents.length === 0 ? 'text-orange-500' : 'text-slate-400'}`} />
+                      <span className="text-sm text-slate-600 font-medium">
+                        {documents.length === 0 ? 'Cliquez pour ajouter un document (obligatoire)' : 'Ajouter un autre document'}
+                      </span>
                       <span className="text-xs text-slate-500 mt-1">PDF, JPG, PNG (max 5MB par fichier)</span>
                       <input
                         type="file"
