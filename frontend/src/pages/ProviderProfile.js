@@ -683,6 +683,18 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
         customerName={customer ? `${customer.first_name} ${customer.last_name}` : ''}
         customerPhone={customer?.phone_number || ''}
       />
+
+      {/* Profile Edit Modal - Only for provider viewing their own profile */}
+      {showEditProfile && isOwnProfile && provider && (
+        <ProviderProfileEdit
+          provider={provider}
+          onClose={() => setShowEditProfile(false)}
+          onSave={(updatedProvider) => {
+            setProvider(updatedProvider);
+            setShowEditProfile(false);
+          }}
+        />
+      )}
     </div>
   );
 };
