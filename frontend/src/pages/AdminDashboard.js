@@ -110,6 +110,11 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
   const [loadingRefunds, setLoadingRefunds] = useState(false);
   const [processingRefund, setProcessingRefund] = useState(null);
 
+  // Edit About Me modal state
+  const [editAboutModal, setEditAboutModal] = useState({ show: false, providerId: null, currentText: '' });
+  const [editAboutText, setEditAboutText] = useState('');
+  const [savingAbout, setSavingAbout] = useState(false);
+
   // Currency options
   const deviseOptions = [
     { value: 'GNF', label: 'Franc Guinéen (GNF)', symbol: 'GNF' },
