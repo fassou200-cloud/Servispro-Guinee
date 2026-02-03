@@ -27,6 +27,23 @@ Construire une plateforme nommée "ServisPro" pour les prestataires de services 
    - Les prestataires sans photo uploadée affichent leurs initiales
    - Note : La plupart des prestataires n'ont pas uploadé de photo
 
+4. **Prestataire peut modifier son profil (NOUVEAU)**
+   - Nouveau bouton "Modifier mon profil" sur la page profil du prestataire (visible uniquement pour le propriétaire)
+   - Modal d'édition complet avec les sections :
+     - Photo de profil (upload avec aperçu)
+     - Informations personnelles (prénom, nom)
+     - À propos de moi (textarea avec validation min 20 caractères)
+     - Localisation (région, ville, commune, quartier)
+     - Expérience (dropdown avec options)
+     - Disponibilité (switch on/off)
+   - Endpoints utilisés :
+     - `PUT /api/profile/me` - Mise à jour des données
+     - `POST /api/profile/upload-picture` - Upload photo de profil
+   - Fichiers créés/modifiés :
+     - `/app/frontend/src/components/ProviderProfileEdit.js` - Nouveau composant modal
+     - `/app/frontend/src/pages/ProviderProfile.js` - Intégration du bouton et modal
+     - `/app/backend/server.py` - Ajout des champs region, ville, commune, quartier, years_experience au modèle ProfileUpdate
+
 ### Fonctionnalités - 31 Janvier 2026
 
 1. **Gestion des documents par le prestataire**
