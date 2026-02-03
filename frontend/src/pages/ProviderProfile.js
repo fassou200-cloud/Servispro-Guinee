@@ -583,7 +583,7 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
               <div className="text-center py-8 bg-gray-50 rounded-xl">
                 <Upload className="h-12 w-12 text-gray-300 mx-auto mb-3" />
                 <p className="text-gray-500">Aucun document téléchargé</p>
-                <p className="text-sm text-gray-400 mt-1">Cliquez sur "Ajouter" pour télécharger vos certifications</p>
+                <p className="text-sm text-gray-400 mt-1">Cliquez sur &quot;Ajouter&quot; pour télécharger vos certifications</p>
               </div>
             )}
             
