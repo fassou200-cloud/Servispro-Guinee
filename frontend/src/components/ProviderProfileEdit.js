@@ -320,40 +320,55 @@ const ProviderProfileEdit = ({ provider, onClose, onSave }) => {
                   data-testid="edit-region"
                 >
                   <option value="">Sélectionner une région</option>
-                  {GUINEA_REGIONS.map(region => (
-                    <option key={region} value={region}>{region}</option>
+                  {regions.map(region => (
+                    <option key={region.id} value={region.id}>{region.name}</option>
                   ))}
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Ville</label>
-                <Input
+                <select
                   value={formData.ville}
                   onChange={(e) => handleChange('ville', e.target.value)}
-                  placeholder="Votre ville"
-                  className="border-gray-300"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  disabled={!formData.region}
                   data-testid="edit-ville"
-                />
+                >
+                  <option value="">Sélectionner une ville</option>
+                  {villes.map(ville => (
+                    <option key={ville.id} value={ville.id}>{ville.name}</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Commune</label>
-                <Input
+                <select
                   value={formData.commune}
                   onChange={(e) => handleChange('commune', e.target.value)}
-                  placeholder="Votre commune"
-                  className="border-gray-300"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  disabled={!formData.ville}
                   data-testid="edit-commune"
-                />
+                >
+                  <option value="">Sélectionner une commune</option>
+                  {communes.map(commune => (
+                    <option key={commune.id} value={commune.id}>{commune.name}</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Quartier</label>
-                <Input
+                <select
                   value={formData.quartier}
                   onChange={(e) => handleChange('quartier', e.target.value)}
-                  placeholder="Votre quartier"
-                  className="border-gray-300"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  disabled={!formData.commune}
                   data-testid="edit-quartier"
-                />
+                >
+                  <option value="">Sélectionner un quartier</option>
+                  {quartiers.map(quartier => (
+                    <option key={quartier} value={quartier}>{quartier}</option>
+                  ))}
+                </select>
               </div>
             </div>
           </div>
