@@ -972,8 +972,20 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
 
                   {/* About Me */}
                   <div className="mb-6">
-                    <h4 className="text-sm font-bold text-slate-300 uppercase mb-2">À Propos</h4>
-                    <p className="text-slate-400 bg-slate-700/50 p-3 rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-sm font-bold text-slate-300 uppercase">À Propos</h4>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openEditAboutModal(selectedProvider)}
+                        className="text-amber-400 hover:text-amber-300 hover:bg-amber-900/20 h-8 px-2"
+                        data-testid="edit-about-btn"
+                      >
+                        <Pencil className="h-4 w-4 mr-1" />
+                        Modifier
+                      </Button>
+                    </div>
+                    <p className="text-slate-400 bg-slate-700/50 p-3 rounded-lg whitespace-pre-wrap">
                       {selectedProvider.about_me || 'Aucune description fournie'}
                     </p>
                   </div>
