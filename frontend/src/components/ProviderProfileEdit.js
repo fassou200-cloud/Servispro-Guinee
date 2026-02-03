@@ -45,8 +45,54 @@ const ProviderProfileEdit = ({ provider, onClose, onSave }) => {
   const [profilePicture, setProfilePicture] = useState(provider.profile_picture);
   const photoInputRef = useRef(null);
 
+  // Dynamic location options
+  const [villes, setVilles] = useState([]);
+  const [communes, setCommunes] = useState([]);
+  const [quartiers, setQuartiers] = useState([]);
+
+  const regions = getRegions();
+
+  // Update villes when region changes
+  useEffect(() => {
+    if (formData.region) {
+      setVilles(getVillesByRegion(formData.region));
+    } else {
+      setVilles([]);
+      setCommunes([]);
+      setQuartiers([]);
+    }
+  }, [formData.region]);
+
+  // Update communes when ville changes
+  useEffect(() => {
+    if (formData.region && formData.ville) {
+      setCommunes(getCommunesByVille(formData.region, formData.ville));
+    } else {
+      setCommunes([]);
+      setQuartiers([]);
+    }
+  }, [formData.ville, formData.region]);
+
+  // Update quartiers when commune changes
+  useEffect(() => {
+    if (formData.region && formData.ville && formData.commune) {
+      setQuartiers(getQuartiersByCommune(formData.region, formData.ville, formData.commune));
+    } else {
+      setQuartiers([]);
+    }
+  }, [formData.commune, formData.ville, formData.region]);
+
   const handleChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    // Reset dependent fields when parent changes
+    if (field === 'region') {
+      setFormData(prev => ({ ...prev, [field]: value, ville: '', commune: '', quartier: '' }));
+    } else if (field === 'ville') {
+      setFormData(prev => ({ ...prev, [field]: value, commune: '', quartier: '' }));
+    } else if (field === 'commune') {
+      setFormData(prev => ({ ...prev, [field]: value, quartier: '' }));
+    } else {
+      setFormData(prev => ({ ...prev, [field]: value }));
+    }
   };
 
   const handlePhotoUpload = async (event) => {
