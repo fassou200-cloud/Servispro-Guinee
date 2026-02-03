@@ -335,6 +335,11 @@ class ProfileUpdate(BaseModel):
     online_status: Optional[bool] = None
     price: Optional[int] = None
     investigation_fee: Optional[int] = None
+    years_experience: Optional[str] = None
+    region: Optional[str] = None
+    ville: Optional[str] = None
+    commune: Optional[str] = None
+    quartier: Optional[str] = None
 
 class ServiceProvider(BaseModel):
     model_config = ConfigDict(extra="ignore")
