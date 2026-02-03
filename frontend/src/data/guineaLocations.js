@@ -1,5 +1,6 @@
 // Guinea Administrative Divisions Data
 // Régions, Villes, Communes et Quartiers de Guinée
+// Mis à jour : Février 2026 - Nouvelles communes de Conakry
 
 export const GUINEA_LOCATIONS = {
   regions: [
@@ -13,28 +14,68 @@ export const GUINEA_LOCATIONS = {
           communes: [
             {
               id: 'kaloum',
-              name: 'Kaloum',
-              quartiers: ['Almamya', 'Boulbinet', 'Coronthie', 'Kouléwondy', 'Manquepas', 'Sandervalia', 'Temenetaye', 'Tombo']
+              name: 'Kaloum (Centre-ville)',
+              quartiers: ['Sandervalia', 'Almamya', 'Manquépas', 'Boulbinet', 'Coronthie', 'Kouléwondy', 'Temenetaye', 'Tombo']
             },
             {
               id: 'dixinn',
               name: 'Dixinn',
-              quartiers: ['Belle Vue', 'Cameroun', 'Dixinn Port', 'Hafia', 'Kenien', 'Landréah', 'Minière', 'Université']
+              quartiers: ['Landréah', 'Camayenne', 'Minière', 'Belle-vue', 'Hafia', 'Dixinn-port', 'Cameroun', 'Kenien', 'Université', 'Dixinn Centre 1', 'Dixinn Centre 2', 'Bonfi', 'Coléah', 'Hafia Minière', 'Hafia Mosquée', 'Kénien', 'Landréah Rails', 'Madina Dispensaire', 'Dixinn Mosquée', 'Dixinn Port 1', 'Dixinn Port 2']
             },
             {
               id: 'matam',
               name: 'Matam',
-              quartiers: ['Boussoura', 'Carrière', 'Hermakono', 'Madina', 'Matam', 'Mafanco', 'Sandervalia', 'Touguiwondy']
-            },
-            {
-              id: 'matoto',
-              name: 'Matoto',
-              quartiers: ['Bambeto', 'Cosa', 'Dabompa', 'Enta', 'Gbessia', 'Kissosso', 'Matoto Centre', 'Sangoyah', 'Simbaya', 'Tanene', 'Yimbaya']
+              quartiers: ['Madina Marché', 'Matam Centre', 'Bonfi', 'Coléah', 'Touguiwondy', 'Boussoura', 'Carrière', 'Hermakono', 'Mafanco', 'Imprimerie', 'Cameroun', 'Fotoba', 'Lanséboundji', 'Matam Marché']
             },
             {
               id: 'ratoma',
               name: 'Ratoma',
-              quartiers: ['Cosa', 'Hamdallaye', 'Kaporo', 'Kipé', 'Koloma', 'Lambanyi', 'Nongo', 'Ratoma Centre', 'Sonfonia', 'Taouyah', 'Wanindara']
+              quartiers: ['Kipé', 'Kaporo', 'Hamdallaye', 'Koloma', 'Ratoma Centre', 'Cosa', 'Taouyah', 'Wanindara', 'Kaporo Rails', 'Kipé Diaré', 'Kipé Koulouwondy', 'Koloma Soloprimo']
+            },
+            {
+              id: 'matoto',
+              name: 'Matoto',
+              quartiers: ['Matoto Marché', 'Béanzin', 'Kissosso', 'Sangoyah', 'Matoto Centre', 'Dabompa', 'Enta', 'Tanene', 'Yimbaya', 'Kissosso Plateau', 'Kissosso Port', 'Sangoyah Marché', 'Sangoyah Mosquée']
+            },
+            {
+              id: 'kassa',
+              name: 'Kassa (Îles de Loos)',
+              quartiers: ['Île de Kassa', 'Île de Room', 'Île de Fotoba', 'Soro', 'Kassa Centre', 'Room Centre', 'Fotoba Centre']
+            },
+            {
+              id: 'gbessia',
+              name: 'Gbessia',
+              quartiers: ['Gbessia Cité 1', 'Gbessia Cité 2', 'Gbessia Cité 3', 'Dabondy 1', 'Dabondy 2', 'Dabondy 3', 'Gbessia Port 1', 'Gbessia Port 2', 'Gbessia Aéroport', 'Dabondy Rails', 'Dabondy Ecole', 'Gbessia Centre']
+            },
+            {
+              id: 'tombolia',
+              name: 'Tombolia',
+              quartiers: ['Tombolia', 'Dabompa', 'Entag', 'Tombolia Centre', 'Tombolia Plateau', 'Dabompa 1', 'Dabompa 2', 'Entag Centre', 'Dar Es Salam']
+            },
+            {
+              id: 'lambanyi',
+              name: 'Lambanyi',
+              quartiers: ['Lambanyi', 'Nongo-Taady', 'Nongo Centre', 'Nassouroulaye', 'Waréah', 'Simbaya Gare', 'Lambanyi Centre', 'Lambanyi Marché', 'Nongo Port', 'Simbaya École', 'Waréah Centre']
+            },
+            {
+              id: 'sonfonia',
+              name: 'Sonfonia',
+              quartiers: ['Sonfonia Gare 1', 'Sonfonia Gare 2', 'Sonfonia Centre', 'Kobaya', 'Yattaya Fossidet', 'Sonfonia T1', 'Sonfonia T2', 'Sonfonia T3', 'Sonfonia T4', 'Sonfonia T5', 'Sonfonia T6', 'Sonfonia T7', 'Kobaya Marché']
+            },
+            {
+              id: 'kagbelen',
+              name: 'Kagbelen',
+              quartiers: ['Kagbelen Plateau', 'Kènendé', 'Keitayah', 'Kagbelen Centre', 'Kagbelen Marché', 'Kènendé Centre', 'Keitayah Centre']
+            },
+            {
+              id: 'maneah',
+              name: 'Manéah',
+              quartiers: ['Bentouraya', 'Friguiyadi', 'Gomboya', 'Manéah Centre', 'Bentouraya Centre', 'Friguiyadi Marché', 'Gomboya Centre']
+            },
+            {
+              id: 'sanoyah',
+              name: 'Sanoyah',
+              quartiers: ['Sanoyah', 'Lansanayah', 'Sanoyah Centre', 'Sanoyah Marché', 'Lansanayah Centre', 'Sanoyah Plateau']
             }
           ]
         }
