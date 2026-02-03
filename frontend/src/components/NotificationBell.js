@@ -17,15 +17,21 @@ let isAudioUnlocked = false;
 // Create and play notification sound using Web Audio API
 const playNotificationBeep = async () => {
   try {
+    console.log('[NotificationSound] Attempting to play notification sound...');
+    
     // Create or resume audio context
     if (!audioContext) {
       audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      console.log('[NotificationSound] AudioContext created');
     }
     
     // Resume if suspended (browser policy)
     if (audioContext.state === 'suspended') {
+      console.log('[NotificationSound] Resuming suspended audio context...');
       await audioContext.resume();
     }
+    
+    console.log('[NotificationSound] AudioContext state:', audioContext.state);
     
     const now = audioContext.currentTime;
     
@@ -36,26 +42,36 @@ const playNotificationBeep = async () => {
     oscillator.connect(gainNode);
     gainNode.connect(audioContext.destination);
     
-    // Pleasant two-tone notification (C5 -> E5 -> G5)
-    oscillator.frequency.setValueAtTime(523.25, now);        // C5
-    oscillator.frequency.setValueAtTime(659.25, now + 0.12); // E5
-    oscillator.frequency.setValueAtTime(783.99, now + 0.24); // G5
+    // Louder, more noticeable notification sound (two beeps)
+    // First beep
+    oscillator.frequency.setValueAtTime(880, now);         // A5 - higher pitch
+    oscillator.frequency.setValueAtTime(1047, now + 0.1);  // C6
+    // Pause
+    oscillator.frequency.setValueAtTime(0, now + 0.2);
+    // Second beep  
+    oscillator.frequency.setValueAtTime(880, now + 0.3);
+    oscillator.frequency.setValueAtTime(1047, now + 0.4);
     
-    // Volume envelope (fade in, sustain, fade out)
+    // Volume envelope - LOUDER (0.7 instead of 0.4)
     gainNode.gain.setValueAtTime(0, now);
-    gainNode.gain.linearRampToValueAtTime(0.4, now + 0.03);
-    gainNode.gain.setValueAtTime(0.4, now + 0.12);
-    gainNode.gain.linearRampToValueAtTime(0.35, now + 0.24);
-    gainNode.gain.linearRampToValueAtTime(0, now + 0.4);
+    gainNode.gain.linearRampToValueAtTime(0.7, now + 0.02);
+    gainNode.gain.setValueAtTime(0.7, now + 0.1);
+    gainNode.gain.linearRampToValueAtTime(0, now + 0.2);
+    // Second beep volume
+    gainNode.gain.setValueAtTime(0, now + 0.3);
+    gainNode.gain.linearRampToValueAtTime(0.7, now + 0.32);
+    gainNode.gain.setValueAtTime(0.7, now + 0.4);
+    gainNode.gain.linearRampToValueAtTime(0, now + 0.5);
     
     oscillator.type = 'sine';
     oscillator.start(now);
-    oscillator.stop(now + 0.45);
+    oscillator.stop(now + 0.55);
     
     isAudioUnlocked = true;
+    console.log('[NotificationSound] Sound played successfully!');
     return true;
   } catch (e) {
-    console.log('Web Audio error:', e.message);
+    console.error('[NotificationSound] Web Audio error:', e.message);
     return false;
   }
 };
@@ -72,10 +88,10 @@ const unlockAudio = async () => {
       await audioContext.resume();
     }
     isAudioUnlocked = true;
-    console.log('Audio context unlocked');
+    console.log('[NotificationSound] Audio context unlocked on user interaction');
     return true;
   } catch (e) {
-    console.log('Audio unlock failed:', e.message);
+    console.error('[NotificationSound] Audio unlock failed:', e.message);
     return false;
   }
 };
