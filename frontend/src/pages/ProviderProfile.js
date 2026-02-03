@@ -85,6 +85,9 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
   const [deletingDocIndex, setDeletingDocIndex] = useState(null);
   const [uploadingDoc, setUploadingDoc] = useState(false);
   const fileInputRef = useRef(null);
+  
+  // Profile edit modal state
+  const [showEditProfile, setShowEditProfile] = useState(false);
 
   useEffect(() => {
     fetchProvider();
