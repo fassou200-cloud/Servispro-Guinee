@@ -7,7 +7,7 @@ import {
   ArrowLeft, ShieldCheck, Briefcase, Phone, Home, Building, Star, 
   MapPin, Clock, CheckCircle, MessageCircle, Calendar, User,
   Truck, Settings, Wrench, Droplet, Hammer, Flame, MoreHorizontal,
-  ChevronRight, Award, ThumbsUp, FileText, ExternalLink, Trash2, Plus, Upload, Loader2
+  ChevronRight, Award, ThumbsUp, FileText, ExternalLink, Trash2, Plus, Upload, Loader2, Pencil
 } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
@@ -15,6 +15,7 @@ import ServiceRequestForm from '@/components/ServiceRequestForm';
 import ReviewsList from '@/components/ReviewsList';
 import InvestigationFeePopup from '@/components/InvestigationFeePopup';
 import ServiceFeesDisplay from '@/components/ServiceFeesDisplay';
+import ProviderProfileEdit from '@/components/ProviderProfileEdit';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
