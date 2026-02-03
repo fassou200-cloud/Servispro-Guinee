@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -11,21 +11,10 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
+import { getRegions, getVillesByRegion, getCommunesByVille, getQuartiersByCommune } from '@/data/guineaLocations';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
-
-// Regions of Guinea
-const GUINEA_REGIONS = [
-  'Conakry',
-  'Boké',
-  'Faranah',
-  'Kankan',
-  'Kindia',
-  'Labé',
-  'Mamou',
-  'N\'Zérékoré'
-];
 
 // Experience options
 const EXPERIENCE_OPTIONS = [
