@@ -385,7 +385,7 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
                     <Clock className="h-5 w-5 mr-2" />
                     Indisponible
                   </Button>
-379|                )}
+                )}
 389|              </div>
               
               {/* Edit Profile Button - Only for owner */}
