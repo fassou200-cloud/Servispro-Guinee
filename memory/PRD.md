@@ -3,9 +3,31 @@
 ## Énoncé du Problème Original
 Construire une plateforme nommée "ServisPro" pour les prestataires de services et clients en Guinée. La plateforme nécessite des rôles utilisateurs distincts (Prestataire, Client, Admin, Entreprise), la gestion des profils, la vérification d'identité et de documents, les annonces de location et vente, les demandes de service et un système de notation.
 
-## Dernière mise à jour - 31 Janvier 2026
+## Dernière mise à jour - 3 Février 2026
 
-### Nouvelles fonctionnalités - 31 Janvier 2026
+### Nouvelles fonctionnalités - 3 Février 2026
+
+1. **Admin peut modifier le "À propos" des prestataires**
+   - Nouveau bouton "Modifier" à côté de la section "À propos" dans les détails prestataire
+   - Modal de modification avec textarea et compteur de caractères
+   - Validation : minimum 10 caractères
+   - Endpoint : `PUT /api/admin/providers/{provider_id}/about`
+   - Fichiers modifiés :
+     - `/app/backend/server.py` - Endpoint déjà créé dans session précédente
+     - `/app/frontend/src/pages/AdminDashboard.js` - UI modal et bouton ajoutés
+
+2. **Amélioration du son de notification**
+   - Volume augmenté (0.7 au lieu de 0.4)
+   - Son à deux bips plus distinct (880Hz -> 1047Hz)
+   - Logs de debug ajoutés pour diagnostiquer les problèmes
+   - Fichier modifié : `/app/frontend/src/components/NotificationBell.js`
+
+3. **Confirmation : Photos des prestataires fonctionnelles**
+   - Les photos s'affichent correctement dans la liste et les détails (admin et browse)
+   - Les prestataires sans photo uploadée affichent leurs initiales
+   - Note : La plupart des prestataires n'ont pas uploadé de photo
+
+### Fonctionnalités - 31 Janvier 2026
 
 1. **Gestion des documents par le prestataire**
    - Le prestataire peut ajouter de nouveaux documents (max 10)
