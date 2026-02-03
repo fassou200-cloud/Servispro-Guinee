@@ -883,6 +883,80 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
           </div>
         )}
 
+        {/* Edit About Me Modal */}
+        {editAboutModal.show && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <Card className="p-6 bg-slate-800 border-slate-700 max-w-lg w-full mx-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Pencil className="h-5 w-5 text-amber-400" />
+                  Modifier "À Propos"
+                </h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setEditAboutModal({ show: false, providerId: null, currentText: '' });
+                    setEditAboutText('');
+                  }}
+                  className="text-slate-400 hover:text-white"
+                >
+                  <XCircle className="h-5 w-5" />
+                </Button>
+              </div>
+              
+              <p className="text-sm text-slate-400 mb-3">
+                Modifiez le texte de présentation du prestataire. Minimum 10 caractères.
+              </p>
+              
+              <Textarea
+                value={editAboutText}
+                onChange={(e) => setEditAboutText(e.target.value)}
+                placeholder="Description du prestataire..."
+                className="min-h-[150px] bg-slate-700 border-slate-600 text-white placeholder:text-slate-500 mb-4"
+                data-testid="edit-about-textarea"
+              />
+              
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-slate-500">
+                  {editAboutText.length} caractère{editAboutText.length > 1 ? 's' : ''}
+                </span>
+                <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setEditAboutModal({ show: false, providerId: null, currentText: '' });
+                      setEditAboutText('');
+                    }}
+                    className="border-slate-600 text-slate-300"
+                    disabled={savingAbout}
+                  >
+                    Annuler
+                  </Button>
+                  <Button
+                    onClick={handleSaveAbout}
+                    className="bg-amber-600 hover:bg-amber-700"
+                    disabled={savingAbout || editAboutText.trim().length < 10}
+                    data-testid="save-about-btn"
+                  >
+                    {savingAbout ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Enregistrement...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4 mr-2" />
+                        Enregistrer
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </div>
+        )}
+
         {/* Providers Tab */}
         {activeTab === 'providers' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
