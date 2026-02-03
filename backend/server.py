@@ -4917,6 +4917,40 @@ async def reject_provider(provider_id: str):
         raise HTTPException(status_code=404, detail="Prestataire non trouvé")
     return {"message": "Prestataire rejeté"}
 
+class UpdateProviderAboutInput(BaseModel):
+    about_me: str
+
+@api_router.put("/admin/providers/{provider_id}/about")
+async def update_provider_about(provider_id: str, input_data: UpdateProviderAboutInput):
+    """Update provider's about_me field - Admin only"""
+    # Validate about_me is not empty
+    if not input_data.about_me or len(input_data.about_me.strip()) < 10:
+        raise HTTPException(status_code=400, detail="La description doit contenir au moins 10 caractères")
+    
+    # Check for contact info in about_me
+    import re
+    phone_patterns = [
+        r'\+?\d{3}[\s.-]?\d{2,3}[\s.-]?\d{2,3}[\s.-]?\d{2,3}',
+        r'\d{9,}',
+    ]
+    email_pattern = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
+    
+    for pattern in phone_patterns:
+        if re.search(pattern, input_data.about_me):
+            raise HTTPException(status_code=400, detail="La description ne doit pas contenir de numéro de téléphone")
+    
+    if re.search(email_pattern, input_data.about_me, re.IGNORECASE):
+        raise HTTPException(status_code=400, detail="La description ne doit pas contenir d'adresse email")
+    
+    result = await db.service_providers.update_one(
+        {'id': provider_id},
+        {'$set': {'about_me': input_data.about_me.strip()}}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Prestataire non trouvé")
+    
+    return {"message": "Description mise à jour avec succès", "about_me": input_data.about_me.strip()}
+
 @api_router.get("/admin/jobs")
 async def get_all_jobs_admin():
     """Get all jobs for admin dashboard"""
