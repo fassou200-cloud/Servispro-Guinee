@@ -337,6 +337,47 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
     }
   };
 
+  // Handle editing provider's "About Me"
+  const openEditAboutModal = (provider) => {
+    setEditAboutModal({
+      show: true,
+      providerId: provider.id,
+      currentText: provider.about_me || ''
+    });
+    setEditAboutText(provider.about_me || '');
+  };
+
+  const handleSaveAbout = async () => {
+    if (!editAboutText || editAboutText.trim().length < 10) {
+      toast.error('Le texte "À propos" doit contenir au moins 10 caractères');
+      return;
+    }
+
+    setSavingAbout(true);
+    try {
+      await axios.put(`${API}/admin/providers/${editAboutModal.providerId}/about`, {
+        about_me: editAboutText.trim()
+      });
+      
+      toast.success('Texte "À propos" mis à jour avec succès !');
+      
+      // Update local state
+      setSelectedProvider(prev => prev ? { ...prev, about_me: editAboutText.trim() } : null);
+      setProviders(prev => prev.map(p => 
+        p.id === editAboutModal.providerId ? { ...p, about_me: editAboutText.trim() } : p
+      ));
+      
+      // Close modal
+      setEditAboutModal({ show: false, providerId: null, currentText: '' });
+      setEditAboutText('');
+    } catch (error) {
+      console.error('Error updating about:', error);
+      toast.error(error.response?.data?.detail || 'Erreur lors de la mise à jour');
+    } finally {
+      setSavingAbout(false);
+    }
+  };
+
   const handleApproveProvider = async (providerId) => {
     try {
       await axios.put(`${API}/admin/providers/${providerId}/approve`);
