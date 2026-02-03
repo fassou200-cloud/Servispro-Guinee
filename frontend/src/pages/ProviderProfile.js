@@ -386,7 +386,7 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
                     Indisponible
                   </Button>
                 )}
-389|              </div>
+              </div>
               
               {/* Edit Profile Button - Only for owner */}
               {isOwnProfile && (
