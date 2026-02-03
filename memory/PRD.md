@@ -66,6 +66,28 @@ Construire une plateforme nommée "ServisPro" pour les prestataires de services 
      - `/app/frontend/src/components/VisitRequestForm.js`
      - `/app/frontend/src/components/InvestigationFeePopup.js`
 
+### Mise à jour des communes de Conakry - 3 Février 2026
+
+Les 13 communes officielles de Conakry ont été ajoutées avec leurs quartiers respectifs :
+
+| # | Commune | Quartiers principaux |
+|---|---------|---------------------|
+| 1 | Kaloum (Centre-ville) | Sandervalia, Almamya, Manquépas, Boulbinet, Coronthie |
+| 2 | Dixinn | Landréah, Camayenne, Minière, Belle-vue, Hafia, Dixinn-port |
+| 3 | Matam | Madina Marché, Matam Centre, Bonfi, Coléah, Touguiwondy |
+| 4 | Ratoma | Kipé, Kaporo, Hamdallaye, Koloma |
+| 5 | Matoto | Matoto Marché, Béanzin, Kissosso, Sangoyah |
+| 6 | Kassa (Îles de Loos) | Île de Kassa, Île de Room, Île de Fotoba |
+| 7 | Gbessia (nouvelle) | Gbessia Cité 1/2/3, Dabondy, Zone Aéroport |
+| 8 | Tombolia (nouvelle) | Tombolia, Dabompa, Entag |
+| 9 | Lambanyi (nouvelle) | Lambanyi, Nongo-Taady, Nassouroulaye, Waréah, Simbaya Gare |
+| 10 | Sonfonia (nouvelle) | Sonfonia Gare 1/2, Sonfonia Centre, Kobaya, Yattaya Fossidet |
+| 11 | Kagbelen (extraite de Dubréka) | Kagbelen Plateau, Kènendé, Keitayah |
+| 12 | Manéah (extraite de Coyah) | Bentouraya, Friguiyadi, Gomboya |
+| 13 | Sanoyah (extraite de Coyah) | Sanoyah, Lansanayah |
+
+**Fichier modifié** : `/app/frontend/src/data/guineaLocations.js`
+
 ### Bug corrigé : Documents non visibles (P0)
 - **Problème** : Les documents téléchargés par les prestataires n'étaient pas visibles sur le profil public ni dans le tableau de bord admin.
 - **Cause** : Conflit CSS avec le wrapper de debug d'Emergent.
