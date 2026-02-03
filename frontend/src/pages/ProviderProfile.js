@@ -385,8 +385,23 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
                     <Clock className="h-5 w-5 mr-2" />
                     Indisponible
                   </Button>
-                )}
-              </div>
+379|                )}
+389|              </div>
+              
+              {/* Edit Profile Button - Only for owner */}
+              {isOwnProfile && (
+                <div className="md:ml-auto mt-4 md:mt-0">
+                  <Button
+                    size="lg"
+                    onClick={() => setShowEditProfile(true)}
+                    className="w-full md:w-auto h-14 px-8 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-xl shadow-amber-500/30 font-bold text-lg"
+                    data-testid="edit-profile-btn"
+                  >
+                    <Pencil className="h-5 w-5 mr-2" />
+                    Modifier mon profil
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </Card>
