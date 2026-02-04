@@ -32,9 +32,8 @@ class TestAdminLogin:
         assert response.status_code == 200, f"Admin login failed: {response.text}"
         data = response.json()
         assert "token" in data, "Token not in response"
-        assert "admin" in data, "Admin info not in response"
-        print(f"✓ Admin login successful: {data['admin'].get('username', 'N/A')}")
-        return data["token"]
+        assert "user" in data, "User info not in response"
+        print(f"✓ Admin login successful: {data['user'].get('username', 'N/A')}")
 
 
 class TestProviderListAdmin:
