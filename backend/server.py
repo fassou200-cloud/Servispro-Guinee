@@ -1153,19 +1153,16 @@ async def register(
     # Normalized phone number for storage
     normalized_phone = '224' + base_phone if not phone.startswith('224') else phone
     
-    # Handle profile photo upload
+    # Handle profile photo upload to Cloudinary
     profile_photo_path = None
     if profile_photo and profile_photo.filename:
         file_ext = profile_photo.filename.split('.')[-1].lower()
         if file_ext in ['jpg', 'jpeg', 'png', 'webp']:
-            photo_filename = f"profile_{user_id}.{file_ext}"
-            photo_path = UPLOAD_DIR / photo_filename
-            with open(photo_path, "wb") as f:
-                content = await profile_photo.read()
-                f.write(content)
-            profile_photo_path = f"/api/uploads/{photo_filename}"
+            result = await upload_to_cloudinary(profile_photo, folder="servispro/profiles")
+            if result["success"]:
+                profile_photo_path = result["url"]
     
-    # Handle documents upload
+    # Handle documents upload to Cloudinary
     uploaded_documents = []
     for idx, doc in enumerate(documents):
         if doc and doc.filename:
