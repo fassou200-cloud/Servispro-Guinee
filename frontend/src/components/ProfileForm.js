@@ -148,7 +148,7 @@ const ProfileForm = ({ user, setUser, onUpdate }) => {
           {user.profile_picture && (
             <div className="mb-3">
               <img
-                src={`${BACKEND_URL}${user.profile_picture}`}
+                src={getImageUrl(user.profile_picture)}
                 alt="Photo de profil"
                 className="w-32 h-32 rounded-full object-cover border-4 border-primary"
               />
