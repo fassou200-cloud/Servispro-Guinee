@@ -14,6 +14,7 @@ import {
 import { toast } from 'sonner';
 import axios from 'axios';
 import AdminSalesManager from '@/components/AdminSalesManager';
+import { getImageUrl } from '@/utils/imageUrl';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
