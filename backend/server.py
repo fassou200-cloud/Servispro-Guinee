@@ -336,6 +336,44 @@ async def delete_provider_cloudinary_files(provider: dict):
     logging.info(f"Cloudinary cleanup for provider {provider.get('id')}: {deleted_count} deleted, {failed_count} failed")
     return {"deleted": deleted_count, "failed": failed_count}
 
+async def delete_company_cloudinary_files(company: dict):
+    """
+    Delete all Cloudinary files associated with a company.
+    """
+    deleted_count = 0
+    failed_count = 0
+    
+    # Delete logo
+    if company.get('logo') and 'cloudinary.com' in str(company.get('logo', '')):
+        result = delete_from_cloudinary(company['logo'])
+        if result['success']:
+            deleted_count += 1
+        else:
+            failed_count += 1
+    
+    # Delete documents (licence, rccm, nif, attestation)
+    doc_fields = ['licence_exploitation', 'rccm_document', 'nif_document', 'attestation_fiscale']
+    for field in doc_fields:
+        if company.get(field) and 'cloudinary.com' in str(company.get(field, '')):
+            result = delete_from_cloudinary(company[field])
+            if result['success']:
+                deleted_count += 1
+            else:
+                failed_count += 1
+    
+    # Delete additional documents
+    if company.get('documents_additionnels'):
+        for doc_url in company['documents_additionnels']:
+            if doc_url and 'cloudinary.com' in doc_url:
+                result = delete_from_cloudinary(doc_url)
+                if result['success']:
+                    deleted_count += 1
+                else:
+                    failed_count += 1
+    
+    logging.info(f"Cloudinary cleanup for company {company.get('id')}: {deleted_count} deleted, {failed_count} failed")
+    return {"deleted": deleted_count, "failed": failed_count}
+
 # Contact filtering for messages - blocks phone numbers and emails
 def filter_contact_info(message: str) -> tuple[str, bool]:
     """
