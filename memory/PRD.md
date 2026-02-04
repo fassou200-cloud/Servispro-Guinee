@@ -127,6 +127,19 @@ Les 13 communes officielles de Conakry ont été ajoutées avec leurs quartiers 
 
 **Fichier modifié** : `/app/frontend/src/data/guineaLocations.js`
 
+### Issues en cours de résolution
+
+| # | Issue | Statut | Notes |
+|---|-------|--------|-------|
+| P2 | Son de notification silencieux | En attente vérification | Code amélioré, attente feedback utilisateur |
+| P3 | "Erreur lors de l'approbation" | Bloqué | Besoin étapes de reproduction |
+| P4 | Revenue Dashboard | En attente vérification | Fix appliqué, attente confirmation |
+| P5 | Cleanup "Logisticien" | Non commencé | Attente confirmation utilisateur |
+
+### Tâches à venir
+
+- **P1** : Ajouter Terms & Conditions à l'inscription entreprises (`/company/auth`)
+
 ### Bug corrigé : Documents non visibles (P0)
 - **Problème** : Les documents téléchargés par les prestataires n'étaient pas visibles sur le profil public ni dans le tableau de bord admin.
 - **Cause** : Conflit CSS avec le wrapper de debug d'Emergent.
