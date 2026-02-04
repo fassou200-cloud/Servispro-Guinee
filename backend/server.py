@@ -1833,14 +1833,13 @@ async def upload_company_rental_photo(
     if not file.content_type.startswith('image/'):
         raise HTTPException(status_code=400, detail="Le fichier doit être une image")
     
-    file_extension = file.filename.split('.')[-1] if '.' in file.filename else 'jpg'
-    filename = f"company_rental_{rental_id}_{uuid.uuid4()}.{file_extension}"
-    file_path = UPLOAD_DIR / filename
+    # Upload to Cloudinary
+    result = await upload_to_cloudinary(file, folder="servispro/rentals")
     
-    with file_path.open('wb') as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    if not result["success"]:
+        raise HTTPException(status_code=500, detail=f"Upload failed: {result.get('error')}")
     
-    photo_url = f"/api/uploads/{filename}"
+    photo_url = result["url"]
     await db.rental_listings.update_one(
         {'id': rental_id},
         {
