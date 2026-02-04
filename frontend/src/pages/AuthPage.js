@@ -190,23 +190,52 @@ const AuthPage = ({ setIsAuthenticated }) => {
     const files = Array.from(e.target.files);
     const maxSize = 5 * 1024 * 1024; // 5MB
     
+    console.log('[DocumentUpload] Files selected:', files.length, files.map(f => f.name));
+    
+    if (files.length === 0) {
+      console.log('[DocumentUpload] No files selected');
+      return;
+    }
+    
+    const validFiles = [];
+    
     files.forEach(file => {
+      console.log('[DocumentUpload] Processing file:', file.name, 'Size:', file.size);
+      
       if (file.size > maxSize) {
         toast.error(`${file.name} est trop volumineux (max 5MB)`);
         return;
       }
       
-      if (documents.length >= 5) {
-        toast.error('Maximum 5 documents autorisés');
+      // Check file type
+      const validTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+      if (!validTypes.includes(file.type)) {
+        toast.error(`${file.name} - Type de fichier non supporté`);
         return;
       }
       
-      setDocuments(prev => [...prev, file]);
+      validFiles.push(file);
     });
+    
+    if (validFiles.length > 0) {
+      setDocuments(prev => {
+        const newDocs = [...prev, ...validFiles].slice(0, 5); // Max 5 documents
+        console.log('[DocumentUpload] Documents updated:', newDocs.length);
+        if (newDocs.length >= 5 && validFiles.length > (5 - prev.length)) {
+          toast.warning('Maximum 5 documents autorisés');
+        }
+        return newDocs;
+      });
+      toast.success(`${validFiles.length} document(s) ajouté(s)`);
+    }
+    
+    // Reset input to allow selecting the same file again
+    e.target.value = '';
   };
 
   const removeDocument = (index) => {
     setDocuments(prev => prev.filter((_, i) => i !== index));
+    toast.info('Document supprimé');
   };
 
   // Handle profile photo upload
