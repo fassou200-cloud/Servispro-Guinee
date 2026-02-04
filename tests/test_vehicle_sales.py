@@ -15,7 +15,7 @@ import requests
 import os
 import uuid
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://client-portal-181.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://servispro-bugfix.preview.emergentagent.com').rstrip('/')
 
 # Test data
 TEST_VEHICLE_PROVIDER = {
