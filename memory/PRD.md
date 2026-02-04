@@ -5,6 +5,20 @@ Construire une plateforme nommée "ServisPro" pour les prestataires de services 
 
 ## Dernière mise à jour - 4 Février 2026
 
+### Corrections de bugs - 4 Février 2026
+
+1. **Bug P0 - Erreur suppression admin** ✅ CORRIGÉ
+   - **Problème** : L'admin ne pouvait pas supprimer les prestataires
+   - **Solution** : Amélioration de la fonction `delete_from_cloudinary()` pour considérer 'not found' comme un succès (le fichier n'existe plus)
+   - **Fichier modifié** : `/app/backend/server.py` ligne 288-293
+   - **Testé** : ✅ 100% tests passés
+
+2. **Bug P1 - Upload documents inscription** ✅ CORRIGÉ
+   - **Problème** : Les prestataires ne pouvaient pas ajouter de documents lors de l'inscription
+   - **Solution** : Correction du double paramètre `folder` dans `upload_to_cloudinary()`
+   - **Fichier modifié** : `/app/backend/server.py` ligne 222-238
+   - **Testé** : ✅ Documents PDF uploadés avec succès sur Cloudinary
+
 ### Intégration Cloudinary - 4 Février 2026 (IMPORTANT)
 
 **Problème résolu** : Les photos de profil des prestataires disparaissaient après redémarrage du serveur car elles étaient stockées localement dans le conteneur.
