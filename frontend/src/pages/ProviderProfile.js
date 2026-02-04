@@ -16,6 +16,7 @@ import ReviewsList from '@/components/ReviewsList';
 import InvestigationFeePopup from '@/components/InvestigationFeePopup';
 import ServiceFeesDisplay from '@/components/ServiceFeesDisplay';
 import ProviderProfileEdit from '@/components/ProviderProfileEdit';
+import { getImageUrl } from '@/utils/imageUrl';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
