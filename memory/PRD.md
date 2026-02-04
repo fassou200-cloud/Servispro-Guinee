@@ -3,7 +3,32 @@
 ## Énoncé du Problème Original
 Construire une plateforme nommée "ServisPro" pour les prestataires de services et clients en Guinée. La plateforme nécessite des rôles utilisateurs distincts (Prestataire, Client, Admin, Entreprise), la gestion des profils, la vérification d'identité et de documents, les annonces de location et vente, les demandes de service et un système de notation.
 
-## Dernière mise à jour - 3 Février 2026
+## Dernière mise à jour - 4 Février 2026
+
+### Intégration Cloudinary - 4 Février 2026 (IMPORTANT)
+
+**Problème résolu** : Les photos de profil des prestataires disparaissaient après redémarrage du serveur car elles étaient stockées localement dans le conteneur.
+
+**Solution** : Intégration de Cloudinary pour le stockage permanent des images et documents.
+
+**Configuration** :
+- Cloud Name: Root
+- Les images sont maintenant stockées sur les serveurs Cloudinary et ne disparaîtront plus jamais.
+
+**Fichiers modifiés** :
+- `/app/backend/.env` - Ajout des clés Cloudinary
+- `/app/backend/server.py` - Fonction `upload_to_cloudinary()` + modification des endpoints d'upload
+- `/app/backend/requirements.txt` - Ajout de `cloudinary==1.44.1`
+- `/app/frontend/src/utils/imageUrl.js` - Nouveau utilitaire pour gérer les URLs (Cloudinary ou locales)
+- Tous les composants affichant des images ont été mis à jour pour utiliser `getImageUrl()`
+
+**Endpoints modifiés pour Cloudinary** :
+- `POST /api/profile/upload-picture` - Upload photo de profil
+- `POST /api/profile/upload-id-verification` - Upload pièce d'identité
+- `POST /api/providers/{id}/documents` - Upload documents prestataire
+- `POST /api/auth/register` - Upload photo et documents lors de l'inscription
+
+**Note pour la production** : Les anciennes images stockées localement (`/api/uploads/...`) ne seront pas disponibles. Les prestataires devront re-uploader leurs photos.
 
 ### Nouvelles fonctionnalités - 3 Février 2026
 
