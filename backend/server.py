@@ -2157,8 +2157,8 @@ async def upload_id_verification(file: UploadFile = File(...), current_user: dic
     if not result["success"]:
         raise HTTPException(status_code=500, detail=f"Upload failed: {result.get('error')}")
     
-    # Update user profile
-    id_verification_url = f"/api/uploads/{filename}"
+    # Update user profile with Cloudinary URL
+    id_verification_url = result["url"]
     await db.service_providers.update_one(
         {'id': current_user['id']},
         {'$set': {'id_verification_picture': id_verification_url}}
