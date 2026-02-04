@@ -1758,7 +1758,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                   <div className="flex items-center gap-4 mb-6">
                     <Avatar className="h-20 w-20">
                       <AvatarImage 
-                        src={selectedAgent.profile_picture ? `${BACKEND_URL}${selectedAgent.profile_picture}` : undefined} 
+                        src={getImageUrl(selectedAgent.profile_picture)} 
                       />
                       <AvatarFallback className="bg-amber-600 text-white text-2xl">
                         {selectedAgent.first_name[0]}{selectedAgent.last_name[0]}
