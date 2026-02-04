@@ -1587,14 +1587,13 @@ async def upload_company_logo(file: UploadFile = File(...), current_company: dic
     if not file.content_type.startswith('image/'):
         raise HTTPException(status_code=400, detail="Le fichier doit être une image")
     
-    file_extension = file.filename.split('.')[-1]
-    filename = f"company_logo_{current_company['id']}_{uuid.uuid4()}.{file_extension}"
-    file_path = UPLOAD_DIR / filename
+    # Upload to Cloudinary
+    result = await upload_to_cloudinary(file, folder="servispro/company_logos")
     
-    with file_path.open('wb') as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    if not result["success"]:
+        raise HTTPException(status_code=500, detail=f"Upload failed: {result.get('error')}")
     
-    logo_url = f"/api/uploads/{filename}"
+    logo_url = result["url"]
     await db.companies.update_one(
         {'id': current_company['id']},
         {'$set': {'logo': logo_url, 'updated_at': datetime.now(timezone.utc).isoformat()}}
