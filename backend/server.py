@@ -251,6 +251,91 @@ async def upload_to_cloudinary(file: UploadFile, folder: str = "servispro") -> d
             "error": str(e)
         }
 
+def delete_from_cloudinary(url: str) -> dict:
+    """
+    Delete a file from Cloudinary using its URL.
+    Extracts the public_id from the URL and deletes the resource.
+    """
+    if not url or not url.startswith('https://res.cloudinary.com'):
+        return {"success": False, "error": "Invalid Cloudinary URL"}
+    
+    try:
+        # Extract public_id from URL
+        # URL format: https://res.cloudinary.com/{cloud_name}/{resource_type}/upload/v{version}/{public_id}.{extension}
+        parts = url.split('/upload/')
+        if len(parts) < 2:
+            return {"success": False, "error": "Could not parse URL"}
+        
+        # Get the part after /upload/ and remove version prefix and extension
+        path_with_version = parts[1]
+        # Remove version (v1234567890/)
+        if path_with_version.startswith('v'):
+            path_parts = path_with_version.split('/', 1)
+            if len(path_parts) > 1:
+                path_with_version = path_parts[1]
+        
+        # Remove file extension
+        public_id = path_with_version.rsplit('.', 1)[0]
+        
+        # Determine resource type from URL
+        if '/raw/upload/' in url:
+            resource_type = 'raw'
+        else:
+            resource_type = 'image'
+        
+        logging.info(f"Deleting from Cloudinary: {public_id} (type: {resource_type})")
+        
+        # Delete from Cloudinary
+        result = cloudinary.uploader.destroy(public_id, resource_type=resource_type)
+        
+        if result.get('result') == 'ok':
+            return {"success": True, "public_id": public_id}
+        else:
+            return {"success": False, "error": f"Cloudinary returned: {result}"}
+            
+    except Exception as e:
+        logging.error(f"Cloudinary delete error: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+async def delete_provider_cloudinary_files(provider: dict):
+    """
+    Delete all Cloudinary files associated with a provider.
+    """
+    deleted_count = 0
+    failed_count = 0
+    
+    # Delete profile picture
+    if provider.get('profile_picture') and 'cloudinary.com' in str(provider.get('profile_picture', '')):
+        result = delete_from_cloudinary(provider['profile_picture'])
+        if result['success']:
+            deleted_count += 1
+            logging.info(f"Deleted profile picture for provider {provider.get('id')}")
+        else:
+            failed_count += 1
+            logging.warning(f"Failed to delete profile picture: {result.get('error')}")
+    
+    # Delete ID verification picture
+    if provider.get('id_verification_picture') and 'cloudinary.com' in str(provider.get('id_verification_picture', '')):
+        result = delete_from_cloudinary(provider['id_verification_picture'])
+        if result['success']:
+            deleted_count += 1
+        else:
+            failed_count += 1
+    
+    # Delete documents
+    if provider.get('documents'):
+        for doc in provider['documents']:
+            doc_path = doc.get('path', '')
+            if doc_path and 'cloudinary.com' in doc_path:
+                result = delete_from_cloudinary(doc_path)
+                if result['success']:
+                    deleted_count += 1
+                else:
+                    failed_count += 1
+    
+    logging.info(f"Cloudinary cleanup for provider {provider.get('id')}: {deleted_count} deleted, {failed_count} failed")
+    return {"deleted": deleted_count, "failed": failed_count}
+
 # Contact filtering for messages - blocks phone numbers and emails
 def filter_contact_info(message: str) -> tuple[str, bool]:
     """
