@@ -5362,35 +5362,57 @@ async def admin_approve_company(company_id: str):
 
 @api_router.put("/admin/companies/{company_id}/reject")
 async def admin_reject_company(company_id: str):
-    """Reject a company"""
+    """Reject a company and delete their Cloudinary files"""
     company = await db.companies.find_one({'id': company_id})
     if not company:
         raise HTTPException(status_code=404, detail="Entreprise non trouvée")
+    
+    # Delete Cloudinary files
+    cloudinary_result = await delete_company_cloudinary_files(company)
+    logging.info(f"Cloudinary cleanup on company reject: {cloudinary_result}")
     
     await db.companies.update_one(
         {'id': company_id},
         {'$set': {
             'verification_status': 'rejected',
+            'logo': None,
+            'licence_exploitation': None,
+            'rccm_document': None,
+            'nif_document': None,
+            'attestation_fiscale': None,
+            'documents_additionnels': [],
             'updated_at': datetime.now(timezone.utc).isoformat()
         }}
     )
-    return {"message": "Entreprise rejetée"}
+    return {
+        "message": "Entreprise rejetée et fichiers supprimés",
+        "cloudinary_files_deleted": cloudinary_result.get('deleted', 0)
+    }
 
 @api_router.delete("/admin/companies/{company_id}")
 async def admin_delete_company(company_id: str):
-    """Delete a company and associated data"""
+    """Delete a company and associated data including Cloudinary files"""
     company = await db.companies.find_one({'id': company_id})
     if not company:
         raise HTTPException(status_code=404, detail="Entreprise non trouvée")
     
+    # Delete Cloudinary files
+    cloudinary_result = await delete_company_cloudinary_files(company)
+    logging.info(f"Cloudinary cleanup on company delete: {cloudinary_result}")
+    
     # Delete associated services and job offers
     await db.company_services.delete_many({'company_id': company_id})
     await db.company_job_offers.delete_many({'company_id': company_id})
+    await db.rental_listings.delete_many({'service_provider_id': company_id})
+    await db.property_sales.delete_many({'agent_id': company_id})
     
     # Delete the company
     await db.companies.delete_one({'id': company_id})
     
-    return {"message": "Entreprise et données associées supprimées avec succès"}
+    return {
+        "message": "Entreprise et données associées supprimées avec succès",
+        "cloudinary_files_deleted": cloudinary_result.get('deleted', 0)
+    }
 
 @api_router.get("/admin/stats")
 async def get_admin_stats():
