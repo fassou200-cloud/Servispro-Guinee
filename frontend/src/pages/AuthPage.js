@@ -976,9 +976,12 @@ const AuthPage = ({ setIsAuthenticated }) => {
                     </p>
                     
                     {/* Upload Zone */}
-                    <label className={`flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-xl cursor-pointer transition-colors ${
-                      documents.length === 0 ? 'border-orange-400 bg-orange-50 hover:border-orange-500' : 'border-slate-300 bg-slate-50 hover:border-orange-500 hover:bg-orange-50'
-                    }`}>
+                    <label 
+                      className={`flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-xl cursor-pointer transition-colors ${
+                        documents.length === 0 ? 'border-orange-400 bg-orange-50 hover:border-orange-500' : 'border-slate-300 bg-slate-50 hover:border-orange-500 hover:bg-orange-50'
+                      }`}
+                      data-testid="document-upload-zone"
+                    >
                       <Upload className={`h-8 w-8 mb-2 ${documents.length === 0 ? 'text-orange-500' : 'text-slate-400'}`} />
                       <span className="text-sm text-slate-600 font-medium">
                         {documents.length === 0 ? 'Cliquez pour ajouter un document (obligatoire)' : 'Ajouter un autre document'}
@@ -990,6 +993,7 @@ const AuthPage = ({ setIsAuthenticated }) => {
                         multiple
                         onChange={handleDocumentUpload}
                         className="hidden"
+                        data-testid="document-file-input"
                       />
                     </label>
 
