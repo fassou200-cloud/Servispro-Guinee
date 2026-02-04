@@ -5023,14 +5023,35 @@ async def approve_provider(provider_id: str):
 
 @api_router.put("/admin/providers/{provider_id}/reject")
 async def reject_provider(provider_id: str):
-    """Reject a service provider"""
+    """Reject a service provider and delete their Cloudinary files"""
+    # Get provider to access their files
+    provider = await db.service_providers.find_one({'id': provider_id})
+    if not provider:
+        raise HTTPException(status_code=404, detail="Prestataire non trouvé")
+    
+    # Delete Cloudinary files to free up storage
+    cloudinary_result = await delete_provider_cloudinary_files(provider)
+    logging.info(f"Cloudinary cleanup on reject: {cloudinary_result}")
+    
+    # Update status to rejected and clear file references
     result = await db.service_providers.update_one(
         {'id': provider_id},
-        {'$set': {'verification_status': ProviderStatus.REJECTED.value}}
+        {
+            '$set': {
+                'verification_status': ProviderStatus.REJECTED.value,
+                'profile_picture': None,
+                'id_verification_picture': None,
+                'documents': []
+            }
+        }
     )
     if result.modified_count == 0:
         raise HTTPException(status_code=404, detail="Prestataire non trouvé")
-    return {"message": "Prestataire rejeté"}
+    
+    return {
+        "message": "Prestataire rejeté et fichiers supprimés",
+        "cloudinary_files_deleted": cloudinary_result.get('deleted', 0)
+    }
 
 class UpdateProviderAboutInput(BaseModel):
     about_me: str
