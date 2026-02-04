@@ -5233,18 +5233,26 @@ async def delete_provider(provider_id: str):
     if not provider:
         raise HTTPException(status_code=404, detail="Prestataire non trouvé")
     
+    # Delete Cloudinary files (profile picture, ID verification, documents)
+    cloudinary_result = await delete_provider_cloudinary_files(provider)
+    logging.info(f"Cloudinary cleanup result: {cloudinary_result}")
+    
     # Delete associated data
     await db.job_offers.delete_many({'service_provider_id': provider_id})
     await db.rental_listings.delete_many({'service_provider_id': provider_id})
     await db.reviews.delete_many({'service_provider_id': provider_id})
     await db.chat_messages.delete_many({'sender_id': provider_id})
+    await db.notifications.delete_many({'user_id': provider_id})
     
     # Delete the provider
     result = await db.service_providers.delete_one({'id': provider_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Prestataire non trouvé")
     
-    return {"message": "Prestataire et données associées supprimés avec succès"}
+    return {
+        "message": "Prestataire et données associées supprimés avec succès",
+        "cloudinary_files_deleted": cloudinary_result.get('deleted', 0)
+    }
 
 @api_router.delete("/admin/customers/{customer_id}")
 async def delete_customer(customer_id: str):
