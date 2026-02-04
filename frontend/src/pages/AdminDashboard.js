@@ -1128,7 +1128,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                     <div className="mb-6">
                       <h4 className="text-sm font-bold text-slate-300 uppercase mb-2">Photo de Profil</h4>
                       <img 
-                        src={`${BACKEND_URL}${selectedProvider.profile_picture}`}
+                        src={getImageUrl(selectedProvider.profile_picture)}
                         alt="Photo de profil"
                         className="w-32 h-32 rounded-xl object-cover border border-slate-600"
                       />
