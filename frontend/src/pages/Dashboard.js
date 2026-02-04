@@ -260,7 +260,7 @@ const Dashboard = ({ setIsAuthenticated }) => {
           <Card className="p-6 mb-6">
             <div className="flex items-center gap-6">
               <Avatar className="h-20 w-20 ring-4 ring-primary/20">
-                <AvatarImage src={user.profile_picture ? `${BACKEND_URL}${user.profile_picture}` : undefined} />
+                <AvatarImage src={getImageUrl(user.profile_picture)} />
                 <AvatarFallback className="text-2xl font-heading bg-primary text-primary-foreground">
                   {user.first_name[0]}{user.last_name[0]}
                 </AvatarFallback>
@@ -367,7 +367,7 @@ const Dashboard = ({ setIsAuthenticated }) => {
           <Card className="p-6 mb-6 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-3xl">
             <div className="flex items-center gap-6">
               <Avatar className="h-20 w-20 ring-4 ring-white/30">
-                <AvatarImage src={user.profile_picture ? `${BACKEND_URL}${user.profile_picture}` : undefined} />
+                <AvatarImage src={getImageUrl(user.profile_picture)} />
                 <AvatarFallback className="text-2xl font-bold bg-white/20">
                   {user.first_name[0]}{user.last_name[0]}
                 </AvatarFallback>
@@ -529,7 +529,7 @@ const Dashboard = ({ setIsAuthenticated }) => {
               {/* Avatar */}
               <div className="relative">
                 <Avatar className="relative h-28 w-28 ring-4 ring-green-100 shadow-lg">
-                  <AvatarImage src={user.profile_picture ? `${BACKEND_URL}${user.profile_picture}` : undefined} />
+                  <AvatarImage src={getImageUrl(user.profile_picture)} />
                   <AvatarFallback className="text-3xl font-heading bg-gradient-to-br from-green-500 to-green-600 text-white">
                     {user.first_name[0]}{user.last_name[0]}
                   </AvatarFallback>
