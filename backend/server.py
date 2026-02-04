@@ -2267,18 +2267,15 @@ async def add_provider_document(
     if len(documents) >= 10:
         raise HTTPException(status_code=400, detail="Vous ne pouvez pas télécharger plus de 10 documents")
     
-    # Save the file
+    # Upload to Cloudinary
     try:
-        file_ext = os.path.splitext(document.filename)[1]
-        safe_filename = f"doc_{provider_id}_{len(documents)}_{document.filename}"
-        file_path = os.path.join(UPLOAD_DIR, safe_filename)
+        result = await upload_to_cloudinary(document, folder="servispro/documents")
         
-        with open(file_path, "wb") as buffer:
-            content = await document.read()
-            buffer.write(content)
+        if not result["success"]:
+            raise HTTPException(status_code=500, detail=f"Erreur upload: {result.get('error')}")
         
         new_doc = {
-            "path": f"/api/uploads/{safe_filename}",
+            "path": result["url"],
             "filename": document.filename,
             "uploaded_at": datetime.now(timezone.utc).isoformat()
         }
