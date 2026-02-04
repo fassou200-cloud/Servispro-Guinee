@@ -1617,16 +1617,13 @@ async def upload_company_document(
     if file.content_type not in allowed_types:
         raise HTTPException(status_code=400, detail="Le fichier doit être une image (JPG, PNG) ou un PDF")
     
-    # Generate filename
-    file_extension = file.filename.split('.')[-1]
-    filename = f"company_doc_{current_company['id']}_{document_type}_{uuid.uuid4()}.{file_extension}"
-    file_path = UPLOAD_DIR / filename
+    # Upload to Cloudinary
+    result = await upload_to_cloudinary(file, folder="servispro/company_documents")
     
-    # Save file
-    with file_path.open('wb') as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    if not result["success"]:
+        raise HTTPException(status_code=500, detail=f"Upload failed: {result.get('error')}")
     
-    document_url = f"/api/uploads/{filename}"
+    document_url = result["url"]
     
     # Update company
     if document_type == 'documents_additionnels':
