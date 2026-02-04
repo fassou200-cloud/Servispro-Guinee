@@ -2130,17 +2130,14 @@ async def upload_profile_picture(file: UploadFile = File(...), current_user: dic
     if not file.content_type.startswith('image/'):
         raise HTTPException(status_code=400, detail="File must be an image")
     
-    # Generate unique filename
-    file_extension = file.filename.split('.')[-1]
-    filename = f"{current_user['id']}_{uuid.uuid4()}.{file_extension}"
-    file_path = UPLOAD_DIR / filename
+    # Upload to Cloudinary
+    result = await upload_to_cloudinary(file, folder="servispro/profiles")
     
-    # Save file
-    with file_path.open('wb') as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    if not result["success"]:
+        raise HTTPException(status_code=500, detail=f"Upload failed: {result.get('error')}")
     
-    # Update user profile
-    profile_picture_url = f"/api/uploads/{filename}"
+    # Update user profile with Cloudinary URL
+    profile_picture_url = result["url"]
     await db.service_providers.update_one(
         {'id': current_user['id']},
         {'$set': {'profile_picture': profile_picture_url}}
@@ -2154,14 +2151,11 @@ async def upload_id_verification(file: UploadFile = File(...), current_user: dic
     if not file.content_type.startswith('image/'):
         raise HTTPException(status_code=400, detail="File must be an image")
     
-    # Generate unique filename
-    file_extension = file.filename.split('.')[-1]
-    filename = f"{current_user['id']}_id_verification_{uuid.uuid4()}.{file_extension}"
-    file_path = UPLOAD_DIR / filename
+    # Upload to Cloudinary
+    result = await upload_to_cloudinary(file, folder="servispro/id_verification")
     
-    # Save file
-    with file_path.open('wb') as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    if not result["success"]:
+        raise HTTPException(status_code=500, detail=f"Upload failed: {result.get('error')}")
     
     # Update user profile
     id_verification_url = f"/api/uploads/{filename}"
