@@ -203,6 +203,51 @@ ADMIN_INVITE_CODE = os.environ.get('ADMIN_INVITE_CODE', 'SERVISPRO2024')
 UPLOAD_DIR = Path("/app/backend/uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
 
+# ============================================
+# CLOUDINARY UPLOAD HELPER
+# ============================================
+
+async def upload_to_cloudinary(file: UploadFile, folder: str = "servispro") -> dict:
+    """
+    Upload a file to Cloudinary and return the secure URL.
+    Works for images and documents (PDF).
+    """
+    try:
+        # Read file content
+        file_content = await file.read()
+        
+        # Generate unique public_id
+        file_ext = file.filename.split('.')[-1].lower() if '.' in file.filename else 'jpg'
+        public_id = f"{folder}/{uuid.uuid4()}"
+        
+        # Determine resource type based on file extension
+        if file_ext in ['pdf', 'doc', 'docx']:
+            resource_type = "raw"
+        else:
+            resource_type = "image"
+        
+        # Upload to Cloudinary
+        result = cloudinary.uploader.upload(
+            file_content,
+            public_id=public_id,
+            resource_type=resource_type,
+            folder=folder,
+            overwrite=True
+        )
+        
+        return {
+            "success": True,
+            "url": result.get("secure_url"),
+            "public_id": result.get("public_id"),
+            "resource_type": resource_type
+        }
+    except Exception as e:
+        logging.error(f"Cloudinary upload error: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
 # Contact filtering for messages - blocks phone numbers and emails
 def filter_contact_info(message: str) -> tuple[str, bool]:
     """
