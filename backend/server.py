@@ -288,7 +288,8 @@ def delete_from_cloudinary(url: str) -> dict:
         # Delete from Cloudinary
         result = cloudinary.uploader.destroy(public_id, resource_type=resource_type)
         
-        if result.get('result') == 'ok':
+        # Consider 'ok' and 'not found' as success (file is gone either way)
+        if result.get('result') in ['ok', 'not found']:
             return {"success": True, "public_id": public_id}
         else:
             return {"success": False, "error": f"Cloudinary returned: {result}"}
