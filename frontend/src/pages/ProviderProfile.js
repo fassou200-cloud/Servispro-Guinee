@@ -307,7 +307,7 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
               {/* Avatar */}
               <Avatar className="h-32 w-32 md:h-40 md:w-40 ring-4 ring-white shadow-2xl">
                 <AvatarImage
-                  src={provider.profile_picture ? `${BACKEND_URL}${provider.profile_picture}` : undefined}
+                  src={getImageUrl(provider.profile_picture)}
                   alt={`${provider.first_name} ${provider.last_name}`}
                 />
                 <AvatarFallback className="text-4xl md:text-5xl font-bold bg-white text-gray-700">
