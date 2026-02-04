@@ -221,7 +221,7 @@ async def upload_to_cloudinary(file: UploadFile, folder: str = "servispro") -> d
         
         # Generate unique public_id
         file_ext = file.filename.split('.')[-1].lower() if '.' in file.filename else 'jpg'
-        public_id = f"{folder}/{uuid.uuid4()}"
+        unique_id = str(uuid.uuid4())
         
         # Determine resource type based on file extension
         if file_ext in ['pdf', 'doc', 'docx']:
@@ -229,12 +229,11 @@ async def upload_to_cloudinary(file: UploadFile, folder: str = "servispro") -> d
         else:
             resource_type = "image"
         
-        # Upload to Cloudinary
+        # Upload to Cloudinary (folder is set via public_id path)
         result = cloudinary.uploader.upload(
             file_content,
-            public_id=public_id,
+            public_id=f"{folder}/{unique_id}",
             resource_type=resource_type,
-            folder=folder,
             overwrite=True
         )
         
