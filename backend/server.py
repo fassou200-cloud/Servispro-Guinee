@@ -216,6 +216,9 @@ async def upload_to_cloudinary(file: UploadFile, folder: str = "servispro") -> d
         # Read file content
         file_content = await file.read()
         
+        # Reset file position for potential reuse
+        await file.seek(0)
+        
         # Generate unique public_id
         file_ext = file.filename.split('.')[-1].lower() if '.' in file.filename else 'jpg'
         public_id = f"{folder}/{uuid.uuid4()}"
