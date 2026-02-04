@@ -210,7 +210,7 @@ const ProviderProfileEdit = ({ provider, onClose, onSave }) => {
             <div className="relative">
               <Avatar className="h-28 w-28 ring-4 ring-green-100 shadow-lg">
                 <AvatarImage 
-                  src={profilePicture ? `${BACKEND_URL}${profilePicture}` : undefined}
+                  src={getImageUrl(profilePicture)}
                   alt="Photo de profil"
                 />
                 <AvatarFallback className="text-3xl font-bold bg-green-100 text-green-700">
