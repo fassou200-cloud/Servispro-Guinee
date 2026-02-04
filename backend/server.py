@@ -4231,16 +4231,14 @@ async def upload_vehicle_photo(vehicle_id: str, file: UploadFile = File(...), cu
     if vehicle['owner_id'] != current_user['id']:
         raise HTTPException(status_code=403, detail="Non autorisé")
     
-    # Save file
-    file_extension = file.filename.split('.')[-1] if '.' in file.filename else 'jpg'
-    filename = f"vehicle_{vehicle_id}_{uuid.uuid4()}.{file_extension}"
-    file_path = UPLOAD_DIR / filename
+    # Upload to Cloudinary
+    result = await upload_to_cloudinary(file, folder="servispro/vehicles")
     
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    if not result["success"]:
+        raise HTTPException(status_code=500, detail=f"Upload failed: {result.get('error')}")
     
     # Update vehicle with new photo
-    photo_url = f"/api/uploads/{filename}"
+    photo_url = result["url"]
     await db.vehicle_listings.update_one(
         {'id': vehicle_id},
         {'$push': {'photos': photo_url}}
