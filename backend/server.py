@@ -3817,14 +3817,13 @@ async def upload_property_sale_photo(sale_id: str, file: UploadFile = File(...),
     if sale['agent_id'] != current_user['id']:
         raise HTTPException(status_code=403, detail="Non autorisé")
     
-    file_extension = file.filename.split('.')[-1] if '.' in file.filename else 'jpg'
-    filename = f"sale_{sale_id}_{uuid.uuid4()}.{file_extension}"
-    file_path = UPLOAD_DIR / filename
+    # Upload to Cloudinary
+    result = await upload_to_cloudinary(file, folder="servispro/property_sales")
     
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    if not result["success"]:
+        raise HTTPException(status_code=500, detail=f"Upload failed: {result.get('error')}")
     
-    photo_url = f"/api/uploads/{filename}"
+    photo_url = result["url"]
     await db.property_sales.update_one(
         {'id': sale_id},
         {
@@ -3854,14 +3853,13 @@ async def upload_property_sale_document(
     if doc_type not in valid_doc_types:
         raise HTTPException(status_code=400, detail=f"Type de document invalide. Types valides: {valid_doc_types}")
     
-    file_extension = file.filename.split('.')[-1] if '.' in file.filename else 'pdf'
-    filename = f"sale_doc_{sale_id}_{doc_type}_{uuid.uuid4()}.{file_extension}"
-    file_path = UPLOAD_DIR / filename
+    # Upload to Cloudinary
+    result = await upload_to_cloudinary(file, folder="servispro/sale_documents")
     
-    with file_path.open('wb') as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    if not result["success"]:
+        raise HTTPException(status_code=500, detail=f"Upload failed: {result.get('error')}")
     
-    doc_url = f"/api/uploads/{filename}"
+    doc_url = result["url"]
     
     if doc_type in ['documents_additionnels', 'autres_documents']:
         await db.property_sales.update_one(
