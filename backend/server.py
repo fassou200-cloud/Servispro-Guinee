@@ -1168,16 +1168,13 @@ async def register(
         if doc and doc.filename:
             file_ext = doc.filename.split('.')[-1].lower()
             if file_ext in ['jpg', 'jpeg', 'png', 'pdf', 'webp']:
-                doc_filename = f"doc_{user_id}_{idx}_{doc.filename}"
-                doc_path = UPLOAD_DIR / doc_filename
-                with open(doc_path, "wb") as f:
-                    content = await doc.read()
-                    f.write(content)
-                uploaded_documents.append({
-                    "filename": doc.filename,
-                    "path": f"/api/uploads/{doc_filename}",
-                    "uploaded_at": datetime.now(timezone.utc).isoformat()
-                })
+                result = await upload_to_cloudinary(doc, folder="servispro/documents")
+                if result["success"]:
+                    uploaded_documents.append({
+                        "filename": doc.filename,
+                        "path": result["url"],
+                        "uploaded_at": datetime.now(timezone.utc).isoformat()
+                    })
     
     user_doc = {
         'id': user_id,
