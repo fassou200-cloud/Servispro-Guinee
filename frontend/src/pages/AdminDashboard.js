@@ -998,7 +998,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                     <div className="flex items-center gap-4">
                       <Avatar className="h-12 w-12">
                         <AvatarImage 
-                          src={provider.profile_picture ? `${BACKEND_URL}${provider.profile_picture}` : undefined} 
+                          src={getImageUrl(provider.profile_picture)} 
                         />
                         <AvatarFallback className="bg-slate-700 text-white">
                           {provider.first_name[0]}{provider.last_name[0]}
