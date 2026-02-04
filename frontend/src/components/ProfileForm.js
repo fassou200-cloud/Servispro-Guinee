@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Upload, CheckCircle } from 'lucide-react';
 import axios from 'axios';
+import { getImageUrl } from '@/utils/imageUrl';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
