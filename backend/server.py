@@ -1687,9 +1687,33 @@ async def reset_password(request: PasswordResetVerify):
     otp = request.otp
     new_password = request.new_password
     
-    # Check OTP
-    otp_key = f"{user_type}_{phone}"
-    stored_otp = password_reset_otps.get(otp_key)
+    # Normalize phone number
+    phone_clean = phone.replace('+', '').replace(' ', '').replace('-', '')
+    if len(phone_clean) >= 9:
+        base_phone = phone_clean[-9:]
+    else:
+        base_phone = phone_clean
+    
+    # Try multiple phone formats to find the OTP
+    phone_patterns = [
+        phone,
+        phone_clean,
+        f"+224{base_phone}",
+        f"224{base_phone}",
+        base_phone,
+    ]
+    
+    stored_otp = None
+    otp_key = None
+    matched_phone = None
+    
+    for p in phone_patterns:
+        key = f"{user_type}_{p}"
+        if key in password_reset_otps:
+            stored_otp = password_reset_otps[key]
+            otp_key = key
+            matched_phone = stored_otp.get('matched_phone', p)
+            break
     
     if not stored_otp:
         raise HTTPException(status_code=400, detail="Aucune demande de réinitialisation en cours")
@@ -1704,20 +1728,20 @@ async def reset_password(request: PasswordResetVerify):
     # Hash new password
     hashed_pwd = hash_password(new_password)
     
-    # Update password based on user type
+    # Update password based on user type - use matched_phone from DB
     if user_type == 'provider':
         await db.service_providers.update_one(
-            {'phone_number': phone},
+            {'phone_number': matched_phone},
             {'$set': {'password': hashed_pwd, 'updated_at': datetime.now(timezone.utc).isoformat()}}
         )
     elif user_type == 'customer':
         await db.customers.update_one(
-            {'phone_number': phone},
+            {'phone_number': matched_phone},
             {'$set': {'password': hashed_pwd, 'updated_at': datetime.now(timezone.utc).isoformat()}}
         )
     elif user_type == 'company':
         await db.companies.update_one(
-            {'phone_number': phone},
+            {'phone_number': matched_phone},
             {'$set': {'password': hashed_pwd, 'updated_at': datetime.now(timezone.utc).isoformat()}}
         )
     
