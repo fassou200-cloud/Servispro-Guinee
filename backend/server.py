@@ -1616,14 +1616,46 @@ async def request_password_reset(request: PasswordResetRequest):
     phone = request.phone_number
     user_type = request.user_type
     
-    # Find user based on type
+    # Normalize phone number - remove + and spaces
+    phone_clean = phone.replace('+', '').replace(' ', '').replace('-', '')
+    
+    # Extract base number (last 9 digits for Guinea)
+    if len(phone_clean) >= 9:
+        base_phone = phone_clean[-9:]
+    else:
+        base_phone = phone_clean
+    
+    # Create multiple search patterns
+    phone_patterns = [
+        phone,  # Original
+        phone_clean,  # Without special chars
+        f"+224{base_phone}",  # With +224
+        f"224{base_phone}",  # With 224
+        base_phone,  # Just the base number
+    ]
+    
+    # Find user based on type - try multiple phone formats
     user = None
+    matched_phone = None
+    
     if user_type == 'provider':
-        user = await db.service_providers.find_one({'phone_number': phone})
+        for p in phone_patterns:
+            user = await db.service_providers.find_one({'phone_number': p})
+            if user:
+                matched_phone = p
+                break
     elif user_type == 'customer':
-        user = await db.customers.find_one({'phone_number': phone})
+        for p in phone_patterns:
+            user = await db.customers.find_one({'phone_number': p})
+            if user:
+                matched_phone = p
+                break
     elif user_type == 'company':
-        user = await db.companies.find_one({'phone_number': phone})
+        for p in phone_patterns:
+            user = await db.companies.find_one({'phone_number': p})
+            if user:
+                matched_phone = p
+                break
     
     if not user:
         raise HTTPException(status_code=404, detail="Aucun compte trouvé avec ce numéro de téléphone")
@@ -1632,10 +1664,12 @@ async def request_password_reset(request: PasswordResetRequest):
     import random
     otp = ''.join([str(random.randint(0, 9)) for _ in range(6)])
     
-    # Store OTP with expiration (10 minutes)
-    password_reset_otps[f"{user_type}_{phone}"] = {
+    # Store OTP with expiration (10 minutes) - use matched phone for consistency
+    password_reset_otps[f"{user_type}_{matched_phone}"] = {
         'otp': otp,
-        'expires_at': datetime.now(timezone.utc) + timedelta(minutes=10)
+        'expires_at': datetime.now(timezone.utc) + timedelta(minutes=10),
+        'original_phone': phone,
+        'matched_phone': matched_phone
     }
     
     # In production, send SMS here. For now, return OTP in response (dev mode)
