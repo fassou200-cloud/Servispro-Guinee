@@ -1113,7 +1113,7 @@ const AuthPage = ({ setIsAuthenticated }) => {
 
                 <div className="mt-6 pt-6 border-t border-slate-100 text-center">
                   <p className="text-sm text-slate-500">
-                    Vous êtes un client ?
+                    Vous êtes simplement client ?
                     <button
                       type="button"
                       onClick={() => navigate('/customer/auth')}
