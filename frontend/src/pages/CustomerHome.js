@@ -105,7 +105,7 @@ const CustomerHome = ({ isCustomerAuthenticated }) => {
                   Se connecter
                 </button>
                 <button 
-                  onClick={() => navigate('/customer/auth')}
+                  onClick={() => navigate('/auth')}
                   className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
                 >
                   S'inscrire
