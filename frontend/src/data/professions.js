@@ -104,7 +104,7 @@ export const professionGroups = [
       { id: 'demenageur', name: 'Déménageur' },
       { id: 'magasinier', name: 'Magasinier' },
       { id: 'preparateur_commandes', name: 'Préparateur de commandes' },
-      { id: 'aide_chauffeur', name: 'Aide-chauffeur' }
+      { id: 'aide_chauffeur', name: 'Chauffeur' }
     ]
   },
   {
