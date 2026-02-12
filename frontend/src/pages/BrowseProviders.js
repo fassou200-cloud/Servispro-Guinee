@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { 
   ArrowLeft, MapPin, ShieldCheck, Star, User, LogOut, Search, Filter,
   Truck, Settings, Wrench, Droplet, Hammer, Building, Flame, MoreHorizontal,
-  CheckCircle, Clock, Phone, ChevronDown, X, Sparkles
+  CheckCircle, Clock, Phone, ChevronDown, X, Sparkles, Zap
 } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
