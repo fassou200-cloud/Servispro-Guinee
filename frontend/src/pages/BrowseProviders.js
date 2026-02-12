@@ -23,7 +23,7 @@ const translateProfession = (profession, customProfession = null) => {
   }
   
   const translations = {
-    'Electromecanicien': 'Électricien bâtiment',
+    'Electromecanicien': 'Électromécanicien',
     'Mecanicien': 'Mécanicien',
     'Plombier': 'Plombier',
     'Macon': 'Maçon',
@@ -63,7 +63,7 @@ const categoryColors = {
 
 const categories = [
   { value: 'All', label: 'Toutes', icon: Sparkles },
-  { value: 'Electromecanicien', label: 'Électricien bâtiment', icon: Settings },
+  { value: 'Electromecanicien', label: 'Électromécanicien', icon: Settings },
   { value: 'Mecanicien', label: 'Mécanicien', icon: Wrench },
   { value: 'Plombier', label: 'Plombier', icon: Droplet },
   { value: 'Macon', label: 'Maçon', icon: Hammer },

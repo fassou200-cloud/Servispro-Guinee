@@ -24,7 +24,7 @@ const translateProfession = (profession) => {
     'Electrician': 'Électricien',
     'Mechanic': 'Mécanicien',
     'Plumber': 'Plombier',
-    'Electromecanicien': 'Électricien bâtiment',
+    'Electromecanicien': 'Électromécanicien',
     'Mecanicien': 'Mécanicien',
     'Macon': 'Maçon',
     'Menuisier': 'Menuisier',
