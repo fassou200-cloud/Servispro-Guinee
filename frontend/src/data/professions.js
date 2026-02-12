@@ -27,7 +27,7 @@ export const professionGroups = [
     professions: [
       { id: 'electricien_batiment', name: 'Électricien bâtiment' },
       { id: 'electricien_industriel', name: 'Électricien industriel' },
-      { id: 'electromecanicien', name: 'Électromécanicien' },
+      { id: 'electromecanicien', name: 'Électricien bâtiment' },
       { id: 'installateur_solaire', name: 'Installateur solaire' },
       { id: 'plombier', name: 'Plombier' },
       { id: 'chauffagiste', name: 'Chauffagiste' },

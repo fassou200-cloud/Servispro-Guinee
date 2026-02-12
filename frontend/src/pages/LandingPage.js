@@ -207,7 +207,7 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
 
   const categories = [
     {
-      name: 'Électromécanicien',
+      name: 'Électricien bâtiment',
       profession: 'Electromecanicien',
       icon: Settings,
       description: 'Maintenance et réparation électromécanique',

@@ -33,7 +33,7 @@ const API = `${BACKEND_URL}/api`;
 // Traduction des professions en français
 const translateProfession = (profession, customProfession = null) => {
   const translations = {
-    'Electromecanicien': 'Électromécanicien',
+    'Electromecanicien': 'Électricien bâtiment',
     'Mecanicien': 'Mécanicien',
     'Plombier': 'Plombier',
     'Macon': 'Maçon',

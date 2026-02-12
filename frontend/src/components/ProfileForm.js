@@ -273,7 +273,7 @@ const ProfileForm = ({ user, setUser, onUpdate }) => {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Electromecanicien">Électromécanicien</SelectItem>
+              <SelectItem value="Electromecanicien">Électricien bâtiment</SelectItem>
               <SelectItem value="Mecanicien">Mécanicien</SelectItem>
               <SelectItem value="Plombier">Plombier</SelectItem>
               <SelectItem value="Macon">Maçon</SelectItem>
