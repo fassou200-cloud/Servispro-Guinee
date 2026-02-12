@@ -23,6 +23,7 @@ const translateProfession = (profession, customProfession = null) => {
   }
   
   const translations = {
+    'ElectricienBatiment': 'Électricien bâtiment',
     'Electromecanicien': 'Électromécanicien',
     'Mecanicien': 'Mécanicien',
     'Plombier': 'Plombier',
@@ -40,6 +41,7 @@ const translateProfession = (profession, customProfession = null) => {
 };
 
 const categoryIcons = {
+  'ElectricienBatiment': Zap,
   'Electromecanicien': Settings,
   'Mecanicien': Wrench,
   'Plombier': Droplet,
@@ -51,6 +53,7 @@ const categoryIcons = {
 };
 
 const categoryColors = {
+  'ElectricienBatiment': 'from-blue-500 to-blue-600',
   'Electromecanicien': 'from-purple-500 to-purple-600',
   'Mecanicien': 'from-orange-500 to-orange-600',
   'Plombier': 'from-cyan-500 to-cyan-600',
@@ -63,6 +66,7 @@ const categoryColors = {
 
 const categories = [
   { value: 'All', label: 'Toutes', icon: Sparkles },
+  { value: 'ElectricienBatiment', label: 'Électricien bâtiment', icon: Zap },
   { value: 'Electromecanicien', label: 'Électromécanicien', icon: Settings },
   { value: 'Mecanicien', label: 'Mécanicien', icon: Wrench },
   { value: 'Plombier', label: 'Plombier', icon: Droplet },
