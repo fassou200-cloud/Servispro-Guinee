@@ -41,14 +41,15 @@ const translateProfession = (profession, customProfession = null) => {
 };
 
 const categoryIcons = {
-  'ElectricienBatiment': Zap,
-  'Electromecanicien': Settings,
-  'Mecanicien': Wrench,
+  'Électricien bâtiment': Zap,
+  'Électromécanicien': Settings,
+  'Mécanicien': Wrench,
   'Plombier': Droplet,
-  'Macon': Hammer,
+  'Maçon': Hammer,
   'Menuisier': Hammer,
-  'AgentImmobilier': Building,
+  'Propriétaire immobilier': Building,
   'Soudeur': Flame,
+  'Chauffeur': Truck,
   'Autres': MoreHorizontal
 };
 
