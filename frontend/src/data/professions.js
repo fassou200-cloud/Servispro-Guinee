@@ -115,6 +115,7 @@ export const professionGroups = [
       { id: 'agent_entretien', name: "Agent d'entretien" },
       { id: 'technicien_maintenance_batiment', name: 'Technicien de maintenance bâtiment' },
       { id: 'agent_nettoyage_industriel', name: 'Agent de nettoyage industriel' },
+      { id: 'femme_de_menage', name: 'Femme de ménage' },
       { id: 'ouvrier_polyvalent', name: 'Ouvrier polyvalent' },
       { id: 'homme_tout_faire', name: 'Homme à tout faire' }
     ]
