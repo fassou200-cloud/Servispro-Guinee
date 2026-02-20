@@ -53,27 +53,29 @@ const categoryIcons = {
 };
 
 const categoryColors = {
-  'ElectricienBatiment': 'from-blue-500 to-blue-600',
-  'Electromecanicien': 'from-purple-500 to-purple-600',
-  'Mecanicien': 'from-orange-500 to-orange-600',
+  'Électricien bâtiment': 'from-blue-500 to-blue-600',
+  'Électromécanicien': 'from-purple-500 to-purple-600',
+  'Mécanicien': 'from-orange-500 to-orange-600',
   'Plombier': 'from-cyan-500 to-cyan-600',
-  'Macon': 'from-amber-500 to-amber-600',
+  'Maçon': 'from-amber-500 to-amber-600',
   'Menuisier': 'from-yellow-500 to-yellow-600',
-  'AgentImmobilier': 'from-emerald-500 to-emerald-600',
+  'Propriétaire immobilier': 'from-emerald-500 to-emerald-600',
   'Soudeur': 'from-red-500 to-red-600',
+  'Chauffeur': 'from-indigo-500 to-indigo-600',
   'Autres': 'from-gray-500 to-gray-600'
 };
 
 const categories = [
   { value: 'All', label: 'Toutes', icon: Sparkles },
-  { value: 'ElectricienBatiment', label: 'Électricien bâtiment', icon: Zap },
-  { value: 'Electromecanicien', label: 'Électromécanicien', icon: Settings },
-  { value: 'Mecanicien', label: 'Mécanicien', icon: Wrench },
+  { value: 'Électricien bâtiment', label: 'Électricien bâtiment', icon: Zap },
+  { value: 'Électromécanicien', label: 'Électromécanicien', icon: Settings },
+  { value: 'Mécanicien', label: 'Mécanicien', icon: Wrench },
   { value: 'Plombier', label: 'Plombier', icon: Droplet },
-  { value: 'Macon', label: 'Maçon', icon: Hammer },
+  { value: 'Maçon', label: 'Maçon', icon: Hammer },
   { value: 'Menuisier', label: 'Menuisier', icon: Hammer },
-  { value: 'AgentImmobilier', label: 'Propriétaire immobilier', icon: Building },
+  { value: 'Propriétaire immobilier', label: 'Propriétaire immobilier', icon: Building },
   { value: 'Soudeur', label: 'Soudeur', icon: Flame },
+  { value: 'Chauffeur', label: 'Chauffeur', icon: Truck },
   { value: 'Autres', label: 'Autres', icon: MoreHorizontal }
 ];
 
