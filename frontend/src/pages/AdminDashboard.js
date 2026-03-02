@@ -1121,10 +1121,21 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                         {selectedProvider.first_name[0]}{selectedProvider.last_name[0]}
                       </AvatarFallback>
                     </Avatar>
-                    <div>
-                      <h3 className="text-xl font-bold text-white">
-                        {selectedProvider.first_name} {selectedProvider.last_name}
-                      </h3>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-xl font-bold text-white">
+                          {selectedProvider.first_name} {selectedProvider.last_name}
+                        </h3>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => openEditProfileModal(selectedProvider)}
+                          className="text-blue-400 hover:text-blue-300 hover:bg-blue-900/20 h-7 px-2"
+                          data-testid="edit-profile-btn"
+                        >
+                          <Pencil className="h-3 w-3" />
+                        </Button>
+                      </div>
                       <p className="text-slate-400">{translateProfession(selectedProvider.profession)}</p>
                       <p className="text-sm text-slate-500">{selectedProvider.phone_number}</p>
                     </div>
