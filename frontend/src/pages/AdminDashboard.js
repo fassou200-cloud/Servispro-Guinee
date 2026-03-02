@@ -415,6 +415,55 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
     }
   };
 
+  // Open edit profile modal
+  const openEditProfileModal = (provider) => {
+    setEditProfileModal({ show: true, provider });
+    setEditProfileData({
+      first_name: provider.first_name || '',
+      last_name: provider.last_name || '',
+      profession: provider.profession || ''
+    });
+  };
+
+  // Save profile changes
+  const handleSaveProfile = async () => {
+    if (!editProfileData.first_name.trim() || !editProfileData.last_name.trim()) {
+      toast.error('Le prénom et le nom sont obligatoires');
+      return;
+    }
+    
+    setSavingProfile(true);
+    try {
+      await axios.put(`${API}/admin/providers/${editProfileModal.provider.id}/profile`, {
+        first_name: editProfileData.first_name.trim(),
+        last_name: editProfileData.last_name.trim(),
+        profession: editProfileData.profession.trim(),
+        profession_group: ''
+      });
+      
+      toast.success('Profil mis à jour avec succès !');
+      
+      // Update local state
+      const updatedData = {
+        first_name: editProfileData.first_name.trim(),
+        last_name: editProfileData.last_name.trim(),
+        profession: editProfileData.profession.trim()
+      };
+      
+      setSelectedProvider(prev => prev ? { ...prev, ...updatedData } : null);
+      setProviders(prev => prev.map(p => 
+        p.id === editProfileModal.provider.id ? { ...p, ...updatedData } : p
+      ));
+      
+      setEditProfileModal({ show: false, provider: null });
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast.error(error.response?.data?.detail || 'Erreur lors de la mise à jour');
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
   const handleApproveProvider = async (providerId) => {
     try {
       await axios.put(`${API}/admin/providers/${providerId}/approve`);
