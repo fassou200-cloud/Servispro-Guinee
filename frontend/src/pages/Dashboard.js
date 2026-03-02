@@ -667,6 +667,18 @@ const Dashboard = ({ setIsAuthenticated }) => {
             <User className="h-4 w-4" />
             Mon Profil
           </Button>
+          <Button
+            variant={activeTab === 'reviews' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('reviews')}
+            className={`gap-2 rounded-xl whitespace-nowrap ${
+              activeTab === 'reviews' 
+                ? 'bg-yellow-500 hover:bg-yellow-600 text-white shadow-lg' 
+                : 'text-gray-600 hover:text-gray-900 hover:bg-yellow-50 border-yellow-200'
+            }`}
+          >
+            <Star className="h-4 w-4" />
+            Avis Clients
+          </Button>
         </div>
 
         {/* Tab Content - White Theme */}
