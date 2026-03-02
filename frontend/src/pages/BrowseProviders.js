@@ -47,9 +47,12 @@ const categoryIcons = {
   'Plombier': Droplet,
   'Maçon': Hammer,
   'Menuisier': Hammer,
-  'Propriétaire immobilier': Building,
   'Soudeur': Flame,
   'Chauffeur': Truck,
+  'Vitrier': Building,
+  'Ferrailleur': Hammer,
+  'Femme de ménage': Home,
+  'Manœuvre de chantier': Hammer,
   'Autres': MoreHorizontal
 };
 
