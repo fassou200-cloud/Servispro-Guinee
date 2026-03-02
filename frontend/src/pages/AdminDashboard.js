@@ -1043,6 +1043,95 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
           </div>
         )}
 
+        {/* Edit Profile Modal */}
+        {editProfileModal.show && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <Card className="p-6 bg-slate-800 border-slate-700 max-w-lg w-full mx-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <UserCircle className="h-5 w-5 text-blue-400" />
+                  Modifier le Profil
+                </h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setEditProfileModal({ show: false, provider: null })}
+                  className="text-slate-400 hover:text-white"
+                >
+                  <XCircle className="h-5 w-5" />
+                </Button>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm text-slate-400 mb-1 block">Prénom</label>
+                    <input
+                      type="text"
+                      value={editProfileData.first_name}
+                      onChange={(e) => setEditProfileData(prev => ({ ...prev, first_name: e.target.value }))}
+                      className="w-full bg-slate-700 border border-slate-600 text-white rounded-lg px-3 py-2"
+                      placeholder="Prénom"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm text-slate-400 mb-1 block">Nom</label>
+                    <input
+                      type="text"
+                      value={editProfileData.last_name}
+                      onChange={(e) => setEditProfileData(prev => ({ ...prev, last_name: e.target.value }))}
+                      className="w-full bg-slate-700 border border-slate-600 text-white rounded-lg px-3 py-2"
+                      placeholder="Nom"
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="text-sm text-slate-400 mb-1 block">Profession</label>
+                  <select
+                    value={editProfileData.profession}
+                    onChange={(e) => setEditProfileData(prev => ({ ...prev, profession: e.target.value }))}
+                    className="w-full bg-slate-700 border border-slate-600 text-white rounded-lg px-3 py-2"
+                  >
+                    <option value="">Sélectionner une profession</option>
+                    {availableProfessions.map((prof) => (
+                      <option key={prof} value={prof}>{prof}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              
+              <div className="flex justify-end gap-3 mt-6">
+                <Button
+                  variant="outline"
+                  onClick={() => setEditProfileModal({ show: false, provider: null })}
+                  className="border-slate-600 text-slate-300"
+                  disabled={savingProfile}
+                >
+                  Annuler
+                </Button>
+                <Button
+                  onClick={handleSaveProfile}
+                  className="bg-blue-600 hover:bg-blue-700"
+                  disabled={savingProfile}
+                >
+                  {savingProfile ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Enregistrement...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4 mr-2" />
+                      Enregistrer
+                    </>
+                  )}
+                </Button>
+              </div>
+            </Card>
+          </div>
+        )}
+
         {/* Providers Tab */}
         {activeTab === 'providers' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
