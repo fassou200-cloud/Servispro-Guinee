@@ -3,7 +3,23 @@
 ## Énoncé du Problème Original
 Construire une plateforme nommée "ServisPro" pour les prestataires de services et clients en Guinée. La plateforme nécessite des rôles utilisateurs distincts (Prestataire, Client, Admin, Entreprise), la gestion des profils, la vérification d'identité et de documents, les annonces de location et vente, les demandes de service et un système de notation.
 
-## Dernière mise à jour - 4 Février 2026
+## Dernière mise à jour - 2 Mars 2026
+
+### Fonctionnalités Admin - 2 Mars 2026
+
+1. **Admin peut modifier le profil complet d'un prestataire** ✅ COMPLÉTÉ
+   - **Fonctionnalité** : L'admin peut modifier le prénom, nom et profession d'un prestataire
+   - **Dropdown des professions** : 66 professions disponibles, groupées par catégorie avec icônes
+   - **Catégories** : Bâtiment & Construction, Électricité/Eau/Énergie, Mécanique, Bois/Métal, Usines, Agriculture, Transport, Services techniques, Immobilier
+   - **Endpoint** : `PUT /api/admin/providers/{provider_id}/profile`
+   - **Fichiers modifiés** :
+     - `/app/backend/server.py` - Nouveau endpoint et modèle Pydantic `UpdateProviderProfileInput`
+     - `/app/frontend/src/pages/AdminDashboard.js` - Import de `professionGroups`, modal "Modifier le Profil" avec dropdown groupé
+   - **Testé** : ✅ Screenshots confirmant le fonctionnement complet
+
+---
+
+## Mise à jour - 4 Février 2026
 
 ### Corrections de bugs - 4 Février 2026
 
