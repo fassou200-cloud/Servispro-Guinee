@@ -123,35 +123,10 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
   const [editProfileData, setEditProfileData] = useState({ first_name: '', last_name: '', profession: '' });
   const [savingProfile, setSavingProfile] = useState(false);
 
-  // All available professions for dropdown
-  const availableProfessions = [
-    'Électricien bâtiment',
-    'Électricien industriel',
-    'Électromécanicien',
-    'Mécanicien',
-    'Mécanicien automobile',
-    'Mécanicien poids lourds',
-    'Plombier',
-    'Maçon',
-    'Menuisier',
-    'Menuisier bois',
-    'Menuisier aluminium',
-    'Soudeur',
-    'Chauffeur',
-    'Vitrier',
-    'Ferrailleur',
-    'Femme de ménage',
-    'Manœuvre de chantier',
-    'Carreleur',
-    'Peintre en bâtiment',
-    'Charpentier',
-    'Couvreur',
-    'Jardinier',
-    'Ouvrier forestier',
-    'Propriétaire immobilier',
-    'Agent immobilier',
-    'Autres'
-  ];
+  // All available professions for dropdown - extracted from professionGroups (69 total)
+  const availableProfessions = professionGroups.flatMap(group => 
+    group.professions.map(p => ({ name: p.name, group: group.name }))
+  ).sort((a, b) => a.name.localeCompare(b.name, 'fr'));
 
   // Currency options
   const deviseOptions = [
