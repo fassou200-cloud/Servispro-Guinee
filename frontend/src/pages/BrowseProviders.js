@@ -60,9 +60,12 @@ const categoryColors = {
   'Plombier': 'from-cyan-500 to-cyan-600',
   'Maçon': 'from-amber-500 to-amber-600',
   'Menuisier': 'from-yellow-500 to-yellow-600',
-  'Propriétaire immobilier': 'from-emerald-500 to-emerald-600',
   'Soudeur': 'from-red-500 to-red-600',
   'Chauffeur': 'from-indigo-500 to-indigo-600',
+  'Vitrier': 'from-sky-500 to-sky-600',
+  'Ferrailleur': 'from-slate-500 to-slate-600',
+  'Femme de ménage': 'from-pink-500 to-pink-600',
+  'Manœuvre de chantier': 'from-stone-500 to-stone-600',
   'Autres': 'from-gray-500 to-gray-600'
 };
 
@@ -74,9 +77,12 @@ const categories = [
   { value: 'Plombier', label: 'Plombier', icon: Droplet },
   { value: 'Maçon', label: 'Maçon', icon: Hammer },
   { value: 'Menuisier', label: 'Menuisier', icon: Hammer },
-  { value: 'Propriétaire immobilier', label: 'Propriétaire immobilier', icon: Building },
   { value: 'Soudeur', label: 'Soudeur', icon: Flame },
   { value: 'Chauffeur', label: 'Chauffeur', icon: Truck },
+  { value: 'Vitrier', label: 'Vitrier', icon: Building },
+  { value: 'Ferrailleur', label: 'Ferrailleur', icon: Hammer },
+  { value: 'Femme de ménage', label: 'Femme de ménage', icon: Home },
+  { value: 'Manœuvre de chantier', label: 'Manœuvre de chantier', icon: Hammer },
   { value: 'Autres', label: 'Autres', icon: MoreHorizontal }
 ];
 
