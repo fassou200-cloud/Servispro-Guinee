@@ -1063,15 +1063,20 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                 </div>
                 
                 <div>
-                  <label className="text-sm text-slate-400 mb-1 block">Profession</label>
+                  <label className="text-sm text-slate-400 mb-1 block">Profession ({availableProfessions.length} disponibles)</label>
                   <select
                     value={editProfileData.profession}
                     onChange={(e) => setEditProfileData(prev => ({ ...prev, profession: e.target.value }))}
                     className="w-full bg-slate-700 border border-slate-600 text-white rounded-lg px-3 py-2"
+                    data-testid="edit-profession-select"
                   >
                     <option value="">Sélectionner une profession</option>
-                    {availableProfessions.map((prof) => (
-                      <option key={prof} value={prof}>{prof}</option>
+                    {professionGroups.map((group) => (
+                      <optgroup key={group.id} label={`${group.icon} ${group.name}`}>
+                        {group.professions.map((prof) => (
+                          <option key={prof.id} value={prof.name}>{prof.name}</option>
+                        ))}
+                      </optgroup>
                     ))}
                   </select>
                 </div>
