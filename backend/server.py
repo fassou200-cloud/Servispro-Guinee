@@ -5152,6 +5152,47 @@ async def reject_provider(provider_id: str):
 class UpdateProviderAboutInput(BaseModel):
     about_me: str
 
+class UpdateProviderProfileInput(BaseModel):
+    first_name: str
+    last_name: str
+    profession: str
+    profession_group: Optional[str] = None
+
+@api_router.put("/admin/providers/{provider_id}/profile")
+async def update_provider_profile(provider_id: str, input_data: UpdateProviderProfileInput):
+    """Update provider's profile (name, profession) - Admin only"""
+    # Validate names are not empty
+    if not input_data.first_name or len(input_data.first_name.strip()) < 2:
+        raise HTTPException(status_code=400, detail="Le prénom doit contenir au moins 2 caractères")
+    if not input_data.last_name or len(input_data.last_name.strip()) < 2:
+        raise HTTPException(status_code=400, detail="Le nom doit contenir au moins 2 caractères")
+    if not input_data.profession or len(input_data.profession.strip()) < 2:
+        raise HTTPException(status_code=400, detail="La profession est obligatoire")
+    
+    update_data = {
+        'first_name': input_data.first_name.strip(),
+        'last_name': input_data.last_name.strip(),
+        'profession': input_data.profession.strip()
+    }
+    
+    # Update profession_group if provided
+    if input_data.profession_group:
+        update_data['profession_group'] = input_data.profession_group.strip()
+    
+    result = await db.service_providers.update_one(
+        {'id': provider_id},
+        {'$set': update_data}
+    )
+    if result.modified_count == 0:
+        # Check if provider exists
+        provider = await db.service_providers.find_one({'id': provider_id})
+        if not provider:
+            raise HTTPException(status_code=404, detail="Prestataire non trouvé")
+        # Provider exists but no changes made (same data)
+        return {"message": "Aucune modification nécessaire", **update_data}
+    
+    return {"message": "Profil mis à jour avec succès", **update_data}
+
 @api_router.put("/admin/providers/{provider_id}/about")
 async def update_provider_about(provider_id: str, input_data: UpdateProviderAboutInput):
     """Update provider's about_me field - Admin only"""
