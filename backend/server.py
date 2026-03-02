@@ -6708,8 +6708,8 @@ app.add_middleware(RateLimitMiddleware)
 
 # CORS Configuration - Restrictive
 ALLOWED_ORIGINS = [
-    os.environ.get('FRONTEND_URL', 'https://servispro-bugfix.preview.emergentagent.com'),
-    "https://servispro-bugfix.preview.emergentagent.com",
+    os.environ.get('FRONTEND_URL', 'https://profi-gn.preview.emergentagent.com'),
+    "https://profi-gn.preview.emergentagent.com",
     "https://servisprogn.com",
     "https://www.servisprogn.com",
     "http://servisprogn.com",
