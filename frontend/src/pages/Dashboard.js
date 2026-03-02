@@ -970,6 +970,10 @@ const Dashboard = ({ setIsAuthenticated }) => {
         {activeTab === 'profile' && (
           <ProfileForm user={user} setUser={setUser} onUpdate={fetchProfile} />
         )}
+
+        {activeTab === 'reviews' && user && (
+          <ProviderReviews providerId={user.id} />
+        )}
       </div>
     </div>
   );
