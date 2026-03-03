@@ -130,11 +130,24 @@ const BrowseProviders = ({ isCustomerAuthenticated }) => {
   }, []);
 
   // Extract unique villes from providers data (dynamic)
+  // Excludes entries ending with "_ville" from display but keeps filtering functional
   const availableVilles = useMemo(() => {
     const villesSet = new Set();
     providers.forEach(p => {
-      if (p.ville) villesSet.add(capitalizeFirst(p.ville));
-      if (p.region) villesSet.add(capitalizeFirst(p.region));
+      if (p.ville) {
+        const ville = capitalizeFirst(p.ville);
+        // Skip entries ending with "_ville"
+        if (!ville.toLowerCase().endsWith('_ville')) {
+          villesSet.add(ville);
+        }
+      }
+      if (p.region) {
+        const region = capitalizeFirst(p.region);
+        // Skip entries ending with "_ville"
+        if (!region.toLowerCase().endsWith('_ville')) {
+          villesSet.add(region);
+        }
+      }
     });
     return Array.from(villesSet).sort((a, b) => a.localeCompare(b, 'fr'));
   }, [providers]);
