@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input';
 import { 
   ArrowLeft, MapPin, ShieldCheck, Star, User, LogOut, Search, Filter,
   Truck, Settings, Wrench, Droplet, Hammer, Building, Flame, MoreHorizontal,
-  CheckCircle, Clock, Phone, ChevronDown, X, Sparkles, Zap, Home, Briefcase, Calendar
+  CheckCircle, Clock, Phone, ChevronDown, X, Sparkles, Zap, Home, Briefcase, Calendar,
+  Car, Paintbrush
 } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
@@ -60,6 +61,7 @@ const categoryIcons = {
   'Électricien bâtiment': Zap,
   'Électromécanicien': Settings,
   'Mécanicien': Wrench,
+  'Mécanicien automobile': Car,
   'Plombier': Droplet,
   'Maçon': Hammer,
   'Menuisier': Hammer,
@@ -69,6 +71,7 @@ const categoryIcons = {
   'Ferrailleur': Hammer,
   'Femme de ménage': Home,
   'Manœuvre de chantier': Hammer,
+  'Peintre en bâtiment': Paintbrush,
   'Autres': MoreHorizontal
 };
 
@@ -76,6 +79,7 @@ const categoryColors = {
   'Électricien bâtiment': 'from-blue-500 to-blue-600',
   'Électromécanicien': 'from-purple-500 to-purple-600',
   'Mécanicien': 'from-orange-500 to-orange-600',
+  'Mécanicien automobile': 'from-rose-500 to-rose-600',
   'Plombier': 'from-cyan-500 to-cyan-600',
   'Maçon': 'from-amber-500 to-amber-600',
   'Menuisier': 'from-yellow-500 to-yellow-600',
@@ -85,6 +89,7 @@ const categoryColors = {
   'Ferrailleur': 'from-slate-500 to-slate-600',
   'Femme de ménage': 'from-pink-500 to-pink-600',
   'Manœuvre de chantier': 'from-stone-500 to-stone-600',
+  'Peintre en bâtiment': 'from-teal-500 to-teal-600',
   'Autres': 'from-gray-500 to-gray-600'
 };
 
@@ -93,10 +98,12 @@ const categories = [
   { value: 'Électricien bâtiment', label: 'Électricien bâtiment', icon: Zap },
   { value: 'Électromécanicien', label: 'Électromécanicien', icon: Settings },
   { value: 'Mécanicien', label: 'Mécanicien', icon: Wrench },
+  { value: 'Mécanicien automobile', label: 'Mécanicien auto', icon: Car },
   { value: 'Plombier', label: 'Plombier', icon: Droplet },
   { value: 'Maçon', label: 'Maçon', icon: Hammer },
   { value: 'Menuisier', label: 'Menuisier', icon: Hammer },
   { value: 'Soudeur', label: 'Soudeur', icon: Flame },
+  { value: 'Peintre en bâtiment', label: 'Peintre bâtiment', icon: Paintbrush },
   { value: 'Chauffeur', label: 'Chauffeur', icon: Truck },
   { value: 'Vitrier', label: 'Vitrier', icon: Building },
   { value: 'Ferrailleur', label: 'Ferrailleur', icon: Hammer },
