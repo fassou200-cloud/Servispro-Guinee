@@ -17,40 +17,10 @@ import { professionGroups } from '@/data/professions';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-// Villes de Guinée
-const villesGuinee = [
-  'Conakry',
-  'Nzérékoré',
-  'Kankan',
-  'Kindia',
-  'Labé',
-  'Mamou',
-  'Boké',
-  'Faranah',
-  'Siguiri',
-  'Kissidougou',
-  'Guéckédou',
-  'Macenta',
-  'Kamsar',
-  'Coyah',
-  'Dubréka',
-  'Fria',
-  'Dalaba',
-  'Pita',
-  'Télimélé',
-  'Kouroussa'
-];
-
-// Quartiers par ville (principalement Conakry)
-const quartiersParVille = {
-  'Conakry': [
-    'Kaloum', 'Dixinn', 'Matam', 'Ratoma', 'Matoto',
-    'Kipé', 'Nongo', 'Lambanyi', 'Cosa', 'Sonfonia',
-    'Hamdallaye', 'Bambeto', 'Cosa', 'Koloma', 'Yimbaya',
-    'Taouyah', 'Kaporo', 'Sangoya', 'Dar Es Salam', 'Bonfi',
-    'Madina', 'Almamya', 'Boulbinet', 'Coronthie', 'Sandervalia'
-  ],
-  'default': []
+// Helper function to capitalize first letter
+const capitalizeFirst = (str) => {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 };
 
 // Options d'expérience
@@ -159,11 +129,31 @@ const BrowseProviders = ({ isCustomerAuthenticated }) => {
     return professionGroups.flatMap(group => group.professions.map(p => p.name)).sort((a, b) => a.localeCompare(b, 'fr'));
   }, []);
 
-  // Get quartiers based on selected ville
+  // Extract unique villes from providers data (dynamic)
+  const availableVilles = useMemo(() => {
+    const villesSet = new Set();
+    providers.forEach(p => {
+      if (p.ville) villesSet.add(capitalizeFirst(p.ville));
+      if (p.region) villesSet.add(capitalizeFirst(p.region));
+    });
+    return Array.from(villesSet).sort((a, b) => a.localeCompare(b, 'fr'));
+  }, [providers]);
+
+  // Extract unique quartiers from providers data (dynamic, filtered by selected ville)
   const availableQuartiers = useMemo(() => {
-    if (!selectedVille) return [];
-    return quartiersParVille[selectedVille] || quartiersParVille['default'];
-  }, [selectedVille]);
+    const quartiersSet = new Set();
+    providers.forEach(p => {
+      // Include quartier if it matches the selected ville (case-insensitive)
+      const providerVille = (p.ville || p.region || '').toLowerCase();
+      const selectedVilleLower = selectedVille.toLowerCase();
+      
+      if (!selectedVille || providerVille.includes(selectedVilleLower) || selectedVilleLower.includes(providerVille)) {
+        if (p.quartier) quartiersSet.add(p.quartier);
+        if (p.commune) quartiersSet.add(capitalizeFirst(p.commune));
+      }
+    });
+    return Array.from(quartiersSet).sort((a, b) => a.localeCompare(b, 'fr'));
+  }, [providers, selectedVille]);
 
   useEffect(() => {
     const storedCustomer = localStorage.getItem('customer');
@@ -227,18 +217,36 @@ const BrowseProviders = ({ isCustomerAuthenticated }) => {
       filtered = filtered.filter(p => p.online_status);
     }
     
-    // Ville filter
+    // Ville filter (case-insensitive, checks both ville and region fields)
+    // Only filters providers that have location data set
     if (selectedVille) {
-      filtered = filtered.filter(p => 
-        p.ville && p.ville.toLowerCase() === selectedVille.toLowerCase()
-      );
+      const villeLower = selectedVille.toLowerCase();
+      filtered = filtered.filter(p => {
+        const pVille = (p.ville || '').toLowerCase();
+        const pRegion = (p.region || '').toLowerCase();
+        // If provider has location data, check if it matches
+        if (pVille || pRegion) {
+          return pVille.includes(villeLower) || villeLower.includes(pVille) ||
+                 pRegion.includes(villeLower) || villeLower.includes(pRegion);
+        }
+        // If provider has no location data, exclude from filter
+        return false;
+      });
     }
     
-    // Quartier filter
+    // Quartier filter (case-insensitive, checks both quartier and commune fields)
     if (selectedQuartier) {
-      filtered = filtered.filter(p => 
-        p.quartier && p.quartier.toLowerCase() === selectedQuartier.toLowerCase()
-      );
+      const quartierLower = selectedQuartier.toLowerCase();
+      filtered = filtered.filter(p => {
+        const pQuartier = (p.quartier || '').toLowerCase();
+        const pCommune = (p.commune || '').toLowerCase();
+        // If provider has quartier/commune data, check if it matches
+        if (pQuartier || pCommune) {
+          return pQuartier.includes(quartierLower) || quartierLower.includes(pQuartier) ||
+                 pCommune.includes(quartierLower) || quartierLower.includes(pCommune);
+        }
+        return false;
+      });
     }
     
     // Profession filter (from dropdown, different from category buttons)
@@ -431,7 +439,7 @@ const BrowseProviders = ({ isCustomerAuthenticated }) => {
                     data-testid="filter-ville"
                   >
                     <option value="">Toutes les villes</option>
-                    {villesGuinee.map(ville => (
+                    {availableVilles.map(ville => (
                       <option key={ville} value={ville}>{ville}</option>
                     ))}
                   </select>
@@ -447,7 +455,7 @@ const BrowseProviders = ({ isCustomerAuthenticated }) => {
                     value={selectedQuartier}
                     onChange={(e) => setSelectedQuartier(e.target.value)}
                     className="w-full h-10 px-3 rounded-lg border border-gray-200 bg-white text-sm focus:border-green-500 focus:ring-green-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                    disabled={!selectedVille || availableQuartiers.length === 0}
+                    disabled={availableQuartiers.length === 0}
                     data-testid="filter-quartier"
                   >
                     <option value="">Tous les quartiers</option>
