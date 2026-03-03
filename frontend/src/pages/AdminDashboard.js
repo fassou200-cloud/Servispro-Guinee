@@ -3658,7 +3658,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                   <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-heading font-bold text-white flex items-center gap-2">
                       <DollarSign className="h-6 w-6 text-blue-400" />
-                      Frais de Visite par Profession
+                      Frais de Déplacement par Profession
                     </h2>
                     <Button
                       onClick={handleSaveServiceFees}
@@ -3680,7 +3680,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                   </div>
 
                   <p className="text-sm text-slate-400 mb-4">
-                    Définissez les frais de visite pour chaque catégorie de métier. Ces frais seront affichés aux clients et prestataires.
+                    Définissez les frais de déplacement pour chaque catégorie de métier. Ces frais seront affichés aux clients et prestataires.
                   </p>
 
                   <div className="overflow-x-auto">
@@ -3691,7 +3691,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                           <th className="text-center py-3 px-4 text-slate-300 font-medium">
                             <div className="flex items-center justify-center gap-2">
                               <Eye className="h-4 w-4 text-blue-400" />
-                              Frais de Visite ({settings.devise})
+                              Frais de Déplacement ({settings.devise})
                             </div>
                           </th>
                         </tr>
