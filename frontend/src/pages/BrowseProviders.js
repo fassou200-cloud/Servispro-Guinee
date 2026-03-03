@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -7,14 +7,60 @@ import { Input } from '@/components/ui/input';
 import { 
   ArrowLeft, MapPin, ShieldCheck, Star, User, LogOut, Search, Filter,
   Truck, Settings, Wrench, Droplet, Hammer, Building, Flame, MoreHorizontal,
-  CheckCircle, Clock, Phone, ChevronDown, X, Sparkles, Zap, Home
+  CheckCircle, Clock, Phone, ChevronDown, X, Sparkles, Zap, Home, Briefcase, Calendar
 } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { getImageUrl } from '@/utils/imageUrl';
+import { professionGroups } from '@/data/professions';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
+
+// Villes de Guinée
+const villesGuinee = [
+  'Conakry',
+  'Nzérékoré',
+  'Kankan',
+  'Kindia',
+  'Labé',
+  'Mamou',
+  'Boké',
+  'Faranah',
+  'Siguiri',
+  'Kissidougou',
+  'Guéckédou',
+  'Macenta',
+  'Kamsar',
+  'Coyah',
+  'Dubréka',
+  'Fria',
+  'Dalaba',
+  'Pita',
+  'Télimélé',
+  'Kouroussa'
+];
+
+// Quartiers par ville (principalement Conakry)
+const quartiersParVille = {
+  'Conakry': [
+    'Kaloum', 'Dixinn', 'Matam', 'Ratoma', 'Matoto',
+    'Kipé', 'Nongo', 'Lambanyi', 'Cosa', 'Sonfonia',
+    'Hamdallaye', 'Bambeto', 'Cosa', 'Koloma', 'Yimbaya',
+    'Taouyah', 'Kaporo', 'Sangoya', 'Dar Es Salam', 'Bonfi',
+    'Madina', 'Almamya', 'Boulbinet', 'Coronthie', 'Sandervalia'
+  ],
+  'default': []
+};
+
+// Options d'expérience
+const experienceOptions = [
+  { value: '', label: 'Toutes' },
+  { value: '0-2', label: '0-2 ans' },
+  { value: '2-5', label: '2-5 ans' },
+  { value: '5-10', label: '5-10 ans' },
+  { value: '10+', label: '10+ ans' }
+];
 
 const translateProfession = (profession, customProfession = null) => {
   // If profession is "Autres" and custom_profession is provided, use it
@@ -100,6 +146,24 @@ const BrowseProviders = ({ isCustomerAuthenticated }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showOnlineOnly, setShowOnlineOnly] = useState(false);
   const [customer, setCustomer] = useState(null);
+  
+  // Advanced filters
+  const [selectedVille, setSelectedVille] = useState('');
+  const [selectedQuartier, setSelectedQuartier] = useState('');
+  const [selectedProfession, setSelectedProfession] = useState('');
+  const [selectedExperience, setSelectedExperience] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Get all unique professions from professionGroups
+  const allProfessions = useMemo(() => {
+    return professionGroups.flatMap(group => group.professions.map(p => p.name)).sort((a, b) => a.localeCompare(b, 'fr'));
+  }, []);
+
+  // Get quartiers based on selected ville
+  const availableQuartiers = useMemo(() => {
+    if (!selectedVille) return [];
+    return quartiersParVille[selectedVille] || quartiersParVille['default'];
+  }, [selectedVille]);
 
   useEffect(() => {
     const storedCustomer = localStorage.getItem('customer');
@@ -114,7 +178,7 @@ const BrowseProviders = ({ isCustomerAuthenticated }) => {
 
   useEffect(() => {
     filterProviders();
-  }, [providers, selectedCategory, searchQuery, showOnlineOnly]);
+  }, [providers, selectedCategory, searchQuery, showOnlineOnly, selectedVille, selectedQuartier, selectedProfession, selectedExperience]);
 
   const fetchProviders = async () => {
     try {
@@ -143,10 +207,12 @@ const BrowseProviders = ({ isCustomerAuthenticated }) => {
   const filterProviders = () => {
     let filtered = providers;
     
+    // Category filter
     if (selectedCategory !== 'All') {
       filtered = filtered.filter(p => p.profession === selectedCategory);
     }
     
+    // Search query
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(p => 
@@ -156,12 +222,56 @@ const BrowseProviders = ({ isCustomerAuthenticated }) => {
       );
     }
     
+    // Online filter
     if (showOnlineOnly) {
       filtered = filtered.filter(p => p.online_status);
     }
     
+    // Ville filter
+    if (selectedVille) {
+      filtered = filtered.filter(p => 
+        p.ville && p.ville.toLowerCase() === selectedVille.toLowerCase()
+      );
+    }
+    
+    // Quartier filter
+    if (selectedQuartier) {
+      filtered = filtered.filter(p => 
+        p.quartier && p.quartier.toLowerCase() === selectedQuartier.toLowerCase()
+      );
+    }
+    
+    // Profession filter (from dropdown, different from category buttons)
+    if (selectedProfession) {
+      filtered = filtered.filter(p => p.profession === selectedProfession);
+    }
+    
+    // Experience filter
+    if (selectedExperience) {
+      filtered = filtered.filter(p => p.years_experience === selectedExperience);
+    }
+    
     setFilteredProviders(filtered);
   };
+
+  // Reset all filters
+  const resetFilters = () => {
+    setSelectedCategory('All');
+    setSearchQuery('');
+    setShowOnlineOnly(false);
+    setSelectedVille('');
+    setSelectedQuartier('');
+    setSelectedProfession('');
+    setSelectedExperience('');
+  };
+
+  // Count active filters
+  const activeFiltersCount = [
+    selectedVille,
+    selectedQuartier,
+    selectedProfession,
+    selectedExperience
+  ].filter(Boolean).length;
 
   const handleCategoryChange = (value) => {
     setSelectedCategory(value);
@@ -280,6 +390,131 @@ const BrowseProviders = ({ isCustomerAuthenticated }) => {
             })}
           </div>
 
+          {/* Advanced Filters Section */}
+          <div className="mt-4">
+            {/* Toggle Button */}
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all mb-3 ${
+                showFilters || activeFiltersCount > 0
+                  ? 'bg-green-100 text-green-700 border border-green-200'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+              data-testid="toggle-filters-btn"
+            >
+              <Filter className="h-4 w-4" />
+              <span className="text-sm font-medium">Filtres avancés</span>
+              {activeFiltersCount > 0 && (
+                <span className="bg-green-600 text-white text-xs px-2 py-0.5 rounded-full">
+                  {activeFiltersCount}
+                </span>
+              )}
+              <ChevronDown className={`h-4 w-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+            </button>
+
+            {/* Filters Dropdowns */}
+            {showFilters && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                {/* Ville Filter */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">
+                    <MapPin className="h-3 w-3 inline mr-1" />
+                    Ville
+                  </label>
+                  <select
+                    value={selectedVille}
+                    onChange={(e) => {
+                      setSelectedVille(e.target.value);
+                      setSelectedQuartier(''); // Reset quartier when ville changes
+                    }}
+                    className="w-full h-10 px-3 rounded-lg border border-gray-200 bg-white text-sm focus:border-green-500 focus:ring-green-500"
+                    data-testid="filter-ville"
+                  >
+                    <option value="">Toutes les villes</option>
+                    {villesGuinee.map(ville => (
+                      <option key={ville} value={ville}>{ville}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Quartier Filter */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">
+                    <MapPin className="h-3 w-3 inline mr-1" />
+                    Quartier
+                  </label>
+                  <select
+                    value={selectedQuartier}
+                    onChange={(e) => setSelectedQuartier(e.target.value)}
+                    className="w-full h-10 px-3 rounded-lg border border-gray-200 bg-white text-sm focus:border-green-500 focus:ring-green-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    disabled={!selectedVille || availableQuartiers.length === 0}
+                    data-testid="filter-quartier"
+                  >
+                    <option value="">Tous les quartiers</option>
+                    {availableQuartiers.map(quartier => (
+                      <option key={quartier} value={quartier}>{quartier}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Profession Filter */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">
+                    <Briefcase className="h-3 w-3 inline mr-1" />
+                    Profession
+                  </label>
+                  <select
+                    value={selectedProfession}
+                    onChange={(e) => setSelectedProfession(e.target.value)}
+                    className="w-full h-10 px-3 rounded-lg border border-gray-200 bg-white text-sm focus:border-green-500 focus:ring-green-500"
+                    data-testid="filter-profession"
+                  >
+                    <option value="">Toutes les professions</option>
+                    {professionGroups.map(group => (
+                      <optgroup key={group.id} label={`${group.icon} ${group.name}`}>
+                        {group.professions.map(prof => (
+                          <option key={prof.id} value={prof.name}>{prof.name}</option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Experience Filter */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">
+                    <Calendar className="h-3 w-3 inline mr-1" />
+                    Expérience
+                  </label>
+                  <select
+                    value={selectedExperience}
+                    onChange={(e) => setSelectedExperience(e.target.value)}
+                    className="w-full h-10 px-3 rounded-lg border border-gray-200 bg-white text-sm focus:border-green-500 focus:ring-green-500"
+                    data-testid="filter-experience"
+                  >
+                    {experienceOptions.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Reset Filters Button */}
+                {activeFiltersCount > 0 && (
+                  <div className="col-span-2 md:col-span-4 flex justify-end mt-2">
+                    <button
+                      onClick={resetFilters}
+                      className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      data-testid="reset-filters-btn"
+                    >
+                      <X className="h-4 w-4" />
+                      Réinitialiser tous les filtres
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           {/* Online Filter */}
           <div className="flex items-center justify-between mt-4">
             <button
@@ -310,7 +545,7 @@ const BrowseProviders = ({ isCustomerAuthenticated }) => {
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">Aucun prestataire trouvé</h3>
             <p className="text-gray-600 mb-6">Essayez de modifier vos critères de recherche</p>
-            <Button onClick={() => { setSelectedCategory('All'); setSearchQuery(''); setShowOnlineOnly(false); }}>
+            <Button onClick={resetFilters}>
               Réinitialiser les filtres
             </Button>
           </div>
