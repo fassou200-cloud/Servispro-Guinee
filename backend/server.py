@@ -850,6 +850,7 @@ class FeedbackType(str, Enum):
     ISSUE = "issue"
     FEATURE = "feature"
     IMPROVEMENT = "improvement"
+    CONTACT = "contact"
     OTHER = "other"
 
 class FeedbackStatus(str, Enum):
