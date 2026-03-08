@@ -14,7 +14,6 @@ import { toast } from 'sonner';
 import ServiceRequestForm from '@/components/ServiceRequestForm';
 import ReviewsList from '@/components/ReviewsList';
 import InvestigationFeePopup from '@/components/InvestigationFeePopup';
-import ServiceFeesDisplay from '@/components/ServiceFeesDisplay';
 import ProviderProfileEdit from '@/components/ProviderProfileEdit';
 import { getImageUrl } from '@/utils/imageUrl';
 
@@ -352,10 +351,6 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
                   </div>
                 )}
 
-                {/* Service Fees Display - For ALL providers including Agent Immobilier */}
-                <div className="mt-4">
-                  <ServiceFeesDisplay profession={provider.profession} compact={true} />
-                </div>
               </div>
 
               {/* CTA Button */}
