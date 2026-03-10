@@ -9,7 +9,8 @@ import {
   Clock, Eye, Home, Building, UserCheck, UserX, AlertCircle, Trash2, UserCircle,
   MapPin, Calendar, Moon, DollarSign, Star, MessageCircle, FileText, ExternalLink,
   Loader2, RefreshCw, Settings, Percent, TrendingUp, Save, Car, Banknote, Wallet,
-  MessageSquare, Bug, AlertTriangle, Lightbulb, Sparkles, HelpCircle, Send, Pencil
+  MessageSquare, Bug, AlertTriangle, Lightbulb, Sparkles, HelpCircle, Send, Pencil,
+  Power, Ban
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
@@ -487,6 +488,37 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
       setDeleteConfirm({ show: false, type: null, id: null, name: '' });
     } catch (error) {
       toast.error('Erreur lors de la suppression');
+    }
+  };
+
+  // Toggle provider active status
+  const handleToggleProviderActive = async (providerId) => {
+    try {
+      const response = await axios.put(`${API}/admin/providers/${providerId}/toggle-active`);
+      toast.success(response.data.message);
+      refreshTabData('providers');
+      refreshTabData('agents');
+      // Update selected provider if it's the same one
+      if (selectedProvider?.id === providerId) {
+        setSelectedProvider(prev => ({ ...prev, is_active: response.data.is_active }));
+      }
+    } catch (error) {
+      toast.error('Erreur lors du changement de statut');
+    }
+  };
+
+  // Toggle customer active status
+  const handleToggleCustomerActive = async (customerId) => {
+    try {
+      const response = await axios.put(`${API}/admin/customers/${customerId}/toggle-active`);
+      toast.success(response.data.message);
+      refreshTabData('customers');
+      // Update selected customer if it's the same one
+      if (selectedCustomer?.id === customerId) {
+        setSelectedCustomer(prev => ({ ...prev, is_active: response.data.is_active }));
+      }
+    } catch (error) {
+      toast.error('Erreur lors du changement de statut');
     }
   };
 
@@ -1166,9 +1198,16 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                         <p className="text-sm text-slate-400">{translateProfession(provider.profession)}</p>
                         <p className="text-xs text-slate-500">{provider.phone_number}</p>
                       </div>
-                      <span className={`px-2 py-1 rounded text-xs font-medium border ${getStatusBadge(provider.verification_status || 'pending')}`}>
-                        {translateStatus(provider.verification_status || 'pending')}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        {provider.is_active === false && (
+                          <span className="px-2 py-1 rounded text-xs font-medium bg-red-900/50 text-red-400 border border-red-700">
+                            Désactivé
+                          </span>
+                        )}
+                        <span className={`px-2 py-1 rounded text-xs font-medium border ${getStatusBadge(provider.verification_status || 'pending')}`}>
+                          {translateStatus(provider.verification_status || 'pending')}
+                        </span>
+                      </div>
                     </div>
                   </Card>
                 ))
@@ -1362,6 +1401,36 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                     </div>
                   )}
 
+                  {/* Active Status Indicator */}
+                  <div className={`mt-4 flex items-center justify-between p-3 rounded-lg ${
+                    selectedProvider.is_active === false ? 'bg-red-900/20' : 'bg-green-900/20'
+                  }`}>
+                    <div className="flex items-center gap-2">
+                      {selectedProvider.is_active === false ? (
+                        <>
+                          <Ban className="h-5 w-5 text-red-400" />
+                          <span className="text-red-400">Compte désactivé</span>
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="h-5 w-5 text-green-400" />
+                          <span className="text-green-400">Compte actif</span>
+                        </>
+                      )}
+                    </div>
+                    <Button
+                      onClick={() => handleToggleProviderActive(selectedProvider.id)}
+                      size="sm"
+                      className={selectedProvider.is_active === false 
+                        ? 'bg-green-600 hover:bg-green-700 gap-2' 
+                        : 'bg-orange-600 hover:bg-orange-700 gap-2'
+                      }
+                    >
+                      <Power className="h-4 w-4" />
+                      {selectedProvider.is_active === false ? 'Activer' : 'Désactiver'}
+                    </Button>
+                  </div>
+
                   {/* Delete Button */}
                   <div className="mt-4 pt-4 border-t border-slate-700">
                     <Button
@@ -1412,6 +1481,11 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                         <h3 className="font-bold text-white">{customer.first_name} {customer.last_name}</h3>
                         <p className="text-sm text-slate-400">{customer.phone_number}</p>
                       </div>
+                      {customer.is_active === false && (
+                        <span className="px-2 py-1 rounded text-xs font-medium bg-red-900/50 text-red-400 border border-red-700">
+                          Désactivé
+                        </span>
+                      )}
                     </div>
                   </Card>
                 ))
@@ -1438,10 +1512,41 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                       <span className="text-white font-medium">{new Date(selectedCustomer.created_at).toLocaleDateString('fr-FR')}</span>
                     </div>
                   </div>
+
+                  {/* Active Status Indicator */}
+                  <div className={`mt-4 flex items-center justify-between p-3 rounded-lg ${
+                    selectedCustomer.is_active === false ? 'bg-red-900/20' : 'bg-green-900/20'
+                  }`}>
+                    <div className="flex items-center gap-2">
+                      {selectedCustomer.is_active === false ? (
+                        <>
+                          <Ban className="h-5 w-5 text-red-400" />
+                          <span className="text-red-400">Compte désactivé</span>
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="h-5 w-5 text-green-400" />
+                          <span className="text-green-400">Compte actif</span>
+                        </>
+                      )}
+                    </div>
+                    <Button
+                      onClick={() => handleToggleCustomerActive(selectedCustomer.id)}
+                      size="sm"
+                      className={selectedCustomer.is_active === false 
+                        ? 'bg-green-600 hover:bg-green-700 gap-2' 
+                        : 'bg-orange-600 hover:bg-orange-700 gap-2'
+                      }
+                    >
+                      <Power className="h-4 w-4" />
+                      {selectedCustomer.is_active === false ? 'Activer' : 'Désactiver'}
+                    </Button>
+                  </div>
+
                   <Button
                     onClick={() => confirmDelete('customer', selectedCustomer.id, `${selectedCustomer.first_name} ${selectedCustomer.last_name}`)}
                     variant="outline"
-                    className="w-full border-red-600 text-red-400 hover:bg-red-600 hover:text-white gap-2"
+                    className="w-full mt-4 border-red-600 text-red-400 hover:bg-red-600 hover:text-white gap-2"
                   >
                     <Trash2 className="h-4 w-4" />
                     Supprimer ce client

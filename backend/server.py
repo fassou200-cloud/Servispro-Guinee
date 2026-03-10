@@ -546,6 +546,7 @@ class ServiceProvider(BaseModel):
     quartier: Optional[str] = None
     documents: Optional[List[Dict]] = None
     verification_status: Optional[str] = None
+    is_active: bool = True
     created_at: str
 
 # Notification Models
@@ -2370,7 +2371,11 @@ async def set_offline(current_user: dict = Depends(get_current_user)):
 
 @api_router.get("/providers", response_model=List[ServiceProvider])
 async def get_all_providers():
-    providers = await db.service_providers.find({}, {'_id': 0, 'password': 0}).to_list(None)
+    # Only return active providers (is_active=True or field doesn't exist for backwards compatibility)
+    providers = await db.service_providers.find(
+        {'$or': [{'is_active': True}, {'is_active': {'$exists': False}}]},
+        {'_id': 0, 'password': 0}
+    ).to_list(None)
     return [ServiceProvider(**p) for p in providers]
 
 @api_router.get("/providers/{provider_id}", response_model=ServiceProvider)
@@ -2378,6 +2383,9 @@ async def get_provider_by_id(provider_id: str):
     provider = await db.service_providers.find_one({'id': provider_id}, {'_id': 0, 'password': 0})
     if not provider:
         raise HTTPException(status_code=404, detail="Provider not found")
+    # Check if provider is active
+    if provider.get('is_active') == False:
+        raise HTTPException(status_code=404, detail="Ce prestataire n'est plus disponible")
     return ServiceProvider(**provider)
 
 # Provider Document Management
@@ -5148,6 +5156,50 @@ async def reject_provider(provider_id: str):
     return {
         "message": "Prestataire rejeté et fichiers supprimés",
         "cloudinary_files_deleted": cloudinary_result.get('deleted', 0)
+    }
+
+@api_router.put("/admin/providers/{provider_id}/toggle-active")
+async def toggle_provider_active(provider_id: str):
+    """Toggle provider's active status (activate/deactivate) - Admin only"""
+    provider = await db.service_providers.find_one({'id': provider_id})
+    if not provider:
+        raise HTTPException(status_code=404, detail="Prestataire non trouvé")
+    
+    # Toggle is_active status
+    current_status = provider.get('is_active', True)
+    new_status = not current_status
+    
+    await db.service_providers.update_one(
+        {'id': provider_id},
+        {'$set': {'is_active': new_status}}
+    )
+    
+    status_text = "activé" if new_status else "désactivé"
+    return {
+        "message": f"Prestataire {status_text} avec succès",
+        "is_active": new_status
+    }
+
+@api_router.put("/admin/customers/{customer_id}/toggle-active")
+async def toggle_customer_active(customer_id: str):
+    """Toggle customer's active status (activate/deactivate) - Admin only"""
+    customer = await db.customers.find_one({'id': customer_id})
+    if not customer:
+        raise HTTPException(status_code=404, detail="Client non trouvé")
+    
+    # Toggle is_active status
+    current_status = customer.get('is_active', True)
+    new_status = not current_status
+    
+    await db.customers.update_one(
+        {'id': customer_id},
+        {'$set': {'is_active': new_status}}
+    )
+    
+    status_text = "activé" if new_status else "désactivé"
+    return {
+        "message": f"Client {status_text} avec succès",
+        "is_active": new_status
     }
 
 class UpdateProviderAboutInput(BaseModel):
