@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -10,7 +10,7 @@ import {
   MapPin, Calendar, Moon, DollarSign, Star, MessageCircle, FileText, ExternalLink,
   Loader2, RefreshCw, Settings, Percent, TrendingUp, Save, Car, Banknote, Wallet,
   MessageSquare, Bug, AlertTriangle, Lightbulb, Sparkles, HelpCircle, Send, Pencil,
-  Power, Ban
+  Power, Ban, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
@@ -108,6 +108,61 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
   // Demand statistics by profession and location
   const [demandStats, setDemandStats] = useState(null);
   const [loadingDemandStats, setLoadingDemandStats] = useState(false);
+  
+  // Pagination state for providers
+  const [providerPage, setProviderPage] = useState(1);
+  const [providersPerPage] = useState(10);
+  
+  // Pagination state for customers
+  const [customerPage, setCustomerPage] = useState(1);
+  const [customersPerPage] = useState(10);
+
+  // Sort and paginate providers - "En attente" first, then "Approuvé", then others
+  const sortedAndPaginatedProviders = useMemo(() => {
+    // Define sort order for verification_status
+    const statusOrder = {
+      'pending': 0,
+      'approved': 1,
+      'rejected': 2
+    };
+    
+    // Sort providers
+    const sorted = [...providers].sort((a, b) => {
+      const statusA = statusOrder[a.verification_status || 'pending'] ?? 3;
+      const statusB = statusOrder[b.verification_status || 'pending'] ?? 3;
+      if (statusA !== statusB) return statusA - statusB;
+      // Secondary sort by created_at (newest first)
+      return new Date(b.created_at) - new Date(a.created_at);
+    });
+    
+    // Paginate
+    const startIndex = (providerPage - 1) * providersPerPage;
+    const endIndex = startIndex + providersPerPage;
+    
+    return {
+      items: sorted.slice(startIndex, endIndex),
+      totalItems: sorted.length,
+      totalPages: Math.ceil(sorted.length / providersPerPage),
+      currentPage: providerPage
+    };
+  }, [providers, providerPage, providersPerPage]);
+
+  // Sort and paginate customers - newest first
+  const sortedAndPaginatedCustomers = useMemo(() => {
+    const sorted = [...customers].sort((a, b) => {
+      return new Date(b.created_at) - new Date(a.created_at);
+    });
+    
+    const startIndex = (customerPage - 1) * customersPerPage;
+    const endIndex = startIndex + customersPerPage;
+    
+    return {
+      items: sorted.slice(startIndex, endIndex),
+      totalItems: sorted.length,
+      totalPages: Math.ceil(sorted.length / customersPerPage),
+      currentPage: customerPage
+    };
+  }, [customers, customerPage, customersPerPage]);
   
   // Refund requests state
   const [refundRequests, setRefundRequests] = useState([]);
@@ -1152,7 +1207,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
             <div className="space-y-4">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-heading font-bold text-white">
-                  Liste des Prestataires
+                  Liste des Prestataires ({sortedAndPaginatedProviders.totalItems})
                 </h2>
                 <Button
                   variant="ghost"
@@ -1174,43 +1229,106 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                   <p className="text-slate-400">Aucun prestataire inscrit</p>
                 </Card>
               ) : (
-                providers.map((provider) => (
-                  <Card 
-                    key={provider.id} 
-                    className={`p-4 bg-slate-800 border-slate-700 cursor-pointer transition-colors ${
-                      selectedProvider?.id === provider.id ? 'border-amber-500' : 'hover:border-slate-600'
-                    }`}
-                    onClick={() => setSelectedProvider(provider)}
-                  >
-                    <div className="flex items-center gap-4">
-                      <Avatar className="h-12 w-12">
-                        <AvatarImage 
-                          src={getImageUrl(provider.profile_picture)} 
-                        />
-                        <AvatarFallback className="bg-slate-700 text-white">
-                          {provider.first_name[0]}{provider.last_name[0]}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <h3 className="font-bold text-white">
-                          {provider.first_name} {provider.last_name}
-                        </h3>
-                        <p className="text-sm text-slate-400">{translateProfession(provider.profession)}</p>
-                        <p className="text-xs text-slate-500">{provider.phone_number}</p>
-                      </div>
+                <>
+                  <div className="space-y-2">
+                    {sortedAndPaginatedProviders.items.map((provider) => (
+                      <Card 
+                        key={provider.id} 
+                        className={`p-4 bg-slate-800 border-slate-700 cursor-pointer transition-colors ${
+                          selectedProvider?.id === provider.id ? 'border-amber-500' : 'hover:border-slate-600'
+                        }`}
+                        onClick={() => setSelectedProvider(provider)}
+                      >
+                        <div className="flex items-center gap-4">
+                          <Avatar className="h-12 w-12">
+                            <AvatarImage 
+                              src={getImageUrl(provider.profile_picture)} 
+                            />
+                            <AvatarFallback className="bg-slate-700 text-white">
+                              {provider.first_name[0]}{provider.last_name[0]}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <h3 className="font-bold text-white">
+                              {provider.first_name} {provider.last_name}
+                            </h3>
+                            <p className="text-sm text-slate-400">{translateProfession(provider.profession)}</p>
+                            <p className="text-xs text-slate-500">{provider.phone_number}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {provider.is_active === false && (
+                              <span className="px-2 py-1 rounded text-xs font-medium bg-red-900/50 text-red-400 border border-red-700">
+                                Désactivé
+                              </span>
+                            )}
+                            <span className={`px-2 py-1 rounded text-xs font-medium border ${getStatusBadge(provider.verification_status || 'pending')}`}>
+                              {translateStatus(provider.verification_status || 'pending')}
+                            </span>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                  
+                  {/* Pagination Controls */}
+                  {sortedAndPaginatedProviders.totalPages > 1 && (
+                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-700">
+                      <p className="text-sm text-slate-400">
+                        Page {sortedAndPaginatedProviders.currentPage} sur {sortedAndPaginatedProviders.totalPages}
+                      </p>
                       <div className="flex items-center gap-2">
-                        {provider.is_active === false && (
-                          <span className="px-2 py-1 rounded text-xs font-medium bg-red-900/50 text-red-400 border border-red-700">
-                            Désactivé
-                          </span>
-                        )}
-                        <span className={`px-2 py-1 rounded text-xs font-medium border ${getStatusBadge(provider.verification_status || 'pending')}`}>
-                          {translateStatus(provider.verification_status || 'pending')}
-                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setProviderPage(p => Math.max(1, p - 1))}
+                          disabled={providerPage === 1}
+                          className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                          Précédent
+                        </Button>
+                        <div className="flex gap-1">
+                          {Array.from({ length: Math.min(5, sortedAndPaginatedProviders.totalPages) }, (_, i) => {
+                            let pageNum;
+                            if (sortedAndPaginatedProviders.totalPages <= 5) {
+                              pageNum = i + 1;
+                            } else if (providerPage <= 3) {
+                              pageNum = i + 1;
+                            } else if (providerPage >= sortedAndPaginatedProviders.totalPages - 2) {
+                              pageNum = sortedAndPaginatedProviders.totalPages - 4 + i;
+                            } else {
+                              pageNum = providerPage - 2 + i;
+                            }
+                            return (
+                              <Button
+                                key={pageNum}
+                                variant={providerPage === pageNum ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => setProviderPage(pageNum)}
+                                className={providerPage === pageNum 
+                                  ? "bg-amber-500 hover:bg-amber-600 text-white" 
+                                  : "border-slate-600 text-slate-300 hover:bg-slate-700"
+                                }
+                              >
+                                {pageNum}
+                              </Button>
+                            );
+                          })}
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setProviderPage(p => Math.min(sortedAndPaginatedProviders.totalPages, p + 1))}
+                          disabled={providerPage === sortedAndPaginatedProviders.totalPages}
+                          className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                        >
+                          Suivant
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
-                  </Card>
-                ))
+                  )}
+                </>
               )}
             </div>
 
@@ -1457,38 +1575,101 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
         {activeTab === 'customers' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="space-y-4">
-              <h2 className="text-lg font-heading font-bold text-white mb-4">Liste des Clients</h2>
+              <h2 className="text-lg font-heading font-bold text-white mb-4">Liste des Clients ({sortedAndPaginatedCustomers.totalItems})</h2>
               {customers.length === 0 ? (
                 <Card className="p-8 bg-slate-800 border-slate-700 text-center">
                   <p className="text-slate-400">Aucun client inscrit</p>
                 </Card>
               ) : (
-                customers.map((customer) => (
-                  <Card 
-                    key={customer.id} 
-                    className={`p-4 bg-slate-800 border-slate-700 cursor-pointer transition-colors ${
-                      selectedCustomer?.id === customer.id ? 'border-amber-500' : 'hover:border-slate-600'
-                    }`}
-                    onClick={() => setSelectedCustomer(customer)}
-                  >
-                    <div className="flex items-center gap-4">
-                      <Avatar className="h-12 w-12">
-                        <AvatarFallback className="bg-slate-700 text-white">
-                          {customer.first_name[0]}{customer.last_name[0]}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <h3 className="font-bold text-white">{customer.first_name} {customer.last_name}</h3>
-                        <p className="text-sm text-slate-400">{customer.phone_number}</p>
+                <>
+                  <div className="space-y-2">
+                    {sortedAndPaginatedCustomers.items.map((customer) => (
+                      <Card 
+                        key={customer.id} 
+                        className={`p-4 bg-slate-800 border-slate-700 cursor-pointer transition-colors ${
+                          selectedCustomer?.id === customer.id ? 'border-amber-500' : 'hover:border-slate-600'
+                        }`}
+                        onClick={() => setSelectedCustomer(customer)}
+                      >
+                        <div className="flex items-center gap-4">
+                          <Avatar className="h-12 w-12">
+                            <AvatarFallback className="bg-slate-700 text-white">
+                              {customer.first_name[0]}{customer.last_name[0]}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <h3 className="font-bold text-white">{customer.first_name} {customer.last_name}</h3>
+                            <p className="text-sm text-slate-400">{customer.phone_number}</p>
+                          </div>
+                          {customer.is_active === false && (
+                            <span className="px-2 py-1 rounded text-xs font-medium bg-red-900/50 text-red-400 border border-red-700">
+                              Désactivé
+                            </span>
+                          )}
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                  
+                  {/* Pagination Controls */}
+                  {sortedAndPaginatedCustomers.totalPages > 1 && (
+                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-700">
+                      <p className="text-sm text-slate-400">
+                        Page {sortedAndPaginatedCustomers.currentPage} sur {sortedAndPaginatedCustomers.totalPages}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCustomerPage(p => Math.max(1, p - 1))}
+                          disabled={customerPage === 1}
+                          className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                          Précédent
+                        </Button>
+                        <div className="flex gap-1">
+                          {Array.from({ length: Math.min(5, sortedAndPaginatedCustomers.totalPages) }, (_, i) => {
+                            let pageNum;
+                            if (sortedAndPaginatedCustomers.totalPages <= 5) {
+                              pageNum = i + 1;
+                            } else if (customerPage <= 3) {
+                              pageNum = i + 1;
+                            } else if (customerPage >= sortedAndPaginatedCustomers.totalPages - 2) {
+                              pageNum = sortedAndPaginatedCustomers.totalPages - 4 + i;
+                            } else {
+                              pageNum = customerPage - 2 + i;
+                            }
+                            return (
+                              <Button
+                                key={pageNum}
+                                variant={customerPage === pageNum ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => setCustomerPage(pageNum)}
+                                className={customerPage === pageNum 
+                                  ? "bg-amber-500 hover:bg-amber-600 text-white" 
+                                  : "border-slate-600 text-slate-300 hover:bg-slate-700"
+                                }
+                              >
+                                {pageNum}
+                              </Button>
+                            );
+                          })}
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCustomerPage(p => Math.min(sortedAndPaginatedCustomers.totalPages, p + 1))}
+                          disabled={customerPage === sortedAndPaginatedCustomers.totalPages}
+                          className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                        >
+                          Suivant
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
                       </div>
-                      {customer.is_active === false && (
-                        <span className="px-2 py-1 rounded text-xs font-medium bg-red-900/50 text-red-400 border border-red-700">
-                          Désactivé
-                        </span>
-                      )}
                     </div>
-                  </Card>
-                ))
+                  )}
+                </>
               )}
             </div>
             <div>
