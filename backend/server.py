@@ -2260,7 +2260,7 @@ async def get_all_companies(
     if region:
         query['region'] = region
     
-    companies = await db.companies.find(query, {'_id': 0, 'password': 0}).to_list(100)
+    companies = await db.companies.find(query, {'_id': 0, 'password': 0}).to_list(500)
     return companies
 
 @api_router.get("/companies/{company_id}")
@@ -2370,7 +2370,7 @@ async def set_offline(current_user: dict = Depends(get_current_user)):
 
 @api_router.get("/providers", response_model=List[ServiceProvider])
 async def get_all_providers():
-    providers = await db.service_providers.find({}, {'_id': 0, 'password': 0}).to_list(100)
+    providers = await db.service_providers.find({}, {'_id': 0, 'password': 0}).to_list(1000)
     return [ServiceProvider(**p) for p in providers]
 
 @api_router.get("/providers/{provider_id}", response_model=ServiceProvider)
