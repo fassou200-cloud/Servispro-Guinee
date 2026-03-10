@@ -385,14 +385,15 @@ const ServiceRequestForm = ({ providerId, providerName, provider, onSuccess }) =
       </p>
 
       {/* Service Fee Notice */}
+      {/* Service gratuit - pas de frais */}
       <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl">
         <div className="flex items-center gap-3">
           <CreditCard className="h-5 w-5 text-green-600" />
           <div>
-            <p className="font-semibold text-green-800">Frais de Service à Payer</p>
+            <p className="font-semibold text-green-800">Service Gratuit</p>
             <p className="text-sm text-green-700">
-              <span className="font-bold text-lg">{formatPrice(fraisVisite)} {settings.devise}</span>
-              {' '}- Ce montant sera débité de votre compte Mobile Money après validation
+              <span className="font-bold text-lg">0 {settings.devise}</span>
+              {' '}- Aucun frais ne sera débité pour cette demande
             </p>
           </div>
         </div>
@@ -522,7 +523,7 @@ const ServiceRequestForm = ({ providerId, providerName, provider, onSuccess }) =
           disabled={loading}
         >
           <CreditCard className="h-5 w-5" />
-          {loading ? 'Envoi en cours...' : 'Continuer vers le Paiement'}
+          {loading ? 'Envoi en cours...' : 'Continuer'}
         </Button>
       </form>
     </div>
