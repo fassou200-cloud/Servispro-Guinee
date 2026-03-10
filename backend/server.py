@@ -1858,7 +1858,7 @@ async def get_my_company_services(current_company: dict = Depends(get_current_co
     services = await db.company_services.find(
         {'company_id': current_company['id']},
         {'_id': 0}
-    ).to_list(100)
+    ).to_list(None)
     return services
 
 @api_router.get("/company-services")
@@ -1873,7 +1873,7 @@ async def get_all_company_services(
     if location:
         query['location'] = {'$regex': location, '$options': 'i'}
     
-    services = await db.company_services.find(query, {'_id': 0}).to_list(100)
+    services = await db.company_services.find(query, {'_id': 0}).to_list(None)
     return services
 
 # Company Job Offers Routes
@@ -1909,7 +1909,7 @@ async def get_my_company_job_offers(current_company: dict = Depends(get_current_
     jobs = await db.company_job_offers.find(
         {'company_id': current_company['id']},
         {'_id': 0}
-    ).to_list(100)
+    ).to_list(None)
     return jobs
 
 @api_router.get("/job-offers")
@@ -1924,7 +1924,7 @@ async def get_all_job_offers(
     if location:
         query['location'] = {'$regex': location, '$options': 'i'}
     
-    jobs = await db.company_job_offers.find(query, {'_id': 0}).sort('created_at', -1).to_list(100)
+    jobs = await db.company_job_offers.find(query, {'_id': 0}).sort('created_at', -1).to_list(None)
     return jobs
 
 @api_router.get("/job-offers/{job_id}")
@@ -1998,7 +1998,7 @@ async def get_company_rentals(current_company: dict = Depends(get_current_compan
     rentals = await db.rental_listings.find(
         {'service_provider_id': current_company['id']},
         {'_id': 0}
-    ).sort('created_at', -1).to_list(100)
+    ).sort('created_at', -1).to_list(None)
     return rentals
 
 @api_router.post("/company/rentals/{rental_id}/upload-photo")
@@ -2154,7 +2154,7 @@ async def get_company_property_sales(current_company: dict = Depends(get_current
     sales = await db.property_sales.find(
         {'agent_id': current_company['id']},
         {'_id': 0}
-    ).sort('created_at', -1).to_list(100)
+    ).sort('created_at', -1).to_list(None)
     return sales
 
 @api_router.post("/company/property-sales/{sale_id}/upload-photo")
@@ -2260,7 +2260,7 @@ async def get_all_companies(
     if region:
         query['region'] = region
     
-    companies = await db.companies.find(query, {'_id': 0, 'password': 0}).to_list(500)
+    companies = await db.companies.find(query, {'_id': 0, 'password': 0}).to_list(None)
     return companies
 
 @api_router.get("/companies/{company_id}")
@@ -2370,7 +2370,7 @@ async def set_offline(current_user: dict = Depends(get_current_user)):
 
 @api_router.get("/providers", response_model=List[ServiceProvider])
 async def get_all_providers():
-    providers = await db.service_providers.find({}, {'_id': 0, 'password': 0}).to_list(1000)
+    providers = await db.service_providers.find({}, {'_id': 0, 'password': 0}).to_list(None)
     return [ServiceProvider(**p) for p in providers]
 
 @api_router.get("/providers/{provider_id}", response_model=ServiceProvider)
@@ -2497,7 +2497,7 @@ async def create_job_offer(job_data: JobOfferCreate):
 
 @api_router.get("/jobs/my-jobs", response_model=List[JobOffer])
 async def get_my_jobs(current_user: dict = Depends(get_current_user)):
-    jobs = await db.job_offers.find({'service_provider_id': current_user['id']}, {'_id': 0}).to_list(100)
+    jobs = await db.job_offers.find({'service_provider_id': current_user['id']}, {'_id': 0}).to_list(None)
     return [JobOffer(**job) for job in jobs]
 
 @api_router.put("/jobs/{job_id}")
@@ -2574,13 +2574,13 @@ async def get_all_rentals(rental_type: Optional[str] = None, is_available: Optio
     if is_available is not None:
         query['is_available'] = is_available
     
-    rentals = await db.rental_listings.find(query, {'_id': 0}).to_list(100)
+    rentals = await db.rental_listings.find(query, {'_id': 0}).to_list(None)
     return [RentalListing(**r) for r in rentals]
 
 @api_router.get("/rentals/my-listings", response_model=List[RentalListing])
 async def get_my_rental_listings(current_user: dict = Depends(get_current_user)):
     """Get all rental listings for the current provider (including pending/rejected)"""
-    rentals = await db.rental_listings.find({'service_provider_id': current_user['id']}, {'_id': 0}).to_list(100)
+    rentals = await db.rental_listings.find({'service_provider_id': current_user['id']}, {'_id': 0}).to_list(None)
     return [RentalListing(**r) for r in rentals]
 
 @api_router.put("/rentals/{rental_id}/availability")
@@ -2810,7 +2810,7 @@ async def get_my_visit_requests(current_user: dict = Depends(get_current_user)):
     requests = await db.visit_requests.find(
         {'$or': [{'provider_id': user_id}, {'owner_id': user_id}]},
         {'_id': 0}
-    ).sort('created_at', -1).to_list(100)
+    ).sort('created_at', -1).to_list(None)
     
     return requests
 
@@ -3266,7 +3266,7 @@ async def admin_get_all_vehicle_sales(status: str = None):
     if status:
         query['status'] = status
     
-    sales = await db.vehicle_sales.find(query, {'_id': 0}).sort('created_at', -1).to_list(100)
+    sales = await db.vehicle_sales.find(query, {'_id': 0}).sort('created_at', -1).to_list(None)
     return sales
 
 @api_router.put("/admin/vehicle-sales/{sale_id}/approve")
@@ -3331,7 +3331,7 @@ async def admin_get_vehicle_inquiries(status: str = None):
     if status:
         query['status'] = status
     
-    inquiries = await db.vehicle_inquiries.find(query, {'_id': 0}).sort('created_at', -1).to_list(100)
+    inquiries = await db.vehicle_inquiries.find(query, {'_id': 0}).sort('created_at', -1).to_list(None)
     return inquiries
 
 @api_router.put("/admin/vehicle-inquiries/{inquiry_id}")
@@ -3363,7 +3363,7 @@ async def admin_get_all_property_sales(status: str = None):
     if status:
         query['status'] = status
     
-    sales = await db.property_sales.find(query, {'_id': 0}).sort('created_at', -1).to_list(100)
+    sales = await db.property_sales.find(query, {'_id': 0}).sort('created_at', -1).to_list(None)
     return sales
 
 @api_router.get("/admin/property-sales/pending")
@@ -3372,7 +3372,7 @@ async def admin_get_pending_property_sales():
     sales = await db.property_sales.find(
         {'status': 'pending'},
         {'_id': 0}
-    ).sort('created_at', -1).to_list(100)
+    ).sort('created_at', -1).to_list(None)
     return sales
 
 @api_router.put("/admin/property-sales/{sale_id}/approve")
@@ -3621,7 +3621,7 @@ async def get_customer_property_inquiries(current_customer: dict = Depends(get_c
     inquiries = await db.property_inquiries.find(
         {'customer_id': current_customer['id']},
         {'_id': 0}
-    ).sort('created_at', -1).to_list(100)
+    ).sort('created_at', -1).to_list(None)
     return inquiries
 
 @api_router.post("/customer/property-inquiries/{inquiry_id}/message")
@@ -3723,7 +3723,7 @@ async def admin_get_property_inquiries(status: str = None):
     query = {}
     if status:
         query['status'] = status
-    inquiries = await db.property_inquiries.find(query, {'_id': 0}).sort('created_at', -1).to_list(100)
+    inquiries = await db.property_inquiries.find(query, {'_id': 0}).sort('created_at', -1).to_list(None)
     return inquiries
 
 @api_router.put("/admin/property-inquiries/{inquiry_id}")
@@ -3923,7 +3923,7 @@ async def get_all_property_sales(
         else:
             query['sale_price'] = {'$lte': max_price}
     
-    sales = await db.property_sales.find(query, {'_id': 0}).sort('created_at', -1).to_list(100)
+    sales = await db.property_sales.find(query, {'_id': 0}).sort('created_at', -1).to_list(None)
     return sales
 
 @api_router.get("/property-sales/my-listings")
@@ -3932,7 +3932,7 @@ async def get_my_property_sales(current_user: dict = Depends(get_current_user)):
     sales = await db.property_sales.find(
         {'agent_id': current_user['id']},
         {'_id': 0}
-    ).sort('created_at', -1).to_list(100)
+    ).sort('created_at', -1).to_list(None)
     return sales
 
 @api_router.get("/property-sales/{sale_id}")
@@ -4169,13 +4169,13 @@ async def get_all_feedbacks(status: Optional[str] = None, type: Optional[str] = 
     if type:
         query['type'] = type
     
-    feedbacks = await db.feedbacks.find(query, {'_id': 0}).sort('created_at', -1).to_list(500)
+    feedbacks = await db.feedbacks.find(query, {'_id': 0}).sort('created_at', -1).to_list(None)
     return feedbacks
 
 @api_router.get("/admin/feedbacks/stats")
 async def get_feedback_stats():
     """Get feedback statistics for admin dashboard"""
-    all_feedbacks = await db.feedbacks.find({}, {'_id': 0, 'type': 1, 'status': 1}).to_list(1000)
+    all_feedbacks = await db.feedbacks.find({}, {'_id': 0, 'type': 1, 'status': 1}).to_list(None)
     
     stats = {
         'total': len(all_feedbacks),
@@ -4232,12 +4232,12 @@ async def delete_feedback(feedback_id: str):
 
 @api_router.get("/reviews/{provider_id}", response_model=List[Review])
 async def get_provider_reviews(provider_id: str):
-    reviews = await db.reviews.find({'service_provider_id': provider_id}, {'_id': 0}).sort('created_at', -1).to_list(100)
+    reviews = await db.reviews.find({'service_provider_id': provider_id}, {'_id': 0}).sort('created_at', -1).to_list(None)
     return [Review(**r) for r in reviews]
 
 @api_router.get("/reviews/{provider_id}/stats")
 async def get_provider_rating_stats(provider_id: str):
-    reviews = await db.reviews.find({'service_provider_id': provider_id}, {'_id': 0, 'rating': 1}).to_list(1000)
+    reviews = await db.reviews.find({'service_provider_id': provider_id}, {'_id': 0, 'rating': 1}).to_list(None)
     
     if not reviews:
         return {
@@ -4336,7 +4336,7 @@ async def get_all_vehicles(
         else:
             query['price_per_day'] = {'$lte': max_price}
     
-    vehicles = await db.vehicle_listings.find(query, {'_id': 0}).sort('created_at', -1).to_list(100)
+    vehicles = await db.vehicle_listings.find(query, {'_id': 0}).sort('created_at', -1).to_list(None)
     return vehicles
 
 @api_router.get("/vehicles/my-listings", response_model=List[VehicleListing])
@@ -4345,7 +4345,7 @@ async def get_my_vehicle_listings(current_user: dict = Depends(get_current_user)
     vehicles = await db.vehicle_listings.find(
         {'owner_id': current_user['id']},
         {'_id': 0}
-    ).sort('created_at', -1).to_list(100)
+    ).sort('created_at', -1).to_list(None)
     return vehicles
 
 @api_router.get("/vehicles/{vehicle_id}", response_model=VehicleListing)
@@ -4507,7 +4507,7 @@ async def get_my_vehicle_booking_requests(current_user: dict = Depends(get_curre
     bookings = await db.vehicle_bookings.find(
         {'owner_id': current_user['id']},
         {'_id': 0}
-    ).sort('created_at', -1).to_list(100)
+    ).sort('created_at', -1).to_list(None)
     return bookings
 
 @api_router.put("/vehicles/bookings/{booking_id}/status")
@@ -4624,7 +4624,7 @@ async def get_rental_chat_messages(rental_id: str):
     messages = await db.chat_messages.find(
         {'rental_id': rental_id}, 
         {'_id': 0, 'original_message': 0}  # Exclude original message from user view
-    ).sort('created_at', 1).to_list(100)
+    ).sort('created_at', 1).to_list(None)
     return messages
 
 @api_router.get("/admin/chat/rental/{rental_id}/messages")
@@ -4633,7 +4633,7 @@ async def get_rental_chat_messages_admin(rental_id: str):
     messages = await db.chat_messages.find(
         {'rental_id': rental_id}, 
         {'_id': 0}  # Admin can see original_message
-    ).sort('created_at', 1).to_list(100)
+    ).sort('created_at', 1).to_list(None)
     return messages
 
 @api_router.get("/admin/chat/all-messages")
@@ -4642,7 +4642,7 @@ async def get_all_chat_messages_admin():
     messages = await db.chat_messages.find(
         {}, 
         {'_id': 0}
-    ).sort('created_at', -1).to_list(500)
+    ).sort('created_at', -1).to_list(None)
     
     # Add rental info to each message
     for msg in messages:
@@ -4661,7 +4661,7 @@ async def get_my_conversations(current_user: dict = Depends(get_current_user)):
     rentals = await db.rental_listings.find(
         {'service_provider_id': current_user['id']},
         {'_id': 0, 'id': 1, 'title': 1}
-    ).to_list(100)
+    ).to_list(None)
     
     conversations = []
     for rental in rentals:
@@ -4925,7 +4925,7 @@ async def get_visit_fees_stats():
     }
     
     # 1. Get all visit requests (for locations) - both pending and paid
-    visit_requests = await db.visit_requests.find({}, {'_id': 0}).sort('created_at', -1).to_list(100)
+    visit_requests = await db.visit_requests.find({}, {'_id': 0}).sort('created_at', -1).to_list(None)
     
     for vr in visit_requests:
         amount = vr.get('frais_visite', 0) or 0
@@ -4964,7 +4964,7 @@ async def get_visit_fees_stats():
                 })
     
     # 2. Get all payments from payments collection (for prestataires/services)
-    payments = await db.payments.find({}, {'_id': 0}).sort('created_at', -1).to_list(100)
+    payments = await db.payments.find({}, {'_id': 0}).sort('created_at', -1).to_list(None)
     
     for payment in payments:
         amount = payment.get('amount', 0) or 0
@@ -5023,7 +5023,7 @@ async def get_demand_stats():
     """Get statistics for service demands by profession and by location"""
     
     # Get all jobs/demands
-    jobs = await db.job_offers.find({}, {'_id': 0}).to_list(1000)
+    jobs = await db.job_offers.find({}, {'_id': 0}).to_list(None)
     
     # Stats by profession
     by_profession = {}
@@ -5104,7 +5104,7 @@ async def get_demand_stats():
 @api_router.get("/admin/providers")
 async def get_all_providers_admin():
     """Get all providers with their verification status for admin review"""
-    providers = await db.service_providers.find({}, {'_id': 0, 'password': 0}).sort('created_at', -1).to_list(1000)
+    providers = await db.service_providers.find({}, {'_id': 0, 'password': 0}).sort('created_at', -1).to_list(None)
     return providers
 
 @api_router.put("/admin/providers/{provider_id}/approve")
@@ -5228,7 +5228,7 @@ async def update_provider_about(provider_id: str, input_data: UpdateProviderAbou
 @api_router.get("/admin/jobs")
 async def get_all_jobs_admin():
     """Get all jobs for admin dashboard"""
-    jobs = await db.job_offers.find({}, {'_id': 0}).sort('created_at', -1).to_list(1000)
+    jobs = await db.job_offers.find({}, {'_id': 0}).sort('created_at', -1).to_list(None)
     
     # Enrich with provider and customer info
     for job in jobs:
@@ -5245,7 +5245,7 @@ async def get_all_jobs_admin():
 @api_router.get("/admin/rentals")
 async def get_all_rentals_admin():
     """Get all rental listings for admin dashboard"""
-    rentals = await db.rental_listings.find({}, {'_id': 0}).sort('created_at', -1).to_list(1000)
+    rentals = await db.rental_listings.find({}, {'_id': 0}).sort('created_at', -1).to_list(None)
     return rentals
 
 @api_router.get("/admin/rentals/pending")
@@ -5254,7 +5254,7 @@ async def get_pending_rentals_admin():
     rentals = await db.rental_listings.find(
         {'approval_status': ListingApprovalStatus.PENDING.value}, 
         {'_id': 0}
-    ).sort('created_at', -1).to_list(1000)
+    ).sort('created_at', -1).to_list(None)
     return rentals
 
 @api_router.put("/admin/rentals/{rental_id}/approve")
@@ -5337,7 +5337,7 @@ async def get_all_agents_immobilier():
     agents = await db.service_providers.find(
         {'profession': 'AgentImmobilier'}, 
         {'_id': 0, 'password': 0}
-    ).sort('created_at', -1).to_list(1000)
+    ).sort('created_at', -1).to_list(None)
     
     # Add rental count for each agent
     for agent in agents:
@@ -5381,7 +5381,7 @@ async def delete_rental_admin(rental_id: str):
 @api_router.get("/admin/customers")
 async def get_all_customers_admin():
     """Get all customers for admin dashboard"""
-    customers = await db.customers.find({}, {'_id': 0, 'password': 0}).sort('created_at', -1).to_list(1000)
+    customers = await db.customers.find({}, {'_id': 0, 'password': 0}).sort('created_at', -1).to_list(None)
     return customers
 
 @api_router.delete("/admin/providers/{provider_id}")
@@ -5435,7 +5435,7 @@ async def delete_customer(customer_id: str):
 @api_router.get("/admin/companies")
 async def admin_get_all_companies():
     """Get all companies for admin"""
-    companies = await db.companies.find({}, {'_id': 0, 'password': 0}).sort('created_at', -1).to_list(1000)
+    companies = await db.companies.find({}, {'_id': 0, 'password': 0}).sort('created_at', -1).to_list(None)
     
     # Add stats for each company
     for company in companies:
@@ -5622,7 +5622,7 @@ async def get_customer_jobs():
     jobs = await db.job_offers.find(
         {'status': {'$in': ['Accepted', 'ProviderCompleted']}}, 
         {'_id': 0}
-    ).sort('created_at', -1).to_list(100)
+    ).sort('created_at', -1).to_list(None)
     
     # Enrich with provider info and review status
     for job in jobs:
@@ -5878,7 +5878,7 @@ async def get_provider_payment_history(current_user: dict = Depends(get_current_
     payments = await db.payments.find(
         {'provider_id': current_user['id'], 'status': PaymentStatus.COMPLETED.value},
         {'_id': 0}
-    ).sort('created_at', -1).to_list(100)
+    ).sort('created_at', -1).to_list(None)
     return payments
 
 @api_router.get("/payments/history/customer/{phone}")
@@ -5972,7 +5972,7 @@ class ServiceFeesUpdate(BaseModel):
 @api_router.get("/admin/service-fees")
 async def get_all_service_fees():
     """Get all service fees by profession"""
-    fees = await db.service_fees.find({}, {'_id': 0}).to_list(100)
+    fees = await db.service_fees.find({}, {'_id': 0}).to_list(None)
     
     # If no fees exist, return defaults for all professions
     if not fees:
@@ -6066,7 +6066,7 @@ async def update_bulk_service_fees(fees_list: List[ServiceFeesUpdate]):
 @api_router.get("/service-fees")
 async def get_public_service_fees():
     """Get all service fees (public endpoint)"""
-    fees = await db.service_fees.find({}, {'_id': 0}).to_list(100)
+    fees = await db.service_fees.find({}, {'_id': 0}).to_list(None)
     
     if not fees:
         # Return defaults
@@ -6188,19 +6188,19 @@ async def get_commission_revenue():
     payments = await db.payments.find({
         'status': 'completed',
         'created_at': {'$gte': thirty_days_ago}
-    }, {'_id': 0}).to_list(1000)
+    }, {'_id': 0}).to_list(None)
     
     # Get property sales from the last 30 days
     sales = await db.property_sales.find({
         'status': 'sold',
         'sold_at': {'$gte': thirty_days_ago}
-    }, {'_id': 0}).to_list(1000)
+    }, {'_id': 0}).to_list(None)
     
     # Get rentals for location calculations
     rentals = await db.rentals.find({
         'status': 'approved',
         'created_at': {'$gte': thirty_days_ago}
-    }, {'_id': 0}).to_list(1000)
+    }, {'_id': 0}).to_list(None)
     
     # Calculate totals
     total_payments = len(payments)
@@ -6458,7 +6458,7 @@ async def get_all_refund_requests():
     requests = await db.refund_requests.find(
         {},
         {'_id': 0}
-    ).sort('created_at', -1).to_list(100)
+    ).sort('created_at', -1).to_list(None)
     
     return requests
 
@@ -6722,7 +6722,7 @@ async def get_customers_with_balance():
     customers = await db.customers.find(
         {},
         {'_id': 0, 'password': 0}
-    ).to_list(1000)
+    ).to_list(None)
     
     # Add balance info if missing
     for customer in customers:
