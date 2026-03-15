@@ -289,7 +289,7 @@ const Dashboard = ({ setIsAuthenticated }) => {
 
           {/* Real Estate Listing Fees Info */}
           <div className="mb-6">
-            <RealEstateFeesCard providerId={user.id} />
+            <RealEstateFeesCard providerId={user.id} key={activeTab} />
           </div>
 
           {/* Tabs for Agent Immobilier */}

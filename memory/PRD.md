@@ -68,7 +68,14 @@ ServisPro est une plateforme pour prestataires de services et clients en Guinée
 - **rental_listings**: `service_provider_id` (owner reference)
 - **property_sales**: `agent_id` (owner reference)
 
-## Test Credentials
+## Changelog
+
+### 2026-03-15
+- **Real Estate Ad Pricing** - Completed full feature:
+  - `RealEstateFeesCard.js` component showing fees, free listings remaining, listing counts
+  - Backend endpoint `GET /api/agent-listing-info/{provider_id}` (fixed collection names)
+  - Auto-refresh every 15s + instant refresh on tab switch
+  - Info footer shows exact fee amounts from admin settings (50 000 GNF location, 100 000 GNF vente)
 - **Admin**: `servispro@servisprogn.com` / `Servisproguinea2026#`
 - **Provider (Standard)**: `224620333444` / `password123`
 - **Provider (Real Estate)**: `224699999999` / `password123`

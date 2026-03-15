@@ -10,10 +10,6 @@ const RealEstateFeesCard = ({ providerId }) => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (providerId) fetchListingInfo();
-  }, [providerId]);
-
   const fetchListingInfo = async () => {
     try {
       const res = await axios.get(`${API}/agent-listing-info/${providerId}`);
@@ -24,6 +20,17 @@ const RealEstateFeesCard = ({ providerId }) => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (providerId) fetchListingInfo();
+  }, [providerId]);
+
+  // Auto-refresh every 15s to reflect new listings in real time
+  useEffect(() => {
+    if (!providerId) return;
+    const interval = setInterval(fetchListingInfo, 15000);
+    return () => clearInterval(interval);
+  }, [providerId]);
 
   const formatPrice = (price) => new Intl.NumberFormat('fr-FR').format(price || 0);
 
@@ -125,7 +132,7 @@ const RealEstateFeesCard = ({ providerId }) => {
           <Info className="h-4 w-4 mt-0.5 shrink-0" />
           <span>
             Les tarifs sont définis par ServisPro. Les {data.free_listings_limit} premieres annonces (location ou vente) sont gratuites. 
-            Au-dela, des frais de publication s'appliquent.
+            Au-dela, des frais de publication s'appliquent : <strong>{formatPrice(data.frais_annonce_location)} {data.devise}</strong> par annonce de location et <strong>{formatPrice(data.frais_annonce_vente)} {data.devise}</strong> par annonce de vente.
           </span>
         </div>
       </div>
