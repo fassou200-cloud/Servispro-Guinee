@@ -4044,6 +4044,28 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                       </div>
                     </div>
                   </div>
+
+                  {/* Save Button */}
+                  <div className="flex justify-end mt-6">
+                    <Button
+                      data-testid="save-real-estate-fees-btn"
+                      onClick={handleSaveSettings}
+                      disabled={savingSettings}
+                      className="bg-green-600 hover:bg-green-700 gap-2"
+                    >
+                      {savingSettings ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Enregistrement...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="h-4 w-4" />
+                          Enregistrer les Tarifs Immobiliers
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </Card>
 
                 {/* Service Fees by Profession */}
