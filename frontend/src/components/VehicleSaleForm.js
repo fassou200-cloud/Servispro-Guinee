@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
+import { getImageUrl } from '@/utils/imageUrl';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -390,7 +391,7 @@ const VehicleSaleForm = ({ onSuccess, userProfession }) => {
             {photos.map((photo, index) => (
               <div key={index} className="relative aspect-square rounded-xl overflow-hidden bg-slate-100">
                 <img 
-                  src={`${BACKEND_URL}${photo}`} 
+                  src={getImageUrl(photo)} 
                   alt={`Photo ${index + 1}`}
                   className="w-full h-full object-cover"
                 />

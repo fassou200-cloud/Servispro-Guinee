@@ -8,6 +8,7 @@ import {
   Users, Package, Gauge, CheckCircle, XCircle, Eye, Edit
 } from 'lucide-react';
 import axios from 'axios';
+import { getImageUrl } from '@/utils/imageUrl';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -136,7 +137,7 @@ const MyVehicles = () => {
                 <div className="md:w-72 h-48 md:h-auto relative bg-gradient-to-br from-slate-200 to-slate-300 flex-shrink-0">
                   {vehicle.photos && vehicle.photos.length > 0 ? (
                     <img
-                      src={`${BACKEND_URL}${vehicle.photos[0]}`}
+                      src={getImageUrl(vehicle.photos[0])}
                       alt={`${vehicle.brand} ${vehicle.model}`}
                       className="w-full h-full object-cover"
                     />

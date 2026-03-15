@@ -71,11 +71,8 @@ ServisPro est une plateforme pour prestataires de services et clients en Guinée
 ## Changelog
 
 ### 2026-03-15
-- **Real Estate Ad Pricing** - Completed full feature:
-  - `RealEstateFeesCard.js` component showing fees, free listings remaining, listing counts
-  - Backend endpoint `GET /api/agent-listing-info/{provider_id}` (fixed collection names)
-  - Auto-refresh every 15s + instant refresh on tab switch
-  - Info footer shows exact fee amounts from admin settings (50 000 GNF location, 100 000 GNF vente)
+- **Real Estate Ad Pricing** - Completed full feature
+- **Cloudinary Image Fix** - Fixed broken images across 11 frontend files. All `${BACKEND_URL}${photo}` replaced with `getImageUrl(photo)` to handle full Cloudinary URLs correctly. Added missing Cloudinary env vars.
 - **Admin**: `servispro@servisprogn.com` / `Servisproguinea2026#`
 - **Provider (Standard)**: `224620333444` / `password123`
 - **Provider (Real Estate)**: `224699999999` / `password123`

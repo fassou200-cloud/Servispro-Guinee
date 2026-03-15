@@ -14,6 +14,7 @@ import {
 import { toast } from 'sonner';
 import axios from 'axios';
 import NotificationBell from '@/components/NotificationBell';
+import { getImageUrl } from '@/utils/imageUrl';
 import RatingPopup from '@/components/RatingPopup';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -930,7 +931,7 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
                         <div className="flex gap-3">
                           {selectedInquiry.property_photos && selectedInquiry.property_photos.length > 0 ? (
                             <img 
-                              src={`${BACKEND_URL}${selectedInquiry.property_photos[0]}`}
+                              src={getImageUrl(selectedInquiry.property_photos[0])}
                               alt="Propriété"
                               className="w-20 h-20 rounded-lg object-cover"
                             />

@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
+import { getImageUrl } from '@/utils/imageUrl';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -257,7 +258,7 @@ const BrowsePropertySales = ({ isCustomerAuthenticated }) => {
                 <div className="relative h-48 bg-gray-200">
                   {property.photos && property.photos.length > 0 ? (
                     <img
-                      src={`${BACKEND_URL}${property.photos[0]}`}
+                      src={getImageUrl(property.photos[0])}
                       alt={property.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
@@ -345,7 +346,7 @@ const BrowsePropertySales = ({ isCustomerAuthenticated }) => {
                 {selectedProperty.photos && selectedProperty.photos.length > 0 ? (
                   <>
                     <img
-                      src={`${BACKEND_URL}${selectedProperty.photos[currentImageIndex]}`}
+                      src={getImageUrl(selectedProperty.photos[currentImageIndex])}
                       alt={selectedProperty.title}
                       className="w-full h-64 md:h-full object-cover"
                     />

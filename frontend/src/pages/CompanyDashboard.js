@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { getErrorMessage } from '@/utils/helpers';
+import { getImageUrl } from '@/utils/imageUrl';
 import CommissionRatesCard from '@/components/CommissionRatesCard';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -1405,7 +1406,7 @@ const CompanyDashboard = () => {
                   <Card key={rental.id} className="overflow-hidden">
                     {rental.photos && rental.photos.length > 0 && (
                       <img 
-                        src={`${BACKEND_URL}${rental.photos[0]}`} 
+                        src={getImageUrl(rental.photos[0])} 
                         alt={rental.title}
                         className="w-full h-48 object-cover"
                       />
@@ -1746,7 +1747,7 @@ const CompanyDashboard = () => {
                   <Card key={sale.id} className="overflow-hidden">
                     {sale.photos && sale.photos.length > 0 && (
                       <img 
-                        src={`${BACKEND_URL}${sale.photos[0]}`} 
+                        src={getImageUrl(sale.photos[0])} 
                         alt={sale.title}
                         className="w-full h-48 object-cover"
                       />

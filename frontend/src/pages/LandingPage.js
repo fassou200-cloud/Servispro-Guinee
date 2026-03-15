@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
+import { getImageUrl } from '@/utils/imageUrl';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -690,7 +691,7 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
                       <div className="relative h-48 bg-gray-200">
                         {rental.photos && rental.photos.length > 0 ? (
                           <img 
-                            src={`${BACKEND_URL}${rental.photos[0]}`}
+                            src={getImageUrl(rental.photos[0])}
                             alt={rental.title}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           />
@@ -826,7 +827,7 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
                       <div className="relative h-48 bg-gray-200">
                         {sale.photos && sale.photos.length > 0 ? (
                           <img 
-                            src={`${BACKEND_URL}${sale.photos[0]}`}
+                            src={getImageUrl(sale.photos[0])}
                             alt={sale.title}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           />
@@ -1066,7 +1067,7 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
               <div className="flex gap-3">
                 {selectedProperty.photos && selectedProperty.photos.length > 0 ? (
                   <img 
-                    src={`${BACKEND_URL}${selectedProperty.photos[0]}`}
+                    src={getImageUrl(selectedProperty.photos[0])}
                     alt={selectedProperty.title}
                     className="w-20 h-20 rounded-lg object-cover"
                   />
@@ -1222,14 +1223,14 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
               {detailProperty.photos && detailProperty.photos.length > 0 ? (
                 <div className="grid grid-cols-2 gap-2 p-4">
                   <img 
-                    src={`${BACKEND_URL}${detailProperty.photos[0]}`}
+                    src={getImageUrl(detailProperty.photos[0])}
                     alt={detailProperty.title}
                     className="w-full h-64 object-cover rounded-lg col-span-2"
                   />
                   {detailProperty.photos.slice(1, 5).map((photo, idx) => (
                     <img 
                       key={idx}
-                      src={`${BACKEND_URL}${photo}`}
+                      src={getImageUrl(photo)}
                       alt={`${detailProperty.title} ${idx + 2}`}
                       className="w-full h-32 object-cover rounded-lg"
                     />

@@ -1836,7 +1836,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                     <div className="flex gap-4">
                       {rental.photos && rental.photos.length > 0 ? (
                         <img 
-                          src={`${BACKEND_URL}${rental.photos[0]}`}
+                          src={getImageUrl(rental.photos[0])}
                           alt={rental.title}
                           className="w-24 h-20 object-cover rounded-lg"
                         />
@@ -1887,7 +1887,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                 <Card className="p-6 bg-slate-800 border-slate-700">
                   {selectedRental.photos && selectedRental.photos.length > 0 && (
                     <img 
-                      src={`${BACKEND_URL}${selectedRental.photos[0]}`}
+                      src={getImageUrl(selectedRental.photos[0])}
                       alt={selectedRental.title}
                       className="w-full h-48 object-cover rounded-lg mb-4"
                     />
@@ -2338,7 +2338,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                     <div className="flex gap-4">
                       {sale.photos && sale.photos.length > 0 ? (
                         <img 
-                          src={`${BACKEND_URL}${sale.photos[0]}`}
+                          src={getImageUrl(sale.photos[0])}
                           alt={sale.title}
                           className="w-24 h-20 object-cover rounded-lg"
                         />
@@ -2388,7 +2388,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                   {selectedSale.photos && selectedSale.photos.length > 0 && (
                     <div className="mb-4">
                       <img 
-                        src={`${BACKEND_URL}${selectedSale.photos[0]}`}
+                        src={getImageUrl(selectedSale.photos[0])}
                         alt={selectedSale.title}
                         className="w-full h-48 object-cover rounded-lg mb-2"
                       />
@@ -2397,7 +2397,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                           {selectedSale.photos.slice(1).map((photo, idx) => (
                             <img 
                               key={idx}
-                              src={`${BACKEND_URL}${photo}`}
+                              src={getImageUrl(photo)}
                               alt={`Photo ${idx + 2}`}
                               className="w-16 h-16 object-cover rounded flex-shrink-0"
                             />

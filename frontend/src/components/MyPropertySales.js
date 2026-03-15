@@ -9,6 +9,7 @@ import {
   ExternalLink, User
 } from 'lucide-react';
 import axios from 'axios';
+import { getImageUrl } from '@/utils/imageUrl';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -151,7 +152,7 @@ const MyPropertySales = () => {
                 <div className="md:w-72 h-48 md:h-auto relative bg-gradient-to-br from-slate-200 to-slate-300 flex-shrink-0">
                   {property.photos && property.photos.length > 0 ? (
                     <img
-                      src={`${BACKEND_URL}${property.photos[0]}`}
+                      src={getImageUrl(property.photos[0])}
                       alt={property.title}
                       className="w-full h-full object-cover"
                     />

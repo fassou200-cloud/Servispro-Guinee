@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { getErrorMessage } from '@/utils/helpers';
+import { getImageUrl } from '@/utils/imageUrl';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -327,7 +328,7 @@ const MyRentals = () => {
             {rental.photos && rental.photos.length > 0 ? (
               <div className="w-48 h-36 flex-shrink-0 relative">
                 <img
-                  src={`${BACKEND_URL}${rental.photos[0]}`}
+                  src={getImageUrl(rental.photos[0])}
                   alt={rental.title}
                   className="w-full h-full object-cover rounded-lg"
                 />

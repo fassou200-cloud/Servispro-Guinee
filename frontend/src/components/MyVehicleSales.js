@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
+import { getImageUrl } from '@/utils/imageUrl';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -168,7 +169,7 @@ const MyVehicleSales = () => {
                 {/* Photo */}
                 {sale.photos && sale.photos.length > 0 ? (
                   <img
-                    src={`${BACKEND_URL}${sale.photos[0]}`}
+                    src={getImageUrl(sale.photos[0])}
                     alt={`${sale.brand} ${sale.model}`}
                     className="w-32 h-24 object-cover rounded-lg"
                   />
