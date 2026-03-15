@@ -21,6 +21,16 @@ import { professionGroups } from '@/data/professions';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+// Create axios instance with admin auth token
+const adminApi = axios.create();
+adminApi.interceptors.request.use((config) => {
+  const token = localStorage.getItem('adminToken');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 // Traduction des professions
 const translateProfession = (profession) => {
   const translations = {
@@ -211,7 +221,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
   const loadInitialData = async () => {
     try {
       // Load only stats initially (very fast)
-      const statsRes = await axios.get(`${API}/admin/stats`);
+      const statsRes = await adminApi.get(`${API}/admin/stats`);
       setStats(statsRes.data);
       
       // Pre-load the first tab (providers) in background
@@ -231,38 +241,38 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
     try {
       switch (tab) {
         case 'providers':
-          const providersRes = await axios.get(`${API}/admin/providers`);
+          const providersRes = await adminApi.get(`${API}/admin/providers`);
           setProviders(providersRes.data);
           break;
         case 'customers':
-          const customersRes = await axios.get(`${API}/admin/customers`);
+          const customersRes = await adminApi.get(`${API}/admin/customers`);
           setCustomers(customersRes.data);
           break;
         case 'jobs':
-          const jobsRes = await axios.get(`${API}/admin/jobs`);
+          const jobsRes = await adminApi.get(`${API}/admin/jobs`);
           setJobs(jobsRes.data);
           break;
         case 'rentals':
-          const rentalsRes = await axios.get(`${API}/admin/rentals`);
+          const rentalsRes = await adminApi.get(`${API}/admin/rentals`);
           setRentals(rentalsRes.data);
           break;
         case 'agents':
-          const agentsRes = await axios.get(`${API}/admin/agents-immobilier`);
+          const agentsRes = await adminApi.get(`${API}/admin/agents-immobilier`);
           setAgentsImmobilier(agentsRes.data);
           break;
         case 'sales':
-          const salesRes = await axios.get(`${API}/admin/property-sales`).catch(() => ({ data: [] }));
+          const salesRes = await adminApi.get(`${API}/admin/property-sales`).catch(() => ({ data: [] }));
           setPropertySales(salesRes.data);
           break;
         case 'companies':
-          const companiesRes = await axios.get(`${API}/admin/companies`).catch(() => ({ data: [] }));
+          const companiesRes = await adminApi.get(`${API}/admin/companies`).catch(() => ({ data: [] }));
           setCompanies(companiesRes.data);
           break;
         case 'settings':
           const [settingsRes, revenueRes, feesRes] = await Promise.all([
-            axios.get(`${API}/admin/settings`),
-            axios.get(`${API}/admin/commission-revenue`),
-            axios.get(`${API}/admin/service-fees`)
+            adminApi.get(`${API}/admin/settings`),
+            adminApi.get(`${API}/admin/commission-revenue`),
+            adminApi.get(`${API}/admin/service-fees`)
           ]);
           setSettings(settingsRes.data);
           setCommissionRevenue(revenueRes.data);
@@ -272,8 +282,8 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
           setLoadingVisitFees(true);
           setLoadingDemandStats(true);
           const [visitFeesRes, demandStatsRes] = await Promise.all([
-            axios.get(`${API}/admin/visit-fees-stats`),
-            axios.get(`${API}/admin/demand-stats`)
+            adminApi.get(`${API}/admin/visit-fees-stats`),
+            adminApi.get(`${API}/admin/demand-stats`)
           ]);
           setVisitFeesStats(visitFeesRes.data);
           setDemandStats(demandStatsRes.data);
@@ -282,8 +292,8 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
           break;
         case 'feedbacks':
           const [feedbacksRes, feedbackStatsRes] = await Promise.all([
-            axios.get(`${API}/admin/feedbacks`),
-            axios.get(`${API}/admin/feedbacks/stats`)
+            adminApi.get(`${API}/admin/feedbacks`),
+            adminApi.get(`${API}/admin/feedbacks/stats`)
           ]);
           setFeedbacks(feedbacksRes.data);
           setFeedbackStats(feedbackStatsRes.data);
@@ -312,7 +322,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
     refreshTabData(activeTab);
     // Also refresh stats
     try {
-      const statsRes = await axios.get(`${API}/admin/stats`);
+      const statsRes = await adminApi.get(`${API}/admin/stats`);
       setStats(statsRes.data);
     } catch (error) {
       console.error('Error refreshing stats:', error);
@@ -323,7 +333,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
   const handleSaveSettings = async () => {
     setSavingSettings(true);
     try {
-      await axios.put(`${API}/admin/settings`, {
+      await adminApi.put(`${API}/admin/settings`, {
         commission_prestation: parseFloat(settings.commission_prestation) || 10,
         commission_location_courte: parseFloat(settings.commission_location_courte) || 10,
         commission_location_longue: parseFloat(settings.commission_location_longue) || 5,
@@ -336,7 +346,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
       });
       toast.success('Paramètres enregistrés avec succès !');
       // Refresh commission revenue with new rates
-      const revenueRes = await axios.get(`${API}/admin/commission-revenue`);
+      const revenueRes = await adminApi.get(`${API}/admin/commission-revenue`);
       setCommissionRevenue(revenueRes.data);
     } catch (error) {
       toast.error('Erreur lors de la sauvegarde des paramètres');
@@ -366,7 +376,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
         frais_prestation: parseFloat(fee.frais_prestation) || 0
       }));
       
-      await axios.put(`${API}/admin/service-fees/bulk`, feesToSave);
+      await adminApi.put(`${API}/admin/service-fees/bulk`, feesToSave);
       toast.success('Frais de service enregistrés avec succès !');
     } catch (error) {
       console.error('Error saving fees:', error);
@@ -388,7 +398,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
   const fetchRefundRequests = async () => {
     setLoadingRefunds(true);
     try {
-      const response = await axios.get(`${API}/admin/refund-requests`);
+      const response = await adminApi.get(`${API}/admin/refund-requests`);
       setRefundRequests(response.data || []);
     } catch (error) {
       console.error('Error fetching refund requests:', error);
@@ -400,7 +410,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
   const handleRefundDecision = async (requestId, status, adminNote = '') => {
     setProcessingRefund(requestId);
     try {
-      await axios.put(`${API}/admin/refund-requests/${requestId}`, {
+      await adminApi.put(`${API}/admin/refund-requests/${requestId}`, {
         status: status,
         admin_note: adminNote
       });
@@ -431,7 +441,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
 
     setSavingAbout(true);
     try {
-      await axios.put(`${API}/admin/providers/${editAboutModal.providerId}/about`, {
+      await adminApi.put(`${API}/admin/providers/${editAboutModal.providerId}/about`, {
         about_me: editAboutText.trim()
       });
       
@@ -473,7 +483,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
     
     setSavingProfile(true);
     try {
-      await axios.put(`${API}/admin/providers/${editProfileModal.provider.id}/profile`, {
+      await adminApi.put(`${API}/admin/providers/${editProfileModal.provider.id}/profile`, {
         first_name: editProfileData.first_name.trim(),
         last_name: editProfileData.last_name.trim(),
         profession: editProfileData.profession.trim(),
@@ -505,7 +515,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
 
   const handleApproveProvider = async (providerId) => {
     try {
-      await axios.put(`${API}/admin/providers/${providerId}/approve`);
+      await adminApi.put(`${API}/admin/providers/${providerId}/approve`);
       toast.success('Prestataire approuvé !');
       refreshTabData('providers');
       setSelectedProvider(null);
@@ -517,7 +527,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
 
   const handleRejectProvider = async (providerId) => {
     try {
-      await axios.put(`${API}/admin/providers/${providerId}/reject`);
+      await adminApi.put(`${API}/admin/providers/${providerId}/reject`);
       toast.success('Prestataire rejeté');
       refreshTabData('providers');
       setSelectedProvider(null);
@@ -529,7 +539,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
 
   const handleDeleteProvider = async (providerId) => {
     try {
-      await axios.delete(`${API}/admin/providers/${providerId}`);
+      await adminApi.delete(`${API}/admin/providers/${providerId}`);
       toast.success('Prestataire supprimé avec succès');
       refreshTabData('providers');
       refreshTabData('agents');
@@ -543,7 +553,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
 
   const handleDeleteCustomer = async (customerId) => {
     try {
-      await axios.delete(`${API}/admin/customers/${customerId}`);
+      await adminApi.delete(`${API}/admin/customers/${customerId}`);
       toast.success('Client supprimé avec succès');
       refreshTabData('customers');
       setSelectedCustomer(null);
@@ -556,7 +566,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
   // Toggle provider active status
   const handleToggleProviderActive = async (providerId) => {
     try {
-      const response = await axios.put(`${API}/admin/providers/${providerId}/toggle-active`);
+      const response = await adminApi.put(`${API}/admin/providers/${providerId}/toggle-active`);
       toast.success(response.data.message);
       refreshTabData('providers');
       refreshTabData('agents');
@@ -572,7 +582,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
   // Toggle customer active status
   const handleToggleCustomerActive = async (customerId) => {
     try {
-      const response = await axios.put(`${API}/admin/customers/${customerId}/toggle-active`);
+      const response = await adminApi.put(`${API}/admin/customers/${customerId}/toggle-active`);
       toast.success(response.data.message);
       refreshTabData('customers');
       // Update selected customer if it's the same one
@@ -586,7 +596,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
 
   const handleDeleteRental = async (rentalId) => {
     try {
-      await axios.delete(`${API}/admin/rentals/${rentalId}`);
+      await adminApi.delete(`${API}/admin/rentals/${rentalId}`);
       toast.success('Location supprimée avec succès');
       refreshTabData('rentals');
       setSelectedRental(null);
@@ -599,7 +609,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
   // Company management functions
   const handleApproveCompany = async (companyId) => {
     try {
-      await axios.put(`${API}/admin/companies/${companyId}/approve`);
+      await adminApi.put(`${API}/admin/companies/${companyId}/approve`);
       toast.success('Entreprise approuvée avec succès');
       refreshTabData('companies');
       if (selectedCompany?.id === companyId) {
@@ -613,7 +623,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
 
   const handleRejectCompany = async (companyId) => {
     try {
-      await axios.put(`${API}/admin/companies/${companyId}/reject`);
+      await adminApi.put(`${API}/admin/companies/${companyId}/reject`);
       toast.success('Entreprise rejetée');
       refreshTabData('companies');
       if (selectedCompany?.id === companyId) {
@@ -627,7 +637,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
 
   const handleDeleteCompany = async (companyId) => {
     try {
-      await axios.delete(`${API}/admin/companies/${companyId}`);
+      await adminApi.delete(`${API}/admin/companies/${companyId}`);
       toast.success('Entreprise supprimée avec succès');
       refreshTabData('companies');
       setSelectedCompany(null);
@@ -660,7 +670,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
       const formData = new FormData();
       formData.append('document', file);
 
-      const response = await axios.post(
+      const response = await adminApi.post(
         `${API}/admin/property-sales/${saleId}/documents`,
         formData,
         { headers: { 'Content-Type': 'multipart/form-data' } }
@@ -692,7 +702,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
   // Delete admin document
   const handleDeleteAdminDoc = async (saleId, docPath) => {
     try {
-      await axios.delete(`${API}/admin/property-sales/${saleId}/documents`, {
+      await adminApi.delete(`${API}/admin/property-sales/${saleId}/documents`, {
         data: { document_path: docPath }
       });
       
@@ -715,7 +725,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
   // Rental approval functions
   const handleApproveRental = async (rentalId) => {
     try {
-      await axios.put(`${API}/admin/rentals/${rentalId}/approve`);
+      await adminApi.put(`${API}/admin/rentals/${rentalId}/approve`);
       toast.success('Annonce approuvée avec succès !');
       refreshTabData('rentals');
       if (selectedRental?.id === rentalId) {
@@ -729,7 +739,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
 
   const handleRejectRental = async (rentalId) => {
     try {
-      await axios.put(`${API}/admin/rentals/${rentalId}/reject`);
+      await adminApi.put(`${API}/admin/rentals/${rentalId}/reject`);
       toast.success('Annonce rejetée');
       refreshTabData('rentals');
       if (selectedRental?.id === rentalId) {
@@ -2692,7 +2702,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                       <Button
                         onClick={async () => {
                           try {
-                            await axios.put(`${API}/admin/property-sales/${selectedSale.id}/approve`);
+                            await adminApi.put(`${API}/admin/property-sales/${selectedSale.id}/approve`);
                             toast.success('Vente immobilière approuvée !');
                             fetchData();
                             setSelectedSale({...selectedSale, status: 'approved'});
@@ -2708,7 +2718,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                       <Button
                         onClick={async () => {
                           try {
-                            await axios.put(`${API}/admin/property-sales/${selectedSale.id}/reject`);
+                            await adminApi.put(`${API}/admin/property-sales/${selectedSale.id}/reject`);
                             toast.success('Vente immobilière rejetée');
                             fetchData();
                             setSelectedSale({...selectedSale, status: 'rejected'});
@@ -2730,7 +2740,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                       <Button
                         onClick={async () => {
                           try {
-                            await axios.put(`${API}/admin/property-sales/${selectedSale.id}/sold`);
+                            await adminApi.put(`${API}/admin/property-sales/${selectedSale.id}/sold`);
                             toast.success('Propriété marquée comme vendue !');
                             fetchData();
                             setSelectedSale({...selectedSale, status: 'sold', is_available: false});
@@ -3676,7 +3686,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                                   onClick={async (e) => {
                                     e.stopPropagation();
                                     try {
-                                      await axios.put(`${API}/admin/feedbacks/${feedback.id}?status=in_progress`);
+                                      await adminApi.put(`${API}/admin/feedbacks/${feedback.id}?status=in_progress`);
                                       setFeedbacks(prev => prev.map(f => f.id === feedback.id ? {...f, status: 'in_progress'} : f));
                                       toast.success('Statut mis à jour');
                                     } catch (error) {
@@ -3693,7 +3703,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                                   onClick={async (e) => {
                                     e.stopPropagation();
                                     try {
-                                      await axios.put(`${API}/admin/feedbacks/${feedback.id}?status=resolved`);
+                                      await adminApi.put(`${API}/admin/feedbacks/${feedback.id}?status=resolved`);
                                       setFeedbacks(prev => prev.map(f => f.id === feedback.id ? {...f, status: 'resolved'} : f));
                                       toast.success('Marqué comme résolu');
                                     } catch (error) {
@@ -3711,7 +3721,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                                   onClick={async (e) => {
                                     e.stopPropagation();
                                     try {
-                                      await axios.put(`${API}/admin/feedbacks/${feedback.id}?status=closed`);
+                                      await adminApi.put(`${API}/admin/feedbacks/${feedback.id}?status=closed`);
                                       setFeedbacks(prev => prev.map(f => f.id === feedback.id ? {...f, status: 'closed'} : f));
                                       toast.success('Feedback fermé');
                                     } catch (error) {
@@ -3727,7 +3737,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                                   onClick={async (e) => {
                                     e.stopPropagation();
                                     try {
-                                      await axios.put(`${API}/admin/feedbacks/${feedback.id}`, null, {
+                                      await adminApi.put(`${API}/admin/feedbacks/${feedback.id}`, null, {
                                         params: { admin_notes: selectedFeedback.admin_notes }
                                       });
                                       setFeedbacks(prev => prev.map(f => f.id === feedback.id ? {...f, admin_notes: selectedFeedback.admin_notes} : f));
@@ -3748,7 +3758,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                                     e.stopPropagation();
                                     if (window.confirm('Supprimer ce feedback ?')) {
                                       try {
-                                        await axios.delete(`${API}/admin/feedbacks/${feedback.id}`);
+                                        await adminApi.delete(`${API}/admin/feedbacks/${feedback.id}`);
                                         setFeedbacks(prev => prev.filter(f => f.id !== feedback.id));
                                         setSelectedFeedback(null);
                                         toast.success('Feedback supprimé');

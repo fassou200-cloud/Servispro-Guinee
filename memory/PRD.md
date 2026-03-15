@@ -72,7 +72,13 @@ ServisPro est une plateforme pour prestataires de services et clients en Guinée
 
 ### 2026-03-15
 - **Real Estate Ad Pricing** - Completed full feature
-- **Cloudinary Image Fix** - Fixed broken images across 11 frontend files. All `${BACKEND_URL}${photo}` replaced with `getImageUrl(photo)` to handle full Cloudinary URLs correctly. Added missing Cloudinary env vars.
+- **Cloudinary Image Fix** - Fixed broken images across 11 frontend files
+- **CRITICAL Security Fix** - Secured ALL 65 admin endpoints:
+  - Added `AdminAuthMiddleware` blocking unauthorized access to `/api/admin/*`
+  - All requests without valid admin JWT token are rejected (401/403)
+  - Replaced hard deletes with soft-delete for customers and providers
+  - Added audit logging for destructive admin actions
+  - Frontend `AdminDashboard.js` and `AdminSalesManager.js` now send Bearer token via `adminApi` interceptor
 - **Admin**: `servispro@servisprogn.com` / `Servisproguinea2026#`
 - **Provider (Standard)**: `224620333444` / `password123`
 - **Provider (Real Estate)**: `224699999999` / `password123`

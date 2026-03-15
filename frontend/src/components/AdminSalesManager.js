@@ -14,6 +14,16 @@ import axios from 'axios';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+// Create axios instance with admin auth token
+const adminApi = axios.create();
+adminApi.interceptors.request.use((config) => {
+  const token = localStorage.getItem('adminToken');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 // Admin component to manage property inquiries
 const AdminSalesManager = () => {
   const [propertyInquiries, setPropertyInquiries] = useState([]);
@@ -31,7 +41,7 @@ const AdminSalesManager = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const propertyInqRes = await axios.get(`${API}/admin/property-inquiries`);
+      const propertyInqRes = await adminApi.get(`${API}/admin/property-inquiries`);
       setPropertyInquiries(propertyInqRes.data || []);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -45,7 +55,7 @@ const AdminSalesManager = () => {
   const handlePropertyInquiryStatus = async (inquiryId, status) => {
     setProcessingId(inquiryId);
     try {
-      await axios.put(`${API}/admin/property-inquiries/${inquiryId}`, {
+      await adminApi.put(`${API}/admin/property-inquiries/${inquiryId}`, {
         status: status
       });
       toast.success(status === 'responded' ? 'Demande traitée !' : 'Demande fermée');
@@ -72,7 +82,7 @@ const AdminSalesManager = () => {
     }
     setProcessingId(inquiryId);
     try {
-      await axios.post(`${API}/admin/property-inquiries/${inquiryId}/message`, {
+      await adminApi.post(`${API}/admin/property-inquiries/${inquiryId}/message`, {
         message: adminResponse,
         sender: 'admin'
       });
@@ -125,7 +135,7 @@ const AdminSalesManager = () => {
       const formData = new FormData();
       formData.append('document', file);
 
-      const response = await axios.post(
+      const response = await adminApi.post(
         `${API}/admin/property-inquiries/${inquiryId}/documents`,
         formData,
         { headers: { 'Content-Type': 'multipart/form-data' } }
@@ -169,7 +179,7 @@ const AdminSalesManager = () => {
   // Delete document
   const handleDeleteDocument = async (inquiryId, docPath) => {
     try {
-      await axios.delete(`${API}/admin/property-inquiries/${inquiryId}/documents`, {
+      await adminApi.delete(`${API}/admin/property-inquiries/${inquiryId}/documents`, {
         data: { document_path: docPath }
       });
       

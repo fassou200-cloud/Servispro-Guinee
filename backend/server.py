@@ -172,6 +172,78 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         response = await call_next(request)
         return response
 
+# Admin Authentication Middleware - protects ALL /api/admin/* endpoints
+class AdminAuthMiddleware(BaseHTTPMiddleware):
+    # Routes that don't require admin authentication
+    EXEMPT_PATHS = ["/api/admin/login", "/api/admin/register"]
+
+    async def dispatch(self, request: Request, call_next):
+        path = request.url.path
+        
+        # Only apply to admin routes
+        if not path.startswith("/api/admin"):
+            return await call_next(request)
+        
+        # Skip auth for exempt paths (login, register)
+        if any(path.endswith(exempt) for exempt in self.EXEMPT_PATHS):
+            return await call_next(request)
+        
+        # Skip OPTIONS requests (CORS preflight)
+        if request.method == "OPTIONS":
+            return await call_next(request)
+        
+        # Extract and verify token
+        auth_header = request.headers.get("Authorization", "")
+        if not auth_header.startswith("Bearer "):
+            return JSONResponse(
+                status_code=401,
+                content={"detail": "Token d'authentification admin requis"}
+            )
+        
+        token = auth_header.split("Bearer ")[1]
+        try:
+            payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+            user_id = payload.get("user_id")
+            
+            # Check if user_id matches a known admin account
+            is_admin = False
+            for admin_account in ADMIN_ACCOUNTS:
+                if user_id == admin_account["username"]:
+                    is_admin = True
+                    break
+            
+            # Also check database admins
+            if not is_admin:
+                admin_db = await db.admins.find_one({"id": user_id}, {"_id": 0})
+                if admin_db:
+                    is_admin = True
+            
+            if not is_admin:
+                await log_audit_event(
+                    event_type="ADMIN_UNAUTHORIZED_ACCESS",
+                    user_id=user_id,
+                    ip_address=get_client_ip(request),
+                    details={"path": path, "method": request.method},
+                    success=False
+                )
+                return JSONResponse(
+                    status_code=403,
+                    content={"detail": "Accès refusé. Droits administrateur requis."}
+                )
+            
+        except jwt.ExpiredSignatureError:
+            return JSONResponse(
+                status_code=401,
+                content={"detail": "Token expiré. Veuillez vous reconnecter."}
+            )
+        except jwt.InvalidTokenError:
+            return JSONResponse(
+                status_code=401,
+                content={"detail": "Token invalide"}
+            )
+        
+        return await call_next(request)
+
 # JWT Configuration
 JWT_SECRET = os.environ.get('JWT_SECRET', 'your-secret-key-change-in-production')
 JWT_ALGORITHM = 'HS256'
@@ -2371,9 +2443,12 @@ async def set_offline(current_user: dict = Depends(get_current_user)):
 
 @api_router.get("/providers", response_model=List[ServiceProvider])
 async def get_all_providers():
-    # Only return active providers (is_active=True or field doesn't exist for backwards compatibility)
+    # Only return active, non-deleted providers
     providers = await db.service_providers.find(
-        {'$or': [{'is_active': True}, {'is_active': {'$exists': False}}]},
+        {
+            '$or': [{'is_active': True}, {'is_active': {'$exists': False}}],
+            'is_deleted': {'$ne': True}
+        },
         {'_id': 0, 'password': 0}
     ).to_list(None)
     return [ServiceProvider(**p) for p in providers]
@@ -5437,51 +5512,75 @@ async def get_all_customers_admin():
     return customers
 
 @api_router.delete("/admin/providers/{provider_id}")
-async def delete_provider(provider_id: str):
-    """Delete a service provider and their associated data"""
-    # Check if provider exists
+async def delete_provider(provider_id: str, request: Request):
+    """Soft-delete a service provider (archive instead of permanent deletion)"""
     provider = await db.service_providers.find_one({'id': provider_id})
     if not provider:
         raise HTTPException(status_code=404, detail="Prestataire non trouvé")
     
-    # Delete Cloudinary files (profile picture, ID verification, documents)
-    cloudinary_result = await delete_provider_cloudinary_files(provider)
-    logging.info(f"Cloudinary cleanup result: {cloudinary_result}")
+    # Soft-delete: mark as deleted instead of removing
+    now = datetime.now(timezone.utc).isoformat()
+    await db.service_providers.update_one(
+        {'id': provider_id},
+        {'$set': {
+            'is_active': False,
+            'is_deleted': True,
+            'deleted_at': now,
+            'deleted_by': 'admin'
+        }}
+    )
     
-    # Delete associated data
-    await db.job_offers.delete_many({'service_provider_id': provider_id})
-    await db.rental_listings.delete_many({'service_provider_id': provider_id})
-    await db.reviews.delete_many({'service_provider_id': provider_id})
-    await db.chat_messages.delete_many({'sender_id': provider_id})
-    await db.notifications.delete_many({'user_id': provider_id})
+    # Audit log
+    await log_audit_event(
+        event_type="PROVIDER_DELETED",
+        ip_address=get_client_ip(request),
+        user_type="admin",
+        details={
+            "provider_id": provider_id,
+            "provider_name": f"{provider.get('first_name', '')} {provider.get('last_name', '')}",
+            "provider_phone": provider.get('phone_number', ''),
+            "profession": provider.get('profession', ''),
+            "action": "soft_delete"
+        },
+        success=True
+    )
     
-    # Delete the provider
-    result = await db.service_providers.delete_one({'id': provider_id})
-    if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Prestataire non trouvé")
-    
-    return {
-        "message": "Prestataire et données associées supprimés avec succès",
-        "cloudinary_files_deleted": cloudinary_result.get('deleted', 0)
-    }
+    return {"message": "Prestataire archivé avec succès"}
 
 @api_router.delete("/admin/customers/{customer_id}")
-async def delete_customer(customer_id: str):
-    """Delete a customer and their associated data"""
-    # Check if customer exists
+async def delete_customer(customer_id: str, request: Request):
+    """Soft-delete a customer (archive instead of permanent deletion)"""
     customer = await db.customers.find_one({'id': customer_id})
     if not customer:
         raise HTTPException(status_code=404, detail="Client non trouvé")
     
-    # Delete associated data (job offers where they were the client, chat messages)
-    await db.chat_messages.delete_many({'sender_id': customer_id})
+    # Soft-delete: mark as deleted instead of removing
+    now = datetime.now(timezone.utc).isoformat()
+    await db.customers.update_one(
+        {'id': customer_id},
+        {'$set': {
+            'is_active': False,
+            'is_deleted': True,
+            'deleted_at': now,
+            'deleted_by': 'admin'
+        }}
+    )
     
-    # Delete the customer
-    result = await db.customers.delete_one({'id': customer_id})
-    if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Client non trouvé")
+    # Audit log
+    await log_audit_event(
+        event_type="CUSTOMER_DELETED",
+        ip_address=get_client_ip(request),
+        user_type="admin",
+        details={
+            "customer_id": customer_id,
+            "customer_name": f"{customer.get('first_name', '')} {customer.get('last_name', '')}",
+            "customer_phone": customer.get('phone_number', ''),
+            "action": "soft_delete"
+        },
+        success=True
+    )
     
-    return {"message": "Client supprimé avec succès"}
+    return {"message": "Client archivé avec succès"}
 
 # Admin Company Routes
 @api_router.get("/admin/companies")
@@ -6846,6 +6945,9 @@ app.mount("/api/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads"
 
 # Add Security Headers Middleware (must be added first)
 app.add_middleware(SecurityHeadersMiddleware)
+
+# Add Admin Authentication Middleware (before rate limiting)
+app.add_middleware(AdminAuthMiddleware)
 
 # Add Rate Limiting Middleware
 app.add_middleware(RateLimitMiddleware)
