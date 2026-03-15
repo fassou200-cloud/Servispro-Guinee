@@ -13,7 +13,6 @@ import axios from 'axios';
 import { toast } from 'sonner';
 import ServiceRequestForm from '@/components/ServiceRequestForm';
 import ReviewsList from '@/components/ReviewsList';
-import InvestigationFeePopup from '@/components/InvestigationFeePopup';
 import ProviderProfileEdit from '@/components/ProviderProfileEdit';
 import { getImageUrl } from '@/utils/imageUrl';
 
@@ -75,9 +74,6 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
   const [refreshReviews, setRefreshReviews] = useState(0);
   const [customer, setCustomer] = useState(null);
   const [reviewStats, setReviewStats] = useState(null);
-  const [showPaymentPopup, setShowPaymentPopup] = useState(false);
-  const [paymentCompleted, setPaymentCompleted] = useState(false);
-  const [serviceFees, setServiceFees] = useState(null);
   
   // Check if current user is the owner of this profile (provider viewing their own profile)
   const [isOwnProfile, setIsOwnProfile] = useState(false);
@@ -105,15 +101,6 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
       setIsOwnProfile(providerData.id === providerId);
     }
   }, [providerId]);
-
-  // Fetch service fees when provider is loaded - synced with admin settings
-  useEffect(() => {
-    if (provider?.profession) {
-      axios.get(`${API}/service-fees/${provider.profession}`)
-        .then(res => setServiceFees(res.data))
-        .catch(() => setServiceFees({ frais_visite: 0, frais_prestation: 0 }));
-    }
-  }, [provider?.profession]);
 
   const fetchProvider = async () => {
     try {
@@ -227,13 +214,6 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
 
     // No payment required for service requests - show form directly
     setShowRequestForm(!showRequestForm);
-  };
-
-  const handlePaymentSuccess = () => {
-    setPaymentCompleted(true);
-    setShowPaymentPopup(false);
-    setShowRequestForm(true);
-    toast.success('Paiement réussi ! Vous pouvez maintenant envoyer votre demande.');
   };
 
   if (loading) {
@@ -670,16 +650,6 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
         </div>
 
       </div>
-
-      {/* Investigation Fee Payment Popup */}
-      <InvestigationFeePopup
-        isOpen={showPaymentPopup}
-        onClose={() => setShowPaymentPopup(false)}
-        provider={provider}
-        onPaymentSuccess={handlePaymentSuccess}
-        customerName={customer ? `${customer.first_name} ${customer.last_name}` : ''}
-        customerPhone={customer?.phone_number || ''}
-      />
 
       {/* Profile Edit Modal - Only for provider viewing their own profile */}
       {showEditProfile && isOwnProfile && provider && (
