@@ -30,6 +30,18 @@ adminApi.interceptors.request.use((config) => {
   }
   return config;
 });
+// Auto-logout on 401/403
+adminApi.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+      localStorage.removeItem('adminToken');
+      localStorage.removeItem('admin');
+      window.location.href = '/admin';
+    }
+    return Promise.reject(error);
+  }
+);
 
 // Traduction des professions
 const translateProfession = (profession) => {
