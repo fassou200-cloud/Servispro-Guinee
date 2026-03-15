@@ -71,7 +71,14 @@ const translateStatus = (status) => {
 
 // Check if user is an Agent Immobilier
 const isAgentImmobilier = (profession) => {
-  return profession === 'AgentImmobilier';
+  const realEstateProfessions = [
+    'AgentImmobilier',
+    'Agent Immobilier',
+    'Agent immobilier',
+    'Propriétaire immobilier',
+    'Proprietaire immobilier'
+  ];
+  return realEstateProfessions.includes(profession);
 };
 
 // Check if user is a Vehicle Provider (deprecated - categories removed)
