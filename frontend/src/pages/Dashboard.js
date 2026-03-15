@@ -24,6 +24,7 @@ import PropertySaleForm from '@/components/PropertySaleForm';
 import MyPropertySales from '@/components/MyPropertySales';
 import NotificationBell from '@/components/NotificationBell';
 import ProviderFeesCard from '@/components/ProviderFeesCard';
+import RealEstateFeesCard from '@/components/RealEstateFeesCard';
 import VisitRequestsList from '@/components/VisitRequestsList';
 import ProviderReviews from '@/components/ProviderReviews';
 import { getImageUrl } from '@/utils/imageUrl';
@@ -221,6 +222,14 @@ const Dashboard = ({ setIsAuthenticated }) => {
     );
   }
 
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="text-lg text-gray-600">Impossible de charger le profil.</div>
+      </div>
+    );
+  }
+
   // Agent Immobilier has different dashboard
   if (isAgentImmobilier(user.profession)) {
     return (
@@ -260,11 +269,6 @@ const Dashboard = ({ setIsAuthenticated }) => {
         </header>
 
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
-          {/* Service Fees Info */}
-          <div className="mb-6">
-            <ProviderFeesCard profession={user.profession} />
-          </div>
-
           {/* Profile Summary */}
           <Card className="p-6 mb-6">
             <div className="flex items-center gap-6">
@@ -282,6 +286,11 @@ const Dashboard = ({ setIsAuthenticated }) => {
               </div>
             </div>
           </Card>
+
+          {/* Real Estate Listing Fees Info */}
+          <div className="mb-6">
+            <RealEstateFeesCard providerId={user.id} />
+          </div>
 
           {/* Tabs for Agent Immobilier */}
           <div className="flex gap-2 mb-6 flex-wrap">

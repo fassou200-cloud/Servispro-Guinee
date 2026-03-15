@@ -92,7 +92,11 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
     commission_location_longue: 5,    // Location longue durée (%)
     commission_vente: 3,              // Vente immobilière (%)
     commission_location_vehicule: 10, // Location véhicule (%)
-    devise: 'GNF'
+    devise: 'GNF',
+    // Frais d'annonces immobilières
+    frais_annonce_location: 50000,    // Frais par annonce de location
+    frais_annonce_vente: 100000,      // Frais par annonce de vente
+    annonces_gratuites: 3             // Nombre d'annonces gratuites
   });
   const [commissionRevenue, setCommissionRevenue] = useState(null);
   const [savingSettings, setSavingSettings] = useState(false);
@@ -325,7 +329,10 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
         commission_location_longue: parseFloat(settings.commission_location_longue) || 5,
         commission_vente: parseFloat(settings.commission_vente) || 3,
         commission_location_vehicule: parseFloat(settings.commission_location_vehicule) || 10,
-        devise: settings.devise || 'GNF'
+        devise: settings.devise || 'GNF',
+        frais_annonce_location: parseInt(settings.frais_annonce_location) || 50000,
+        frais_annonce_vente: parseInt(settings.frais_annonce_vente) || 100000,
+        annonces_gratuites: parseInt(settings.annonces_gratuites) || 3
       });
       toast.success('Paramètres enregistrés avec succès !');
       // Refresh commission revenue with new rates
@@ -3936,6 +3943,96 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                       Taux actuel: 
                       Vente immobilière <span className="text-amber-400 font-semibold">{commissionRevenue?.rates?.commission_vente || settings.commission_vente}%</span>
                     </span>
+                  </div>
+                </Card>
+
+                {/* Frais d'Annonces Immobilières */}
+                <Card className="p-6 bg-slate-800 border-slate-700 mt-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-heading font-bold text-white flex items-center gap-2">
+                      <Home className="h-6 w-6 text-green-400" />
+                      Tarifs Annonces Immobilières
+                    </h2>
+                  </div>
+
+                  <p className="text-sm text-slate-400 mb-4">
+                    Configurez les frais d'annonces pour les agents et propriétaires immobiliers. Les premières annonces sont gratuites.
+                  </p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Annonces Gratuites */}
+                    <div className="space-y-2">
+                      <label className="text-sm text-slate-400 flex items-center gap-2">
+                        <Sparkles className="h-4 w-4 text-yellow-400" />
+                        Annonces Gratuites
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min="0"
+                          value={settings.annonces_gratuites || 3}
+                          onChange={(e) => setSettings({...settings, annonces_gratuites: e.target.value})}
+                          className="w-full bg-slate-700 border border-slate-600 text-white rounded-lg px-4 py-3 text-lg font-bold"
+                        />
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm">premières</span>
+                      </div>
+                      <p className="text-xs text-green-400">Nombre d'annonces gratuites par agent</p>
+                    </div>
+
+                    {/* Frais Annonce Location */}
+                    <div className="space-y-2">
+                      <label className="text-sm text-slate-400 flex items-center gap-2">
+                        <Building className="h-4 w-4 text-blue-400" />
+                        Frais Annonce Location
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min="0"
+                          step="1000"
+                          value={settings.frais_annonce_location || 50000}
+                          onChange={(e) => setSettings({...settings, frais_annonce_location: e.target.value})}
+                          className="w-full bg-slate-700 border border-slate-600 text-white rounded-lg px-4 py-3 text-lg font-bold"
+                        />
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm">{settings.devise}</span>
+                      </div>
+                      <p className="text-xs text-blue-400">Par annonce de location (après gratuites)</p>
+                    </div>
+
+                    {/* Frais Annonce Vente */}
+                    <div className="space-y-2">
+                      <label className="text-sm text-slate-400 flex items-center gap-2">
+                        <Home className="h-4 w-4 text-purple-400" />
+                        Frais Annonce Vente
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min="0"
+                          step="1000"
+                          value={settings.frais_annonce_vente || 100000}
+                          onChange={(e) => setSettings({...settings, frais_annonce_vente: e.target.value})}
+                          className="w-full bg-slate-700 border border-slate-600 text-white rounded-lg px-4 py-3 text-lg font-bold"
+                        />
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm">{settings.devise}</span>
+                      </div>
+                      <p className="text-xs text-purple-400">Par annonce de vente (après gratuites)</p>
+                    </div>
+                  </div>
+
+                  {/* Info Box */}
+                  <div className="mt-4 p-4 bg-green-900/20 border border-green-700 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <CheckCircle className="h-5 w-5 text-green-400 mt-0.5" />
+                      <div>
+                        <p className="text-green-400 font-medium">Politique actuelle</p>
+                        <p className="text-sm text-slate-300 mt-1">
+                          Les {settings.annonces_gratuites || 3} premières annonces sont <strong>gratuites</strong>. 
+                          Ensuite, chaque annonce de location coûte <strong>{(settings.frais_annonce_location || 50000).toLocaleString()} {settings.devise}</strong> et 
+                          chaque annonce de vente coûte <strong>{(settings.frais_annonce_vente || 100000).toLocaleString()} {settings.devise}</strong>.
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </Card>
 

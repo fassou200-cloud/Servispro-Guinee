@@ -1,0 +1,81 @@
+{
+  "summary": "Real Estate Ad Pricing Feature - Full Testing Complete. All features verified: Backend API (8/8 tests passed), Frontend UI with RealEstateFeesCard component renders correctly. Found and fixed a critical bug in the backend endpoint.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "bugs_found_and_fixed": [
+    {
+      "location": "/app/backend/server.py line 6036-6037",
+      "issue": "agent-listing-info endpoint was querying wrong collection (db.rentals instead of db.rental_listings) and using wrong field names (owner_id instead of service_provider_id/agent_id)",
+      "fix_applied": "Changed to db.rental_listings.count_documents({'service_provider_id': provider_id}) and db.property_sales.count_documents({'agent_id': provider_id})"
+    }
+  ],
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_real_estate_fees.py",
+    "/app/test_reports/pytest/pytest_real_estate_fees.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "RealEstateFeesCard component correctly uses providerId prop to fetch agent-listing-info",
+    "All data-testid attributes present and working correctly",
+    "Fee cards correctly show 'Gratuit' when free listings remain (is_next_free: true)",
+    "Free listings banner shows correct count from API response",
+    "Dashboard correctly imports and renders RealEstateFeesCard for AgentImmobilier users"
+  ],
+  "updated_files": [
+    "/app/backend/server.py (line 6036-6038 - fixed collection and field names)"
+  ],
+  "success_rate": {
+    "backend": "100% (8/8 tests passed)",
+    "frontend": "100% (all UI elements verified with data-testid)"
+  },
+  "test_credentials": {
+    "real_estate_agent": {
+      "phone": "224699999999",
+      "password": "password123",
+      "user_type": "provider"
+    },
+    "admin": {
+      "email": "servispro@servisprogn.com",
+      "password": "Servisproguinea2026#"
+    }
+  },
+  "seed_data_creation": "Using existing test real estate agent (TestImmo Agent)",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Real estate fees feature is complete. RealEstateFeesCard displays on dashboard for AgentImmobilier users. Backend tests in /app/backend/tests/test_real_estate_fees.py can be reused for regression.",
+  "features_tested": {
+    "backend_api_agent_listing_info": {
+      "status": "PASS",
+      "endpoint": "GET /api/agent-listing-info/{provider_id}",
+      "details": "Returns correct listing counts, fee amounts, and free listings calculation"
+    },
+    "backend_api_admin_settings": {
+      "status": "PASS",
+      "endpoint": "GET /api/admin/settings",
+      "details": "Returns frais_annonce_location, frais_annonce_vente, annonces_gratuites fields"
+    },
+    "frontend_real_estate_fees_card": {
+      "status": "PASS",
+      "details": "Card renders with all data-testid elements: real-estate-fees-card, free-listings-banner, total-listings-count, rentals-count, sales-count, rental-fee-card, sale-fee-card"
+    },
+    "frontend_gratuit_display": {
+      "status": "PASS",
+      "details": "Fee cards correctly show 'Gratuit' when free listings remain (is_next_free: true)"
+    },
+    "frontend_dashboard_integration": {
+      "status": "PASS",
+      "details": "Dashboard correctly loads for real estate agents (profession='Propriétaire immobilier') and displays RealEstateFeesCard"
+    }
+  },
+  "mocked_apis": {
+    "has_mocked_apis": false,
+    "mocked_apis_list": []
+  }
+}

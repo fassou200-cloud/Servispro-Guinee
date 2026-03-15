@@ -5966,6 +5966,10 @@ class AdminSettingsUpdate(BaseModel):
     commission_vente: Optional[float] = None           # Vente immobilière (%)
     commission_location_vehicule: Optional[float] = None # Location véhicule (%)
     devise: Optional[str] = None                       # Devise (GNF, USD, EUR)
+    # Frais d'annonces immobilières
+    frais_annonce_location: Optional[int] = None      # Frais par annonce de location (GNF)
+    frais_annonce_vente: Optional[int] = None         # Frais par annonce de vente (GNF)
+    annonces_gratuites: Optional[int] = None          # Nombre d'annonces gratuites
 
 # Public endpoint to get commission rates (visible to all users)
 @api_router.get("/commission-rates")
@@ -6011,6 +6015,43 @@ async def get_public_commission_rates():
                 'type': 'percentage'
             }
         },
+        'devise': settings.get('devise', 'GNF')
+    }
+
+# Endpoint pour obtenir les tarifs et le nombre d'annonces restantes pour un agent immobilier
+@api_router.get("/agent-listing-info/{provider_id}")
+async def get_agent_listing_info(provider_id: str):
+    """Get listing fees and remaining free listings for a real estate agent"""
+    # Get platform settings
+    settings = await db.admin_settings.find_one({'type': 'platform_settings'}, {'_id': 0})
+    if not settings:
+        settings = {
+            'frais_annonce_location': 50000,
+            'frais_annonce_vente': 100000,
+            'annonces_gratuites': 3,
+            'devise': 'GNF'
+        }
+    
+    # Count existing listings for this provider
+    # Note: rental_listings uses 'service_provider_id', property_sales uses 'agent_id'
+    rentals_count = await db.rental_listings.count_documents({'service_provider_id': provider_id})
+    sales_count = await db.property_sales.count_documents({'agent_id': provider_id})
+    total_listings = rentals_count + sales_count
+    
+    # Calculate free listings remaining
+    free_listings_limit = settings.get('annonces_gratuites', 3)
+    free_listings_remaining = max(0, free_listings_limit - total_listings)
+    is_free = total_listings < free_listings_limit
+    
+    return {
+        'total_listings': total_listings,
+        'rentals_count': rentals_count,
+        'sales_count': sales_count,
+        'free_listings_limit': free_listings_limit,
+        'free_listings_remaining': free_listings_remaining,
+        'is_next_free': is_free,
+        'frais_annonce_location': settings.get('frais_annonce_location', 50000),
+        'frais_annonce_vente': settings.get('frais_annonce_vente', 100000),
         'devise': settings.get('devise', 'GNF')
     }
 
@@ -6170,6 +6211,9 @@ async def get_admin_settings():
             'commission_vente': 3.0,              # 3% Vente immobilière
             'commission_location_vehicule': 10.0, # 10% Location véhicule
             'devise': 'GNF',                      # Devise par défaut
+            'frais_annonce_location': 50000,      # 50 000 GNF par annonce de location
+            'frais_annonce_vente': 100000,        # 100 000 GNF par annonce de vente
+            'annonces_gratuites': 3,              # 3 premières annonces gratuites
             'created_at': datetime.now(timezone.utc).isoformat(),
             'updated_at': datetime.now(timezone.utc).isoformat()
         }
@@ -6205,6 +6249,12 @@ async def update_admin_settings(settings: AdminSettingsUpdate):
         update_data['commission_location_vehicule'] = settings.commission_location_vehicule
     if settings.devise is not None:
         update_data['devise'] = settings.devise
+    if settings.frais_annonce_location is not None:
+        update_data['frais_annonce_location'] = settings.frais_annonce_location
+    if settings.frais_annonce_vente is not None:
+        update_data['frais_annonce_vente'] = settings.frais_annonce_vente
+    if settings.annonces_gratuites is not None:
+        update_data['annonces_gratuites'] = settings.annonces_gratuites
     
     result = await db.admin_settings.update_one(
         {'type': 'platform_settings'},
@@ -6802,8 +6852,8 @@ app.add_middleware(RateLimitMiddleware)
 
 # CORS Configuration - Restrictive
 ALLOWED_ORIGINS = [
-    os.environ.get('FRONTEND_URL', 'https://profi-gn.preview.emergentagent.com'),
-    "https://profi-gn.preview.emergentagent.com",
+    os.environ.get('FRONTEND_URL', 'https://servis-preview.preview.emergentagent.com'),
+    "https://servis-preview.preview.emergentagent.com",
     "https://servisprogn.com",
     "https://www.servisprogn.com",
     "http://servisprogn.com",
