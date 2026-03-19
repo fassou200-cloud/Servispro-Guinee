@@ -65,6 +65,12 @@ const CustomerHome = ({ isCustomerAuthenticated }) => {
             >
               Entreprise
             </button>
+            <button 
+              onClick={() => navigate('/marketplace')}
+              className="text-orange-500 hover:text-orange-600 font-semibold transition-colors"
+            >
+              Marketplace
+            </button>
             <a 
               href="https://www.facebook.com/profile.php?id=100090427284060&sk=directory_intro" 
               target="_blank" 

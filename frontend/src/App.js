@@ -8,6 +8,9 @@ import ProviderProfile from '@/pages/ProviderProfile';
 import BrowseRentals from '@/pages/BrowseRentals';
 import BrowsePropertySales from '@/pages/BrowsePropertySales';
 import RentalDetail from '@/pages/RentalDetail';
+import Marketplace from '@/pages/Marketplace';
+import ShopDetail from '@/pages/ShopDetail';
+import ProductDetail from '@/pages/ProductDetail';
 import CustomerAuth from '@/pages/CustomerAuth';
 import CustomerDashboard from '@/pages/CustomerDashboard';
 import AuthPage from '@/pages/AuthPage';
@@ -54,6 +57,11 @@ function App() {
           <Route path="/rentals" element={<BrowseRentals isCustomerAuthenticated={isCustomerAuthenticated} />} />
           <Route path="/property-sales" element={<BrowsePropertySales isCustomerAuthenticated={isCustomerAuthenticated} />} />
           <Route path="/rental/:rentalId" element={<RentalDetail />} />
+          
+          {/* Marketplace Routes */}
+          <Route path="/marketplace" element={<Marketplace isCustomerAuthenticated={isCustomerAuthenticated} />} />
+          <Route path="/marketplace/shop/:shopId" element={<ShopDetail />} />
+          <Route path="/marketplace/product/:productId" element={<ProductDetail />} />
           
           {/* Customer Routes */}
           <Route 
