@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Search, MapPin, Users, Star, Shield, Clock, ChevronRight, User, Building,
-  Zap, Droplet, Wrench, Hammer, Home
+  Zap, Droplet, Wrench, Hammer, Home, ShoppingBag, Briefcase
 } from 'lucide-react';
 
 const CustomerHome = ({ isCustomerAuthenticated }) => {
@@ -312,6 +312,42 @@ const CustomerHome = ({ isCustomerAuthenticated }) => {
               </h3>
               <p className="text-blue-100 text-sm md:text-base">
                 Locations et ventes immobilières
+              </p>
+              <ChevronRight className="absolute right-6 top-1/2 -translate-y-1/2 h-6 w-6 text-white/70 group-hover:translate-x-1 transition-transform" />
+            </button>
+
+            {/* Marketplace Card */}
+            <button
+              onClick={() => navigate('/marketplace')}
+              data-testid="marketplace-card"
+              className="group relative bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl p-6 md:p-8 text-left transition-all hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <div className="h-12 w-12 rounded-xl bg-white/20 flex items-center justify-center mb-4">
+                <ShoppingBag className="h-6 w-6 text-white" />
+              </div>
+              <h3 className="text-xl md:text-2xl font-bold text-white mb-2">
+                Marketplace
+              </h3>
+              <p className="text-orange-100 text-sm md:text-base">
+                Parcourez les boutiques et produits
+              </p>
+              <ChevronRight className="absolute right-6 top-1/2 -translate-y-1/2 h-6 w-6 text-white/70 group-hover:translate-x-1 transition-transform" />
+            </button>
+
+            {/* Enterprise Card */}
+            <button
+              onClick={() => navigate('/company/auth')}
+              data-testid="enterprise-card"
+              className="group relative bg-gradient-to-br from-purple-600 to-indigo-600 rounded-2xl p-6 md:p-8 text-left transition-all hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <div className="h-12 w-12 rounded-xl bg-white/20 flex items-center justify-center mb-4">
+                <Briefcase className="h-6 w-6 text-white" />
+              </div>
+              <h3 className="text-xl md:text-2xl font-bold text-white mb-2">
+                Espace Entreprise
+              </h3>
+              <p className="text-purple-100 text-sm md:text-base">
+                Créez votre boutique et vendez vos produits
               </p>
               <ChevronRight className="absolute right-6 top-1/2 -translate-y-1/2 h-6 w-6 text-white/70 group-hover:translate-x-1 transition-transform" />
             </button>
