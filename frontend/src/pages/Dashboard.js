@@ -316,13 +316,6 @@ const Dashboard = ({ setIsAuthenticated }) => {
             <Button variant={activeTab === 'messages' ? 'default' : 'outline'} onClick={() => setActiveTab('messages')} className="gap-2">
               <MessageCircle className="h-4 w-4" /> Messages
             </Button>
-            <Button
-              variant={activeTab === 'my-shop' ? 'default' : 'outline'}
-              onClick={() => setActiveTab('my-shop')}
-              className={`gap-2 ${activeTab === 'my-shop' ? 'bg-orange-500 hover:bg-orange-600' : 'bg-orange-50 border-orange-200 hover:bg-orange-100'}`}
-            >
-              <Store className="h-4 w-4 text-orange-500" /> Ma Boutique
-            </Button>
           </div>
 
           {activeTab === 'profile' && <ProfileForm user={user} setUser={setUser} onUpdate={fetchProfile} />}
@@ -332,7 +325,6 @@ const Dashboard = ({ setIsAuthenticated }) => {
           {activeTab === 'sales' && <MyPropertySales />}
           {activeTab === 'create-sale' && <PropertySaleForm onSuccess={() => setActiveTab('sales')} />}
           {activeTab === 'messages' && <RentalConversations />}
-          {activeTab === 'my-shop' && <MyShop token={localStorage.getItem('token')} />}
         </div>
       </div>
     );
@@ -466,14 +458,6 @@ const Dashboard = ({ setIsAuthenticated }) => {
               <User className="h-4 w-4" />
               Mon Profil
             </Button>
-            <Button
-              variant={activeTab === 'my-shop' ? 'default' : 'outline'}
-              onClick={() => setActiveTab('my-shop')}
-              className={`gap-2 ${activeTab === 'my-shop' ? 'bg-orange-500 hover:bg-orange-600' : 'bg-orange-50 border-orange-200 hover:bg-orange-100'}`}
-            >
-              <Store className="h-4 w-4 text-orange-500" />
-              Ma Boutique
-            </Button>
           </div>
 
           {/* Content */}
@@ -492,7 +476,6 @@ const Dashboard = ({ setIsAuthenticated }) => {
             />
           )}
           {activeTab === 'profile' && <ProfileForm user={user} setUser={setUser} onUpdate={fetchProfile} />}
-          {activeTab === 'my-shop' && <MyShop token={localStorage.getItem('token')} />}
         </div>
       </div>
     );
@@ -712,18 +695,6 @@ const Dashboard = ({ setIsAuthenticated }) => {
           >
             <Star className="h-4 w-4" />
             Avis Clients
-          </Button>
-          <Button
-            variant={activeTab === 'my-shop' ? 'default' : 'outline'}
-            onClick={() => setActiveTab('my-shop')}
-            className={`gap-2 rounded-xl whitespace-nowrap ${
-              activeTab === 'my-shop' 
-                ? 'bg-orange-500 hover:bg-orange-600 text-white shadow-lg' 
-                : 'text-gray-600 hover:text-gray-900 hover:bg-orange-50 border-orange-200'
-            }`}
-          >
-            <Store className="h-4 w-4" />
-            Ma Boutique
           </Button>
         </div>
 
@@ -1019,9 +990,6 @@ const Dashboard = ({ setIsAuthenticated }) => {
 
         {activeTab === 'reviews' && user && (
           <ProviderReviews providerId={user.id} />
-        )}
-        {activeTab === 'my-shop' && (
-          <MyShop token={localStorage.getItem('token')} />
         )}
       </div>
     </div>

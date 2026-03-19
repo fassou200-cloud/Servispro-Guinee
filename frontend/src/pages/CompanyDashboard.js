@@ -13,12 +13,13 @@ import {
   Building2, LogOut, FileText, Upload, Briefcase, Users, MapPin,
   CheckCircle, XCircle, Clock, Phone, Mail, Globe, Plus, Home,
   Eye, AlertTriangle, Shield, User, ExternalLink, Trash2, Edit,
-  DollarSign, Calendar, Building, Bath, Car, Trees, Waves, X
+  DollarSign, Calendar, Building, Bath, Car, Trees, Waves, X, Store
 } from 'lucide-react';
 import axios from 'axios';
 import { getErrorMessage } from '@/utils/helpers';
 import { getImageUrl } from '@/utils/imageUrl';
 import CommissionRatesCard from '@/components/CommissionRatesCard';
+import MyShop from '@/components/MyShop';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -907,6 +908,14 @@ const CompanyDashboard = () => {
             data-testid="tab-create-service"
           >
             <Plus className="h-4 w-4" /> + Service
+          </Button>
+          <Button 
+            variant={activeTab === 'my-shop' ? 'default' : 'outline'} 
+            onClick={() => setActiveTab('my-shop')} 
+            className={`gap-2 ${activeTab === 'my-shop' ? 'bg-orange-500 hover:bg-orange-600' : 'bg-orange-50 border-orange-200 hover:bg-orange-100'}`}
+            data-testid="tab-my-shop"
+          >
+            <Store className="h-4 w-4 text-orange-500" /> Ma Boutique
           </Button>
         </div>
 
@@ -2226,6 +2235,11 @@ const CompanyDashboard = () => {
               </div>
             )}
           </Card>
+        )}
+
+        {/* Ma Boutique */}
+        {activeTab === 'my-shop' && (
+          <MyShop token={localStorage.getItem('companyToken')} apiPrefix="company/shop" />
         )}
       </div>
     </div>

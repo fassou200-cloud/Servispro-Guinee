@@ -20,7 +20,7 @@ const SECTORS = [
   'Automobile', 'Mobilier & Décoration', 'Santé & Bien-être', 'Autre'
 ];
 
-const MyShop = ({ token }) => {
+const MyShop = ({ token, apiPrefix = 'shop' }) => {
   const [shop, setShop] = useState(null);
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -48,16 +48,16 @@ const MyShop = ({ token }) => {
   const loadShopData = async () => {
     try {
       const [shopRes, catRes] = await Promise.all([
-        axios.get(`${API}/shop/my-shop`, authHeaders),
+        axios.get(`${API}/${apiPrefix}/my-shop`, authHeaders),
         axios.get(`${API}/product-categories`)
       ]);
       setCategories(catRes.data);
       if (shopRes.data) {
         setShop(shopRes.data);
         const [prodRes, statsRes, msgRes] = await Promise.all([
-          axios.get(`${API}/shop/products`, authHeaders),
-          axios.get(`${API}/shop/stats`, authHeaders),
-          axios.get(`${API}/shop/messages`, authHeaders)
+          axios.get(`${API}/${apiPrefix}/products`, authHeaders),
+          axios.get(`${API}/${apiPrefix}/stats`, authHeaders),
+          axios.get(`${API}/${apiPrefix}/messages`, authHeaders)
         ]);
         setProducts(prodRes.data);
         setStats(statsRes.data);
@@ -80,7 +80,7 @@ const MyShop = ({ token }) => {
     }
     setSaving(true);
     try {
-      const res = await axios.post(`${API}/shop/create`, shopForm, authHeaders);
+      const res = await axios.post(`${API}/${apiPrefix}/create`, shopForm, authHeaders);
       setShop(res.data);
       setShowCreateShop(false);
       toast.success('Boutique créée avec succès !');
@@ -100,7 +100,7 @@ const MyShop = ({ token }) => {
     }
     setSaving(true);
     try {
-      const res = await axios.post(`${API}/shop/products`, {
+      const res = await axios.post(`${API}/${apiPrefix}/products`, {
         ...productForm,
         price: parseFloat(productForm.price)
       }, authHeaders);
@@ -109,7 +109,7 @@ const MyShop = ({ token }) => {
       if (selectedProductFiles.length > 0) {
         const formData = new FormData();
         selectedProductFiles.forEach(f => formData.append('files', f));
-        await axios.post(`${API}/shop/products/${res.data.id}/photos`, formData, {
+        await axios.post(`${API}/${apiPrefix}/products/${res.data.id}/photos`, formData, {
           headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
         });
       }
@@ -129,7 +129,7 @@ const MyShop = ({ token }) => {
   const handleDeleteProduct = async (productId) => {
     if (!window.confirm('Supprimer ce produit ?')) return;
     try {
-      await axios.delete(`${API}/shop/products/${productId}`, authHeaders);
+      await axios.delete(`${API}/${apiPrefix}/products/${productId}`, authHeaders);
       toast.success('Produit supprimé');
       setProducts(products.filter(p => p.id !== productId));
     } catch (err) {
@@ -139,7 +139,7 @@ const MyShop = ({ token }) => {
 
   const handleToggleAvailability = async (product) => {
     try {
-      await axios.put(`${API}/shop/products/${product.id}`, { is_available: !product.is_available }, authHeaders);
+      await axios.put(`${API}/${apiPrefix}/products/${product.id}`, { is_available: !product.is_available }, authHeaders);
       setProducts(products.map(p => p.id === product.id ? { ...p, is_available: !p.is_available } : p));
     } catch (err) {
       toast.error('Erreur');
@@ -152,7 +152,7 @@ const MyShop = ({ token }) => {
     const formData = new FormData();
     formData.append('file', file);
     try {
-      const res = await axios.post(`${API}/shop/upload-logo`, formData, {
+      const res = await axios.post(`${API}/${apiPrefix}/upload-logo`, formData, {
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
       });
       setShop({ ...shop, logo: res.data.logo });
