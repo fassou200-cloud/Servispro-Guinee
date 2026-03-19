@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Store, Plus, Package, Eye, MessageCircle, Edit, Trash2, Upload, Camera,
-  BarChart3, Check, X, Loader2, Image as ImageIcon, DollarSign, Tag
+  Check, X, Loader2, Image as ImageIcon, DollarSign, Tag, Save
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
@@ -29,21 +29,23 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
   const [loading, setLoading] = useState(true);
   const [showCreateShop, setShowCreateShop] = useState(false);
   const [showAddProduct, setShowAddProduct] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
   const [activeSection, setActiveSection] = useState('products');
   const [saving, setSaving] = useState(false);
-  const [uploadingPhotos, setUploadingPhotos] = useState(false);
+  const [uploadingPhotos, setUploadingPhotos] = useState(null);
   const fileInputRef = useRef(null);
+  const addPhotosInputRef = useRef(null);
   const logoInputRef = useRef(null);
 
   const [shopForm, setShopForm] = useState({ name: '', description: '', sector: '', contact_phone: '', contact_email: '', location: '' });
   const [productForm, setProductForm] = useState({ name: '', description: '', price: '', is_negotiable: false, is_available: true, category_id: '' });
+  const [editForm, setEditForm] = useState({ name: '', description: '', price: '', is_negotiable: false, is_available: true, category_id: '' });
   const [selectedProductFiles, setSelectedProductFiles] = useState([]);
+  const [addPhotosProductId, setAddPhotosProductId] = useState(null);
 
   const authHeaders = { headers: { Authorization: `Bearer ${token}` } };
 
-  useEffect(() => {
-    loadShopData();
-  }, []);
+  useEffect(() => { loadShopData(); }, []);
 
   const loadShopData = async () => {
     try {
@@ -65,18 +67,14 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
       } else {
         setShowCreateShop(true);
       }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { console.error(err); }
+    finally { setLoading(false); }
   };
 
   const handleCreateShop = async (e) => {
     e.preventDefault();
     if (!shopForm.name || !shopForm.description || !shopForm.sector || !shopForm.contact_phone) {
-      toast.error('Veuillez remplir les champs obligatoires');
-      return;
+      toast.error('Veuillez remplir les champs obligatoires'); return;
     }
     setSaving(true);
     try {
@@ -87,25 +85,19 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
       loadShopData();
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Erreur lors de la création');
-    } finally {
-      setSaving(false);
-    }
+    } finally { setSaving(false); }
   };
 
   const handleAddProduct = async (e) => {
     e.preventDefault();
     if (!productForm.name || !productForm.description || !productForm.price) {
-      toast.error('Veuillez remplir les champs obligatoires');
-      return;
+      toast.error('Veuillez remplir les champs obligatoires'); return;
     }
     setSaving(true);
     try {
       const res = await axios.post(`${API}/${apiPrefix}/products`, {
-        ...productForm,
-        price: parseFloat(productForm.price)
+        ...productForm, price: parseFloat(productForm.price)
       }, authHeaders);
-      
-      // Upload photos if selected
       if (selectedProductFiles.length > 0) {
         const formData = new FormData();
         selectedProductFiles.forEach(f => formData.append('files', f));
@@ -113,7 +105,6 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
           headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
         });
       }
-      
       toast.success('Produit ajouté !');
       setShowAddProduct(false);
       setProductForm({ name: '', description: '', price: '', is_negotiable: false, is_available: true, category_id: '' });
@@ -121,8 +112,60 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
       loadShopData();
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Erreur');
+    } finally { setSaving(false); }
+  };
+
+  const handleEditProduct = async (e) => {
+    e.preventDefault();
+    if (!editingProduct) return;
+    setSaving(true);
+    try {
+      await axios.put(`${API}/${apiPrefix}/products/${editingProduct.id}`, {
+        name: editForm.name,
+        description: editForm.description,
+        price: parseFloat(editForm.price),
+        is_negotiable: editForm.is_negotiable,
+        is_available: editForm.is_available,
+        category_id: editForm.category_id || null
+      }, authHeaders);
+      toast.success('Produit mis à jour !');
+      setEditingProduct(null);
+      loadShopData();
+    } catch (err) {
+      toast.error('Erreur lors de la mise à jour');
+    } finally { setSaving(false); }
+  };
+
+  const startEditProduct = (product) => {
+    setEditingProduct(product);
+    setEditForm({
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      is_negotiable: product.is_negotiable,
+      is_available: product.is_available,
+      category_id: product.category_id || ''
+    });
+    setShowAddProduct(false);
+  };
+
+  const handleAddPhotosToProduct = async (e) => {
+    const files = Array.from(e.target.files);
+    if (!files.length || !addPhotosProductId) return;
+    setUploadingPhotos(addPhotosProductId);
+    try {
+      const formData = new FormData();
+      files.forEach(f => formData.append('files', f));
+      const res = await axios.post(`${API}/${apiPrefix}/products/${addPhotosProductId}/photos`, formData, {
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
+      });
+      setProducts(products.map(p => p.id === addPhotosProductId ? { ...p, photos: res.data.photos } : p));
+      toast.success(`${files.length} photo(s) ajoutée(s) !`);
+    } catch (err) {
+      toast.error('Erreur upload photos');
     } finally {
-      setSaving(false);
+      setUploadingPhotos(null);
+      setAddPhotosProductId(null);
     }
   };
 
@@ -132,18 +175,15 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
       await axios.delete(`${API}/${apiPrefix}/products/${productId}`, authHeaders);
       toast.success('Produit supprimé');
       setProducts(products.filter(p => p.id !== productId));
-    } catch (err) {
-      toast.error('Erreur');
-    }
+    } catch (err) { toast.error('Erreur'); }
   };
 
   const handleToggleAvailability = async (product) => {
     try {
       await axios.put(`${API}/${apiPrefix}/products/${product.id}`, { is_available: !product.is_available }, authHeaders);
       setProducts(products.map(p => p.id === product.id ? { ...p, is_available: !p.is_available } : p));
-    } catch (err) {
-      toast.error('Erreur');
-    }
+      toast.success(product.is_available ? 'Marqué en rupture' : 'Marqué en stock');
+    } catch (err) { toast.error('Erreur'); }
   };
 
   const handleUploadLogo = async (e) => {
@@ -157,9 +197,7 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
       });
       setShop({ ...shop, logo: res.data.logo });
       toast.success('Logo mis à jour !');
-    } catch (err) {
-      toast.error('Erreur upload logo');
-    }
+    } catch (err) { toast.error('Erreur upload logo'); }
   };
 
   const formatPrice = (p) => new Intl.NumberFormat('fr-FR').format(p || 0);
@@ -252,18 +290,21 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
         ))}
       </div>
 
+      {/* Hidden file input for adding photos to existing product */}
+      <input type="file" ref={addPhotosInputRef} multiple accept="image/*" className="hidden" onChange={handleAddPhotosToProduct} />
+
       {/* Products Section */}
       {activeSection === 'products' && (
         <div>
           <div className="flex justify-between items-center mb-4">
             <h3 className="font-bold text-lg">Mes Produits</h3>
-            <Button data-testid="add-product-btn" onClick={() => setShowAddProduct(true)} className="bg-orange-500 hover:bg-orange-600 gap-2" size="sm">
+            <Button data-testid="add-product-btn" onClick={() => { setShowAddProduct(true); setEditingProduct(null); }} className="bg-orange-500 hover:bg-orange-600 gap-2" size="sm">
               <Plus className="h-4 w-4" /> Ajouter un produit
             </Button>
           </div>
 
           {/* Add Product Form */}
-          {showAddProduct && (
+          {showAddProduct && !editingProduct && (
             <Card className="p-5 mb-4 border-orange-200">
               <h4 className="font-semibold mb-3">Nouveau produit</h4>
               <form onSubmit={handleAddProduct} className="space-y-3">
@@ -278,10 +319,16 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
                     </select>
                   )}
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-6">
                   <label className="flex items-center gap-2 text-sm">
                     <input type="checkbox" checked={productForm.is_negotiable} onChange={(e) => setProductForm({...productForm, is_negotiable: e.target.checked})} />
                     Prix négociable
+                  </label>
+                  <label className="flex items-center gap-2 text-sm">
+                    <input type="checkbox" checked={productForm.is_available} onChange={(e) => setProductForm({...productForm, is_available: e.target.checked})} />
+                    <span className={productForm.is_available ? 'text-green-600 font-medium' : 'text-red-500 font-medium'}>
+                      {productForm.is_available ? 'En stock' : 'Rupture de stock'}
+                    </span>
                   </label>
                 </div>
                 <div>
@@ -289,12 +336,70 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
                   <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} className="gap-2">
                     <Camera className="h-4 w-4" /> Photos ({selectedProductFiles.length})
                   </Button>
+                  {selectedProductFiles.length > 0 && (
+                    <div className="flex gap-2 mt-2 flex-wrap">
+                      {selectedProductFiles.map((f, i) => (
+                        <span key={i} className="text-xs bg-gray-100 px-2 py-1 rounded">{f.name}</span>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div className="flex gap-2">
                   <Button data-testid="save-product-btn" type="submit" className="bg-orange-500 hover:bg-orange-600" disabled={saving}>
                     {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Ajouter'}
                   </Button>
                   <Button type="button" variant="outline" onClick={() => setShowAddProduct(false)}>Annuler</Button>
+                </div>
+              </form>
+            </Card>
+          )}
+
+          {/* Edit Product Form */}
+          {editingProduct && (
+            <Card className="p-5 mb-4 border-blue-200 bg-blue-50/30">
+              <h4 className="font-semibold mb-3 flex items-center gap-2">
+                <Edit className="h-4 w-4 text-blue-600" /> Modifier : {editingProduct.name}
+              </h4>
+              <form onSubmit={handleEditProduct} className="space-y-3">
+                <Input placeholder="Nom du produit *" value={editForm.name} onChange={(e) => setEditForm({...editForm, name: e.target.value})} required />
+                <Textarea placeholder="Description *" value={editForm.description} onChange={(e) => setEditForm({...editForm, description: e.target.value})} rows={2} required />
+                <div className="grid grid-cols-2 gap-3">
+                  <Input type="number" placeholder="Prix (GNF) *" value={editForm.price} onChange={(e) => setEditForm({...editForm, price: e.target.value})} required />
+                  {categories.length > 0 && (
+                    <select className="px-3 py-2 border rounded-lg text-sm" value={editForm.category_id} onChange={(e) => setEditForm({...editForm, category_id: e.target.value})}>
+                      <option value="">Catégorie</option>
+                      {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                  )}
+                </div>
+                <div className="flex items-center gap-6">
+                  <label className="flex items-center gap-2 text-sm">
+                    <input type="checkbox" checked={editForm.is_negotiable} onChange={(e) => setEditForm({...editForm, is_negotiable: e.target.checked})} />
+                    Prix négociable
+                  </label>
+                  <label className="flex items-center gap-2 text-sm">
+                    <input type="checkbox" checked={editForm.is_available} onChange={(e) => setEditForm({...editForm, is_available: e.target.checked})} />
+                    <span className={editForm.is_available ? 'text-green-600 font-medium' : 'text-red-500 font-medium'}>
+                      {editForm.is_available ? 'En stock' : 'Rupture de stock'}
+                    </span>
+                  </label>
+                </div>
+                {/* Existing photos */}
+                {editingProduct.photos?.length > 0 && (
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Photos actuelles :</p>
+                    <div className="flex gap-2 flex-wrap">
+                      {editingProduct.photos.map((photo, i) => (
+                        <img key={i} src={getImageUrl(photo)} alt="" className="h-16 w-16 rounded-lg object-cover border" />
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <Button type="submit" className="bg-blue-600 hover:bg-blue-700 gap-2" disabled={saving}>
+                    {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Save className="h-4 w-4" /> Enregistrer</>}
+                  </Button>
+                  <Button type="button" variant="outline" onClick={() => setEditingProduct(null)}>Annuler</Button>
                 </div>
               </form>
             </Card>
@@ -307,33 +412,56 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
               <p className="text-gray-500">Aucun produit. Ajoutez votre premier produit !</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-3">
               {products.map(product => (
-                <Card key={product.id} className="flex overflow-hidden">
-                  <div className="w-24 h-24 bg-gray-100 flex-shrink-0">
-                    {product.photos?.length > 0 ? (
-                      <img src={getImageUrl(product.photos[0])} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center"><Package className="h-8 w-8 text-gray-300" /></div>
-                    )}
-                  </div>
-                  <div className="flex-1 p-3 flex flex-col justify-between">
-                    <div>
-                      <h4 className="font-medium text-sm line-clamp-1">{product.name}</h4>
-                      <p className="text-orange-600 font-bold text-sm">{formatPrice(product.price)} GNF</p>
+                <Card key={product.id} className="overflow-hidden">
+                  <div className="flex">
+                    {/* Product image */}
+                    <div className="w-28 h-28 bg-gray-100 flex-shrink-0 relative">
+                      {product.photos?.length > 0 ? (
+                        <img src={getImageUrl(product.photos[0])} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center"><Package className="h-8 w-8 text-gray-300" /></div>
+                      )}
+                      {product.photos?.length > 1 && (
+                        <span className="absolute bottom-1 right-1 bg-black/60 text-white text-xs px-1.5 rounded">
+                          +{product.photos.length - 1}
+                        </span>
+                      )}
                     </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${product.is_available ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
-                        {product.is_available ? 'En stock' : 'Rupture'}
-                      </span>
-                      <span className="text-xs text-gray-400">{product.total_views || 0} vues</span>
-                      <div className="ml-auto flex gap-1">
-                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => handleToggleAvailability(product)}>
-                          {product.is_available ? <X className="h-3.5 w-3.5 text-gray-400" /> : <Check className="h-3.5 w-3.5 text-green-500" />}
-                        </Button>
-                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => handleDeleteProduct(product.id)}>
-                          <Trash2 className="h-3.5 w-3.5 text-red-400" />
-                        </Button>
+
+                    {/* Product info */}
+                    <div className="flex-1 p-3 flex flex-col justify-between">
+                      <div>
+                        <h4 className="font-medium text-sm line-clamp-1">{product.name}</h4>
+                        <p className="text-orange-600 font-bold text-sm">{formatPrice(product.price)} GNF {product.is_negotiable && <span className="text-xs font-normal text-gray-400">(Négociable)</span>}</p>
+                      </div>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        <button
+                          onClick={() => handleToggleAvailability(product)}
+                          className={`text-xs px-2 py-0.5 rounded-full cursor-pointer hover:opacity-80 ${product.is_available ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}
+                        >
+                          {product.is_available ? 'En stock' : 'Rupture'}
+                        </button>
+                        <span className="text-xs text-gray-400 flex items-center gap-1"><Eye className="h-3 w-3" />{product.total_views || 0}</span>
+                        <span className="text-xs text-gray-400 flex items-center gap-1"><MessageCircle className="h-3 w-3" />{product.total_inquiries || 0}</span>
+                        <div className="ml-auto flex gap-1">
+                          {/* Add Photos */}
+                          <Button variant="ghost" size="sm" className="h-7 px-2 text-xs gap-1 text-blue-500 hover:text-blue-700"
+                            disabled={uploadingPhotos === product.id}
+                            onClick={() => { setAddPhotosProductId(product.id); addPhotosInputRef.current?.click(); }}
+                          >
+                            {uploadingPhotos === product.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <><Camera className="h-3.5 w-3.5" /> Photo</>}
+                          </Button>
+                          {/* Edit */}
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => startEditProduct(product)}>
+                            <Edit className="h-3.5 w-3.5 text-blue-500" />
+                          </Button>
+                          {/* Delete */}
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => handleDeleteProduct(product.id)}>
+                            <Trash2 className="h-3.5 w-3.5 text-red-400" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
