@@ -128,7 +128,7 @@ const CustomerHome = ({ isCustomerAuthenticated }) => {
             <img 
               src="https://customer-assets.emergentagent.com/job_51c68f4d-d0b5-4882-ab10-1c8d02ee7e45/artifacts/d6u3u1zz_image.png"
               alt="ServisPro"
-              className="h-32 w-auto"
+              className="h-48 w-auto"
             />
             <h2 className="text-2xl md:text-3xl font-bold text-gray-900 text-center">
               Que recherchez-vous ?
