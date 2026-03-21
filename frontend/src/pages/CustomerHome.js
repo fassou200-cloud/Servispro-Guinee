@@ -124,9 +124,16 @@ const CustomerHome = ({ isCustomerAuthenticated }) => {
       {/* What are you looking for Section */}
       <section className="py-12 md:py-16 px-6">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 text-center mb-8 md:mb-12">
-            Que recherchez-vous ?
-          </h2>
+          <div className="flex flex-col items-center gap-4 mb-8 md:mb-12">
+            <img 
+              src="https://customer-assets.emergentagent.com/job_51c68f4d-d0b5-4882-ab10-1c8d02ee7e45/artifacts/d6u3u1zz_image.png"
+              alt="ServisPro"
+              className="h-20 w-auto"
+            />
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 text-center">
+              Que recherchez-vous ?
+            </h2>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
             {/* Find Professional Card */}
