@@ -10,7 +10,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://servis-preview.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://shop-marketplace-47.preview.emergentagent.com').rstrip('/')
 
 # Test credentials for real estate agent
 REAL_ESTATE_AGENT = {

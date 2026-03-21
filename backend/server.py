@@ -6995,8 +6995,8 @@ app.add_middleware(RateLimitMiddleware)
 
 # CORS Configuration - Restrictive
 ALLOWED_ORIGINS = [
-    os.environ.get('FRONTEND_URL', 'https://servis-preview.preview.emergentagent.com'),
-    "https://servis-preview.preview.emergentagent.com",
+    os.environ.get('FRONTEND_URL', 'https://shop-marketplace-47.preview.emergentagent.com'),
+    "https://shop-marketplace-47.preview.emergentagent.com",
     "https://servisprogn.com",
     "https://www.servisprogn.com",
     "http://servisprogn.com",
