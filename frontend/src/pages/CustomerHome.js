@@ -23,11 +23,12 @@ const CustomerHome = ({ isCustomerAuthenticated }) => {
       <header className="bg-white px-6 py-4 border-b border-gray-100">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center gap-2">
-            <div className="h-10 w-10 rounded-xl bg-green-500 flex items-center justify-center">
-              <span className="text-white font-bold text-xl">S</span>
-            </div>
-            <span className="font-bold text-xl text-gray-900">ServisPro</span>
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
+            <img 
+              src="https://customer-assets.emergentagent.com/job_51c68f4d-d0b5-4882-ab10-1c8d02ee7e45/artifacts/d6u3u1zz_image.png"
+              alt="ServisPro"
+              className="h-10 w-auto"
+            />
           </div>
 
           {/* Navigation Links - Desktop */}
@@ -209,11 +210,12 @@ const CustomerHome = ({ isCustomerAuthenticated }) => {
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             {/* Logo & Copyright */}
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-green-500/20">
-                <span className="text-white font-bold text-lg">S</span>
-              </div>
+              <img 
+                src="https://customer-assets.emergentagent.com/job_51c68f4d-d0b5-4882-ab10-1c8d02ee7e45/artifacts/d6u3u1zz_image.png"
+                alt="ServisPro"
+                className="h-10 w-auto"
+              />
               <div>
-                <span className="font-bold text-gray-800">ServisPro</span>
                 <p className="text-xs text-gray-500">© 2025 Tous droits réservés</p>
               </div>
             </div>
