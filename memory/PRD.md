@@ -71,7 +71,16 @@ ServisPro est une plateforme pour prestataires de services et clients en Guinée
 ## Changelog
 
 ### 2026-03-21
-- **Rebranding Marketplace → Makiti** - Renamed visible text "Marketplace" to "Makiti" on homepage card and navigation bar in CustomerHome.js
+- **Rebranding Marketplace -> Makiti** - Renamed visible text on homepage card and navigation bar
+- **Homepage Cleanup** - Removed hero section and categories, kept only "Que recherchez-vous?" with 4 cards
+- **Logo Update** - Added ServisPro logo to header, homepage center, and footer
+- **Company Auth: Phone Login** - Changed company login from RCCM to phone number, RCCM now optional in registration
+- **Contact Popup** - "Contacter le vendeur" now opens as a modal popup instead of inline
+- **Product Reviews System** - Full implementation:
+  - Backend: 4 new endpoints (create review, get reviews, company reviews, provider reviews)
+  - Frontend: Star rating, review form (logged-in customers only), reviews list on product page
+  - Enterprise dashboard: New "Avis" tab in Ma Boutique showing all customer reviews
+  - Duplicate review prevention, average rating calculation, review count on products
 
 ### 2026-03-15
 - **Real Estate Ad Pricing** - Completed full feature
