@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Store, Plus, Package, Eye, MessageCircle, Edit, Trash2, Upload, Camera,
-  Check, X, Loader2, Image as ImageIcon, DollarSign, Tag, Save
+  Check, X, Loader2, Image as ImageIcon, DollarSign, Tag, Save, Star, User
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
@@ -26,6 +26,7 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
   const [categories, setCategories] = useState([]);
   const [stats, setStats] = useState(null);
   const [messages, setMessages] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateShop, setShowCreateShop] = useState(false);
   const [showAddProduct, setShowAddProduct] = useState(false);
@@ -56,14 +57,16 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
       setCategories(catRes.data);
       if (shopRes.data) {
         setShop(shopRes.data);
-        const [prodRes, statsRes, msgRes] = await Promise.all([
+        const [prodRes, statsRes, msgRes, reviewsRes] = await Promise.all([
           axios.get(`${API}/${apiPrefix}/products`, authHeaders),
           axios.get(`${API}/${apiPrefix}/stats`, authHeaders),
-          axios.get(`${API}/${apiPrefix}/messages`, authHeaders)
+          axios.get(`${API}/${apiPrefix}/messages`, authHeaders),
+          axios.get(`${API}/${apiPrefix}/reviews`, authHeaders).catch(() => ({ data: [] }))
         ]);
         setProducts(prodRes.data);
         setStats(statsRes.data);
         setMessages(msgRes.data);
+        setReviews(reviewsRes.data);
       } else {
         setShowCreateShop(true);
       }
@@ -278,13 +281,14 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
 
       {/* Section Tabs */}
       <div className="flex gap-2 border-b pb-2">
-        {['products', 'messages', 'shop'].map(section => (
+        {['products', 'messages', 'reviews', 'shop'].map(section => (
           <Button key={section} variant={activeSection === section ? 'default' : 'ghost'} size="sm"
             className={activeSection === section ? 'bg-orange-500 hover:bg-orange-600' : ''}
             onClick={() => setActiveSection(section)}
           >
             {section === 'products' && <><Package className="h-4 w-4 mr-1" /> Produits ({products.length})</>}
             {section === 'messages' && <><MessageCircle className="h-4 w-4 mr-1" /> Messages {unreadCount > 0 && `(${unreadCount})`}</>}
+            {section === 'reviews' && <><Star className="h-4 w-4 mr-1" /> Avis ({reviews.length})</>}
             {section === 'shop' && <><Store className="h-4 w-4 mr-1" /> Ma Boutique</>}
           </Button>
         ))}
@@ -493,6 +497,46 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
                     <span className="text-xs text-gray-400">{new Date(msg.created_at).toLocaleDateString('fr-FR')}</span>
                   </div>
                   <p className="text-sm text-gray-700 mt-2">{msg.message}</p>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Reviews Section */}
+      {activeSection === 'reviews' && (
+        <div>
+          <h3 className="font-bold text-lg mb-4">Avis des clients</h3>
+          {reviews.length === 0 ? (
+            <div className="text-center py-12 bg-gray-50 rounded-xl">
+              <Star className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-500">Aucun avis pour le moment</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {reviews.map(review => (
+                <Card key={review.id} className="p-4">
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-center gap-3">
+                      <div className="h-9 w-9 rounded-full bg-orange-100 flex items-center justify-center">
+                        <User className="h-4 w-4 text-orange-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm">{review.customer_name}</p>
+                        <p className="text-xs text-gray-500">Produit: {review.product_name}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex gap-0.5">
+                        {[1,2,3,4,5].map(s => (
+                          <Star key={s} className={`h-3.5 w-3.5 ${s <= review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
+                        ))}
+                      </div>
+                      <span className="text-xs text-gray-400">{new Date(review.created_at).toLocaleDateString('fr-FR')}</span>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-700 mt-2 ml-12">{review.comment}</p>
                 </Card>
               ))}
             </div>

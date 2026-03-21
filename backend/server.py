@@ -1695,7 +1695,7 @@ async def login_company(input_data: CompanyLoginInput, request: Request):
         user_id=company['id'],
         ip_address=client_ip,
         user_type="company",
-        details={"rccm": input_data.rccm_number, "company_name": company.get('company_name')},
+        details={"phone": input_data.phone_number, "company_name": company.get('company_name')},
         success=True
     )
     
@@ -7237,6 +7237,18 @@ async def mark_message_read(message_id: str, current_user: dict = Depends(get_cu
     await db.product_messages.update_one({'id': message_id}, {'$set': {'is_read': True}})
     return {"message": "Marqué comme lu"}
 
+@api_router.get("/shop/reviews")
+async def get_shop_reviews(current_user: dict = Depends(get_current_user)):
+    provider_id = current_user['id']
+    shop = await db.shops.find_one({'owner_id': provider_id}, {'_id': 0, 'id': 1})
+    if not shop:
+        return []
+    reviews = await db.product_reviews.find({'shop_id': shop['id']}, {'_id': 0}).sort('created_at', -1).to_list(None)
+    for review in reviews:
+        product = await db.products.find_one({'id': review['product_id']}, {'_id': 0, 'name': 1})
+        review['product_name'] = product['name'] if product else 'Produit supprimé'
+    return reviews
+
 # --- Provider: Shop Stats ---
 @api_router.get("/shop/stats")
 async def get_shop_stats(current_user: dict = Depends(get_current_user)):
@@ -7581,6 +7593,85 @@ async def company_get_shop_stats(current_company: dict = Depends(get_current_com
     }
 
 # Include router AFTER all route definitions
+
+# ==================== PRODUCT REVIEWS ====================
+
+class ProductReviewCreate(BaseModel):
+    rating: int
+    comment: str
+    
+    @field_validator('rating')
+    def validate_rating(cls, v):
+        if v < 1 or v > 5:
+            raise ValueError('Rating must be between 1 and 5')
+        return v
+
+@api_router.post("/marketplace/products/{product_id}/reviews")
+async def create_product_review(product_id: str, data: ProductReviewCreate, current_customer: dict = Depends(get_current_customer)):
+    """Create a review for a product (requires customer auth)"""
+    product = await db.products.find_one({'id': product_id, 'is_deleted': {'$ne': True}}, {'_id': 0})
+    if not product:
+        raise HTTPException(status_code=404, detail="Produit non trouvé")
+    
+    # Check if customer already reviewed this product
+    existing = await db.product_reviews.find_one({
+        'product_id': product_id, 
+        'customer_id': current_customer['id']
+    })
+    if existing:
+        raise HTTPException(status_code=400, detail="Vous avez déjà laissé un avis sur ce produit")
+    
+    review = {
+        'id': str(uuid.uuid4()),
+        'product_id': product_id,
+        'shop_id': product['shop_id'],
+        'customer_id': current_customer['id'],
+        'customer_name': f"{current_customer.get('first_name', '')} {current_customer.get('last_name', '')}".strip() or current_customer.get('full_name', 'Client'),
+        'rating': data.rating,
+        'comment': data.comment,
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    await db.product_reviews.insert_one(review)
+    review.pop('_id', None)
+    
+    # Update product average rating
+    pipeline = [
+        {'$match': {'product_id': product_id}},
+        {'$group': {'_id': None, 'avg_rating': {'$avg': '$rating'}, 'count': {'$sum': 1}}}
+    ]
+    agg = await db.product_reviews.aggregate(pipeline).to_list(1)
+    if agg:
+        await db.products.update_one({'id': product_id}, {'$set': {
+            'avg_rating': round(agg[0]['avg_rating'], 1),
+            'review_count': agg[0]['count']
+        }})
+    
+    return review
+
+@api_router.get("/marketplace/products/{product_id}/reviews")
+async def get_product_reviews(product_id: str):
+    """Get all reviews for a product (public)"""
+    reviews = await db.product_reviews.find(
+        {'product_id': product_id}, {'_id': 0}
+    ).sort('created_at', -1).to_list(None)
+    return reviews
+
+@api_router.get("/company/shop/reviews")
+async def company_get_shop_reviews(current_company: dict = Depends(get_current_company)):
+    """Get all reviews for the company's shop products"""
+    company_id = current_company['id']
+    shop = await db.shops.find_one({'owner_id': company_id}, {'_id': 0, 'id': 1})
+    if not shop:
+        return []
+    reviews = await db.product_reviews.find(
+        {'shop_id': shop['id']}, {'_id': 0}
+    ).sort('created_at', -1).to_list(None)
+    # Attach product name to each review
+    for review in reviews:
+        product = await db.products.find_one({'id': review['product_id']}, {'_id': 0, 'name': 1})
+        review['product_name'] = product['name'] if product else 'Produit supprimé'
+    return reviews
+
 app.include_router(api_router)
 
 @app.on_event("shutdown")
