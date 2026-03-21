@@ -184,43 +184,51 @@ const ProductDetail = () => {
               </a>
             )}
 
-            {/* Contact Form */}
+            {/* Contact Form Modal */}
             {showContactForm && (
-              <Card data-testid="contact-form" className="p-5 mt-4 border-green-200 bg-green-50/50">
-                <h3 className="font-semibold text-gray-900 mb-3">Envoyer un message au vendeur</h3>
-                <form onSubmit={handleSendMessage} className="space-y-3">
-                  <Input
-                    data-testid="contact-name"
-                    placeholder="Votre nom"
-                    value={contactForm.sender_name}
-                    onChange={(e) => setContactForm({...contactForm, sender_name: e.target.value})}
-                    required
-                  />
-                  <Input
-                    data-testid="contact-phone"
-                    placeholder="Votre numéro de téléphone"
-                    value={contactForm.sender_phone}
-                    onChange={(e) => setContactForm({...contactForm, sender_phone: e.target.value})}
-                    required
-                  />
-                  <Textarea
-                    data-testid="contact-message"
-                    placeholder={`Bonjour, je suis intéressé par "${product.name}"...`}
-                    value={contactForm.message}
-                    onChange={(e) => setContactForm({...contactForm, message: e.target.value})}
-                    rows={3}
-                    required
-                  />
-                  <Button
-                    data-testid="send-message-btn"
-                    type="submit"
-                    className="w-full bg-green-500 hover:bg-green-600"
-                    disabled={sending}
+              <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowContactForm(false)}>
+                <Card data-testid="contact-form" className="w-full max-w-md p-6 bg-white relative" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-2xl font-bold leading-none"
+                    onClick={() => setShowContactForm(false)}
                   >
-                    {sending ? 'Envoi...' : 'Envoyer le message'}
-                  </Button>
-                </form>
-              </Card>
+                    &times;
+                  </button>
+                  <h3 className="font-semibold text-gray-900 text-lg mb-4">Envoyer un message au vendeur</h3>
+                  <form onSubmit={handleSendMessage} className="space-y-3">
+                    <Input
+                      data-testid="contact-name"
+                      placeholder="Votre nom"
+                      value={contactForm.sender_name}
+                      onChange={(e) => setContactForm({...contactForm, sender_name: e.target.value})}
+                      required
+                    />
+                    <Input
+                      data-testid="contact-phone"
+                      placeholder="Votre numéro de téléphone"
+                      value={contactForm.sender_phone}
+                      onChange={(e) => setContactForm({...contactForm, sender_phone: e.target.value})}
+                      required
+                    />
+                    <Textarea
+                      data-testid="contact-message"
+                      placeholder={`Bonjour, je suis intéressé par "${product.name}"...`}
+                      value={contactForm.message}
+                      onChange={(e) => setContactForm({...contactForm, message: e.target.value})}
+                      rows={3}
+                      required
+                    />
+                    <Button
+                      data-testid="send-message-btn"
+                      type="submit"
+                      className="w-full bg-green-500 hover:bg-green-600"
+                      disabled={sending}
+                    >
+                      {sending ? 'Envoi...' : 'Envoyer le message'}
+                    </Button>
+                  </form>
+                </Card>
+              </div>
             )}
           </div>
         </div>
