@@ -1068,7 +1068,7 @@ class CompanySector(str, Enum):
 
 class CompanyRegisterInput(BaseModel):
     company_name: str
-    rccm_number: str  # Registre du Commerce
+    rccm_number: Optional[str] = None  # Registre du Commerce (optional)
     nif_number: Optional[str] = None  # Numéro d'Identification Fiscale
     sector: str
     address: str
@@ -1089,7 +1089,7 @@ class CompanyRegisterInput(BaseModel):
         return v
 
 class CompanyLoginInput(BaseModel):
-    rccm_number: str
+    phone_number: str
     password: str
 
 class Company(BaseModel):
@@ -1583,10 +1583,11 @@ async def register_customer(input_data: CustomerRegisterInput):
 @api_router.post("/auth/company/register", response_model=AuthResponse)
 async def register_company(input_data: CompanyRegisterInput):
     """Register a new company"""
-    # Check if RCCM number already exists
-    existing_company = await db.companies.find_one({'rccm_number': input_data.rccm_number})
-    if existing_company:
-        raise HTTPException(status_code=400, detail="Ce numéro RCCM est déjà enregistré")
+    # Check if RCCM number already exists (only if provided)
+    if input_data.rccm_number:
+        existing_company = await db.companies.find_one({'rccm_number': input_data.rccm_number})
+        if existing_company:
+            raise HTTPException(status_code=400, detail="Ce numéro RCCM est déjà enregistré")
     
     # Check if phone number already exists
     existing_phone = await db.companies.find_one({'phone_number': input_data.phone_number})
@@ -1641,7 +1642,7 @@ async def register_company(input_data: CompanyRegisterInput):
 
 @api_router.post("/auth/company/login", response_model=AuthResponse)
 async def login_company(input_data: CompanyLoginInput, request: Request):
-    """Login for companies using RCCM number"""
+    """Login for companies using phone number"""
     client_ip = get_client_ip(request)
     
     # Check if IP is blocked
@@ -1650,7 +1651,7 @@ async def login_company(input_data: CompanyLoginInput, request: Request):
             event_type="COMPANY_LOGIN_BLOCKED",
             ip_address=client_ip,
             user_type="company",
-            details={"rccm": input_data.rccm_number, "reason": "rate_limited"},
+            details={"phone": input_data.phone_number, "reason": "rate_limited"},
             success=False
         )
         raise HTTPException(
@@ -1658,17 +1659,17 @@ async def login_company(input_data: CompanyLoginInput, request: Request):
             detail="Trop de tentatives de connexion. Veuillez réessayer dans 15 minutes."
         )
     
-    company = await db.companies.find_one({'rccm_number': input_data.rccm_number})
+    company = await db.companies.find_one({'phone_number': input_data.phone_number})
     if not company:
         was_blocked = record_failed_attempt(client_ip)
         await log_audit_event(
             event_type="COMPANY_LOGIN_FAILED",
             ip_address=client_ip,
             user_type="company",
-            details={"rccm": input_data.rccm_number, "reason": "not_found", "blocked": was_blocked},
+            details={"phone": input_data.phone_number, "reason": "not_found", "blocked": was_blocked},
             success=False
         )
-        raise HTTPException(status_code=401, detail="Numéro RCCM ou mot de passe incorrect")
+        raise HTTPException(status_code=401, detail="Numéro de téléphone ou mot de passe incorrect")
     
     if not verify_password(input_data.password, company['password']):
         was_blocked = record_failed_attempt(client_ip)
@@ -1677,10 +1678,10 @@ async def login_company(input_data: CompanyLoginInput, request: Request):
             user_id=company['id'],
             ip_address=client_ip,
             user_type="company",
-            details={"rccm": input_data.rccm_number, "reason": "invalid_password", "blocked": was_blocked},
+            details={"phone": input_data.phone_number, "reason": "invalid_password", "blocked": was_blocked},
             success=False
         )
-        raise HTTPException(status_code=401, detail="Numéro RCCM ou mot de passe incorrect")
+        raise HTTPException(status_code=401, detail="Numéro de téléphone ou mot de passe incorrect")
     
     # Clear failed attempts on successful login
     clear_failed_attempts(client_ip)

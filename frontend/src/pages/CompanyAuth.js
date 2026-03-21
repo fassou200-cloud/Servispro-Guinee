@@ -44,7 +44,7 @@ const CompanyAuth = ({ setIsCompanyAuthenticated }) => {
   
   // Login form
   const [loginData, setLoginData] = useState({
-    rccm_number: '',
+    phone_number: '',
     password: ''
   });
   
@@ -131,7 +131,7 @@ const CompanyAuth = ({ setIsCompanyAuthenticated }) => {
     try {
       const response = await axios.post(`${API}/auth/company/register`, {
         company_name: formData.company_name,
-        rccm_number: formData.rccm_number,
+        rccm_number: formData.rccm_number || null,
         nif_number: formData.nif_number || null,
         sector: formData.sector,
         address: formData.address,
@@ -346,19 +346,19 @@ const CompanyAuth = ({ setIsCompanyAuthenticated }) => {
           {isLogin && (
             <form onSubmit={handleLogin} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="rccm_login" className="text-slate-300 flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-emerald-400" />
-                  Numéro RCCM *
+                <Label htmlFor="phone_login" className="text-slate-300 flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-emerald-400" />
+                  Numéro de téléphone *
                 </Label>
                 <Input
-                  id="rccm_login"
-                  name="rccm_number"
-                  value={loginData.rccm_number}
-                  onChange={(e) => setLoginData({ ...loginData, rccm_number: e.target.value })}
+                  id="phone_login"
+                  name="phone_number"
+                  value={loginData.phone_number}
+                  onChange={(e) => setLoginData({ ...loginData, phone_number: e.target.value })}
                   required
                   className="h-12 bg-slate-700/50 border-slate-600 text-white"
-                  placeholder="RCCM/GC/XXXX"
-                  data-testid="company-login-rccm"
+                  placeholder="224 6XX XX XX XX"
+                  data-testid="company-login-phone"
                 />
               </div>
 
@@ -422,13 +422,12 @@ const CompanyAuth = ({ setIsCompanyAuthenticated }) => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-slate-300 flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-emerald-400" />
-                    Numéro RCCM *
+                    <FileText className="h-4 w-4 text-slate-400" />
+                    Numéro RCCM
                   </Label>
                   <Input
                     value={formData.rccm_number}
                     onChange={(e) => setFormData({ ...formData, rccm_number: e.target.value })}
-                    required
                     className="h-12 bg-slate-700/50 border-slate-600 text-white"
                     placeholder="RCCM/GC/XXXX"
                     data-testid="company-rccm-input"
