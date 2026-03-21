@@ -69,7 +69,7 @@ const CustomerHome = ({ isCustomerAuthenticated }) => {
               onClick={() => navigate('/marketplace')}
               className="text-orange-500 hover:text-orange-600 font-semibold transition-colors"
             >
-              Marketplace
+              Makiti
             </button>
             <a 
               href="https://www.facebook.com/profile.php?id=100090427284060&sk=directory_intro" 
@@ -326,7 +326,7 @@ const CustomerHome = ({ isCustomerAuthenticated }) => {
                 <ShoppingBag className="h-6 w-6 text-white" />
               </div>
               <h3 className="text-xl md:text-2xl font-bold text-white mb-2">
-                Marketplace
+                Makiti
               </h3>
               <p className="text-orange-100 text-sm md:text-base">
                 Parcourez les boutiques et produits

@@ -70,6 +70,9 @@ ServisPro est une plateforme pour prestataires de services et clients en Guinée
 
 ## Changelog
 
+### 2026-03-21
+- **Rebranding Marketplace → Makiti** - Renamed visible text "Marketplace" to "Makiti" on homepage card and navigation bar in CustomerHome.js
+
 ### 2026-03-15
 - **Real Estate Ad Pricing** - Completed full feature
 - **Cloudinary Image Fix** - Fixed broken images across 11 frontend files
