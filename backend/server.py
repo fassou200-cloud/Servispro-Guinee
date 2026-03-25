@@ -5653,6 +5653,26 @@ async def admin_approve_company(company_id: str):
     )
     return {"message": "Entreprise approuvée avec succès"}
 
+@api_router.put("/admin/companies/{company_id}/description")
+async def admin_update_company_description(company_id: str, data: dict = Body(...)):
+    """Update a company's description"""
+    company = await db.companies.find_one({'id': company_id})
+    if not company:
+        raise HTTPException(status_code=404, detail="Entreprise non trouvée")
+    
+    description = data.get('description', '').strip()
+    if not description:
+        raise HTTPException(status_code=400, detail="La description ne peut pas être vide")
+    
+    await db.companies.update_one(
+        {'id': company_id},
+        {'$set': {
+            'description': description,
+            'updated_at': datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    return {"message": "Description mise à jour avec succès"}
+
 @api_router.put("/admin/companies/{company_id}/reject")
 async def admin_reject_company(company_id: str):
     """Reject a company and delete their Cloudinary files"""

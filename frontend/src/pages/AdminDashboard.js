@@ -98,6 +98,8 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
   const [selectedAgent, setSelectedAgent] = useState(null);
   const [selectedSale, setSelectedSale] = useState(null);
   const [selectedCompany, setSelectedCompany] = useState(null);
+  const [editingCompanyDesc, setEditingCompanyDesc] = useState(null);
+  const [companyDescText, setCompanyDescText] = useState('');
   const [rentalFilter, setRentalFilter] = useState('all'); // all, long_term, short_term
   const [feedbackFilter, setFeedbackFilter] = useState('all'); // all, new, in_progress, resolved
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, type: null, id: null, name: '' });
@@ -2909,10 +2911,56 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                     <p className="text-slate-400">{selectedCompany.contact_person_phone}</p>
                   </div>
 
-                  {/* Description */}
+                  {/* Description - Editable */}
                   <div className="mb-6">
-                    <h4 className="text-sm font-bold text-slate-300 uppercase mb-2">Description</h4>
-                    <p className="text-slate-400 text-sm">{selectedCompany.description}</p>
+                    <h4 className="text-sm font-bold text-slate-300 uppercase mb-2 flex items-center justify-between">
+                      Description
+                      {editingCompanyDesc !== selectedCompany.id ? (
+                        <button
+                          onClick={() => { setEditingCompanyDesc(selectedCompany.id); setCompanyDescText(selectedCompany.description || ''); }}
+                          className="text-xs text-teal-400 hover:text-teal-300 font-normal flex items-center gap-1"
+                          data-testid="edit-company-desc-btn"
+                        >
+                          <Pencil className="h-3 w-3" /> Modifier
+                        </button>
+                      ) : null}
+                    </h4>
+                    {editingCompanyDesc === selectedCompany.id ? (
+                      <div className="space-y-2">
+                        <textarea
+                          value={companyDescText}
+                          onChange={(e) => setCompanyDescText(e.target.value)}
+                          className="w-full bg-slate-700 border border-slate-600 rounded-lg p-3 text-white text-sm resize-none focus:outline-none focus:border-teal-500"
+                          rows={4}
+                          data-testid="company-desc-textarea"
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            onClick={async () => {
+                              try {
+                                await adminApi.put(`${API}/admin/companies/${selectedCompany.id}/description`, { description: companyDescText });
+                                toast.success('Description mise à jour');
+                                setEditingCompanyDesc(null);
+                                setSelectedCompany({ ...selectedCompany, description: companyDescText });
+                                setCompanies(prev => prev.map(c => c.id === selectedCompany.id ? { ...c, description: companyDescText } : c));
+                              } catch (err) { toast.error('Erreur lors de la mise à jour'); }
+                            }}
+                            className="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-xs rounded-lg font-medium"
+                            data-testid="save-company-desc-btn"
+                          >
+                            Enregistrer
+                          </button>
+                          <button
+                            onClick={() => setEditingCompanyDesc(null)}
+                            className="px-3 py-1.5 bg-slate-600 hover:bg-slate-500 text-white text-xs rounded-lg"
+                          >
+                            Annuler
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-slate-400 text-sm">{selectedCompany.description}</p>
+                    )}
                   </div>
 
                   {/* Documents Section */}
