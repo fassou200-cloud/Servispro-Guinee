@@ -85,7 +85,7 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
             </div>
             <div>
               <span className="font-bold text-xl text-gray-900">ServisPro</span>
-              <span className="text-xs text-orange-500 ml-2 font-semibold">Marketplace</span>
+              <span className="text-xs text-orange-500 ml-2 font-semibold">Makiti</span>
             </div>
           </div>
           <nav className="hidden md:flex items-center gap-6">
@@ -96,8 +96,7 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
           <div className="flex items-center gap-3">
             {!isCustomerAuthenticated ? (
               <>
-                <Button variant="ghost" size="sm" onClick={() => navigate('/auth')} data-testid="marketplace-login-btn">Se connecter</Button>
-                <Button size="sm" className="bg-green-500 hover:bg-green-600" onClick={() => navigate('/auth')} data-testid="marketplace-register-btn">S'inscrire</Button>
+                <Button variant="ghost" size="sm" onClick={() => navigate('/customer/auth')} data-testid="marketplace-login-btn">Se connecter</Button>
               </>
             ) : (
               <Button size="sm" variant="outline" onClick={() => navigate('/dashboard')}>Mon Dashboard</Button>
@@ -110,7 +109,7 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
       <section className="bg-gradient-to-br from-orange-500 via-orange-400 to-yellow-400 py-12 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
-            Marketplace ServisPro
+            Makiti
           </h1>
           <p className="text-orange-100 text-base sm:text-lg mb-8">
             Découvrez les boutiques et produits des vendeurs en Guinée
