@@ -7322,7 +7322,13 @@ async def get_shop_stats(current_user: dict = Depends(get_current_user)):
 # --- Public: Browse Marketplace ---
 @api_router.get("/marketplace/shops")
 async def browse_shops(sector: Optional[str] = None, search: Optional[str] = None):
-    query = {'is_active': True}
+    # Get non-deleted company IDs
+    valid_companies = await db.companies.find(
+        {'is_deleted': {'$ne': True}}, {'_id': 0, 'id': 1}
+    ).to_list(None)
+    valid_owner_ids = [c['id'] for c in valid_companies]
+    
+    query = {'is_active': True, 'owner_id': {'$in': valid_owner_ids}}
     if sector:
         query['sector'] = sector
     if search:
