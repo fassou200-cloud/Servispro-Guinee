@@ -5628,7 +5628,7 @@ async def delete_customer(customer_id: str, request: Request):
 @api_router.get("/admin/companies")
 async def admin_get_all_companies():
     """Get all companies for admin"""
-    companies = await db.companies.find({}, {'_id': 0, 'password': 0}).sort('created_at', -1).to_list(None)
+    companies = await db.companies.find({'is_deleted': {'$ne': True}}, {'_id': 0, 'password': 0}).sort('created_at', -1).to_list(None)
     
     # Add stats for each company
     for company in companies:
@@ -5704,27 +5704,38 @@ async def admin_reject_company(company_id: str):
 
 @api_router.delete("/admin/companies/{company_id}")
 async def admin_delete_company(company_id: str):
-    """Delete a company and associated data including Cloudinary files"""
+    """Soft-delete a company and deactivate associated data"""
     company = await db.companies.find_one({'id': company_id})
     if not company:
         raise HTTPException(status_code=404, detail="Entreprise non trouvée")
     
-    # Delete Cloudinary files
-    cloudinary_result = await delete_company_cloudinary_files(company)
-    logging.info(f"Cloudinary cleanup on company delete: {cloudinary_result}")
+    # Soft-delete the company
+    await db.companies.update_one(
+        {'id': company_id},
+        {'$set': {
+            'is_deleted': True,
+            'deleted_at': datetime.now(timezone.utc).isoformat()
+        }}
+    )
     
-    # Delete associated services and job offers
-    await db.company_services.delete_many({'company_id': company_id})
-    await db.company_job_offers.delete_many({'company_id': company_id})
-    await db.rental_listings.delete_many({'service_provider_id': company_id})
-    await db.property_sales.delete_many({'agent_id': company_id})
+    # Deactivate the company's shop so products don't appear on marketplace
+    await db.shops.update_many(
+        {'owner_id': company_id},
+        {'$set': {'is_active': False}}
+    )
     
-    # Delete the company
-    await db.companies.delete_one({'id': company_id})
+    # Soft-delete company rentals and property sales
+    await db.rental_listings.update_many(
+        {'service_provider_id': company_id},
+        {'$set': {'is_deleted': True}}
+    )
+    await db.property_sales.update_many(
+        {'agent_id': company_id},
+        {'$set': {'is_deleted': True}}
+    )
     
     return {
-        "message": "Entreprise et données associées supprimées avec succès",
-        "cloudinary_files_deleted": cloudinary_result.get('deleted', 0)
+        "message": "Entreprise supprimée avec succès"
     }
 
 @api_router.get("/admin/stats")
