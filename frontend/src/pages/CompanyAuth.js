@@ -28,6 +28,7 @@ const COMPANY_SECTORS = [
   { value: 'Restauration', label: 'Restauration & Hôtellerie' },
   { value: 'Immobilier', label: 'Agence Immobilière' },
   { value: 'Commerce', label: 'Commerce & Distribution' },
+  { value: 'Automobiles', label: 'Automobiles & Transport' },
   { value: 'Agriculture', label: 'Agriculture & Agroalimentaire' },
   { value: 'Industrie', label: 'Industrie & Manufacture' },
   { value: 'Services', label: 'Services aux Entreprises' },
