@@ -7358,14 +7358,16 @@ async def get_shop_stats(current_user: dict = Depends(get_current_user)):
 # --- Public: Browse Marketplace ---
 @api_router.get("/marketplace/shops")
 async def browse_shops(sector: Optional[str] = None, search: Optional[str] = None):
-    # Get non-deleted, approved company IDs
-    valid_companies = await db.companies.find(
-        {'is_deleted': {'$ne': True}, 'verification_status': 'approved'}, {'_id': 0}
-    ).to_list(None)
+    # Get non-deleted, approved, NON-Immobilier company IDs
+    company_filter = {
+        'is_deleted': {'$ne': True},
+        'verification_status': 'approved',
+        'sector': {'$ne': 'Immobilier'}
+    }
+    valid_companies = await db.companies.find(company_filter, {'_id': 0}).to_list(None)
     valid_owner_ids = [c['id'] for c in valid_companies]
-    company_map = {c['id']: c for c in valid_companies}
     
-    # Get existing shops from valid companies
+    # Get existing active shops from valid companies
     shop_query = {'is_active': True, 'owner_id': {'$in': valid_owner_ids}}
     if sector:
         shop_query['sector'] = sector
@@ -7376,39 +7378,16 @@ async def browse_shops(sector: Optional[str] = None, search: Optional[str] = Non
         ]
     
     shops = await db.shops.find(shop_query, {'_id': 0}).sort('created_at', -1).to_list(None)
-    shop_owner_ids = set(s['owner_id'] for s in shops)
     
-    # Add product count for each shop
+    # Only keep shops that have at least 1 product
+    result = []
     for shop in shops:
-        shop['total_products'] = await db.products.count_documents({'shop_id': shop['id'], 'is_deleted': {'$ne': True}, 'is_available': True})
+        product_count = await db.products.count_documents({'shop_id': shop['id'], 'is_deleted': {'$ne': True}})
+        if product_count > 0:
+            shop['total_products'] = product_count
+            result.append(shop)
     
-    # Add approved companies without a shop as virtual shops
-    for company in valid_companies:
-        if company['id'] not in shop_owner_ids:
-            if sector and company.get('sector') != sector:
-                continue
-            if search:
-                name_match = search.lower() in (company.get('company_name', '') or '').lower()
-                desc_match = search.lower() in (company.get('description', '') or '').lower()
-                if not name_match and not desc_match:
-                    continue
-            shops.append({
-                'id': f"company-{company['id']}",
-                'owner_id': company['id'],
-                'name': company.get('company_name', ''),
-                'description': company.get('description', ''),
-                'sector': company.get('sector', ''),
-                'location': f"{company.get('city', '')}, {company.get('region', '')}".strip(', '),
-                'contact_phone': company.get('phone_number', ''),
-                'logo': company.get('logo', ''),
-                'is_active': True,
-                'is_virtual': True,
-                'total_products': 0,
-                'total_views': 0,
-                'created_at': company.get('created_at', '')
-            })
-    
-    return shops
+    return result
 
 @api_router.get("/marketplace/shops/{shop_id}")
 async def get_shop_detail(shop_id: str):
