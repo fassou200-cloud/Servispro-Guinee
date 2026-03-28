@@ -5673,6 +5673,42 @@ async def admin_update_company_description(company_id: str, data: dict = Body(..
     )
     return {"message": "Description mise à jour avec succès"}
 
+@api_router.put("/admin/companies/{company_id}/update")
+async def admin_update_company(company_id: str, data: dict = Body(...)):
+    """Update company details from admin dashboard"""
+    company = await db.companies.find_one({'id': company_id})
+    if not company:
+        raise HTTPException(status_code=404, detail="Entreprise non trouvée")
+    
+    allowed_fields = [
+        'company_name', 'sector', 'address', 'city', 'region',
+        'phone_number', 'email', 'website', 'description',
+        'rccm_number', 'nif_number', 'contact_person_name', 'contact_person_phone'
+    ]
+    
+    update_data = {}
+    for field in allowed_fields:
+        if field in data:
+            update_data[field] = data[field]
+    
+    if not update_data:
+        raise HTTPException(status_code=400, detail="Aucun champ à mettre à jour")
+    
+    update_data['updated_at'] = datetime.now(timezone.utc).isoformat()
+    
+    await db.companies.update_one({'id': company_id}, {'$set': update_data})
+    
+    # Also update the shop name/sector if exists
+    shop_update = {}
+    if 'company_name' in update_data:
+        shop_update['name'] = update_data['company_name']
+    if 'sector' in update_data:
+        shop_update['sector'] = update_data['sector']
+    if shop_update:
+        await db.shops.update_many({'owner_id': company_id}, {'$set': shop_update})
+    
+    return {"message": "Entreprise mise à jour avec succès"}
+
 @api_router.put("/admin/companies/{company_id}/reject")
 async def admin_reject_company(company_id: str):
     """Reject a company and delete their Cloudinary files"""

@@ -100,6 +100,8 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [editingCompanyDesc, setEditingCompanyDesc] = useState(null);
   const [companyDescText, setCompanyDescText] = useState('');
+  const [editingCompany, setEditingCompany] = useState(false);
+  const [companyEditData, setCompanyEditData] = useState({});
   const [rentalFilter, setRentalFilter] = useState('all'); // all, long_term, short_term
   const [feedbackFilter, setFeedbackFilter] = useState('all'); // all, new, in_progress, resolved
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, type: null, id: null, name: '' });
@@ -2855,113 +2857,217 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
               {selectedCompany ? (
                 <Card className="p-6 bg-slate-800 border-slate-700">
                   {/* Header with Logo */}
-                  <div className="flex items-center gap-4 mb-6">
-                    {selectedCompany.logo ? (
-                      <img 
-                        src={`${BACKEND_URL}${selectedCompany.logo}`}
-                        alt={selectedCompany.company_name}
-                        className="w-20 h-20 object-cover rounded-xl"
-                      />
-                    ) : (
-                      <div className="w-20 h-20 bg-slate-700 rounded-xl flex items-center justify-center">
-                        <Building className="h-10 w-10 text-slate-500" />
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-4">
+                      {selectedCompany.logo ? (
+                        <img 
+                          src={`${BACKEND_URL}${selectedCompany.logo}`}
+                          alt={selectedCompany.company_name}
+                          className="w-20 h-20 object-cover rounded-xl"
+                        />
+                      ) : (
+                        <div className="w-20 h-20 bg-slate-700 rounded-xl flex items-center justify-center">
+                          <Building className="h-10 w-10 text-slate-500" />
+                        </div>
+                      )}
+                      <div>
+                        {editingCompany ? (
+                          <input
+                            value={companyEditData.company_name || ''}
+                            onChange={(e) => setCompanyEditData({...companyEditData, company_name: e.target.value})}
+                            className="bg-slate-700 border border-slate-600 rounded px-2 py-1 text-white font-bold text-lg focus:outline-none focus:border-teal-500"
+                          />
+                        ) : (
+                          <h3 className="text-xl font-bold text-white">{selectedCompany.company_name}</h3>
+                        )}
+                        {editingCompany ? (
+                          <select
+                            value={companyEditData.sector || ''}
+                            onChange={(e) => setCompanyEditData({...companyEditData, sector: e.target.value})}
+                            className="mt-1 bg-slate-700 border border-slate-600 rounded px-2 py-1 text-teal-400 text-sm focus:outline-none focus:border-teal-500"
+                          >
+                            <option value="Construction">Construction & BTP</option>
+                            <option value="Securite">Sécurité & Gardiennage</option>
+                            <option value="Informatique">Informatique & Technologie</option>
+                            <option value="Restauration">Restauration & Hôtellerie</option>
+                            <option value="Immobilier">Agence Immobilière</option>
+                            <option value="Commerce">Commerce & Distribution</option>
+                            <option value="Automobiles">Automobiles & Transport</option>
+                            <option value="Agriculture">Agriculture & Agroalimentaire</option>
+                            <option value="Industrie">Industrie & Manufacture</option>
+                            <option value="Services">Services aux Entreprises</option>
+                            <option value="Autres">Autres</option>
+                          </select>
+                        ) : (
+                          <p className="text-teal-400">{selectedCompany.sector}</p>
+                        )}
+                        <span className={`inline-flex mt-1 px-2 py-1 rounded text-xs font-medium border ${getStatusBadge(selectedCompany.verification_status)}`}>
+                          {translateStatus(selectedCompany.verification_status)}
+                        </span>
                       </div>
-                    )}
-                    <div>
-                      <h3 className="text-xl font-bold text-white">{selectedCompany.company_name}</h3>
-                      <p className="text-teal-400">{selectedCompany.sector}</p>
-                      <span className={`inline-flex mt-1 px-2 py-1 rounded text-xs font-medium border ${getStatusBadge(selectedCompany.verification_status)}`}>
-                        {translateStatus(selectedCompany.verification_status)}
-                      </span>
                     </div>
+                    {!editingCompany ? (
+                      <button
+                        onClick={() => {
+                          setEditingCompany(true);
+                          setCompanyEditData({
+                            company_name: selectedCompany.company_name || '',
+                            sector: selectedCompany.sector || '',
+                            address: selectedCompany.address || '',
+                            city: selectedCompany.city || '',
+                            region: selectedCompany.region || '',
+                            phone_number: selectedCompany.phone_number || '',
+                            email: selectedCompany.email || '',
+                            rccm_number: selectedCompany.rccm_number || '',
+                            nif_number: selectedCompany.nif_number || '',
+                            contact_person_name: selectedCompany.contact_person_name || '',
+                            contact_person_phone: selectedCompany.contact_person_phone || '',
+                            description: selectedCompany.description || ''
+                          });
+                        }}
+                        className="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-xs rounded-lg font-medium flex items-center gap-1"
+                        data-testid="edit-company-btn"
+                      >
+                        <Pencil className="h-3 w-3" /> Modifier
+                      </button>
+                    ) : null}
                   </div>
 
                   {/* Company Info */}
                   <div className="space-y-3 mb-6">
-                    <div className="flex items-center gap-2 text-slate-300">
-                      <MapPin className="h-4 w-4 text-slate-400" />
-                      {selectedCompany.address}, {selectedCompany.city}, {selectedCompany.region}
-                    </div>
-                    <div className="flex items-center gap-2 text-slate-300">
-                      <UserCircle className="h-4 w-4 text-slate-400" />
-                      {selectedCompany.phone_number}
-                    </div>
-                    {selectedCompany.email && (
-                      <div className="flex items-center gap-2 text-slate-300">
-                        <MessageCircle className="h-4 w-4 text-slate-400" />
-                        {selectedCompany.email}
+                    {editingCompany ? (
+                      <div className="space-y-3">
+                        <div>
+                          <label className="text-xs text-slate-400 mb-1 block">Adresse</label>
+                          <input value={companyEditData.address || ''} onChange={(e) => setCompanyEditData({...companyEditData, address: e.target.value})}
+                            className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-teal-500" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="text-xs text-slate-400 mb-1 block">Ville</label>
+                            <input value={companyEditData.city || ''} onChange={(e) => setCompanyEditData({...companyEditData, city: e.target.value})}
+                              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-teal-500" />
+                          </div>
+                          <div>
+                            <label className="text-xs text-slate-400 mb-1 block">Région</label>
+                            <input value={companyEditData.region || ''} onChange={(e) => setCompanyEditData({...companyEditData, region: e.target.value})}
+                              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-teal-500" />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-xs text-slate-400 mb-1 block">Téléphone</label>
+                          <input value={companyEditData.phone_number || ''} onChange={(e) => setCompanyEditData({...companyEditData, phone_number: e.target.value})}
+                            className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-teal-500" />
+                        </div>
+                        <div>
+                          <label className="text-xs text-slate-400 mb-1 block">Email</label>
+                          <input value={companyEditData.email || ''} onChange={(e) => setCompanyEditData({...companyEditData, email: e.target.value})}
+                            className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-teal-500" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="text-xs text-slate-400 mb-1 block">RCCM</label>
+                            <input value={companyEditData.rccm_number || ''} onChange={(e) => setCompanyEditData({...companyEditData, rccm_number: e.target.value})}
+                              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm font-mono focus:outline-none focus:border-teal-500" />
+                          </div>
+                          <div>
+                            <label className="text-xs text-slate-400 mb-1 block">NIF</label>
+                            <input value={companyEditData.nif_number || ''} onChange={(e) => setCompanyEditData({...companyEditData, nif_number: e.target.value})}
+                              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm font-mono focus:outline-none focus:border-teal-500" />
+                          </div>
+                        </div>
                       </div>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-2 text-slate-300">
+                          <MapPin className="h-4 w-4 text-slate-400" />
+                          {selectedCompany.address}, {selectedCompany.city}, {selectedCompany.region}
+                        </div>
+                        <div className="flex items-center gap-2 text-slate-300">
+                          <UserCircle className="h-4 w-4 text-slate-400" />
+                          {selectedCompany.phone_number}
+                        </div>
+                        {selectedCompany.email && (
+                          <div className="flex items-center gap-2 text-slate-300">
+                            <MessageCircle className="h-4 w-4 text-slate-400" />
+                            {selectedCompany.email}
+                          </div>
+                        )}
+                        <div className="grid grid-cols-2 gap-4 p-3 bg-slate-700/50 rounded-lg">
+                          <div>
+                            <p className="text-xs text-slate-400">RCCM</p>
+                            <p className="text-white font-mono">{selectedCompany.rccm_number}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-slate-400">NIF</p>
+                            <p className="text-white font-mono">{selectedCompany.nif_number || '-'}</p>
+                          </div>
+                        </div>
+                      </>
                     )}
-                    <div className="grid grid-cols-2 gap-4 p-3 bg-slate-700/50 rounded-lg">
-                      <div>
-                        <p className="text-xs text-slate-400">RCCM</p>
-                        <p className="text-white font-mono">{selectedCompany.rccm_number}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-slate-400">NIF</p>
-                        <p className="text-white font-mono">{selectedCompany.nif_number || '-'}</p>
-                      </div>
-                    </div>
                   </div>
 
                   {/* Contact Person */}
                   <div className="mb-6 p-4 bg-slate-700/30 rounded-lg">
                     <h4 className="text-sm font-bold text-slate-300 uppercase mb-2">Personne de Contact</h4>
-                    <p className="text-white">{selectedCompany.contact_person_name}</p>
-                    <p className="text-slate-400">{selectedCompany.contact_person_phone}</p>
+                    {editingCompany ? (
+                      <div className="space-y-2">
+                        <input value={companyEditData.contact_person_name || ''} onChange={(e) => setCompanyEditData({...companyEditData, contact_person_name: e.target.value})}
+                          placeholder="Nom" className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-teal-500" />
+                        <input value={companyEditData.contact_person_phone || ''} onChange={(e) => setCompanyEditData({...companyEditData, contact_person_phone: e.target.value})}
+                          placeholder="Téléphone" className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-teal-500" />
+                      </div>
+                    ) : (
+                      <>
+                        <p className="text-white">{selectedCompany.contact_person_name}</p>
+                        <p className="text-slate-400">{selectedCompany.contact_person_phone}</p>
+                      </>
+                    )}
                   </div>
 
-                  {/* Description - Editable */}
+                  {/* Description */}
                   <div className="mb-6">
-                    <h4 className="text-sm font-bold text-slate-300 uppercase mb-2 flex items-center justify-between">
-                      Description
-                      {editingCompanyDesc !== selectedCompany.id ? (
-                        <button
-                          onClick={() => { setEditingCompanyDesc(selectedCompany.id); setCompanyDescText(selectedCompany.description || ''); }}
-                          className="text-xs text-teal-400 hover:text-teal-300 font-normal flex items-center gap-1"
-                          data-testid="edit-company-desc-btn"
-                        >
-                          <Pencil className="h-3 w-3" /> Modifier
-                        </button>
-                      ) : null}
-                    </h4>
-                    {editingCompanyDesc === selectedCompany.id ? (
-                      <div className="space-y-2">
-                        <textarea
-                          value={companyDescText}
-                          onChange={(e) => setCompanyDescText(e.target.value)}
-                          className="w-full bg-slate-700 border border-slate-600 rounded-lg p-3 text-white text-sm resize-none focus:outline-none focus:border-teal-500"
-                          rows={4}
-                          data-testid="company-desc-textarea"
-                        />
-                        <div className="flex gap-2">
-                          <button
-                            onClick={async () => {
-                              try {
-                                await adminApi.put(`${API}/admin/companies/${selectedCompany.id}/description`, { description: companyDescText });
-                                toast.success('Description mise à jour');
-                                setEditingCompanyDesc(null);
-                                setSelectedCompany({ ...selectedCompany, description: companyDescText });
-                                setCompanies(prev => prev.map(c => c.id === selectedCompany.id ? { ...c, description: companyDescText } : c));
-                              } catch (err) { toast.error('Erreur lors de la mise à jour'); }
-                            }}
-                            className="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-xs rounded-lg font-medium"
-                            data-testid="save-company-desc-btn"
-                          >
-                            Enregistrer
-                          </button>
-                          <button
-                            onClick={() => setEditingCompanyDesc(null)}
-                            className="px-3 py-1.5 bg-slate-600 hover:bg-slate-500 text-white text-xs rounded-lg"
-                          >
-                            Annuler
-                          </button>
-                        </div>
-                      </div>
+                    <h4 className="text-sm font-bold text-slate-300 uppercase mb-2">Description</h4>
+                    {editingCompany ? (
+                      <textarea
+                        value={companyEditData.description || ''}
+                        onChange={(e) => setCompanyEditData({...companyEditData, description: e.target.value})}
+                        className="w-full bg-slate-700 border border-slate-600 rounded-lg p-3 text-white text-sm resize-none focus:outline-none focus:border-teal-500"
+                        rows={4}
+                      />
                     ) : (
                       <p className="text-slate-400 text-sm">{selectedCompany.description}</p>
                     )}
                   </div>
+
+                  {/* Save / Cancel buttons for edit mode */}
+                  {editingCompany && (
+                    <div className="flex gap-3 mb-6 pt-4 border-t border-slate-700">
+                      <Button
+                        onClick={async () => {
+                          try {
+                            await adminApi.put(`${API}/admin/companies/${selectedCompany.id}/update`, companyEditData);
+                            toast.success('Entreprise mise à jour avec succès');
+                            const updated = { ...selectedCompany, ...companyEditData };
+                            setSelectedCompany(updated);
+                            setCompanies(prev => prev.map(c => c.id === selectedCompany.id ? updated : c));
+                            setEditingCompany(false);
+                          } catch (err) { toast.error('Erreur lors de la mise à jour'); }
+                        }}
+                        className="flex-1 bg-teal-600 hover:bg-teal-700 gap-2"
+                        data-testid="save-company-edit-btn"
+                      >
+                        <CheckCircle className="h-4 w-4" /> Enregistrer
+                      </Button>
+                      <Button
+                        onClick={() => setEditingCompany(false)}
+                        variant="outline"
+                        className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-700"
+                      >
+                        Annuler
+                      </Button>
+                    </div>
+                  )}
 
                   {/* Documents Section */}
                   <div className="mb-6 p-4 bg-slate-700/50 rounded-lg">
