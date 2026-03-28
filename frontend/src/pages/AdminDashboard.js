@@ -3052,7 +3052,10 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                             setSelectedCompany(updated);
                             setCompanies(prev => prev.map(c => c.id === selectedCompany.id ? updated : c));
                             setEditingCompany(false);
-                          } catch (err) { toast.error('Erreur lors de la mise à jour'); }
+                          } catch (err) {
+                            console.error('Update error:', err.response?.data || err.message);
+                            toast.error(err.response?.data?.detail || 'Erreur lors de la mise à jour');
+                          }
                         }}
                         className="flex-1 bg-teal-600 hover:bg-teal-700 gap-2"
                         data-testid="save-company-edit-btn"
