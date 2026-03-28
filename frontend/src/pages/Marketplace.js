@@ -74,6 +74,14 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
 
   const sectors = [...new Set(shops.map(s => s.sector).filter(Boolean))];
 
+  // Build shop-to-sector map for product filtering
+  const shopSectorMap = {};
+  shops.forEach(s => { if (s.sector) shopSectorMap[s.id] = s.sector; });
+
+  const filteredProducts = selectedSector
+    ? products.filter(p => shopSectorMap[p.shop_id] === selectedSector)
+    : products;
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -138,7 +146,7 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
               onClick={() => setViewMode('products')}
               className={viewMode === 'products' ? 'bg-orange-500 hover:bg-orange-600' : ''}
             >
-              <Package className="h-4 w-4 mr-1" /> Produits ({products.length})
+              <Package className="h-4 w-4 mr-1" /> Produits ({filteredProducts.length})
             </Button>
             <Button
               data-testid="view-shops-btn"
@@ -151,6 +159,19 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
             </Button>
           </div>
           <div className="flex gap-2">
+            {sectors.length > 0 && (
+              <select
+                data-testid="sector-filter"
+                className="px-3 py-2 border rounded-lg text-sm bg-white"
+                value={selectedSector}
+                onChange={(e) => setSelectedSector(e.target.value)}
+              >
+                <option value="">Tous secteurs</option>
+                {sectors.map(s => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            )}
             {viewMode === 'products' && categories.length > 0 && (
               <select
                 data-testid="category-filter"
@@ -161,19 +182,6 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
                 <option value="">Toutes catégories</option>
                 {categories.map(c => (
                   <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-            )}
-            {viewMode === 'shops' && sectors.length > 0 && (
-              <select
-                data-testid="sector-filter"
-                className="px-3 py-2 border rounded-lg text-sm bg-white"
-                value={selectedSector}
-                onChange={(e) => setSelectedSector(e.target.value)}
-              >
-                <option value="">Tous secteurs</option>
-                {sectors.map(s => (
-                  <option key={s} value={s}>{s}</option>
                 ))}
               </select>
             )}
@@ -200,7 +208,7 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
 
         {/* Products Grid */}
         {!loading && viewMode === 'products' && (
-          products.length === 0 ? (
+          filteredProducts.length === 0 ? (
             <div className="text-center py-16">
               <ShoppingBag className="h-16 w-16 text-gray-300 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-gray-600">Aucun produit disponible</h3>
@@ -208,7 +216,7 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-              {products.map(product => (
+              {filteredProducts.map(product => (
                 <Card
                   key={product.id}
                   data-testid={`product-card-${product.id}`}
