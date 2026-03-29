@@ -585,9 +585,8 @@ const CompanyDashboard = () => {
         if (saleDocuments[docType]) {
           const docFormData = new FormData();
           docFormData.append('file', saleDocuments[docType]);
-          docFormData.append('document_type', docType);
 
-          await axios.post(`${API}/company/property-sales/${createdSaleId}/upload-document`, docFormData, {
+          await axios.post(`${API}/company/property-sales/${createdSaleId}/upload-document/${docType}`, docFormData, {
             headers: {
               Authorization: `Bearer ${token}`,
               'Content-Type': 'multipart/form-data'
@@ -600,9 +599,8 @@ const CompanyDashboard = () => {
       for (const doc of saleDocuments.documents_additionnels) {
         const docFormData = new FormData();
         docFormData.append('file', doc);
-        docFormData.append('document_type', 'autres_documents');
 
-        await axios.post(`${API}/company/property-sales/${createdSaleId}/upload-document`, docFormData, {
+        await axios.post(`${API}/company/property-sales/${createdSaleId}/upload-document/autres_documents`, docFormData, {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'multipart/form-data'
