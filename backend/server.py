@@ -3622,6 +3622,26 @@ async def admin_mark_property_sold(sale_id: str):
     
     return {'message': 'Propriété marquée comme vendue', 'sale_id': sale_id}
 
+@api_router.put("/admin/property-sales/{sale_id}/update-price")
+async def admin_update_sale_price(sale_id: str, data: dict = Body(...)):
+    """Admin: Update property sale price"""
+    sale = await db.property_sales.find_one({'id': sale_id})
+    if not sale:
+        raise HTTPException(status_code=404, detail="Vente non trouvée")
+    
+    new_price = data.get('sale_price')
+    if new_price is None or float(new_price) < 0:
+        raise HTTPException(status_code=400, detail="Prix invalide")
+    
+    await db.property_sales.update_one(
+        {'id': sale_id},
+        {'$set': {
+            'sale_price': float(new_price),
+            'updated_at': datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    return {'message': 'Prix mis à jour avec succès'}
+
 @api_router.post("/admin/property-sales/{sale_id}/documents")
 async def admin_upload_property_document(sale_id: str, document: UploadFile = File(...)):
     """Admin: Upload a document for a property sale"""

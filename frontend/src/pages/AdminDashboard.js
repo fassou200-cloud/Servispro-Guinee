@@ -97,6 +97,8 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
   const [selectedRental, setSelectedRental] = useState(null);
   const [selectedAgent, setSelectedAgent] = useState(null);
   const [selectedSale, setSelectedSale] = useState(null);
+  const [editingSalePrice, setEditingSalePrice] = useState(false);
+  const [salePriceValue, setSalePriceValue] = useState('');
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [editingCompanyDesc, setEditingCompanyDesc] = useState(null);
   const [companyDescText, setCompanyDescText] = useState('');
@@ -2439,9 +2441,60 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                       <p className="text-emerald-400">{selectedSale.property_type}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-2xl font-bold text-emerald-400">
-                        {Number(selectedSale.sale_price).toLocaleString('fr-FR')} GNF
-                      </p>
+                      {editingSalePrice ? (
+                        <div className="flex flex-col items-end gap-2">
+                          <div className="flex items-center gap-1">
+                            <input
+                              type="number"
+                              value={salePriceValue}
+                              onChange={(e) => setSalePriceValue(e.target.value)}
+                              className="w-40 bg-slate-700 border border-slate-600 rounded-lg px-3 py-1.5 text-emerald-400 text-right font-bold text-lg focus:outline-none focus:border-teal-500"
+                              data-testid="sale-price-input"
+                            />
+                            <span className="text-emerald-400 font-bold text-sm">GNF</span>
+                          </div>
+                          <div className="flex gap-1">
+                            <button
+                              onClick={async () => {
+                                try {
+                                  await adminApi.put(`${API}/admin/property-sales/${selectedSale.id}/update-price`, { sale_price: Number(salePriceValue) });
+                                  toast.success('Prix mis à jour');
+                                  const updated = { ...selectedSale, sale_price: Number(salePriceValue) };
+                                  setSelectedSale(updated);
+                                  setSales(prev => prev.map(s => s.id === selectedSale.id ? updated : s));
+                                  setEditingSalePrice(false);
+                                } catch (err) {
+                                  toast.error(err.response?.data?.detail || 'Erreur');
+                                }
+                              }}
+                              className="px-2 py-1 bg-teal-600 hover:bg-teal-700 text-white text-xs rounded font-medium"
+                              data-testid="save-sale-price-btn"
+                            >
+                              OK
+                            </button>
+                            <button
+                              onClick={() => setEditingSalePrice(false)}
+                              className="px-2 py-1 bg-slate-600 hover:bg-slate-500 text-white text-xs rounded"
+                            >
+                              X
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <p className="text-2xl font-bold text-emerald-400">
+                            {Number(selectedSale.sale_price).toLocaleString('fr-FR')} GNF
+                          </p>
+                          <button
+                            onClick={() => { setEditingSalePrice(true); setSalePriceValue(selectedSale.sale_price || 0); }}
+                            className="p-1 text-slate-400 hover:text-teal-400 transition-colors"
+                            data-testid="edit-sale-price-btn"
+                            title="Modifier le prix"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                        </div>
+                      )}
                       {selectedSale.is_negotiable && (
                         <span className="text-xs text-amber-400">Négociable</span>
                       )}
