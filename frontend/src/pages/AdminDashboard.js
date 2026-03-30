@@ -2834,6 +2834,29 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                       </p>
                     </div>
                   )}
+
+                  {/* Delete Button */}
+                  <div className="pt-4 border-t border-slate-700 mt-4">
+                    <Button
+                      onClick={async () => {
+                        if (!window.confirm('Êtes-vous sûr de vouloir supprimer cette annonce ? Cette action est irréversible.')) return;
+                        try {
+                          await adminApi.delete(`${API}/admin/property-sales/${selectedSale.id}`);
+                          toast.success('Annonce supprimée');
+                          setSales(prev => prev.filter(s => s.id !== selectedSale.id));
+                          setSelectedSale(null);
+                        } catch (error) {
+                          toast.error('Erreur lors de la suppression');
+                        }
+                      }}
+                      variant="outline"
+                      className="w-full border-red-600/50 text-red-400 hover:bg-red-600 hover:text-white gap-2"
+                      data-testid="delete-sale-btn"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Supprimer l'annonce
+                    </Button>
+                  </div>
                 </Card>
               ) : (
                 <Card className="p-8 bg-slate-800 border-slate-700 text-center">
