@@ -137,6 +137,9 @@ const RentalDetail = () => {
   const [newMessage, setNewMessage] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [showContactForm, setShowContactForm] = useState(false);
+  const [contactForm, setContactForm] = useState({ sender_name: '', sender_phone: '', message: '' });
+  const [sendingContact, setSendingContact] = useState(false);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -168,6 +171,25 @@ const RentalDetail = () => {
       navigate('/rentals');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSendContact = async (e) => {
+    e.preventDefault();
+    if (!contactForm.sender_name || !contactForm.sender_phone || !contactForm.message) {
+      toast.error('Veuillez remplir tous les champs');
+      return;
+    }
+    setSendingContact(true);
+    try {
+      await axios.post(`${API}/rentals/${rentalId}/messages`, contactForm);
+      toast.success('Message envoyé au propriétaire !');
+      setShowContactForm(false);
+      setContactForm({ sender_name: '', sender_phone: '', message: '' });
+    } catch (err) {
+      toast.error("Erreur lors de l'envoi du message");
+    } finally {
+      setSendingContact(false);
     }
   };
 
@@ -564,6 +586,15 @@ const RentalDetail = () => {
                   <Eye className="h-5 w-5" />
                   Demander une Visite
                 </Button>
+
+                <Button
+                  className="w-full h-14 font-heading font-bold gap-3 rounded-2xl mt-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-lg shadow-green-500/30 text-base"
+                  data-testid="contact-agency-button"
+                  onClick={() => setShowContactForm(true)}
+                >
+                  <MessageCircle className="h-5 w-5" />
+                  Contacter l'Agence
+                </Button>
               </Card>
             </div>
           </div>
@@ -582,6 +613,57 @@ const RentalDetail = () => {
               onClose={() => setShowVisitForm(false)}
             />
           </div>
+        </div>
+      )}
+
+      {/* Contact Agency Modal */}
+      {showContactForm && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowContactForm(false)}>
+          <Card className="w-full max-w-md p-6 bg-white relative" onClick={(e) => e.stopPropagation()}>
+            <button
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-2xl font-bold leading-none"
+              onClick={() => setShowContactForm(false)}
+            >
+              &times;
+            </button>
+            <h3 className="font-semibold text-gray-900 text-lg mb-4 flex items-center gap-2">
+              <MessageCircle className="h-5 w-5 text-green-500" />
+              Contacter l'Agence
+            </h3>
+            <form onSubmit={handleSendContact} className="space-y-3">
+              <Input
+                data-testid="rental-contact-name"
+                placeholder="Votre nom"
+                value={contactForm.sender_name}
+                onChange={(e) => setContactForm({...contactForm, sender_name: e.target.value})}
+                required
+              />
+              <Input
+                data-testid="rental-contact-phone"
+                placeholder="Votre numéro de téléphone"
+                value={contactForm.sender_phone}
+                onChange={(e) => setContactForm({...contactForm, sender_phone: e.target.value})}
+                required
+              />
+              <textarea
+                data-testid="rental-contact-message"
+                placeholder={`Bonjour, je suis intéressé par "${rental?.title || 'ce logement'}"...`}
+                value={contactForm.message}
+                onChange={(e) => setContactForm({...contactForm, message: e.target.value})}
+                rows={3}
+                required
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-green-500"
+              />
+              <Button
+                data-testid="send-rental-contact-btn"
+                type="submit"
+                className="w-full bg-green-500 hover:bg-green-600"
+                disabled={sendingContact}
+              >
+                {sendingContact ? 'Envoi...' : 'Envoyer le message'}
+              </Button>
+            </form>
+          </Card>
         </div>
       )}
     </div>

@@ -3769,6 +3769,83 @@ async def get_customer_property_inquiries(current_customer: dict = Depends(get_c
     ).sort('created_at', -1).to_list(None)
     return inquiries
 
+# ==================== RENTAL MESSAGES ====================
+
+class RentalMessageInput(BaseModel):
+    sender_name: str
+    sender_phone: str
+    message: str
+
+@api_router.post("/rentals/{rental_id}/messages")
+async def send_rental_message(rental_id: str, data: RentalMessageInput):
+    """Send a message to the owner of a rental listing (public)"""
+    rental = await db.rental_listings.find_one({'id': rental_id, 'is_deleted': {'$ne': True}}, {'_id': 0})
+    if not rental:
+        raise HTTPException(status_code=404, detail="Annonce non trouvée")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    msg = {
+        'id': str(uuid.uuid4()),
+        'rental_id': rental_id,
+        'rental_title': rental.get('title', 'Logement'),
+        'rental_location': rental.get('location', ''),
+        'owner_id': rental.get('service_provider_id') or rental.get('company_id'),
+        'sender_name': data.sender_name,
+        'sender_phone': data.sender_phone,
+        'message': data.message,
+        'is_read': False,
+        'message_type': 'rental',
+        'created_at': now
+    }
+    await db.property_messages.insert_one(msg)
+    msg.pop('_id', None)
+    return {'message': 'Message envoyé au propriétaire', 'id': msg['id']}
+
+@api_router.get("/company/property-messages")
+async def get_company_property_messages(current_company: dict = Depends(get_current_company)):
+    """Get all property messages (rental + sale inquiries) for the company"""
+    company_id = current_company['id']
+    
+    # Get rental messages
+    rental_msgs = await db.property_messages.find(
+        {'owner_id': company_id}, {'_id': 0}
+    ).sort('created_at', -1).to_list(None)
+    
+    # Get sale inquiries  
+    sale_inquiries = await db.property_inquiries.find(
+        {'agent_id': company_id}, {'_id': 0}
+    ).sort('created_at', -1).to_list(None)
+    
+    # Normalize sale inquiries to same format
+    for inq in sale_inquiries:
+        inq['message_type'] = 'sale'
+        inq['sender_name'] = inq.get('customer_name', '')
+        inq['sender_phone'] = inq.get('customer_phone', '')
+        inq['rental_title'] = inq.get('property_info', '')
+        inq['is_read'] = inq.get('status') != 'pending'
+    
+    # Combine and sort
+    all_messages = rental_msgs + sale_inquiries
+    all_messages.sort(key=lambda m: m.get('created_at', ''), reverse=True)
+    
+    return all_messages
+
+@api_router.put("/company/property-messages/{message_id}/read")
+async def mark_property_message_read(message_id: str, current_company: dict = Depends(get_current_company)):
+    """Mark a property message as read"""
+    # Try rental messages first
+    result = await db.property_messages.update_one(
+        {'id': message_id, 'owner_id': current_company['id']},
+        {'$set': {'is_read': True}}
+    )
+    if result.modified_count == 0:
+        # Try sale inquiries
+        await db.property_inquiries.update_one(
+            {'id': message_id, 'agent_id': current_company['id']},
+            {'$set': {'status': 'contacted'}}
+        )
+    return {'message': 'Marqué comme lu'}
+
 @api_router.post("/customer/property-inquiries/{inquiry_id}/message")
 async def customer_send_inquiry_message(
     inquiry_id: str, 
