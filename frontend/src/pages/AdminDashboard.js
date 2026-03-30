@@ -2461,7 +2461,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                                   toast.success('Prix mis à jour');
                                   const updated = { ...selectedSale, sale_price: Number(salePriceValue) };
                                   setSelectedSale(updated);
-                                  setSales(prev => prev.map(s => s.id === selectedSale.id ? updated : s));
+                                  setPropertySales(prev => prev.map(s => s.id === selectedSale.id ? updated : s));
                                   setEditingSalePrice(false);
                                 } catch (err) {
                                   toast.error(err.response?.data?.detail || 'Erreur');
@@ -2842,11 +2842,13 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                         if (!window.confirm('Êtes-vous sûr de vouloir supprimer cette annonce ? Cette action est irréversible.')) return;
                         try {
                           await adminApi.delete(`${API}/admin/property-sales/${selectedSale.id}`);
-                          toast.success('Annonce supprimée');
-                          setSales(prev => prev.filter(s => s.id !== selectedSale.id));
+                          toast.success('Annonce supprimée avec succès');
+                          setPropertySales(prev => prev.filter(s => s.id !== selectedSale.id));
                           setSelectedSale(null);
                         } catch (error) {
-                          toast.error('Erreur lors de la suppression');
+                          console.error('Delete error:', error.response?.status, error.response?.data);
+                          const msg = error.response?.data?.detail || error.response?.data?.message || 'Erreur lors de la suppression';
+                          toast.error(msg);
                         }
                       }}
                       variant="outline"
