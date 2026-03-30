@@ -154,41 +154,37 @@ const CustomerHome = ({ isCustomerAuthenticated }) => {
               <ChevronRight className="absolute right-6 top-1/2 -translate-y-1/2 h-6 w-6 text-white/70 group-hover:translate-x-1 transition-transform" />
             </button>
 
-            {/* Location Card */}
-            <button
-              onClick={() => navigate('/rentals')}
-              data-testid="find-rental-card"
-              className="group relative bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 md:p-8 text-left transition-all hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+            {/* Immobilier Card - Location & Vente */}
+            <div
+              data-testid="find-house-card"
+              className="group relative bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 md:p-8 text-left"
             >
               <div className="h-12 w-12 rounded-xl bg-white/20 flex items-center justify-center mb-4">
                 <Building className="h-6 w-6 text-white" />
               </div>
               <h3 className="text-xl md:text-2xl font-bold text-white mb-2">
-                Location
+                Trouver une maison
               </h3>
-              <p className="text-blue-100 text-sm md:text-base">
-                Trouvez une maison à louer
+              <p className="text-blue-100 text-sm md:text-base mb-4">
+                Locations et ventes immobilières
               </p>
-              <ChevronRight className="absolute right-6 top-1/2 -translate-y-1/2 h-6 w-6 text-white/70 group-hover:translate-x-1 transition-transform" />
-            </button>
-
-            {/* Vente Card */}
-            <button
-              onClick={() => navigate('/property-sales')}
-              data-testid="find-sale-card"
-              className="group relative bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-6 md:p-8 text-left transition-all hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
-            >
-              <div className="h-12 w-12 rounded-xl bg-white/20 flex items-center justify-center mb-4">
-                <MapPin className="h-6 w-6 text-white" />
+              <div className="flex gap-3">
+                <button
+                  onClick={() => navigate('/rentals')}
+                  data-testid="find-rental-btn"
+                  className="flex-1 bg-white/20 hover:bg-white/30 text-white font-semibold py-3 rounded-xl transition-colors text-sm"
+                >
+                  Location
+                </button>
+                <button
+                  onClick={() => navigate('/property-sales')}
+                  data-testid="find-sale-btn"
+                  className="flex-1 bg-white/20 hover:bg-white/30 text-white font-semibold py-3 rounded-xl transition-colors text-sm"
+                >
+                  Vente
+                </button>
               </div>
-              <h3 className="text-xl md:text-2xl font-bold text-white mb-2">
-                Vente
-              </h3>
-              <p className="text-indigo-100 text-sm md:text-base">
-                Achetez une propriété
-              </p>
-              <ChevronRight className="absolute right-6 top-1/2 -translate-y-1/2 h-6 w-6 text-white/70 group-hover:translate-x-1 transition-transform" />
-            </button>
+            </div>
 
             {/* Marketplace Card */}
             <button
