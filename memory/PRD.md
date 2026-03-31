@@ -1,102 +1,81 @@
-# ServisPro - PRD (Product Requirements Document)
+# ServisPro - Product Requirements Document
 
-## Problem Statement
-ServisPro est une plateforme pour prestataires de services et clients en Guinée, avec des rôles pour Admin, Prestataires, Entreprises et Clients.
+## Original Problem Statement
+ServisPro is a comprehensive platform for service providers, companies, and clients in Guinea. The platform includes:
+- A virtual marketplace named "Makiti" for companies to sell products
+- A real estate portal (rentals and sales)
+- A service directory connecting professionals with clients
+- Admin dashboard for complete platform management
 
-## Architecture
-- **Backend**: FastAPI (Python) - `/app/backend/server.py`
-- **Frontend**: React - `/app/frontend/src/`
-- **Database**: MongoDB Atlas
-- **File Storage**: Cloudinary
+**User's preferred language**: French
 
-## Core Features Implemented
+## Core Architecture
+- **Frontend**: React (CRA) with Shadcn/UI components
+- **Backend**: FastAPI (Python) - monolithic `server.py`
+- **Database**: MongoDB Atlas (`servispro_production`)
+- **Image Storage**: Cloudinary
+- **Deployment**: Kubernetes container
 
-### Authentication & Roles
-- Provider, Client, Company, Admin authentication
-- Role-based dashboards
-- Terms & Conditions modals (Provider, Client - pending for Company)
+## What's Been Implemented
 
-### Provider Management
-- Registration, profile, approval workflow
-- Advanced filters: City, Neighborhood, Profession, Experience
-- Activation/Deactivation by admin (soft delete with `is_active` flag)
-- Admin can edit provider name and profession
+### Phase 1 - Core Platform (Complete)
+- Service provider registration, profiles, and approval workflow
+- Customer registration and service browsing
+- Admin dashboard with comprehensive management tools
+- Real estate listings (rentals + sales)
+- Company registration and dashboard
 
-### Real Estate Agent Features
-- Special dashboard for "Propriétaire immobilier"
-- Rental listing creation and management
-- Property sale listing
-- Visit requests management
-- **Dynamic Ad Pricing** (COMPLETED 2026-03-15):
-  - First 3 listings free (configurable by admin via `annonces_gratuites`)
-  - Admin-configurable fees: `frais_annonce_location`, `frais_annonce_vente`
-  - `RealEstateFeesCard` component shows fees, free remaining, and listing counts
-  - Backend endpoint: `GET /api/agent-listing-info/{provider_id}`
+### Phase 2 - Marketplace "Makiti" (Complete)
+- Company shop creation and management (MyShop component)
+- Product CRUD with multi-photo uploads
+- Product ratings & reviews from customers
+- Marketplace browsing with sector filters
+- Product messaging between customers and sellers
 
-### Admin Dashboard
-- Provider/Client list with pagination
-- Approval workflow
-- Service fee configuration by profession
-- Real estate ad fee configuration
-- Contact form submissions viewer
+### Phase 3 - Security & Data Integrity (Complete)
+- AdminAuthMiddleware protecting all 65+ admin API endpoints
+- Soft-delete with audit logging for user data
+- Hard cascade deletion for companies (shops, products, rentals, sales, messages, Cloudinary files)
+- Rate limiting on login endpoints
 
-### Service Request Flow
-- Free service requests (payment gateway removed)
-- Job management (accept/reject/complete)
+### Phase 4 - Admin Product Management (Complete - March 31, 2026)
+- Admin can view all products from company boutiques in the Entreprises tab
+- Photo gallery with grid view showing all product photos
+- Individual photo deletion from admin dashboard (with Cloudinary cleanup)
+- Product editing (name, description, price, negotiable, availability) from admin
+- Product deletion with all associated photos from admin
+- Backend endpoints: GET /api/admin/companies/{company_id}/products, PUT /api/admin/products/{product_id}, DELETE /api/admin/products/{product_id}, DELETE /api/admin/products/{product_id}/photos/{photo_index}
 
-### Other
-- Notification system (sound issue pending)
-- Contact form
-- Google Analytics & Tag Manager
+### Phase 5 - UI/UX Enhancements (Complete)
+- Homepage overhaul with Makiti and Espace Entreprise cards
+- Company auth via phone number, RCCM made optional
+- Real estate messaging (Contacter l'Agence)
+- Company password change functionality
+- PWA configuration with service worker
 
-## Known Issues
-- **P2**: Notification sound may be silent in some browsers
-- **P3**: "Erreur lors de l'approbation" bug (needs user reproduction steps)
+## Pending Issues
+- **P3**: "Erreur lors de l'approbation" (needs user reproduction steps)
+- **P3**: Notification sound not playing (browser media playback policy)
+- **P0-Verification**: PWA installation and SPA routing (code written, not fully verified)
 
 ## Upcoming Tasks
-- **P1**: Add Terms & Conditions to Company Registration (`/company/auth`)
-- **P0**: Real Mobile Money Integration (Orange Money / MTN)
-- **P2**: WebSocket for real-time online/offline status
-- **P3**: Refactor `server.py` into modular routers
-- **P4**: Localization with `i18next`
-- **P4**: Admin dashboard visualizations (charts)
+- **P0**: Refactor `server.py` (7800+ lines) into modular FastAPI routers
+- **P0**: Refactor `AdminDashboard.js` (4400+ lines) and `CompanyDashboard.js` (2400+ lines)
+- **P1**: Add Terms & Conditions to Company Registration
 
-## Key DB Schema
-- **service_providers**: `is_active`, `profession`, `phone_number`, `created_at`
-- **customers**: `is_active`
-- **admin_settings**: `listing_fee_rental`, `listing_fee_sale`, `free_listings_count`, `frais_annonce_location`, `frais_annonce_vente`, `annonces_gratuites`
-- **rental_listings**: `service_provider_id` (owner reference)
-- **property_sales**: `agent_id` (owner reference)
+## Future/Backlog Tasks
+- **P0**: Real Mobile Money Integration (payment gateway)
+- **P2**: Real-Time "Online/Offline" Status (WebSockets)
+- **P4**: Localization (i18next)
+- **P4**: Admin Visualizations (charts/graphs)
 
-## Changelog
+## Key Credentials
+- Admin: servispro@servisprogn.com / Servisproguinea2026#
+- Database: servispro_production (MongoDB Atlas)
 
-### 2026-03-21
-- **Rebranding Marketplace -> Makiti** - Renamed visible text on homepage card and navigation bar
-- **Homepage Cleanup** - Removed hero section and categories, kept only "Que recherchez-vous?" with 4 cards
-- **Logo Update** - Added ServisPro logo to header, homepage center, and footer
-- **Company Auth: Phone Login** - Changed company login from RCCM to phone number, RCCM now optional in registration
-- **Contact Popup** - "Contacter le vendeur" now opens as a modal popup instead of inline
-- **Product Reviews System** - Full implementation:
-  - Backend: 4 new endpoints (create review, get reviews, company reviews, provider reviews)
-  - Frontend: Star rating, review form (logged-in customers only), reviews list on product page
-  - Enterprise dashboard: New "Avis" tab in Ma Boutique showing all customer reviews
-  - Duplicate review prevention, average rating calculation, review count on products
-
-### 2026-03-15
-- **Real Estate Ad Pricing** - Completed full feature
-- **Cloudinary Image Fix** - Fixed broken images across 11 frontend files
-- **CRITICAL Security Fix** - Secured ALL 65 admin endpoints:
-  - Added `AdminAuthMiddleware` blocking unauthorized access to `/api/admin/*`
-  - All requests without valid admin JWT token are rejected (401/403)
-  - Replaced hard deletes with soft-delete for customers and providers
-  - Added audit logging for destructive admin actions
-  - Frontend `AdminDashboard.js` and `AdminSalesManager.js` now send Bearer token via `adminApi` interceptor
-- **Admin**: `servispro@servisprogn.com` / `Servisproguinea2026#`
-- **Provider (Standard)**: `224620333444` / `password123`
-- **Provider (Real Estate)**: `224699999999` / `password123`
-
-## 3rd Party Integrations
-- MongoDB Atlas (production DB)
-- Cloudinary (file storage)
-- Google Tag Manager: `GTM-MJMGQVPX`
-- Google Analytics 4: `G-FHEVHMPGMR`
+## Key Files
+- `/app/backend/server.py` - All backend logic (7900+ lines)
+- `/app/frontend/src/pages/AdminDashboard.js` - Admin panel (4500+ lines)
+- `/app/frontend/src/pages/CompanyDashboard.js` - Company dashboard (2400+ lines)
+- `/app/frontend/src/components/MyShop.js` - Shop management component
+- `/app/frontend/src/pages/Marketplace.js` - Makiti browsing page
