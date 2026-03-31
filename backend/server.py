@@ -7396,6 +7396,20 @@ async def upload_product_photos(product_id: str, files: List[UploadFile] = File(
     await db.products.update_one({'id': product_id}, {'$set': {'photos': photo_urls}})
     return {"photos": photo_urls}
 
+@api_router.delete("/shop/products/{product_id}/photos/{photo_index}")
+async def delete_product_photo(product_id: str, photo_index: int, current_user: dict = Depends(get_current_user)):
+    provider_id = current_user['id']
+    product = await db.products.find_one({'id': product_id, 'owner_id': provider_id})
+    if not product:
+        raise HTTPException(status_code=404, detail="Produit non trouvé")
+    photos = list(product.get('photos', []))
+    if photo_index < 0 or photo_index >= len(photos):
+        raise HTTPException(status_code=400, detail="Index de photo invalide")
+    removed_url = photos.pop(photo_index)
+    delete_from_cloudinary(removed_url)
+    await db.products.update_one({'id': product_id}, {'$set': {'photos': photos}})
+    return {"photos": photos}
+
 @api_router.get("/shop/products")
 async def get_my_products(current_user: dict = Depends(get_current_user)):
     provider_id = current_user['id']
@@ -7646,6 +7660,50 @@ async def admin_get_shops():
     shops = await db.shops.find({}, {'_id': 0}).sort('created_at', -1).to_list(None)
     return shops
 
+@api_router.get("/admin/companies/{company_id}/products")
+async def admin_get_company_products(company_id: str):
+    shop = await db.shops.find_one({'owner_id': company_id}, {'_id': 0})
+    if not shop:
+        return []
+    products = await db.products.find(
+        {'shop_id': shop['id'], 'is_deleted': {'$ne': True}}, {'_id': 0}
+    ).sort('created_at', -1).to_list(None)
+    return products
+
+@api_router.put("/admin/products/{product_id}")
+async def admin_update_product(product_id: str, data: ProductUpdate):
+    product = await db.products.find_one({'id': product_id})
+    if not product:
+        raise HTTPException(status_code=404, detail="Produit non trouvé")
+    update_data = {k: v for k, v in data.dict().items() if v is not None}
+    update_data['updated_at'] = datetime.now(timezone.utc).isoformat()
+    await db.products.update_one({'id': product_id}, {'$set': update_data})
+    updated = await db.products.find_one({'id': product_id}, {'_id': 0})
+    return updated
+
+@api_router.delete("/admin/products/{product_id}")
+async def admin_delete_product(product_id: str):
+    product = await db.products.find_one({'id': product_id})
+    if not product:
+        raise HTTPException(status_code=404, detail="Produit non trouvé")
+    for photo_url in product.get('photos', []):
+        delete_from_cloudinary(photo_url)
+    await db.products.delete_one({'id': product_id})
+    return {"message": "Produit supprimé"}
+
+@api_router.delete("/admin/products/{product_id}/photos/{photo_index}")
+async def admin_delete_product_photo(product_id: str, photo_index: int):
+    product = await db.products.find_one({'id': product_id})
+    if not product:
+        raise HTTPException(status_code=404, detail="Produit non trouvé")
+    photos = list(product.get('photos', []))
+    if photo_index < 0 or photo_index >= len(photos):
+        raise HTTPException(status_code=400, detail="Index de photo invalide")
+    removed_url = photos.pop(photo_index)
+    delete_from_cloudinary(removed_url)
+    await db.products.update_one({'id': product_id}, {'$set': {'photos': photos}})
+    return {"photos": photos}
+
 # ==================== COMPANY SHOP ENDPOINTS ====================
 
 @api_router.post("/company/shop/create")
@@ -7751,6 +7809,20 @@ async def company_upload_product_photos(product_id: str, files: List[UploadFile]
         photo_urls.append(result['secure_url'])
     await db.products.update_one({'id': product_id}, {'$set': {'photos': photo_urls}})
     return {"photos": photo_urls}
+
+@api_router.delete("/company/shop/products/{product_id}/photos/{photo_index}")
+async def company_delete_product_photo(product_id: str, photo_index: int, current_company: dict = Depends(get_current_company)):
+    company_id = current_company['id']
+    product = await db.products.find_one({'id': product_id, 'owner_id': company_id})
+    if not product:
+        raise HTTPException(status_code=404, detail="Produit non trouvé")
+    photos = list(product.get('photos', []))
+    if photo_index < 0 or photo_index >= len(photos):
+        raise HTTPException(status_code=400, detail="Index de photo invalide")
+    removed_url = photos.pop(photo_index)
+    delete_from_cloudinary(removed_url)
+    await db.products.update_one({'id': product_id}, {'$set': {'photos': photos}})
+    return {"photos": photos}
 
 @api_router.get("/company/shop/products")
 async def company_get_my_products(current_company: dict = Depends(get_current_company)):

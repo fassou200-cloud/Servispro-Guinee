@@ -5,7 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Store, Plus, Package, Eye, MessageCircle, Edit, Trash2, Upload, Camera,
-  Check, X, Loader2, Image as ImageIcon, DollarSign, Tag, Save, Star, User
+  Check, X, Loader2, Image as ImageIcon, DollarSign, Tag, Save, Star, User,
+  ChevronLeft, ChevronRight, ZoomIn
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
@@ -43,6 +44,8 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
   const [editForm, setEditForm] = useState({ name: '', description: '', price: '', is_negotiable: false, is_available: true, category_id: '' });
   const [selectedProductFiles, setSelectedProductFiles] = useState([]);
   const [addPhotosProductId, setAddPhotosProductId] = useState(null);
+  const [expandedProductId, setExpandedProductId] = useState(null);
+  const [deletingPhoto, setDeletingPhoto] = useState(null);
 
   const authHeaders = { headers: { Authorization: `Bearer ${token}` } };
 
@@ -179,6 +182,21 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
       toast.success('Produit supprimé');
       setProducts(products.filter(p => p.id !== productId));
     } catch (err) { toast.error('Erreur'); }
+  };
+
+  const handleDeletePhoto = async (productId, photoIndex) => {
+    if (!window.confirm('Supprimer cette photo ?')) return;
+    setDeletingPhoto(`${productId}-${photoIndex}`);
+    try {
+      const res = await axios.delete(`${API}/${apiPrefix}/products/${productId}/photos/${photoIndex}`, authHeaders);
+      setProducts(products.map(p => p.id === productId ? { ...p, photos: res.data.photos } : p));
+      if (editingProduct?.id === productId) {
+        setEditingProduct({ ...editingProduct, photos: res.data.photos });
+      }
+      toast.success('Photo supprimée');
+    } catch (err) {
+      toast.error('Erreur lors de la suppression de la photo');
+    } finally { setDeletingPhoto(null); }
   };
 
   const handleToggleAvailability = async (product) => {
@@ -388,13 +406,28 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
                     </span>
                   </label>
                 </div>
-                {/* Existing photos */}
+                {/* Existing photos with delete option */}
                 {editingProduct.photos?.length > 0 && (
                   <div>
-                    <p className="text-xs text-gray-500 mb-1">Photos actuelles :</p>
+                    <p className="text-xs text-gray-500 mb-1">Photos actuelles ({editingProduct.photos.length}) — cliquez sur la croix pour supprimer :</p>
                     <div className="flex gap-2 flex-wrap">
                       {editingProduct.photos.map((photo, i) => (
-                        <img key={i} src={getImageUrl(photo)} alt="" className="h-16 w-16 rounded-lg object-cover border" />
+                        <div key={i} className="relative group">
+                          <img src={getImageUrl(photo)} alt="" className="h-16 w-16 rounded-lg object-cover border" />
+                          <button
+                            type="button"
+                            onClick={() => handleDeletePhoto(editingProduct.id, i)}
+                            disabled={deletingPhoto === `${editingProduct.id}-${i}`}
+                            className="absolute -top-1.5 -right-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full p-0.5 shadow-md"
+                            data-testid={`edit-delete-photo-${i}`}
+                          >
+                            {deletingPhoto === `${editingProduct.id}-${i}` ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <X className="h-3 w-3" />
+                            )}
+                          </button>
+                        </div>
                       ))}
                     </div>
                   </div>
@@ -417,19 +450,30 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
             </div>
           ) : (
             <div className="space-y-3">
-              {products.map(product => (
-                <Card key={product.id} className="overflow-hidden">
+              {products.map(product => {
+                const isExpanded = expandedProductId === product.id;
+                return (
+                <Card key={product.id} className="overflow-hidden" data-testid={`product-card-${product.id}`}>
                   <div className="flex">
-                    {/* Product image */}
-                    <div className="w-28 h-28 bg-gray-100 flex-shrink-0 relative">
+                    {/* Product image - clickable to expand */}
+                    <div
+                      className="w-28 h-28 bg-gray-100 flex-shrink-0 relative cursor-pointer"
+                      onClick={() => setExpandedProductId(isExpanded ? null : product.id)}
+                      data-testid={`product-thumb-${product.id}`}
+                    >
                       {product.photos?.length > 0 ? (
                         <img src={getImageUrl(product.photos[0])} alt="" className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center"><Package className="h-8 w-8 text-gray-300" /></div>
                       )}
                       {product.photos?.length > 1 && (
-                        <span className="absolute bottom-1 right-1 bg-black/60 text-white text-xs px-1.5 rounded">
-                          +{product.photos.length - 1}
+                        <span className="absolute bottom-1 right-1 bg-black/60 text-white text-xs px-1.5 rounded flex items-center gap-0.5">
+                          <ImageIcon className="h-3 w-3" /> {product.photos.length}
+                        </span>
+                      )}
+                      {product.photos?.length > 0 && (
+                        <span className="absolute top-1 right-1 bg-black/40 text-white rounded-full p-0.5">
+                          <ZoomIn className="h-3 w-3" />
                         </span>
                       )}
                     </div>
@@ -458,19 +502,61 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
                             {uploadingPhotos === product.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <><Camera className="h-3.5 w-3.5" /> Photo</>}
                           </Button>
                           {/* Edit */}
-                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => startEditProduct(product)}>
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => startEditProduct(product)} data-testid={`edit-product-${product.id}`}>
                             <Edit className="h-3.5 w-3.5 text-blue-500" />
                           </Button>
                           {/* Delete */}
-                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => handleDeleteProduct(product.id)}>
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => handleDeleteProduct(product.id)} data-testid={`delete-product-${product.id}`}>
                             <Trash2 className="h-3.5 w-3.5 text-red-400" />
                           </Button>
                         </div>
                       </div>
                     </div>
                   </div>
+
+                  {/* Expanded photos gallery */}
+                  {isExpanded && product.photos?.length > 0 && (
+                    <div className="border-t bg-gray-50 p-3" data-testid={`photo-gallery-${product.id}`}>
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-xs font-medium text-gray-600">
+                          Photos du produit ({product.photos.length})
+                        </p>
+                        <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => setExpandedProductId(null)}>
+                          <X className="h-3 w-3 mr-1" /> Fermer
+                        </Button>
+                      </div>
+                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+                        {product.photos.map((photo, index) => (
+                          <div key={index} className="relative group aspect-square rounded-lg overflow-hidden border bg-white">
+                            <img
+                              src={getImageUrl(photo)}
+                              alt={`${product.name} - photo ${index + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                            <button
+                              onClick={() => handleDeletePhoto(product.id, index)}
+                              disabled={deletingPhoto === `${product.id}-${index}`}
+                              className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
+                              data-testid={`delete-photo-${product.id}-${index}`}
+                              title="Supprimer cette photo"
+                            >
+                              {deletingPhoto === `${product.id}-${index}` ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <Trash2 className="h-3 w-3" />
+                              )}
+                            </button>
+                            <span className="absolute bottom-1 left-1 bg-black/50 text-white text-[10px] px-1 rounded">
+                              {index + 1}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </Card>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

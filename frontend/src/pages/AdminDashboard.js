@@ -10,7 +10,7 @@ import {
   MapPin, Calendar, Moon, DollarSign, Star, MessageCircle, FileText, ExternalLink,
   Loader2, RefreshCw, Settings, Percent, TrendingUp, Save, Car, Banknote, Wallet,
   MessageSquare, Bug, AlertTriangle, Lightbulb, Sparkles, HelpCircle, Send, Pencil,
-  Power, Ban, ChevronLeft, ChevronRight
+  Power, Ban, ChevronLeft, ChevronRight, Package, Camera, Image as ImageIcon, X, Store
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
@@ -104,6 +104,12 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
   const [companyDescText, setCompanyDescText] = useState('');
   const [editingCompany, setEditingCompany] = useState(false);
   const [companyEditData, setCompanyEditData] = useState({});
+  const [companyProducts, setCompanyProducts] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(false);
+  const [expandedProductPhotos, setExpandedProductPhotos] = useState(null);
+  const [editingAdminProduct, setEditingAdminProduct] = useState(null);
+  const [adminProductEditData, setAdminProductEditData] = useState({});
+  const [deletingAdminPhoto, setDeletingAdminPhoto] = useState(null);
   const [rentalFilter, setRentalFilter] = useState('all'); // all, long_term, short_term
   const [feedbackFilter, setFeedbackFilter] = useState('all'); // all, new, in_progress, resolved
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, type: null, id: null, name: '' });
@@ -659,9 +665,64 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
       toast.success('Entreprise supprimée avec succès');
       refreshTabData('companies');
       setSelectedCompany(null);
+      setCompanyProducts([]);
       setDeleteConfirm({ show: false, type: null, id: null, name: '' });
     } catch (error) {
       toast.error('Erreur lors de la suppression');
+    }
+  };
+
+  // Load products for a selected company
+  const loadCompanyProducts = async (companyId) => {
+    setLoadingProducts(true);
+    try {
+      const res = await adminApi.get(`${API}/admin/companies/${companyId}/products`);
+      setCompanyProducts(res.data);
+    } catch (error) {
+      console.error('Error loading products:', error);
+      setCompanyProducts([]);
+    } finally { setLoadingProducts(false); }
+  };
+
+  const handleAdminDeleteProduct = async (productId) => {
+    if (!window.confirm('Supprimer ce produit et toutes ses photos ?')) return;
+    try {
+      await adminApi.delete(`${API}/admin/products/${productId}`);
+      toast.success('Produit supprimé');
+      setCompanyProducts(prev => prev.filter(p => p.id !== productId));
+    } catch (error) {
+      toast.error('Erreur lors de la suppression du produit');
+    }
+  };
+
+  const handleAdminDeletePhoto = async (productId, photoIndex) => {
+    if (!window.confirm('Supprimer cette photo ?')) return;
+    setDeletingAdminPhoto(`${productId}-${photoIndex}`);
+    try {
+      const res = await adminApi.delete(`${API}/admin/products/${productId}/photos/${photoIndex}`);
+      setCompanyProducts(prev => prev.map(p =>
+        p.id === productId ? { ...p, photos: res.data.photos } : p
+      ));
+      toast.success('Photo supprimée');
+    } catch (error) {
+      toast.error('Erreur lors de la suppression de la photo');
+    } finally { setDeletingAdminPhoto(null); }
+  };
+
+  const handleAdminUpdateProduct = async (productId) => {
+    try {
+      const res = await adminApi.put(`${API}/admin/products/${productId}`, {
+        name: adminProductEditData.name,
+        description: adminProductEditData.description,
+        price: parseFloat(adminProductEditData.price),
+        is_negotiable: adminProductEditData.is_negotiable,
+        is_available: adminProductEditData.is_available
+      });
+      setCompanyProducts(prev => prev.map(p => p.id === productId ? res.data : p));
+      setEditingAdminProduct(null);
+      toast.success('Produit mis à jour');
+    } catch (error) {
+      toast.error('Erreur lors de la mise à jour');
     }
   };
 
@@ -2888,7 +2949,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                     className={`p-4 bg-slate-800 border-slate-700 cursor-pointer transition-colors ${
                       selectedCompany?.id === company.id ? 'border-teal-500' : 'hover:border-slate-600'
                     }`}
-                    onClick={() => setSelectedCompany(company)}
+                    onClick={() => { setSelectedCompany(company); loadCompanyProducts(company.id); setEditingAdminProduct(null); setExpandedProductPhotos(null); }}
                   >
                     <div className="flex gap-4">
                       {company.logo ? (
@@ -3262,6 +3323,203 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
 
                   <div className="text-xs text-slate-500 mb-4">
                     Inscrite le {new Date(selectedCompany.created_at).toLocaleDateString('fr-FR')}
+                  </div>
+
+                  {/* Company Products Section */}
+                  <div className="mb-6 p-4 bg-slate-700/30 rounded-lg">
+                    <h4 className="text-sm font-bold text-slate-300 uppercase mb-3 flex items-center gap-2">
+                      <Package className="h-4 w-4" />
+                      Produits de la Boutique ({companyProducts.length})
+                    </h4>
+                    {loadingProducts ? (
+                      <div className="text-center py-6">
+                        <Loader2 className="h-6 w-6 animate-spin text-teal-500 mx-auto" />
+                        <p className="text-slate-400 text-sm mt-2">Chargement des produits...</p>
+                      </div>
+                    ) : companyProducts.length === 0 ? (
+                      <div className="text-center py-6">
+                        <Store className="h-8 w-8 text-slate-600 mx-auto mb-2" />
+                        <p className="text-slate-500 text-sm">Aucun produit dans cette boutique</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {companyProducts.map(product => {
+                          const isEditing = editingAdminProduct === product.id;
+                          const isPhotosExpanded = expandedProductPhotos === product.id;
+                          return (
+                            <div key={product.id} className="bg-slate-800 rounded-lg overflow-hidden border border-slate-600" data-testid={`admin-product-${product.id}`}>
+                              {/* Product header */}
+                              <div className="flex gap-3 p-3">
+                                {/* Thumbnail */}
+                                <div
+                                  className="w-20 h-20 bg-slate-700 rounded-lg flex-shrink-0 relative cursor-pointer overflow-hidden"
+                                  onClick={() => setExpandedProductPhotos(isPhotosExpanded ? null : product.id)}
+                                  data-testid={`admin-product-thumb-${product.id}`}
+                                >
+                                  {product.photos?.length > 0 ? (
+                                    <img src={getImageUrl(product.photos[0])} alt="" className="w-full h-full object-cover" />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center">
+                                      <Package className="h-6 w-6 text-slate-500" />
+                                    </div>
+                                  )}
+                                  {product.photos?.length > 0 && (
+                                    <span className="absolute bottom-0.5 right-0.5 bg-black/60 text-white text-[10px] px-1 rounded flex items-center gap-0.5">
+                                      <ImageIcon className="h-2.5 w-2.5" /> {product.photos.length}
+                                    </span>
+                                  )}
+                                </div>
+
+                                {/* Info */}
+                                <div className="flex-1 min-w-0">
+                                  {isEditing ? (
+                                    <div className="space-y-2">
+                                      <input
+                                        value={adminProductEditData.name || ''}
+                                        onChange={e => setAdminProductEditData({...adminProductEditData, name: e.target.value})}
+                                        className="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-white text-sm focus:outline-none focus:border-teal-500"
+                                        placeholder="Nom du produit"
+                                      />
+                                      <textarea
+                                        value={adminProductEditData.description || ''}
+                                        onChange={e => setAdminProductEditData({...adminProductEditData, description: e.target.value})}
+                                        className="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-white text-sm resize-none focus:outline-none focus:border-teal-500"
+                                        rows={2}
+                                        placeholder="Description"
+                                      />
+                                      <div className="flex gap-2">
+                                        <input
+                                          type="number"
+                                          value={adminProductEditData.price || ''}
+                                          onChange={e => setAdminProductEditData({...adminProductEditData, price: e.target.value})}
+                                          className="w-32 bg-slate-700 border border-slate-600 rounded px-2 py-1 text-white text-sm focus:outline-none focus:border-teal-500"
+                                          placeholder="Prix"
+                                        />
+                                        <label className="flex items-center gap-1 text-xs text-slate-300">
+                                          <input
+                                            type="checkbox"
+                                            checked={adminProductEditData.is_negotiable || false}
+                                            onChange={e => setAdminProductEditData({...adminProductEditData, is_negotiable: e.target.checked})}
+                                          />
+                                          Négociable
+                                        </label>
+                                        <label className="flex items-center gap-1 text-xs text-slate-300">
+                                          <input
+                                            type="checkbox"
+                                            checked={adminProductEditData.is_available !== false}
+                                            onChange={e => setAdminProductEditData({...adminProductEditData, is_available: e.target.checked})}
+                                          />
+                                          En stock
+                                        </label>
+                                      </div>
+                                      <div className="flex gap-2">
+                                        <button
+                                          onClick={() => handleAdminUpdateProduct(product.id)}
+                                          className="px-3 py-1 bg-teal-600 hover:bg-teal-700 text-white text-xs rounded font-medium flex items-center gap-1"
+                                          data-testid={`admin-save-product-${product.id}`}
+                                        >
+                                          <Save className="h-3 w-3" /> Enregistrer
+                                        </button>
+                                        <button
+                                          onClick={() => setEditingAdminProduct(null)}
+                                          className="px-3 py-1 bg-slate-600 hover:bg-slate-500 text-white text-xs rounded"
+                                        >
+                                          Annuler
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <>
+                                      <h5 className="font-medium text-white text-sm truncate">{product.name}</h5>
+                                      <p className="text-xs text-slate-400 line-clamp-1">{product.description}</p>
+                                      <p className="text-teal-400 font-bold text-sm mt-1">
+                                        {Number(product.price || 0).toLocaleString('fr-FR')} GNF
+                                        {product.is_negotiable && <span className="text-xs font-normal text-slate-500 ml-1">(Négociable)</span>}
+                                      </p>
+                                      <div className="flex items-center gap-2 mt-1">
+                                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${product.is_available ? 'bg-green-900/50 text-green-400' : 'bg-red-900/50 text-red-400'}`}>
+                                          {product.is_available ? 'En stock' : 'Rupture'}
+                                        </span>
+                                        <span className="text-[10px] text-slate-500 flex items-center gap-0.5"><Eye className="h-2.5 w-2.5" />{product.total_views || 0}</span>
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+
+                                {/* Action buttons */}
+                                {!isEditing && (
+                                  <div className="flex flex-col gap-1 flex-shrink-0">
+                                    <button
+                                      onClick={() => { setEditingAdminProduct(product.id); setAdminProductEditData({ name: product.name, description: product.description, price: product.price, is_negotiable: product.is_negotiable, is_available: product.is_available }); }}
+                                      className="p-1.5 bg-teal-600/20 hover:bg-teal-600/40 text-teal-400 rounded"
+                                      title="Modifier"
+                                      data-testid={`admin-edit-product-${product.id}`}
+                                    >
+                                      <Pencil className="h-3.5 w-3.5" />
+                                    </button>
+                                    <button
+                                      onClick={() => handleAdminDeleteProduct(product.id)}
+                                      className="p-1.5 bg-red-600/20 hover:bg-red-600/40 text-red-400 rounded"
+                                      title="Supprimer"
+                                      data-testid={`admin-delete-product-${product.id}`}
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5" />
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Expanded photos gallery */}
+                              {isPhotosExpanded && product.photos?.length > 0 && (
+                                <div className="border-t border-slate-600 bg-slate-900/50 p-3" data-testid={`admin-photo-gallery-${product.id}`}>
+                                  <div className="flex items-center justify-between mb-2">
+                                    <p className="text-xs font-medium text-slate-400">
+                                      Photos ({product.photos.length}) — cliquez sur X pour supprimer
+                                    </p>
+                                    <button onClick={() => setExpandedProductPhotos(null)} className="text-slate-500 hover:text-white">
+                                      <X className="h-4 w-4" />
+                                    </button>
+                                  </div>
+                                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                                    {product.photos.map((photo, idx) => (
+                                      <div key={idx} className="relative group aspect-square rounded-lg overflow-hidden border border-slate-600 bg-slate-800">
+                                        <img src={getImageUrl(photo)} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover" />
+                                        <button
+                                          onClick={() => handleAdminDeletePhoto(product.id, idx)}
+                                          disabled={deletingAdminPhoto === `${product.id}-${idx}`}
+                                          className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
+                                          data-testid={`admin-delete-photo-${product.id}-${idx}`}
+                                          title="Supprimer cette photo"
+                                        >
+                                          {deletingAdminPhoto === `${product.id}-${idx}` ? (
+                                            <Loader2 className="h-3 w-3 animate-spin" />
+                                          ) : (
+                                            <Trash2 className="h-3 w-3" />
+                                          )}
+                                        </button>
+                                        <span className="absolute bottom-1 left-1 bg-black/60 text-white text-[10px] px-1 rounded">{idx + 1}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Show "click to see photos" hint when photos exist but not expanded */}
+                              {!isPhotosExpanded && product.photos?.length > 0 && (
+                                <button
+                                  onClick={() => setExpandedProductPhotos(product.id)}
+                                  className="w-full text-center py-1.5 text-[11px] text-teal-400 hover:text-teal-300 border-t border-slate-700 hover:bg-slate-700/50 transition-colors"
+                                  data-testid={`admin-show-photos-${product.id}`}
+                                >
+                                  <Camera className="h-3 w-3 inline mr-1" />
+                                  Voir les {product.photos.length} photo(s)
+                                </button>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
 
                   {/* Actions */}

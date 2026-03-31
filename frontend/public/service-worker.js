@@ -1,167 +1,141 @@
-// ServisPro Service Worker v2 - PWA Offline Support
-const CACHE_VERSION = 'v2';
+// ServisPro Service Worker v3 - PWA with SPA Navigation Support
+const CACHE_VERSION = 'v3';
 const STATIC_CACHE = `servispro-static-${CACHE_VERSION}`;
 const API_CACHE = `servispro-api-${CACHE_VERSION}`;
 const IMAGE_CACHE = `servispro-images-${CACHE_VERSION}`;
-const OFFLINE_URL = '/offline.html';
 
-// Core files to pre-cache
-const STATIC_ASSETS = [
+// Core files to pre-cache (must exist)
+const PRECACHE_URLS = [
   '/',
   '/index.html',
   '/offline.html',
-  '/manifest.json',
-  '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png'
+  '/manifest.json'
 ];
 
-// API routes to cache for offline browsing
-const CACHEABLE_API_ROUTES = [
+// API routes worth caching for offline
+const CACHEABLE_API_PATTERNS = [
   '/api/marketplace/shops',
   '/api/marketplace/products',
   '/api/marketplace/categories',
   '/api/services',
-  '/api/rental-listings'
+  '/api/rentals'
 ];
 
-// Install - pre-cache static assets
+// ===================== INSTALL =====================
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(STATIC_CACHE).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
-    })
+    caches.open(STATIC_CACHE)
+      .then(cache => cache.addAll(PRECACHE_URLS))
+      .then(() => self.skipWaiting())
   );
-  self.skipWaiting();
 });
 
-// Activate - clean old caches
+// ===================== ACTIVATE =====================
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((name) => {
-          if (![STATIC_CACHE, API_CACHE, IMAGE_CACHE].includes(name)) {
-            return caches.delete(name);
-          }
-        })
-      );
-    })
+    caches.keys().then(keys =>
+      Promise.all(
+        keys
+          .filter(key => key.startsWith('servispro-') && ![STATIC_CACHE, API_CACHE, IMAGE_CACHE].includes(key))
+          .map(key => caches.delete(key))
+      )
+    ).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
-// Fetch handler with different strategies per resource type
+// ===================== FETCH =====================
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
   const url = new URL(event.request.url);
 
-  // Skip cross-origin (except images from known CDNs)
-  if (url.origin !== self.location.origin && !isKnownImageCDN(url)) return;
+  // 1) SPA Navigation: Any same-origin HTML navigation → serve index.html
+  if (event.request.mode === 'navigate' && url.origin === self.location.origin) {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          // Cache the fresh index.html
+          const clone = response.clone();
+          caches.open(STATIC_CACHE).then(cache => cache.put('/index.html', clone));
+          return response;
+        })
+        .catch(() =>
+          caches.match('/index.html').then(cached => cached || caches.match('/offline.html'))
+        )
+    );
+    return;
+  }
 
-  // Strategy: API requests - Network first, fallback to cache
+  // 2) API requests: Network first, cache fallback
   if (url.pathname.startsWith('/api/')) {
-    event.respondWith(networkFirstThenCache(event.request, API_CACHE));
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          if (response.ok && isCacheableAPI(url.pathname)) {
+            const clone = response.clone();
+            caches.open(API_CACHE).then(cache => cache.put(event.request, clone));
+          }
+          return response;
+        })
+        .catch(() =>
+          caches.match(event.request).then(cached =>
+            cached || new Response(JSON.stringify({ error: 'offline', message: 'Vous êtes hors ligne' }), {
+              headers: { 'Content-Type': 'application/json' }
+            })
+          )
+        )
+    );
     return;
   }
 
-  // Strategy: Images - Cache first, fallback to network
-  if (isImageRequest(event.request, url)) {
-    event.respondWith(cacheFirstThenNetwork(event.request, IMAGE_CACHE));
+  // 3) Images: Cache first, network fallback
+  if (isImageRequest(url)) {
+    event.respondWith(
+      caches.match(event.request).then(cached => {
+        if (cached) return cached;
+        return fetch(event.request).then(response => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(IMAGE_CACHE).then(cache => cache.put(event.request, clone));
+          }
+          return response;
+        }).catch(() => new Response('', { status: 503 }));
+      })
+    );
     return;
   }
 
-  // Strategy: Static assets & navigation - Stale while revalidate
-  event.respondWith(staleWhileRevalidate(event.request, STATIC_CACHE));
+  // 4) Static assets (JS, CSS, fonts): Stale-while-revalidate
+  if (url.origin === self.location.origin) {
+    event.respondWith(
+      caches.match(event.request).then(cached => {
+        const fetchPromise = fetch(event.request).then(response => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(STATIC_CACHE).then(cache => cache.put(event.request, clone));
+          }
+          return response;
+        }).catch(() => null);
+
+        return cached || fetchPromise;
+      })
+    );
+  }
 });
 
-// Network first, cache fallback (for API)
-async function networkFirstThenCache(request, cacheName) {
-  try {
-    const response = await fetch(request);
-    if (response && response.ok) {
-      // Cache successful API responses
-      if (isCacheableAPI(request.url)) {
-        const cache = await caches.open(cacheName);
-        cache.put(request, response.clone());
-      }
-    }
-    return response;
-  } catch (err) {
-    // Offline - try cache
-    const cached = await caches.match(request);
-    if (cached) return cached;
-    return new Response(JSON.stringify({ error: 'Hors ligne', offline: true }), {
-      headers: { 'Content-Type': 'application/json' }
-    });
-  }
+// ===================== HELPERS =====================
+function isCacheableAPI(pathname) {
+  return CACHEABLE_API_PATTERNS.some(pattern => pathname.startsWith(pattern));
 }
 
-// Cache first, network fallback (for images)
-async function cacheFirstThenNetwork(request, cacheName) {
-  const cached = await caches.match(request);
-  if (cached) return cached;
-
-  try {
-    const response = await fetch(request);
-    if (response && response.ok) {
-      const cache = await caches.open(cacheName);
-      cache.put(request, response.clone());
-    }
-    return response;
-  } catch (err) {
-    return new Response('', { status: 503 });
-  }
-}
-
-// Stale while revalidate (for static/navigation)
-async function staleWhileRevalidate(request, cacheName) {
-  const cached = await caches.match(request);
-
-  const fetchPromise = fetch(request).then(async (response) => {
-    if (response && response.ok) {
-      const cache = await caches.open(cacheName);
-      cache.put(request, response.clone());
-    }
-    return response;
-  }).catch(() => null);
-
-  if (cached) {
-    // Return cached version immediately, update in background
-    fetchPromise; 
-    return cached;
-  }
-
-  // No cache, wait for network
-  const networkResponse = await fetchPromise;
-  if (networkResponse) return networkResponse;
-
-  // Offline fallback for navigation
-  if (request.mode === 'navigate') {
-    return caches.match(OFFLINE_URL);
-  }
-  return new Response('Hors ligne', { status: 503 });
-}
-
-// Helper: Check if URL is a cacheable API route
-function isCacheableAPI(url) {
-  return CACHEABLE_API_ROUTES.some(route => url.includes(route));
-}
-
-// Helper: Check if request is for an image
-function isImageRequest(request, url) {
-  const accept = request.headers.get('accept') || '';
+function isImageRequest(url) {
   const ext = url.pathname.split('.').pop().toLowerCase();
-  return accept.includes('image') || ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg'].includes(ext);
+  return ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg', 'ico'].includes(ext) ||
+    url.hostname.includes('cloudinary.com') ||
+    url.hostname.includes('customer-assets.emergentagent.com');
 }
 
-// Helper: Check if URL is from a known image CDN
-function isKnownImageCDN(url) {
-  return url.hostname.includes('cloudinary.com') || 
-         url.hostname.includes('customer-assets.emergentagent.com');
-}
-
-// Push notification
+// ===================== PUSH NOTIFICATIONS =====================
 self.addEventListener('push', (event) => {
   let data = { title: 'ServisPro', body: 'Nouvelle notification' };
   if (event.data) {
@@ -169,40 +143,27 @@ self.addEventListener('push', (event) => {
   }
   event.waitUntil(
     self.registration.showNotification(data.title || 'ServisPro', {
-      body: data.body || 'Vous avez une nouvelle notification',
+      body: data.body,
       icon: '/icons/icon-192x192.png',
       badge: '/icons/icon-72x72.png',
       vibrate: [200, 100, 200],
-      tag: data.tag || 'servispro-notification',
       data: { url: data.url || '/' }
     })
   );
 });
 
-// Notification click
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const urlToOpen = event.notification.data?.url || '/';
+  const url = event.notification.data?.url || '/';
   event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
       for (const client of clientList) {
-        if (client.url.includes(self.location.origin) && 'focus' in client) {
-          client.navigate(urlToOpen);
+        if ('focus' in client) {
+          client.navigate(url);
           return client.focus();
         }
       }
-      if (clients.openWindow) return clients.openWindow(urlToOpen);
+      return clients.openWindow(url);
     })
   );
 });
-
-// Background sync
-self.addEventListener('sync', (event) => {
-  if (event.tag === 'sync-requests') {
-    event.waitUntil(syncPendingRequests());
-  }
-});
-
-async function syncPendingRequests() {
-  console.log('[ServiceWorker] Syncing pending requests...');
-}
