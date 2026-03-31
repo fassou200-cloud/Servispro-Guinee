@@ -5837,39 +5837,61 @@ async def admin_reject_company(company_id: str):
 
 @api_router.delete("/admin/companies/{company_id}")
 async def admin_delete_company(company_id: str):
-    """Soft-delete a company and deactivate associated data"""
+    """Hard-delete a company and ALL associated data"""
     company = await db.companies.find_one({'id': company_id})
     if not company:
         raise HTTPException(status_code=404, detail="Entreprise non trouvée")
     
-    # Soft-delete the company
-    await db.companies.update_one(
-        {'id': company_id},
-        {'$set': {
-            'is_deleted': True,
-            'deleted_at': datetime.now(timezone.utc).isoformat()
-        }}
-    )
+    # Delete Cloudinary files if any
+    try:
+        await delete_company_cloudinary_files(company)
+    except Exception as e:
+        logging.warning(f"Cloudinary cleanup error: {e}")
     
-    # Deactivate the company's shop so products don't appear on marketplace
-    await db.shops.update_many(
-        {'owner_id': company_id},
-        {'$set': {'is_active': False}}
-    )
+    # Delete shop(s) and related data
+    shops = await db.shops.find({'owner_id': company_id}, {'_id': 0, 'id': 1}).to_list(None)
+    shop_ids = [s['id'] for s in shops]
     
-    # Soft-delete company rentals and property sales
-    await db.rental_listings.update_many(
-        {'service_provider_id': company_id},
-        {'$set': {'is_deleted': True}}
-    )
-    await db.property_sales.update_many(
-        {'agent_id': company_id},
-        {'$set': {'is_deleted': True}}
-    )
+    if shop_ids:
+        # Delete products of these shops
+        products = await db.products.find({'shop_id': {'$in': shop_ids}}, {'_id': 0, 'id': 1}).to_list(None)
+        product_ids = [p['id'] for p in products]
+        
+        if product_ids:
+            # Delete product reviews
+            await db.product_reviews.delete_many({'product_id': {'$in': product_ids}})
+            # Delete product messages
+            await db.product_messages.delete_many({'product_id': {'$in': product_ids}})
+        
+        # Delete all products
+        await db.products.delete_many({'shop_id': {'$in': shop_ids}})
+        # Delete marketplace messages for shops
+        await db.marketplace_messages.delete_many({'shop_id': {'$in': shop_ids}})
+        # Delete shops
+        await db.shops.delete_many({'owner_id': company_id})
     
-    return {
-        "message": "Entreprise supprimée avec succès"
-    }
+    # Delete property messages
+    await db.property_messages.delete_many({'owner_id': company_id})
+    # Delete rental listings
+    await db.rental_listings.delete_many({'service_provider_id': company_id})
+    # Delete property sales and inquiries
+    sales = await db.property_sales.find({'agent_id': company_id}, {'_id': 0, 'id': 1}).to_list(None)
+    sale_ids = [s['id'] for s in sales]
+    if sale_ids:
+        await db.property_inquiries.delete_many({'sale_id': {'$in': sale_ids}})
+    await db.property_sales.delete_many({'agent_id': company_id})
+    # Delete company services and job offers
+    await db.company_services.delete_many({'company_id': company_id})
+    await db.company_job_offers.delete_many({'company_id': company_id})
+    # Delete visit requests
+    await db.visit_requests.delete_many({'service_provider_id': company_id})
+    # Delete notifications
+    await db.notifications.delete_many({'user_id': company_id})
+    
+    # Finally delete the company itself
+    await db.companies.delete_one({'id': company_id})
+    
+    return {"message": "Entreprise et toutes les données associées supprimées définitivement"}
 
 @api_router.get("/admin/stats")
 async def get_admin_stats():
