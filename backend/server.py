@@ -1881,8 +1881,33 @@ async def update_company_profile(update_data: CompanyProfileUpdate, current_comp
     updated_company = await db.companies.find_one({'id': current_company['id']}, {'_id': 0, 'password': 0})
     return updated_company
 
+class CompanyChangePassword(BaseModel):
+    current_password: str
+    new_password: str
+
+@api_router.put("/company/change-password")
+async def change_company_password(data: CompanyChangePassword, current_company: dict = Depends(get_current_company)):
+    """Change company password"""
+    company = await db.companies.find_one({'id': current_company['id']})
+    if not company:
+        raise HTTPException(status_code=404, detail="Entreprise non trouvée")
+    
+    if not verify_password(data.current_password, company['password']):
+        raise HTTPException(status_code=400, detail="Mot de passe actuel incorrect")
+    
+    if len(data.new_password) < 6:
+        raise HTTPException(status_code=400, detail="Le nouveau mot de passe doit contenir au moins 6 caractères")
+    
+    hashed = hash_password(data.new_password)
+    await db.companies.update_one(
+        {'id': current_company['id']},
+        {'$set': {'password': hashed, 'updated_at': datetime.now(timezone.utc).isoformat()}}
+    )
+    return {"message": "Mot de passe modifié avec succès"}
+
 @api_router.post("/company/upload-logo")
 async def upload_company_logo(file: UploadFile = File(...), current_company: dict = Depends(get_current_company)):
+
     """Upload company logo"""
     if not file.content_type.startswith('image/'):
         raise HTTPException(status_code=400, detail="Le fichier doit être une image")
