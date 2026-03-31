@@ -1092,6 +1092,11 @@ class CompanyLoginInput(BaseModel):
     phone_number: str
     password: str
 
+class CompanyResetPasswordInput(BaseModel):
+    phone_number: str
+    email: str
+    new_password: str
+
 class Company(BaseModel):
     model_config = ConfigDict(extra="ignore")
     
@@ -1704,6 +1709,48 @@ async def login_company(input_data: CompanyLoginInput, request: Request):
     company_response['user_type'] = 'company'
     
     return AuthResponse(token=token, user=company_response)
+
+@api_router.post("/auth/company/reset-password")
+async def reset_company_password(input_data: CompanyResetPasswordInput, request: Request):
+    """Reset company password by verifying phone number and email"""
+    client_ip = get_client_ip(request)
+    
+    if is_ip_blocked(client_ip):
+        raise HTTPException(status_code=429, detail="Trop de tentatives. Veuillez réessayer dans 15 minutes.")
+    
+    company = await db.companies.find_one({'phone_number': input_data.phone_number})
+    if not company or (company.get('email', '').lower() != input_data.email.lower()):
+        record_failed_attempt(client_ip)
+        await log_audit_event(
+            event_type="COMPANY_PASSWORD_RESET_FAILED",
+            ip_address=client_ip,
+            user_type="company",
+            details={"phone": input_data.phone_number, "email": input_data.email, "reason": "no_match"},
+            success=False
+        )
+        raise HTTPException(status_code=404, detail="Aucun compte trouvé avec ce numéro de téléphone et cet email")
+    
+    if len(input_data.new_password) < 6:
+        raise HTTPException(status_code=400, detail="Le mot de passe doit contenir au moins 6 caractères")
+    
+    hashed_password = hash_password(input_data.new_password)
+    await db.companies.update_one(
+        {'id': company['id']},
+        {'$set': {'password': hashed_password, 'updated_at': datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    clear_failed_attempts(client_ip)
+    
+    await log_audit_event(
+        event_type="COMPANY_PASSWORD_RESET_SUCCESS",
+        user_id=company['id'],
+        ip_address=client_ip,
+        user_type="company",
+        details={"phone": input_data.phone_number, "company_name": company.get('company_name')},
+        success=True
+    )
+    
+    return {"message": "Mot de passe réinitialisé avec succès"}
 
 # Company Profile Routes
 @api_router.get("/company/profile/me")

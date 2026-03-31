@@ -52,6 +52,7 @@ ServisPro is a comprehensive platform for service providers, companies, and clie
 - Real estate messaging (Contacter l'Agence)
 - Company password change functionality
 - PWA configuration with service worker
+- Company password reset via phone + email verification on login page (March 31, 2026)
 
 ## Pending Issues
 - **P3**: "Erreur lors de l'approbation" (needs user reproduction steps)

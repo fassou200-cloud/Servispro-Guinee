@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 import { 
   Building2, FileText, Upload, Eye, EyeOff, ArrowLeft, ArrowRight,
   CheckCircle, AlertTriangle, User, Phone, Mail, Globe, MapPin,
-  Briefcase, Shield, Lock
+  Briefcase, Shield, Lock, KeyRound
 } from 'lucide-react';
 import axios from 'axios';
 import { GUINEA_LOCATIONS, getVillesByRegion, getRegions } from '../data/guineaLocations';
@@ -42,6 +42,9 @@ const CompanyAuth = ({ setIsCompanyAuthenticated }) => {
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [createdCompanyId, setCreatedCompanyId] = useState(null);
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  const [resetStep, setResetStep] = useState(1); // 1 = verify, 2 = new password
+  const [resetData, setResetData] = useState({ phone_number: '', email: '', new_password: '', confirm_password: '' });
   
   // Login form
   const [loginData, setLoginData] = useState({
@@ -108,6 +111,34 @@ const CompanyAuth = ({ setIsCompanyAuthenticated }) => {
       navigate('/company/dashboard');
     } catch (error) {
       toast.error(getErrorMessage(error, 'Échec de la connexion'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    if (resetData.new_password !== resetData.confirm_password) {
+      toast.error('Les mots de passe ne correspondent pas');
+      return;
+    }
+    if (resetData.new_password.length < 6) {
+      toast.error('Le mot de passe doit contenir au moins 6 caractères');
+      return;
+    }
+    setLoading(true);
+    try {
+      await axios.post(`${API}/auth/company/reset-password`, {
+        phone_number: resetData.phone_number,
+        email: resetData.email,
+        new_password: resetData.new_password
+      });
+      toast.success('Mot de passe réinitialisé avec succès ! Vous pouvez maintenant vous connecter.');
+      setShowResetPassword(false);
+      setResetData({ phone_number: '', email: '', new_password: '', confirm_password: '' });
+      setLoginData({ phone_number: resetData.phone_number, password: '' });
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Échec de la réinitialisation'));
     } finally {
       setLoading(false);
     }
@@ -298,12 +329,13 @@ const CompanyAuth = ({ setIsCompanyAuthenticated }) => {
             Espace Entreprise
           </h1>
           <p className="text-slate-400 text-center mb-8">
-            {isLogin ? 'Connectez-vous à votre compte entreprise' : 
+            {showResetPassword ? 'Réinitialisez votre mot de passe' :
+             isLogin ? 'Connectez-vous à votre compte entreprise' : 
              currentStep === 1 ? 'Créez votre profil entreprise' : 'Téléchargez vos documents'}
           </p>
 
-          {/* Tab Switch (only for step 1) */}
-          {currentStep === 1 && (
+          {/* Tab Switch (only for step 1, hide during reset) */}
+          {currentStep === 1 && !showResetPassword && (
             <div className="flex gap-2 p-1 bg-slate-700/50 rounded-xl mb-8">
               <Button
                 type="button"
@@ -344,7 +376,7 @@ const CompanyAuth = ({ setIsCompanyAuthenticated }) => {
           )}
 
           {/* LOGIN FORM */}
-          {isLogin && (
+          {isLogin && !showResetPassword && (
             <form onSubmit={handleLogin} className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="phone_login" className="text-slate-300 flex items-center gap-2">
@@ -397,6 +429,123 @@ const CompanyAuth = ({ setIsCompanyAuthenticated }) => {
               >
                 {loading ? 'Connexion...' : 'Se Connecter'}
               </Button>
+
+              <button
+                type="button"
+                onClick={() => { setShowResetPassword(true); setResetData({ ...resetData, phone_number: loginData.phone_number }); }}
+                className="w-full text-center text-sm text-emerald-400 hover:text-emerald-300 transition-colors"
+                data-testid="forgot-password-link"
+              >
+                <KeyRound className="h-3.5 w-3.5 inline mr-1" />
+                Mot de passe oublié ?
+              </button>
+            </form>
+          )}
+
+          {/* RESET PASSWORD FORM */}
+          {showResetPassword && (
+            <form onSubmit={handleResetPassword} className="space-y-6">
+              <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-start gap-3">
+                <KeyRound className="h-5 w-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="font-bold text-emerald-400">Réinitialisation du mot de passe</h4>
+                  <p className="text-sm text-emerald-200/80">
+                    Entrez votre numéro de téléphone et votre email pour vérifier votre identité, puis choisissez un nouveau mot de passe.
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-slate-300 flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-emerald-400" />
+                  Numéro de téléphone *
+                </Label>
+                <Input
+                  value={resetData.phone_number}
+                  onChange={(e) => setResetData({ ...resetData, phone_number: e.target.value })}
+                  required
+                  className="h-12 bg-slate-700/50 border-slate-600 text-white"
+                  placeholder="224 6XX XX XX XX"
+                  data-testid="reset-phone-input"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-slate-300 flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-emerald-400" />
+                  Email du compte *
+                </Label>
+                <Input
+                  type="email"
+                  value={resetData.email}
+                  onChange={(e) => setResetData({ ...resetData, email: e.target.value })}
+                  required
+                  className="h-12 bg-slate-700/50 border-slate-600 text-white"
+                  placeholder="contact@entreprise.com"
+                  data-testid="reset-email-input"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-slate-300 flex items-center gap-2">
+                  <Lock className="h-4 w-4 text-emerald-400" />
+                  Nouveau mot de passe *
+                </Label>
+                <div className="relative">
+                  <Input
+                    type={showPassword ? 'text' : 'password'}
+                    value={resetData.new_password}
+                    onChange={(e) => setResetData({ ...resetData, new_password: e.target.value })}
+                    required
+                    minLength={6}
+                    className="h-12 bg-slate-700/50 border-slate-600 text-white pr-12"
+                    placeholder="Minimum 6 caractères"
+                    data-testid="reset-new-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                  >
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-slate-300 flex items-center gap-2">
+                  <Lock className="h-4 w-4 text-slate-400" />
+                  Confirmer le nouveau mot de passe *
+                </Label>
+                <Input
+                  type={showPassword ? 'text' : 'password'}
+                  value={resetData.confirm_password}
+                  onChange={(e) => setResetData({ ...resetData, confirm_password: e.target.value })}
+                  required
+                  minLength={6}
+                  className="h-12 bg-slate-700/50 border-slate-600 text-white"
+                  data-testid="reset-confirm-password"
+                />
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full h-14 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 font-bold text-lg"
+                disabled={loading}
+                data-testid="reset-password-submit"
+              >
+                {loading ? 'Réinitialisation...' : 'Réinitialiser le mot de passe'}
+              </Button>
+
+              <button
+                type="button"
+                onClick={() => { setShowResetPassword(false); setResetData({ phone_number: '', email: '', new_password: '', confirm_password: '' }); }}
+                className="w-full text-center text-sm text-slate-400 hover:text-white transition-colors"
+                data-testid="back-to-login-link"
+              >
+                <ArrowLeft className="h-3.5 w-3.5 inline mr-1" />
+                Retour à la connexion
+              </button>
             </form>
           )}
 
