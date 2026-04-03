@@ -21,6 +21,69 @@ const SECTORS = [
   'Automobile', 'Mobilier & Décoration', 'Santé & Bien-être', 'Autre'
 ];
 
+const PRODUCT_TYPES = [
+  { value: 'chaussures', label: 'Chaussures' },
+  { value: 'vetements', label: 'Vêtements' },
+  { value: 'voitures', label: 'Voitures' },
+  { value: 'cosmetiques', label: 'Produits cosmétiques' },
+  { value: 'electronique', label: 'Électronique' },
+  { value: 'alimentation', label: 'Alimentation' },
+  { value: 'mobilier', label: 'Mobilier & Décoration' },
+  { value: 'autre', label: 'Autre' },
+];
+
+const PRODUCT_CHARACTERISTICS = {
+  chaussures: [
+    { key: 'pointure', label: 'Pointure', type: 'select', options: ['36','37','38','39','40','41','42','43','44','45','46','47','48'] },
+    { key: 'couleur', label: 'Couleur', type: 'text' },
+    { key: 'matiere', label: 'Matière', type: 'select', options: ['Cuir', 'Synthétique', 'Tissu', 'Daim', 'Caoutchouc', 'Autre'] },
+    { key: 'genre', label: 'Genre', type: 'select', options: ['Homme', 'Femme', 'Enfant', 'Unisexe'] },
+    { key: 'etat', label: 'État', type: 'select', options: ['Neuf', 'Occasion', 'Reconditionné'] },
+  ],
+  vetements: [
+    { key: 'taille', label: 'Taille', type: 'select', options: ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'] },
+    { key: 'couleur', label: 'Couleur', type: 'text' },
+    { key: 'matiere', label: 'Matière', type: 'select', options: ['Coton', 'Polyester', 'Soie', 'Lin', 'Laine', 'Jean', 'Wax', 'Bazin', 'Autre'] },
+    { key: 'genre', label: 'Genre', type: 'select', options: ['Homme', 'Femme', 'Enfant', 'Unisexe'] },
+    { key: 'etat', label: 'État', type: 'select', options: ['Neuf', 'Occasion'] },
+  ],
+  voitures: [
+    { key: 'marque', label: 'Marque', type: 'select', options: ['Toyota', 'Mercedes', 'BMW', 'Hyundai', 'Kia', 'Nissan', 'Honda', 'Peugeot', 'Renault', 'Ford', 'Chevrolet', 'Mitsubishi', 'Suzuki', 'Autre'] },
+    { key: 'modele', label: 'Modèle', type: 'text' },
+    { key: 'annee', label: 'Année', type: 'number' },
+    { key: 'kilometrage', label: 'Kilométrage (km)', type: 'number' },
+    { key: 'carburant', label: 'Carburant', type: 'select', options: ['Essence', 'Diesel', 'Hybride', 'Électrique', 'GPL'] },
+    { key: 'transmission', label: 'Transmission', type: 'select', options: ['Manuelle', 'Automatique'] },
+    { key: 'etat', label: 'État', type: 'select', options: ['Neuf', 'Occasion', 'Accidenté'] },
+  ],
+  cosmetiques: [
+    { key: 'type_produit', label: 'Type', type: 'select', options: ['Crème', 'Maquillage', 'Parfum', 'Soin capillaire', 'Soin corporel', 'Huile', 'Savon', 'Autre'] },
+    { key: 'marque', label: 'Marque', type: 'text' },
+    { key: 'volume', label: 'Volume / Poids', type: 'text' },
+    { key: 'type_peau', label: 'Type de peau', type: 'select', options: ['Tous types', 'Normale', 'Grasse', 'Sèche', 'Mixte', 'Sensible'] },
+    { key: 'etat', label: 'État', type: 'select', options: ['Neuf', 'Occasion'] },
+  ],
+  electronique: [
+    { key: 'marque', label: 'Marque', type: 'text' },
+    { key: 'modele', label: 'Modèle', type: 'text' },
+    { key: 'etat', label: 'État', type: 'select', options: ['Neuf', 'Occasion', 'Reconditionné'] },
+  ],
+  alimentation: [
+    { key: 'type_produit', label: 'Type', type: 'text' },
+    { key: 'poids', label: 'Poids / Volume', type: 'text' },
+    { key: 'origine', label: 'Origine', type: 'text' },
+  ],
+  mobilier: [
+    { key: 'type_produit', label: 'Type', type: 'text' },
+    { key: 'matiere', label: 'Matière', type: 'text' },
+    { key: 'dimensions', label: 'Dimensions', type: 'text' },
+    { key: 'etat', label: 'État', type: 'select', options: ['Neuf', 'Occasion'] },
+  ],
+  autre: [
+    { key: 'etat', label: 'État', type: 'select', options: ['Neuf', 'Occasion'] },
+  ],
+};
+
 const MyShop = ({ token, apiPrefix = 'shop' }) => {
   const [shop, setShop] = useState(null);
   const [products, setProducts] = useState([]);
@@ -40,8 +103,8 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
   const logoInputRef = useRef(null);
 
   const [shopForm, setShopForm] = useState({ name: '', description: '', sector: '', contact_phone: '', contact_email: '', location: '' });
-  const [productForm, setProductForm] = useState({ name: '', description: '', price: '', is_negotiable: false, is_available: true, category_id: '' });
-  const [editForm, setEditForm] = useState({ name: '', description: '', price: '', is_negotiable: false, is_available: true, category_id: '' });
+  const [productForm, setProductForm] = useState({ name: '', description: '', price: '', is_negotiable: false, is_available: true, category_id: '', product_type: '', characteristics: {} });
+  const [editForm, setEditForm] = useState({ name: '', description: '', price: '', is_negotiable: false, is_available: true, category_id: '', product_type: '', characteristics: {} });
   const [selectedProductFiles, setSelectedProductFiles] = useState([]);
   const [addPhotosProductId, setAddPhotosProductId] = useState(null);
   const [expandedProductId, setExpandedProductId] = useState(null);
@@ -113,7 +176,7 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
       }
       toast.success('Produit ajouté !');
       setShowAddProduct(false);
-      setProductForm({ name: '', description: '', price: '', is_negotiable: false, is_available: true, category_id: '' });
+      setProductForm({ name: '', description: '', price: '', is_negotiable: false, is_available: true, category_id: '', product_type: '', characteristics: {} });
       setSelectedProductFiles([]);
       loadShopData();
     } catch (err) {
@@ -132,7 +195,9 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
         price: parseFloat(editForm.price),
         is_negotiable: editForm.is_negotiable,
         is_available: editForm.is_available,
-        category_id: editForm.category_id || null
+        category_id: editForm.category_id || null,
+        product_type: editForm.product_type || null,
+        characteristics: editForm.characteristics || null
       }, authHeaders);
       toast.success('Produit mis à jour !');
       setEditingProduct(null);
@@ -150,7 +215,9 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
       price: product.price,
       is_negotiable: product.is_negotiable,
       is_available: product.is_available,
-      category_id: product.category_id || ''
+      category_id: product.category_id || '',
+      product_type: product.product_type || '',
+      characteristics: product.characteristics || {}
     });
     setShowAddProduct(false);
   };
@@ -223,6 +290,48 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
 
   const formatPrice = (p) => new Intl.NumberFormat('fr-FR').format(p || 0);
   const unreadCount = messages.filter(m => !m.is_read).length;
+
+  const renderCharacteristicsFields = (form, setForm) => {
+    const type = form.product_type;
+    const fields = PRODUCT_CHARACTERISTICS[type];
+    if (!type || !fields) return null;
+    const chars = form.characteristics || {};
+    const updateChar = (key, value) => setForm({ ...form, characteristics: { ...chars, [key]: value } });
+    return (
+      <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 space-y-2">
+        <p className="text-xs font-semibold text-orange-700 uppercase">
+          Caractéristiques — {PRODUCT_TYPES.find(t => t.value === type)?.label}
+        </p>
+        <div className="grid grid-cols-2 gap-2">
+          {fields.map(field => (
+            <div key={field.key}>
+              <label className="text-xs text-gray-600 mb-0.5 block">{field.label}</label>
+              {field.type === 'select' ? (
+                <select
+                  className="w-full px-2 py-1.5 border rounded-lg text-sm bg-white"
+                  value={chars[field.key] || ''}
+                  onChange={e => updateChar(field.key, e.target.value)}
+                  data-testid={`char-${field.key}`}
+                >
+                  <option value="">Choisir...</option>
+                  {field.options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                </select>
+              ) : (
+                <Input
+                  type={field.type === 'number' ? 'number' : 'text'}
+                  className="h-8 text-sm"
+                  placeholder={field.label}
+                  value={chars[field.key] || ''}
+                  onChange={e => updateChar(field.key, e.target.value)}
+                  data-testid={`char-${field.key}`}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
   if (loading) return <div className="text-center py-8 text-gray-500">Chargement...</div>;
 
@@ -334,13 +443,17 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
                 <Textarea placeholder="Description *" value={productForm.description} onChange={(e) => setProductForm({...productForm, description: e.target.value})} rows={2} required />
                 <div className="grid grid-cols-2 gap-3">
                   <Input data-testid="product-price-input" type="number" placeholder="Prix (GNF) *" value={productForm.price} onChange={(e) => setProductForm({...productForm, price: e.target.value})} required />
-                  {categories.length > 0 && (
-                    <select className="px-3 py-2 border rounded-lg text-sm" value={productForm.category_id} onChange={(e) => setProductForm({...productForm, category_id: e.target.value})}>
-                      <option value="">Catégorie</option>
-                      {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                    </select>
-                  )}
+                  <select
+                    className="px-3 py-2 border rounded-lg text-sm"
+                    value={productForm.product_type}
+                    onChange={(e) => setProductForm({...productForm, product_type: e.target.value, characteristics: {}})}
+                    data-testid="product-type-select"
+                  >
+                    <option value="">Type de produit</option>
+                    {PRODUCT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                  </select>
                 </div>
+                {renderCharacteristicsFields(productForm, setProductForm)}
                 <div className="flex items-center gap-6">
                   <label className="flex items-center gap-2 text-sm">
                     <input type="checkbox" checked={productForm.is_negotiable} onChange={(e) => setProductForm({...productForm, is_negotiable: e.target.checked})} />
@@ -387,13 +500,17 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
                 <Textarea placeholder="Description *" value={editForm.description} onChange={(e) => setEditForm({...editForm, description: e.target.value})} rows={2} required />
                 <div className="grid grid-cols-2 gap-3">
                   <Input type="number" placeholder="Prix (GNF) *" value={editForm.price} onChange={(e) => setEditForm({...editForm, price: e.target.value})} required />
-                  {categories.length > 0 && (
-                    <select className="px-3 py-2 border rounded-lg text-sm" value={editForm.category_id} onChange={(e) => setEditForm({...editForm, category_id: e.target.value})}>
-                      <option value="">Catégorie</option>
-                      {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                    </select>
-                  )}
+                  <select
+                    className="px-3 py-2 border rounded-lg text-sm"
+                    value={editForm.product_type}
+                    onChange={(e) => setEditForm({...editForm, product_type: e.target.value, characteristics: {}})}
+                    data-testid="edit-product-type-select"
+                  >
+                    <option value="">Type de produit</option>
+                    {PRODUCT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                  </select>
                 </div>
+                {renderCharacteristicsFields(editForm, setEditForm)}
                 <div className="flex items-center gap-6">
                   <label className="flex items-center gap-2 text-sm">
                     <input type="checkbox" checked={editForm.is_negotiable} onChange={(e) => setEditForm({...editForm, is_negotiable: e.target.checked})} />
@@ -482,6 +599,11 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
                     <div className="flex-1 p-3 flex flex-col justify-between">
                       <div>
                         <h4 className="font-medium text-sm line-clamp-1">{product.name}</h4>
+                        {product.product_type && (
+                          <span className="text-[10px] bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full font-medium">
+                            {PRODUCT_TYPES.find(t => t.value === product.product_type)?.label || product.product_type}
+                          </span>
+                        )}
                         <p className="text-orange-600 font-bold text-sm">{formatPrice(product.price)} GNF {product.is_negotiable && <span className="text-xs font-normal text-gray-400">(Négociable)</span>}</p>
                       </div>
                       <div className="flex items-center gap-2 mt-1 flex-wrap">

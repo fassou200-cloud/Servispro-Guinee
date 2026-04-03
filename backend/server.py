@@ -1193,6 +1193,8 @@ class ProductCreate(BaseModel):
     description: str
     price: float
     category_id: Optional[str] = None
+    product_type: Optional[str] = None
+    characteristics: Optional[dict] = None
     is_negotiable: bool = False
     is_available: bool = True
 
@@ -1201,6 +1203,8 @@ class ProductUpdate(BaseModel):
     description: Optional[str] = None
     price: Optional[float] = None
     category_id: Optional[str] = None
+    product_type: Optional[str] = None
+    characteristics: Optional[dict] = None
     is_negotiable: Optional[bool] = None
     is_available: Optional[bool] = None
 
@@ -7414,6 +7418,8 @@ async def create_product(data: ProductCreate, current_user: dict = Depends(get_c
         'description': data.description,
         'price': data.price,
         'category_id': data.category_id,
+        'product_type': data.product_type,
+        'characteristics': data.characteristics or {},
         'is_negotiable': data.is_negotiable,
         'is_available': data.is_available,
         'photos': [],
@@ -7830,6 +7836,8 @@ async def company_create_product(data: ProductCreate, current_company: dict = De
         'description': data.description,
         'price': data.price,
         'category_id': data.category_id,
+        'product_type': data.product_type,
+        'characteristics': data.characteristics or {},
         'is_negotiable': data.is_negotiable,
         'is_available': data.is_available,
         'photos': [],

@@ -214,6 +214,21 @@ const ProductDetail = () => {
               <p className="text-gray-600 text-sm whitespace-pre-line">{product.description}</p>
             </div>
 
+            {/* Product Characteristics */}
+            {product.characteristics && Object.keys(product.characteristics).length > 0 && (
+              <div className="mt-6">
+                <h3 className="font-semibold text-gray-900 mb-2">Caractéristiques</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {Object.entries(product.characteristics).filter(([, v]) => v).map(([key, value]) => (
+                    <div key={key} className="flex justify-between bg-gray-50 rounded-lg px-3 py-2">
+                      <span className="text-xs text-gray-500 capitalize">{key.replace(/_/g, ' ')}</span>
+                      <span className="text-xs font-medium text-gray-800">{value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Shop Info */}
             {product.shop && (
               <Card className="p-4 mt-6 cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate(`/marketplace/shop/${product.shop.id}`)}>
