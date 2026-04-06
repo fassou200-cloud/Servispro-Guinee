@@ -7713,6 +7713,29 @@ async def admin_get_shops():
     shops = await db.shops.find({}, {'_id': 0}).sort('created_at', -1).to_list(None)
     return shops
 
+@api_router.get("/admin/all-messages")
+async def admin_get_all_messages():
+    """Get all product and property messages for admin"""
+    product_msgs = await db.product_messages.find({}, {'_id': 0}).sort('created_at', -1).to_list(None)
+    property_msgs = await db.property_messages.find({}, {'_id': 0}).sort('created_at', -1).to_list(None)
+    
+    # Enrich product messages with shop/company info
+    for msg in product_msgs:
+        msg['message_category'] = 'product'
+        shop = await db.shops.find_one({'id': msg.get('shop_id')}, {'_id': 0, 'name': 1, 'owner_id': 1})
+        if shop:
+            msg['shop_name'] = shop.get('name', '')
+            company = await db.companies.find_one({'id': shop.get('owner_id')}, {'_id': 0, 'company_name': 1})
+            msg['company_name'] = company.get('company_name', '') if company else ''
+    
+    # Enrich property messages with company info
+    for msg in property_msgs:
+        msg['message_category'] = 'property'
+        company = await db.companies.find_one({'id': msg.get('owner_id')}, {'_id': 0, 'company_name': 1})
+        msg['company_name'] = company.get('company_name', '') if company else ''
+    
+    return {'product_messages': product_msgs, 'property_messages': property_msgs}
+
 @api_router.get("/admin/companies/{company_id}/products")
 async def admin_get_company_products(company_id: str):
     shop = await db.shops.find_one({'owner_id': company_id}, {'_id': 0})

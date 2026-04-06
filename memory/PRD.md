@@ -55,6 +55,7 @@ ServisPro is a comprehensive platform for service providers, companies, and clie
 - Company password reset via phone + email verification on login page (March 31, 2026)
 - Product categories with dynamic characteristics (Chaussures, Vêtements, Voitures, Cosmétiques, Électronique, etc.) - April 3, 2026
 - Fixed HEIC image display across the app via Cloudinary f_auto transformation - April 3, 2026
+- Admin Messages tab: view all product and property messages from clients to sellers - April 6, 2026
 
 ## Pending Issues
 - **P3**: "Erreur lors de l'approbation" (needs user reproduction steps)

@@ -10,7 +10,7 @@ import {
   MapPin, Calendar, Moon, DollarSign, Star, MessageCircle, FileText, ExternalLink,
   Loader2, RefreshCw, Settings, Percent, TrendingUp, Save, Car, Banknote, Wallet,
   MessageSquare, Bug, AlertTriangle, Lightbulb, Sparkles, HelpCircle, Send, Pencil,
-  Power, Ban, ChevronLeft, ChevronRight, Package, Camera, Image as ImageIcon, X, Store
+  Power, Ban, ChevronLeft, ChevronRight, Package, Camera, Image as ImageIcon, X, Store, Phone
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
@@ -110,6 +110,8 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
   const [editingAdminProduct, setEditingAdminProduct] = useState(null);
   const [adminProductEditData, setAdminProductEditData] = useState({});
   const [deletingAdminPhoto, setDeletingAdminPhoto] = useState(null);
+  const [allMessages, setAllMessages] = useState({ product_messages: [], property_messages: [] });
+  const [loadingMessages, setLoadingMessages] = useState(false);
   const [rentalFilter, setRentalFilter] = useState('all'); // all, long_term, short_term
   const [feedbackFilter, setFeedbackFilter] = useState('all'); // all, new, in_progress, resolved
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, type: null, id: null, name: '' });
@@ -726,6 +728,17 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
     }
   };
 
+  // Load all messages for admin
+  const loadAllMessages = async () => {
+    setLoadingMessages(true);
+    try {
+      const res = await adminApi.get(`${API}/admin/all-messages`);
+      setAllMessages(res.data);
+    } catch (error) {
+      console.error('Error loading messages:', error);
+    } finally { setLoadingMessages(false); }
+  };
+
   // Admin document upload for property sales
   const handleAdminDocUpload = async (saleId, event) => {
     const file = event.target.files[0];
@@ -1085,6 +1098,15 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                 {refundRequests.filter(r => r.status === 'pending').length}
               </span>
             )}
+          </Button>
+          <Button
+            variant={activeTab === 'messages' ? 'default' : 'outline'}
+            onClick={() => { setActiveTab('messages'); loadAllMessages(); }}
+            className={activeTab === 'messages' ? 'bg-blue-600 hover:bg-blue-700' : 'border-slate-600 text-slate-300'}
+            data-testid="admin-messages-tab"
+          >
+            <Send className="h-4 w-4 mr-2" />
+            Messages
           </Button>
           <Button
             variant={activeTab === 'settings' ? 'default' : 'outline'}
@@ -4291,6 +4313,104 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
                     <p className="text-slate-400">Aucun feedback trouvé</p>
                   </Card>
                 )}
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Messages Tab */}
+        {activeTab === 'messages' && (
+          <div className="space-y-6" data-testid="admin-messages-section">
+            {loadingMessages ? (
+              <Card className="p-8 bg-slate-800 border-slate-700 text-center">
+                <Loader2 className="h-8 w-8 animate-spin text-blue-500 mx-auto mb-2" />
+                <p className="text-slate-400">Chargement des messages...</p>
+              </Card>
+            ) : (
+              <>
+                {/* Product Messages */}
+                <Card className="bg-slate-800 border-slate-700">
+                  <div className="p-4 border-b border-slate-700">
+                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                      <Package className="h-5 w-5 text-orange-400" />
+                      Messages Produits ({allMessages.product_messages?.length || 0})
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-1">Messages envoyés par les clients aux vendeurs de Makiti</p>
+                  </div>
+                  <div className="divide-y divide-slate-700">
+                    {(!allMessages.product_messages || allMessages.product_messages.length === 0) ? (
+                      <div className="p-8 text-center">
+                        <MessageCircle className="h-10 w-10 text-slate-600 mx-auto mb-2" />
+                        <p className="text-slate-500">Aucun message produit</p>
+                      </div>
+                    ) : allMessages.product_messages.map(msg => (
+                      <div key={msg.id} className={`p-4 ${!msg.is_read ? 'bg-blue-900/10 border-l-2 border-l-blue-500' : ''}`} data-testid={`msg-product-${msg.id}`}>
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap mb-1">
+                              <span className="text-sm font-bold text-white">{msg.sender_name}</span>
+                              <span className="text-xs text-slate-400 flex items-center gap-1">
+                                <Phone className="h-3 w-3" /> {msg.sender_phone}
+                              </span>
+                              {!msg.is_read && (
+                                <span className="text-[10px] px-1.5 py-0.5 bg-blue-500 text-white rounded-full font-medium">Nouveau</span>
+                              )}
+                            </div>
+                            <p className="text-sm text-slate-300 mb-2">{msg.message}</p>
+                            <div className="flex items-center gap-3 text-[11px] text-slate-500 flex-wrap">
+                              <span className="flex items-center gap-1"><Package className="h-3 w-3 text-orange-400" /> {msg.product_name}</span>
+                              <span className="flex items-center gap-1"><Store className="h-3 w-3 text-teal-400" /> {msg.shop_name || 'Boutique'}</span>
+                              {msg.company_name && <span className="flex items-center gap-1"><Building className="h-3 w-3 text-purple-400" /> {msg.company_name}</span>}
+                              <span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> {new Date(msg.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+
+                {/* Property Messages */}
+                <Card className="bg-slate-800 border-slate-700">
+                  <div className="p-4 border-b border-slate-700">
+                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                      <Home className="h-5 w-5 text-purple-400" />
+                      Messages Immobilier ({allMessages.property_messages?.length || 0})
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-1">Messages envoyés par les clients aux agences immobilières</p>
+                  </div>
+                  <div className="divide-y divide-slate-700">
+                    {(!allMessages.property_messages || allMessages.property_messages.length === 0) ? (
+                      <div className="p-8 text-center">
+                        <MessageCircle className="h-10 w-10 text-slate-600 mx-auto mb-2" />
+                        <p className="text-slate-500">Aucun message immobilier</p>
+                      </div>
+                    ) : allMessages.property_messages.map(msg => (
+                      <div key={msg.id} className={`p-4 ${!msg.is_read ? 'bg-purple-900/10 border-l-2 border-l-purple-500' : ''}`} data-testid={`msg-property-${msg.id}`}>
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap mb-1">
+                              <span className="text-sm font-bold text-white">{msg.sender_name}</span>
+                              <span className="text-xs text-slate-400 flex items-center gap-1">
+                                <Phone className="h-3 w-3" /> {msg.sender_phone}
+                              </span>
+                              {!msg.is_read && (
+                                <span className="text-[10px] px-1.5 py-0.5 bg-purple-500 text-white rounded-full font-medium">Nouveau</span>
+                              )}
+                            </div>
+                            <p className="text-sm text-slate-300 mb-2">{msg.message}</p>
+                            <div className="flex items-center gap-3 text-[11px] text-slate-500 flex-wrap">
+                              <span className="flex items-center gap-1"><Home className="h-3 w-3 text-purple-400" /> {msg.rental_title || 'Bien immobilier'}</span>
+                              {msg.rental_location && <span className="flex items-center gap-1"><MapPin className="h-3 w-3 text-teal-400" /> {msg.rental_location}</span>}
+                              {msg.company_name && <span className="flex items-center gap-1"><Building className="h-3 w-3 text-purple-400" /> {msg.company_name}</span>}
+                              <span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> {new Date(msg.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
               </>
             )}
           </div>
