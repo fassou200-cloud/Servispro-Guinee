@@ -779,12 +779,6 @@ const CompanyDashboard = () => {
       )}
 
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
-        {/* Commission Rates Info */}
-        {company.verification_status === 'approved' && (
-          <div className="mb-6">
-            <CommissionRatesCard sector={company.sector} />
-          </div>
-        )}
 
         {/* Profile Summary - Same style as Agent Immobilier */}
         <Card className="p-6 mb-6">
