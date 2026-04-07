@@ -1191,7 +1191,9 @@ class ShopUpdate(BaseModel):
 class ProductCreate(BaseModel):
     name: str
     description: str
-    price: float
+    price: float = 0
+    currency: str = "GNF"
+    price_on_request: bool = False
     category_id: Optional[str] = None
     product_type: Optional[str] = None
     characteristics: Optional[dict] = None
@@ -1202,6 +1204,8 @@ class ProductUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
     price: Optional[float] = None
+    currency: Optional[str] = None
+    price_on_request: Optional[bool] = None
     category_id: Optional[str] = None
     product_type: Optional[str] = None
     characteristics: Optional[dict] = None
@@ -7417,6 +7421,8 @@ async def create_product(data: ProductCreate, current_user: dict = Depends(get_c
         'name': data.name,
         'description': data.description,
         'price': data.price,
+        'currency': data.currency or 'GNF',
+        'price_on_request': data.price_on_request or False,
         'category_id': data.category_id,
         'product_type': data.product_type,
         'characteristics': data.characteristics or {},
@@ -7858,6 +7864,8 @@ async def company_create_product(data: ProductCreate, current_company: dict = De
         'name': data.name,
         'description': data.description,
         'price': data.price,
+        'currency': data.currency or 'GNF',
+        'price_on_request': data.price_on_request or False,
         'category_id': data.category_id,
         'product_type': data.product_type,
         'characteristics': data.characteristics or {},

@@ -187,9 +187,15 @@ const ProductDetail = () => {
             <h1 data-testid="product-name" className="text-2xl font-bold text-gray-900">{product.name}</h1>
 
             <div className="flex items-center gap-3 mt-3">
-              <span data-testid="product-price" className="text-3xl font-bold text-orange-600">{formatPrice(product.price)} GNF</span>
-              {product.is_negotiable && (
-                <span className="bg-orange-100 text-orange-600 text-xs font-semibold px-3 py-1 rounded-full">Négociable</span>
+              {product.price_on_request ? (
+                <span data-testid="product-price" className="text-2xl font-bold text-blue-600 italic">Prix sur demande</span>
+              ) : (
+                <>
+                  <span data-testid="product-price" className="text-3xl font-bold text-orange-600">{formatPrice(product.price)} {product.currency || 'GNF'}</span>
+                  {product.is_negotiable && (
+                    <span className="bg-orange-100 text-orange-600 text-xs font-semibold px-3 py-1 rounded-full">Négociable</span>
+                  )}
+                </>
               )}
             </div>
 

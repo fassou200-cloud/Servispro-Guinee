@@ -242,7 +242,12 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
                   <div className="p-3">
                     <h3 className="font-medium text-gray-900 text-sm line-clamp-2">{product.name}</h3>
                     <p className="text-xs text-gray-500 mt-1">{product.shop_name}</p>
-                    <p className="text-orange-600 font-bold mt-2">{formatPrice(product.price)} GNF</p>
+                    <p className="text-orange-600 font-bold mt-2">
+                      {product.price_on_request 
+                        ? <span className="text-blue-600 italic text-sm">Prix sur demande</span>
+                        : <>{formatPrice(product.price)} {product.currency || 'GNF'}</>
+                      }
+                    </p>
                   </div>
                 </Card>
               ))}

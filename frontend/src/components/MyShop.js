@@ -103,8 +103,8 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
   const logoInputRef = useRef(null);
 
   const [shopForm, setShopForm] = useState({ name: '', description: '', sector: '', contact_phone: '', contact_email: '', location: '' });
-  const [productForm, setProductForm] = useState({ name: '', description: '', price: '', is_negotiable: false, is_available: true, category_id: '', product_type: '', characteristics: {} });
-  const [editForm, setEditForm] = useState({ name: '', description: '', price: '', is_negotiable: false, is_available: true, category_id: '', product_type: '', characteristics: {} });
+  const [productForm, setProductForm] = useState({ name: '', description: '', price: '', currency: 'GNF', price_on_request: false, is_negotiable: false, is_available: true, category_id: '', product_type: '', characteristics: {} });
+  const [editForm, setEditForm] = useState({ name: '', description: '', price: '', currency: 'GNF', price_on_request: false, is_negotiable: false, is_available: true, category_id: '', product_type: '', characteristics: {} });
   const [selectedProductFiles, setSelectedProductFiles] = useState([]);
   const [addPhotosProductId, setAddPhotosProductId] = useState(null);
   const [expandedProductId, setExpandedProductId] = useState(null);
@@ -176,7 +176,7 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
       }
       toast.success('Produit ajouté !');
       setShowAddProduct(false);
-      setProductForm({ name: '', description: '', price: '', is_negotiable: false, is_available: true, category_id: '', product_type: '', characteristics: {} });
+      setProductForm({ name: '', description: '', price: '', currency: 'GNF', price_on_request: false, is_negotiable: false, is_available: true, category_id: '', product_type: '', characteristics: {} });
       setSelectedProductFiles([]);
       loadShopData();
     } catch (err) {
@@ -192,7 +192,9 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
       await axios.put(`${API}/${apiPrefix}/products/${editingProduct.id}`, {
         name: editForm.name,
         description: editForm.description,
-        price: parseFloat(editForm.price),
+        price: parseFloat(editForm.price) || 0,
+        currency: editForm.currency || 'GNF',
+        price_on_request: editForm.price_on_request || false,
         is_negotiable: editForm.is_negotiable,
         is_available: editForm.is_available,
         category_id: editForm.category_id || null,
@@ -442,7 +444,19 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
                 <Input data-testid="product-name-input" placeholder="Nom du produit *" value={productForm.name} onChange={(e) => setProductForm({...productForm, name: e.target.value})} required />
                 <Textarea placeholder="Description *" value={productForm.description} onChange={(e) => setProductForm({...productForm, description: e.target.value})} rows={2} required />
                 <div className="grid grid-cols-2 gap-3">
-                  <Input data-testid="product-price-input" type="number" placeholder="Prix (GNF) *" value={productForm.price} onChange={(e) => setProductForm({...productForm, price: e.target.value})} required />
+                  <div className="relative">
+                    <Input data-testid="product-price-input" type="number" placeholder="Prix *" value={productForm.price} onChange={(e) => setProductForm({...productForm, price: e.target.value})} required={!productForm.price_on_request} disabled={productForm.price_on_request} className={productForm.price_on_request ? 'opacity-50' : ''} />
+                    <select
+                      className="absolute right-2 top-1/2 -translate-y-1/2 bg-transparent text-xs font-medium text-gray-500 border-none outline-none cursor-pointer"
+                      value={productForm.currency}
+                      onChange={(e) => setProductForm({...productForm, currency: e.target.value})}
+                      data-testid="product-currency-select"
+                    >
+                      <option value="GNF">GNF</option>
+                      <option value="EUR">EUR</option>
+                      <option value="USD">USD</option>
+                    </select>
+                  </div>
                   <select
                     className="px-3 py-2 border rounded-lg text-sm"
                     value={productForm.product_type}
@@ -453,19 +467,21 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
                     {PRODUCT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                   </select>
                 </div>
-                {renderCharacteristicsFields(productForm, setProductForm)}
-                <div className="flex items-center gap-6">
-                  <label className="flex items-center gap-2 text-sm">
-                    <input type="checkbox" checked={productForm.is_negotiable} onChange={(e) => setProductForm({...productForm, is_negotiable: e.target.checked})} />
+                <div className="flex items-center gap-4 flex-wrap">
+                  <label className="flex items-center gap-2 text-sm cursor-pointer" data-testid="price-on-request-checkbox">
+                    <input type="checkbox" checked={productForm.price_on_request} onChange={(e) => setProductForm({...productForm, price_on_request: e.target.checked, price: e.target.checked ? '0' : productForm.price})} className="rounded" />
+                    <span className="text-orange-600 font-medium">Prix sur demande</span>
+                  </label>
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input type="checkbox" checked={productForm.is_negotiable} onChange={(e) => setProductForm({...productForm, is_negotiable: e.target.checked})} className="rounded" />
                     Prix négociable
                   </label>
-                  <label className="flex items-center gap-2 text-sm">
-                    <input type="checkbox" checked={productForm.is_available} onChange={(e) => setProductForm({...productForm, is_available: e.target.checked})} />
-                    <span className={productForm.is_available ? 'text-green-600 font-medium' : 'text-red-500 font-medium'}>
-                      {productForm.is_available ? 'En stock' : 'Rupture de stock'}
-                    </span>
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input type="checkbox" checked={productForm.is_available} onChange={(e) => setProductForm({...productForm, is_available: e.target.checked})} className="rounded text-green-500" />
+                    <span className={productForm.is_available ? 'text-green-600' : 'text-red-500'}>En stock</span>
                   </label>
                 </div>
+                {renderCharacteristicsFields(productForm, setProductForm)}
                 <div>
                   <input type="file" ref={fileInputRef} multiple accept="image/*" className="hidden" onChange={(e) => setSelectedProductFiles(Array.from(e.target.files))} />
                   <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} className="gap-2">
@@ -499,7 +515,18 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
                 <Input placeholder="Nom du produit *" value={editForm.name} onChange={(e) => setEditForm({...editForm, name: e.target.value})} required />
                 <Textarea placeholder="Description *" value={editForm.description} onChange={(e) => setEditForm({...editForm, description: e.target.value})} rows={2} required />
                 <div className="grid grid-cols-2 gap-3">
-                  <Input type="number" placeholder="Prix (GNF) *" value={editForm.price} onChange={(e) => setEditForm({...editForm, price: e.target.value})} required />
+                  <div className="relative">
+                    <Input type="number" placeholder="Prix *" value={editForm.price} onChange={(e) => setEditForm({...editForm, price: e.target.value})} required={!editForm.price_on_request} disabled={editForm.price_on_request} className={editForm.price_on_request ? 'opacity-50' : ''} />
+                    <select
+                      className="absolute right-2 top-1/2 -translate-y-1/2 bg-transparent text-xs font-medium text-gray-500 border-none outline-none cursor-pointer"
+                      value={editForm.currency}
+                      onChange={(e) => setEditForm({...editForm, currency: e.target.value})}
+                    >
+                      <option value="GNF">GNF</option>
+                      <option value="EUR">EUR</option>
+                      <option value="USD">USD</option>
+                    </select>
+                  </div>
                   <select
                     className="px-3 py-2 border rounded-lg text-sm"
                     value={editForm.product_type}
@@ -510,19 +537,21 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
                     {PRODUCT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                   </select>
                 </div>
-                {renderCharacteristicsFields(editForm, setEditForm)}
-                <div className="flex items-center gap-6">
-                  <label className="flex items-center gap-2 text-sm">
-                    <input type="checkbox" checked={editForm.is_negotiable} onChange={(e) => setEditForm({...editForm, is_negotiable: e.target.checked})} />
+                <div className="flex items-center gap-4 flex-wrap">
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input type="checkbox" checked={editForm.price_on_request} onChange={(e) => setEditForm({...editForm, price_on_request: e.target.checked, price: e.target.checked ? '0' : editForm.price})} className="rounded" />
+                    <span className="text-orange-600 font-medium">Prix sur demande</span>
+                  </label>
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input type="checkbox" checked={editForm.is_negotiable} onChange={(e) => setEditForm({...editForm, is_negotiable: e.target.checked})} className="rounded" />
                     Prix négociable
                   </label>
-                  <label className="flex items-center gap-2 text-sm">
-                    <input type="checkbox" checked={editForm.is_available} onChange={(e) => setEditForm({...editForm, is_available: e.target.checked})} />
-                    <span className={editForm.is_available ? 'text-green-600 font-medium' : 'text-red-500 font-medium'}>
-                      {editForm.is_available ? 'En stock' : 'Rupture de stock'}
-                    </span>
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input type="checkbox" checked={editForm.is_available} onChange={(e) => setEditForm({...editForm, is_available: e.target.checked})} className="rounded" />
+                    <span className={editForm.is_available ? 'text-green-600' : 'text-red-500'}>En stock</span>
                   </label>
                 </div>
+                {renderCharacteristicsFields(editForm, setEditForm)}
                 {/* Existing photos with delete option */}
                 {editingProduct.photos?.length > 0 && (
                   <div>
@@ -604,7 +633,12 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
                             {PRODUCT_TYPES.find(t => t.value === product.product_type)?.label || product.product_type}
                           </span>
                         )}
-                        <p className="text-orange-600 font-bold text-sm">{formatPrice(product.price)} GNF {product.is_negotiable && <span className="text-xs font-normal text-gray-400">(Négociable)</span>}</p>
+                        <p className="text-orange-600 font-bold text-sm">
+                          {product.price_on_request 
+                            ? <span className="text-blue-600 italic">Prix sur demande</span>
+                            : <>{formatPrice(product.price)} {product.currency || 'GNF'} {product.is_negotiable && <span className="text-xs font-normal text-gray-400">(Négociable)</span>}</>
+                          }
+                        </p>
                       </div>
                       <div className="flex items-center gap-2 mt-1 flex-wrap">
                         <button
