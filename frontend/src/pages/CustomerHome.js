@@ -58,7 +58,7 @@ const CustomerHome = ({ isCustomerAuthenticated }) => {
               Entreprise
             </button>
             <button 
-              onClick={() => navigate('/marketplace')}
+              onClick={() => navigate('/makiti')}
               className="text-orange-500 hover:text-orange-600 font-semibold transition-colors"
             >
               Makiti
@@ -188,7 +188,7 @@ const CustomerHome = ({ isCustomerAuthenticated }) => {
 
             {/* Marketplace Card */}
             <button
-              onClick={() => navigate('/marketplace')}
+              onClick={() => navigate('/makiti')}
               data-testid="marketplace-card"
               className="group relative bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl p-6 md:p-8 text-left transition-all hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
             >

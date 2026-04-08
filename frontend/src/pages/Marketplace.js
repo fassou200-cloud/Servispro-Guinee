@@ -19,9 +19,20 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedSector, setSelectedSector] = useState('');
-  const [viewMode, setViewMode] = useState('products'); // 'products' or 'shops'
+  const [selectedProductType, setSelectedProductType] = useState('');
+  const [viewMode, setViewMode] = useState('products');
   const [sortBy, setSortBy] = useState('recent');
+
+  const PRODUCT_TYPE_OPTIONS = [
+    { value: 'chaussures', label: 'Chaussures' },
+    { value: 'vetements', label: 'Vêtements' },
+    { value: 'voitures', label: 'Voitures' },
+    { value: 'cosmetiques', label: 'Cosmétiques' },
+    { value: 'electronique', label: 'Électronique' },
+    { value: 'alimentation', label: 'Alimentation' },
+    { value: 'mobilier', label: 'Mobilier' },
+    { value: 'autre', label: 'Autre' },
+  ];
 
   useEffect(() => {
     loadData();
@@ -30,7 +41,7 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
   useEffect(() => {
     if (viewMode === 'products') loadProducts();
     else loadShops();
-  }, [searchQuery, selectedCategory, selectedSector, sortBy, viewMode]);
+  }, [searchQuery, selectedCategory, selectedProductType, sortBy, viewMode]);
 
   const loadData = async () => {
     try {
@@ -64,7 +75,6 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
     try {
       const params = new URLSearchParams();
       if (searchQuery) params.append('search', searchQuery);
-      if (selectedSector) params.append('sector', selectedSector);
       const res = await axios.get(`${API}/marketplace/shops?${params}`);
       setShops(res.data);
     } catch (err) { console.error(err); }
@@ -72,14 +82,8 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
 
   const formatPrice = (price) => new Intl.NumberFormat('fr-FR').format(price || 0);
 
-  const sectors = [...new Set(shops.map(s => s.sector).filter(Boolean))];
-
-  // Build shop-to-sector map for product filtering
-  const shopSectorMap = {};
-  shops.forEach(s => { if (s.sector) shopSectorMap[s.id] = s.sector; });
-
-  const filteredProducts = selectedSector
-    ? products.filter(p => shopSectorMap[p.shop_id] === selectedSector)
+  const filteredProducts = selectedProductType
+    ? products.filter(p => p.product_type === selectedProductType)
     : products;
 
   return (
@@ -159,32 +163,17 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
             </Button>
           </div>
           <div className="flex gap-2">
-            {sectors.length > 0 && (
-              <select
-                data-testid="sector-filter"
-                className="px-3 py-2 border rounded-lg text-sm bg-white"
-                value={selectedSector}
-                onChange={(e) => setSelectedSector(e.target.value)}
-              >
-                <option value="">Tous secteurs</option>
-                {sectors.map(s => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-            )}
-            {viewMode === 'products' && categories.length > 0 && (
-              <select
-                data-testid="category-filter"
-                className="px-3 py-2 border rounded-lg text-sm bg-white"
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-              >
-                <option value="">Toutes catégories</option>
-                {categories.map(c => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-            )}
+            <select
+              data-testid="category-filter"
+              className="px-3 py-2 border rounded-lg text-sm bg-white"
+              value={selectedProductType}
+              onChange={(e) => setSelectedProductType(e.target.value)}
+            >
+              <option value="">Toutes catégories</option>
+              {PRODUCT_TYPE_OPTIONS.map(t => (
+                <option key={t.value} value={t.value}>{t.label}</option>
+              ))}
+            </select>
             {viewMode === 'products' && (
               <select
                 data-testid="sort-filter"
@@ -221,7 +210,7 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
                   key={product.id}
                   data-testid={`product-card-${product.id}`}
                   className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow group"
-                  onClick={() => navigate(`/marketplace/product/${product.id}`)}
+                  onClick={() => navigate(`/makiti/product/${product.id}`)}
                 >
                   <div className="aspect-square bg-gray-100 relative overflow-hidden">
                     {product.photos?.length > 0 ? (
@@ -270,7 +259,7 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
                   key={shop.id}
                   data-testid={`shop-card-${shop.id}`}
                   className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
-                  onClick={() => navigate(`/marketplace/shop/${shop.id}`)}
+                  onClick={() => navigate(`/makiti/shop/${shop.id}`)}
                 >
                   <div className="h-32 bg-gradient-to-br from-orange-400 to-yellow-300 relative">
                     {shop.banner && (

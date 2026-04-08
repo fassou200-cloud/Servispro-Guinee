@@ -237,7 +237,7 @@ const ProductDetail = () => {
 
             {/* Shop Info */}
             {product.shop && (
-              <Card className="p-4 mt-6 cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate(`/marketplace/shop/${product.shop.id}`)}>
+              <Card className="p-4 mt-6 cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate(`/makiti/shop/${product.shop.id}`)}>
                 <div className="flex items-center gap-3">
                   <div className="h-12 w-12 rounded-xl bg-orange-50 flex items-center justify-center overflow-hidden">
                     {product.shop.logo ? (

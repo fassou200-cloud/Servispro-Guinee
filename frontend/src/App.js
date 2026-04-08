@@ -58,10 +58,10 @@ function App() {
           <Route path="/property-sales" element={<BrowsePropertySales isCustomerAuthenticated={isCustomerAuthenticated} />} />
           <Route path="/rental/:rentalId" element={<RentalDetail />} />
           
-          {/* Marketplace Routes */}
-          <Route path="/marketplace" element={<Marketplace isCustomerAuthenticated={isCustomerAuthenticated} />} />
-          <Route path="/marketplace/shop/:shopId" element={<ShopDetail />} />
-          <Route path="/marketplace/product/:productId" element={<ProductDetail />} />
+          {/* Makiti Routes */}
+          <Route path="/makiti" element={<Marketplace isCustomerAuthenticated={isCustomerAuthenticated} />} />
+          <Route path="/makiti/shop/:shopId" element={<ShopDetail />} />
+          <Route path="/makiti/product/:productId" element={<ProductDetail />} />
           
           {/* Customer Routes */}
           <Route 

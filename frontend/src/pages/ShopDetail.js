@@ -40,7 +40,7 @@ const ShopDetail = () => {
       {/* Header */}
       <header className="bg-white border-b sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/marketplace')} data-testid="back-to-marketplace">
+          <Button variant="ghost" size="sm" onClick={() => navigate('/makiti')} data-testid="back-to-marketplace">
             <ArrowLeft className="h-4 w-4 mr-1" /> Marketplace
           </Button>
         </div>
@@ -116,7 +116,7 @@ const ShopDetail = () => {
                     key={product.id}
                     data-testid={`shop-product-${product.id}`}
                     className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow group"
-                    onClick={() => navigate(`/marketplace/product/${product.id}`)}
+                    onClick={() => navigate(`/makiti/product/${product.id}`)}
                   >
                     <div className="aspect-square bg-gray-100 relative overflow-hidden">
                       {product.photos?.length > 0 ? (
