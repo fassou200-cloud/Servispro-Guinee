@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Store, Package, MapPin, Filter, ShoppingBag, ArrowRight, Tag, ChevronDown } from 'lucide-react';
+import { Search, Store, Package, MapPin, Filter, ShoppingBag, ArrowRight, Tag, ChevronDown, Shirt, Car, Sparkles, Cpu, UtensilsCrossed, Sofa, MoreHorizontal, Footprints } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
 import { getImageUrl } from '@/utils/imageUrl';
@@ -24,14 +24,14 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
   const [sortBy, setSortBy] = useState('recent');
 
   const PRODUCT_TYPE_OPTIONS = [
-    { value: 'chaussures', label: 'Chaussures' },
-    { value: 'vetements', label: 'Vêtements' },
-    { value: 'voitures', label: 'Voitures' },
-    { value: 'cosmetiques', label: 'Cosmétiques' },
-    { value: 'electronique', label: 'Électronique' },
-    { value: 'alimentation', label: 'Alimentation' },
-    { value: 'mobilier', label: 'Mobilier' },
-    { value: 'autre', label: 'Autre' },
+    { value: 'chaussures', label: 'Chaussures', icon: Footprints, color: 'bg-amber-500' },
+    { value: 'vetements', label: 'Vêtements & Mode', icon: Shirt, color: 'bg-pink-500' },
+    { value: 'voitures', label: 'Voitures', icon: Car, color: 'bg-blue-500' },
+    { value: 'cosmetiques', label: 'Cosmétiques', icon: Sparkles, color: 'bg-purple-500' },
+    { value: 'electronique', label: 'Électronique', icon: Cpu, color: 'bg-cyan-500' },
+    { value: 'alimentation', label: 'Alimentation', icon: UtensilsCrossed, color: 'bg-green-500' },
+    { value: 'mobilier', label: 'Mobilier', icon: Sofa, color: 'bg-orange-600' },
+    { value: 'autre', label: 'Autre', icon: MoreHorizontal, color: 'bg-gray-500' },
   ];
 
   useEffect(() => {
@@ -139,8 +139,47 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
         </div>
       </section>
 
+      {/* Category Bar */}
+      <section className="bg-white border-b sticky top-0 z-20">
+        <div className="max-w-7xl mx-auto px-4 py-3">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1" style={{scrollbarWidth: 'none'}}>
+            <button
+              onClick={() => setSelectedProductType('')}
+              className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all flex-shrink-0 ${
+                selectedProductType === '' 
+                  ? 'bg-orange-500 text-white shadow-md scale-105' 
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+              data-testid="category-all"
+            >
+              <ShoppingBag className="h-5 w-5" />
+              Tout
+            </button>
+            {PRODUCT_TYPE_OPTIONS.map(cat => {
+              const Icon = cat.icon;
+              const isActive = selectedProductType === cat.value;
+              return (
+                <button
+                  key={cat.value}
+                  onClick={() => setSelectedProductType(isActive ? '' : cat.value)}
+                  className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all flex-shrink-0 ${
+                    isActive 
+                      ? `${cat.color} text-white shadow-md scale-105` 
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                  data-testid={`category-${cat.value}`}
+                >
+                  <Icon className="h-5 w-5" />
+                  {cat.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* View Toggle + Filters */}
+        {/* View Toggle + Sort */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
           <div className="flex gap-2">
             <Button
@@ -163,17 +202,6 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
             </Button>
           </div>
           <div className="flex gap-2">
-            <select
-              data-testid="category-filter"
-              className="px-3 py-2 border rounded-lg text-sm bg-white"
-              value={selectedProductType}
-              onChange={(e) => setSelectedProductType(e.target.value)}
-            >
-              <option value="">Toutes catégories</option>
-              {PRODUCT_TYPE_OPTIONS.map(t => (
-                <option key={t.value} value={t.value}>{t.label}</option>
-              ))}
-            </select>
             {viewMode === 'products' && (
               <select
                 data-testid="sort-filter"
