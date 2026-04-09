@@ -7719,6 +7719,20 @@ async def admin_get_shops():
     shops = await db.shops.find({}, {'_id': 0}).sort('created_at', -1).to_list(None)
     return shops
 
+@api_router.get("/admin/all-products")
+async def admin_get_all_products():
+    """Get all products across all shops for admin"""
+    products = await db.products.find(
+        {'is_deleted': {'$ne': True}}, {'_id': 0}
+    ).sort('created_at', -1).to_list(None)
+    for p in products:
+        shop = await db.shops.find_one({'id': p.get('shop_id')}, {'_id': 0, 'name': 1, 'owner_id': 1})
+        if shop:
+            p['shop_name'] = shop.get('name', '')
+            company = await db.companies.find_one({'id': shop.get('owner_id')}, {'_id': 0, 'company_name': 1})
+            p['company_name'] = company.get('company_name', '') if company else ''
+    return products
+
 @api_router.get("/admin/all-messages")
 async def admin_get_all_messages():
     """Get all product and property messages for admin"""
