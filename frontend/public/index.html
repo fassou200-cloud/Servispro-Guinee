@@ -49,7 +49,6 @@
         <link rel="apple-touch-icon" sizes="167x167" href="%PUBLIC_URL%/icons/icon-192x192.png" />
         
         <!-- Apple Splash Screens -->
-        <meta name="apple-mobile-web-app-capable" content="yes" />
         <link rel="apple-touch-startup-image" href="%PUBLIC_URL%/icons/icon-512x512.png" />
         
         <!-- Microsoft Tiles -->
@@ -170,7 +169,7 @@
         <noscript>Vous devez activer JavaScript pour utiliser cette application.</noscript>
         <div id="root"></div>
         
-        <!-- PWA Install Banner (hidden by default) -->
+        <!-- PWA Install Banner - Android (hidden by default) -->
         <div id="pwa-install-banner" class="pwa-install-banner">
             <div class="pwa-install-banner-content">
                 <img src="/icons/icon-96x96.png" alt="ServisPro" class="pwa-install-banner-icon" />
@@ -181,6 +180,24 @@
             </div>
             <button id="pwa-install-btn" class="pwa-install-btn">Installer</button>
             <button id="pwa-install-close" class="pwa-install-close">&times;</button>
+        </div>
+
+        <!-- PWA Install Banner - iOS Safari -->
+        <div id="ios-install-banner" class="pwa-install-banner">
+            <div class="pwa-install-banner-content">
+                <img src="/icons/icon-96x96.png" alt="ServisPro" class="pwa-install-banner-icon" />
+                <div class="pwa-install-banner-text">
+                    <h4>Installer ServisPro</h4>
+                    <p style="font-size:13px; line-height:1.4;">
+                        Appuyez sur 
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;color:#007AFF;">
+                            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/>
+                        </svg>
+                        <strong>Partager</strong> puis <strong>"Sur l'écran d'accueil"</strong>
+                    </p>
+                </div>
+            </div>
+            <button id="ios-install-close" class="pwa-install-close">&times;</button>
         </div>
         
         <!-- Service Worker Registration -->
@@ -198,56 +215,83 @@
                 });
             }
             
-            // PWA Install Prompt
-            let deferredPrompt;
-            const installBanner = document.getElementById('pwa-install-banner');
-            const installBtn = document.getElementById('pwa-install-btn');
-            const installClose = document.getElementById('pwa-install-close');
+            // Detect iOS
+            function isIOS() {
+                return /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                       (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            }
             
-            window.addEventListener('beforeinstallprompt', (e) => {
+            // Detect if already installed as standalone
+            function isStandalone() {
+                return window.matchMedia('(display-mode: standalone)').matches || 
+                       window.navigator.standalone === true;
+            }
+
+            // iOS Install Banner
+            if (isIOS() && !isStandalone()) {
+                var iosBanner = document.getElementById('ios-install-banner');
+                var iosClose = document.getElementById('ios-install-close');
+                
+                // Show iOS banner after 2 seconds
+                setTimeout(function() {
+                    if (!localStorage.getItem('ios-install-dismissed') && iosBanner) {
+                        iosBanner.style.display = '';
+                        iosBanner.classList.add('show');
+                    }
+                }, 2000);
+                
+                if (iosClose) {
+                    iosClose.addEventListener('click', function() {
+                        iosBanner.classList.remove('show');
+                        iosBanner.style.display = 'none';
+                        localStorage.setItem('ios-install-dismissed', 'true');
+                    });
+                }
+            }
+            
+            // Android/Chrome Install Prompt
+            var deferredPrompt;
+            var installBanner = document.getElementById('pwa-install-banner');
+            var installBtn = document.getElementById('pwa-install-btn');
+            var installClose = document.getElementById('pwa-install-close');
+            
+            window.addEventListener('beforeinstallprompt', function(e) {
                 e.preventDefault();
                 deferredPrompt = e;
                 
-                // Show install banner after 3 seconds
-                setTimeout(() => {
-                    // Don't show if already installed or dismissed
-                    if (!localStorage.getItem('pwa-install-dismissed')) {
+                setTimeout(function() {
+                    if (!localStorage.getItem('pwa-install-dismissed') && installBanner) {
                         installBanner.classList.add('show');
                     }
                 }, 3000);
             });
             
             if (installBtn) {
-                installBtn.addEventListener('click', async () => {
+                installBtn.addEventListener('click', async function() {
                     if (!deferredPrompt) return;
-                    
                     deferredPrompt.prompt();
-                    const { outcome } = await deferredPrompt.userChoice;
-                    
-                    if (outcome === 'accepted') {
+                    var result = await deferredPrompt.userChoice;
+                    if (result.outcome === 'accepted') {
                         console.log('PWA installed');
                     }
-                    
                     deferredPrompt = null;
-                    installBanner.classList.remove('show');
+                    if (installBanner) installBanner.classList.remove('show');
                 });
             }
             
             if (installClose) {
-                installClose.addEventListener('click', () => {
-                    installBanner.classList.remove('show');
+                installClose.addEventListener('click', function() {
+                    if (installBanner) installBanner.classList.remove('show');
                     localStorage.setItem('pwa-install-dismissed', 'true');
                 });
             }
             
-            // Hide banner if app is already installed
-            window.addEventListener('appinstalled', () => {
-                installBanner.classList.remove('show');
+            window.addEventListener('appinstalled', function() {
+                if (installBanner) installBanner.classList.remove('show');
                 deferredPrompt = null;
             });
             
-            // Check if running as standalone PWA
-            if (window.matchMedia('(display-mode: standalone)').matches) {
+            if (isStandalone()) {
                 console.log('Running as installed PWA');
             }
         </script>

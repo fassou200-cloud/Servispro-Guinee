@@ -1,0 +1,692 @@
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Query, Body
+from typing import List, Optional
+from datetime import datetime, timezone
+import uuid
+import logging
+
+from database import db
+from dependencies import get_current_user, get_current_company, get_current_customer
+from models import (
+    ShopCreate, ShopUpdate, ProductCreate, ProductUpdate,
+    ProductMessageCreate, ProductReviewCreate
+)
+from utils.cloudinary_helper import upload_to_cloudinary, delete_from_cloudinary
+from utils.security import filter_contact_info
+
+logger = logging.getLogger(__name__)
+router = APIRouter()
+
+@router.get("/product-categories")
+async def get_public_product_categories():
+    categories = await db.product_categories.find({}, {'_id': 0}).to_list(None)
+    return categories
+
+
+@router.post("/shop/create")
+async def create_shop(data: ShopCreate, current_user: dict = Depends(get_current_user)):
+    provider_id = current_user['id']
+    existing = await db.shops.find_one({'owner_id': provider_id})
+    if existing:
+        raise HTTPException(status_code=400, detail="Vous avez déjà une boutique")
+    
+    provider = await db.service_providers.find_one({'id': provider_id}, {'_id': 0, 'first_name': 1, 'last_name': 1})
+    if not provider:
+        raise HTTPException(status_code=404, detail="Prestataire non trouvé")
+    
+    shop = {
+        'id': str(uuid.uuid4()),
+        'owner_id': provider_id,
+        'owner_name': f"{provider['first_name']} {provider['last_name']}",
+        'name': data.name,
+        'description': data.description,
+        'sector': data.sector,
+        'contact_phone': data.contact_phone,
+        'contact_email': data.contact_email,
+        'location': data.location,
+        'logo': None,
+        'banner': None,
+        'is_active': True,
+        'total_products': 0,
+        'total_views': 0,
+        'created_at': datetime.now(timezone.utc).isoformat(),
+        'updated_at': datetime.now(timezone.utc).isoformat()
+    }
+    await db.shops.insert_one(shop)
+    shop.pop('_id', None)
+    return shop
+
+
+@router.get("/shop/my-shop")
+async def get_my_shop(current_user: dict = Depends(get_current_user)):
+    provider_id = current_user['id']
+    shop = await db.shops.find_one({'owner_id': provider_id}, {'_id': 0})
+    if not shop:
+        return None
+    shop['total_products'] = await db.products.count_documents({'shop_id': shop['id'], 'is_deleted': {'$ne': True}})
+    return shop
+
+
+@router.put("/shop/update")
+async def update_shop(data: ShopUpdate, current_user: dict = Depends(get_current_user)):
+    provider_id = current_user['id']
+    shop = await db.shops.find_one({'owner_id': provider_id})
+    if not shop:
+        raise HTTPException(status_code=404, detail="Boutique non trouvée")
+    
+    update_data = {k: v for k, v in data.dict().items() if v is not None}
+    update_data['updated_at'] = datetime.now(timezone.utc).isoformat()
+    
+    await db.shops.update_one({'owner_id': provider_id}, {'$set': update_data})
+    updated = await db.shops.find_one({'owner_id': provider_id}, {'_id': 0})
+    return updated
+
+
+@router.post("/shop/upload-logo")
+async def upload_shop_logo(file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):
+    provider_id = current_user['id']
+    shop = await db.shops.find_one({'owner_id': provider_id})
+    if not shop:
+        raise HTTPException(status_code=404, detail="Boutique non trouvée")
+    
+    contents = await file.read()
+    result = cloudinary.uploader.upload(contents, folder="servispro/shops/logos", public_id=shop['id'])
+    logo_url = result['secure_url']
+    
+    await db.shops.update_one({'owner_id': provider_id}, {'$set': {'logo': logo_url}})
+    return {"logo": logo_url}
+
+
+@router.post("/shop/upload-banner")
+async def upload_shop_banner(file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):
+    provider_id = current_user['id']
+    shop = await db.shops.find_one({'owner_id': provider_id})
+    if not shop:
+        raise HTTPException(status_code=404, detail="Boutique non trouvée")
+    
+    contents = await file.read()
+    result = cloudinary.uploader.upload(contents, folder="servispro/shops/banners", public_id=shop['id'])
+    banner_url = result['secure_url']
+    
+    await db.shops.update_one({'owner_id': provider_id}, {'$set': {'banner': banner_url}})
+    return {"banner": banner_url}
+
+
+@router.post("/shop/products")
+async def create_product(data: ProductCreate, current_user: dict = Depends(get_current_user)):
+    provider_id = current_user['id']
+    shop = await db.shops.find_one({'owner_id': provider_id}, {'_id': 0, 'id': 1, 'name': 1})
+    if not shop:
+        raise HTTPException(status_code=404, detail="Créez d'abord votre boutique")
+    
+    product = {
+        'id': str(uuid.uuid4()),
+        'shop_id': shop['id'],
+        'shop_name': shop['name'],
+        'owner_id': provider_id,
+        'name': data.name,
+        'description': data.description,
+        'price': data.price,
+        'currency': data.currency or 'GNF',
+        'price_on_request': data.price_on_request or False,
+        'category_id': data.category_id,
+        'product_type': data.product_type,
+        'characteristics': data.characteristics or {},
+        'is_negotiable': data.is_negotiable,
+        'is_available': data.is_available,
+        'photos': [],
+        'total_views': 0,
+        'total_inquiries': 0,
+        'is_deleted': False,
+        'created_at': datetime.now(timezone.utc).isoformat(),
+        'updated_at': datetime.now(timezone.utc).isoformat()
+    }
+    await db.products.insert_one(product)
+    product.pop('_id', None)
+    return product
+
+
+@router.post("/shop/products/{product_id}/photos")
+async def upload_product_photos(product_id: str, files: List[UploadFile] = File(...), current_user: dict = Depends(get_current_user)):
+    provider_id = current_user['id']
+    product = await db.products.find_one({'id': product_id, 'owner_id': provider_id})
+    if not product:
+        raise HTTPException(status_code=404, detail="Produit non trouvé")
+    
+    photo_urls = list(product.get('photos', []))
+    for file in files:
+        contents = await file.read()
+        result = cloudinary.uploader.upload(contents, folder=f"servispro/products/{product_id}")
+        photo_urls.append(result['secure_url'])
+    
+    await db.products.update_one({'id': product_id}, {'$set': {'photos': photo_urls}})
+    return {"photos": photo_urls}
+
+
+@router.delete("/shop/products/{product_id}/photos/{photo_index}")
+async def delete_product_photo(product_id: str, photo_index: int, current_user: dict = Depends(get_current_user)):
+    provider_id = current_user['id']
+    product = await db.products.find_one({'id': product_id, 'owner_id': provider_id})
+    if not product:
+        raise HTTPException(status_code=404, detail="Produit non trouvé")
+    photos = list(product.get('photos', []))
+    if photo_index < 0 or photo_index >= len(photos):
+        raise HTTPException(status_code=400, detail="Index de photo invalide")
+    removed_url = photos.pop(photo_index)
+    delete_from_cloudinary(removed_url)
+    await db.products.update_one({'id': product_id}, {'$set': {'photos': photos}})
+    return {"photos": photos}
+
+
+@router.get("/shop/products")
+async def get_my_products(current_user: dict = Depends(get_current_user)):
+    provider_id = current_user['id']
+    products = await db.products.find(
+        {'owner_id': provider_id, 'is_deleted': {'$ne': True}},
+        {'_id': 0}
+    ).sort('created_at', -1).to_list(None)
+    return products
+
+
+@router.put("/shop/products/{product_id}")
+async def update_product(product_id: str, data: ProductUpdate, current_user: dict = Depends(get_current_user)):
+    provider_id = current_user['id']
+    product = await db.products.find_one({'id': product_id, 'owner_id': provider_id})
+    if not product:
+        raise HTTPException(status_code=404, detail="Produit non trouvé")
+    
+    update_data = {k: v for k, v in data.dict().items() if v is not None}
+    update_data['updated_at'] = datetime.now(timezone.utc).isoformat()
+    
+    await db.products.update_one({'id': product_id}, {'$set': update_data})
+    updated = await db.products.find_one({'id': product_id}, {'_id': 0})
+    return updated
+
+
+@router.delete("/shop/products/{product_id}")
+async def delete_product(product_id: str, current_user: dict = Depends(get_current_user)):
+    provider_id = current_user['id']
+    result = await db.products.update_one(
+        {'id': product_id, 'owner_id': provider_id},
+        {'$set': {'is_deleted': True, 'deleted_at': datetime.now(timezone.utc).isoformat()}}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Produit non trouvé")
+    return {"message": "Produit supprimé"}
+
+
+@router.get("/shop/messages")
+async def get_shop_messages(current_user: dict = Depends(get_current_user)):
+    provider_id = current_user['id']
+    shop = await db.shops.find_one({'owner_id': provider_id}, {'_id': 0, 'id': 1})
+    if not shop:
+        return []
+    messages = await db.product_messages.find(
+        {'shop_id': shop['id']},
+        {'_id': 0}
+    ).sort('created_at', -1).to_list(None)
+    return messages
+
+
+@router.put("/shop/messages/{message_id}/read")
+async def mark_message_read(message_id: str, current_user: dict = Depends(get_current_user)):
+    await db.product_messages.update_one({'id': message_id}, {'$set': {'is_read': True}})
+    return {"message": "Marqué comme lu"}
+
+
+@router.get("/shop/reviews")
+async def get_shop_reviews(current_user: dict = Depends(get_current_user)):
+    provider_id = current_user['id']
+    shop = await db.shops.find_one({'owner_id': provider_id}, {'_id': 0, 'id': 1})
+    if not shop:
+        return []
+    reviews = await db.product_reviews.find({'shop_id': shop['id']}, {'_id': 0}).sort('created_at', -1).to_list(None)
+    for review in reviews:
+        product = await db.products.find_one({'id': review['product_id']}, {'_id': 0, 'name': 1})
+        review['product_name'] = product['name'] if product else 'Produit supprimé'
+    return reviews
+
+
+@router.get("/shop/stats")
+async def get_shop_stats(current_user: dict = Depends(get_current_user)):
+    provider_id = current_user['id']
+    shop = await db.shops.find_one({'owner_id': provider_id}, {'_id': 0, 'id': 1})
+    if not shop:
+        return {"total_products": 0, "total_views": 0, "total_messages": 0, "available_products": 0}
+    
+    shop_id = shop['id']
+    total = await db.products.count_documents({'shop_id': shop_id, 'is_deleted': {'$ne': True}})
+    available = await db.products.count_documents({'shop_id': shop_id, 'is_deleted': {'$ne': True}, 'is_available': True})
+    total_messages = await db.product_messages.count_documents({'shop_id': shop_id})
+    unread_messages = await db.product_messages.count_documents({'shop_id': shop_id, 'is_read': False})
+    
+    # Get product views sum
+    pipeline = [
+        {'$match': {'shop_id': shop_id, 'is_deleted': {'$ne': True}}},
+        {'$group': {'_id': None, 'total_views': {'$sum': '$total_views'}, 'total_inquiries': {'$sum': '$total_inquiries'}}}
+    ]
+    agg = await db.products.aggregate(pipeline).to_list(1)
+    views = agg[0]['total_views'] if agg else 0
+    inquiries = agg[0]['total_inquiries'] if agg else 0
+    
+    # Top products by views
+    top_products = await db.products.find(
+        {'shop_id': shop_id, 'is_deleted': {'$ne': True}},
+        {'_id': 0, 'id': 1, 'name': 1, 'total_views': 1, 'total_inquiries': 1, 'price': 1}
+    ).sort('total_views', -1).to_list(5)
+    
+    return {
+        "total_products": total,
+        "available_products": available,
+        "total_views": views,
+        "total_inquiries": inquiries,
+        "total_messages": total_messages,
+        "unread_messages": unread_messages,
+        "top_products": top_products
+    }
+
+
+@router.get("/marketplace/shops")
+async def browse_shops(sector: Optional[str] = None, search: Optional[str] = None):
+    # Get non-deleted, approved, NON-Immobilier company IDs
+    company_filter = {
+        'is_deleted': {'$ne': True},
+        'verification_status': 'approved',
+        'sector': {'$ne': 'Immobilier'}
+    }
+    valid_companies = await db.companies.find(company_filter, {'_id': 0}).to_list(None)
+    valid_owner_ids = [c['id'] for c in valid_companies]
+    
+    # Get existing active shops from valid companies
+    shop_query = {'is_active': True, 'owner_id': {'$in': valid_owner_ids}}
+    if sector:
+        shop_query['sector'] = sector
+    if search:
+        shop_query['$or'] = [
+            {'name': {'$regex': search, '$options': 'i'}},
+            {'description': {'$regex': search, '$options': 'i'}}
+        ]
+    
+    shops = await db.shops.find(shop_query, {'_id': 0}).sort('created_at', -1).to_list(None)
+    
+    # Only keep shops that have at least 1 product
+    result = []
+    for shop in shops:
+        product_count = await db.products.count_documents({'shop_id': shop['id'], 'is_deleted': {'$ne': True}})
+        if product_count > 0:
+            shop['total_products'] = product_count
+            result.append(shop)
+    
+    return result
+
+
+@router.get("/marketplace/shops/{shop_id}")
+async def get_shop_detail(shop_id: str):
+    shop = await db.shops.find_one({'id': shop_id, 'is_active': True}, {'_id': 0})
+    if not shop:
+        raise HTTPException(status_code=404, detail="Boutique non trouvée")
+    
+    # Increment view count
+    await db.shops.update_one({'id': shop_id}, {'$inc': {'total_views': 1}})
+    
+    products = await db.products.find(
+        {'shop_id': shop_id, 'is_deleted': {'$ne': True}, 'is_available': True},
+        {'_id': 0}
+    ).sort('created_at', -1).to_list(None)
+    
+    shop['products'] = products
+    return shop
+
+
+@router.get("/marketplace/products")
+async def browse_products(
+    category_id: Optional[str] = None,
+    search: Optional[str] = None,
+    min_price: Optional[float] = None,
+    max_price: Optional[float] = None,
+    sort_by: Optional[str] = "recent"
+):
+    query = {'is_deleted': {'$ne': True}, 'is_available': True}
+    
+    # Only show products from active shops
+    active_shops = await db.shops.find({'is_active': True}, {'_id': 0, 'id': 1}).to_list(None)
+    active_shop_ids = [s['id'] for s in active_shops]
+    query['shop_id'] = {'$in': active_shop_ids}
+    
+    if category_id:
+        query['category_id'] = category_id
+    if search:
+        query['$or'] = [
+            {'name': {'$regex': search, '$options': 'i'}},
+            {'description': {'$regex': search, '$options': 'i'}}
+        ]
+    if min_price is not None:
+        query['price'] = {'$gte': min_price}
+    if max_price is not None:
+        query.setdefault('price', {})['$lte'] = max_price
+    
+    sort_field = ('created_at', -1)
+    if sort_by == "price_asc":
+        sort_field = ('price', 1)
+    elif sort_by == "price_desc":
+        sort_field = ('price', -1)
+    elif sort_by == "popular":
+        sort_field = ('total_views', -1)
+    
+    products = await db.products.find(query, {'_id': 0}).sort(*sort_field).to_list(None)
+    return products
+
+
+@router.get("/marketplace/products/{product_id}")
+async def get_product_detail(product_id: str):
+    product = await db.products.find_one({'id': product_id, 'is_deleted': {'$ne': True}}, {'_id': 0})
+    if not product:
+        raise HTTPException(status_code=404, detail="Produit non trouvé")
+    
+    # Increment view count
+    await db.products.update_one({'id': product_id}, {'$inc': {'total_views': 1}})
+    
+    # Get shop info
+    shop = await db.shops.find_one({'id': product['shop_id']}, {'_id': 0, 'id': 1, 'name': 1, 'logo': 1, 'contact_phone': 1, 'location': 1, 'sector': 1})
+    product['shop'] = shop
+    
+    return product
+
+
+@router.post("/marketplace/products/{product_id}/message")
+async def send_product_message(product_id: str, data: ProductMessageCreate):
+    product = await db.products.find_one({'id': product_id, 'is_deleted': {'$ne': True}}, {'_id': 0})
+    if not product:
+        raise HTTPException(status_code=404, detail="Produit non trouvé")
+    
+    message = {
+        'id': str(uuid.uuid4()),
+        'product_id': product_id,
+        'product_name': product['name'],
+        'shop_id': product['shop_id'],
+        'sender_name': data.sender_name,
+        'sender_phone': data.sender_phone,
+        'message': data.message,
+        'is_read': False,
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    await db.product_messages.insert_one(message)
+    message.pop('_id', None)
+    
+    # Increment inquiry count
+    await db.products.update_one({'id': product_id}, {'$inc': {'total_inquiries': 1}})
+    
+    return message
+
+
+@router.post("/company/shop/create")
+async def company_create_shop(data: ShopCreate, current_company: dict = Depends(get_current_company)):
+    company_id = current_company['id']
+    existing = await db.shops.find_one({'owner_id': company_id})
+    if existing:
+        raise HTTPException(status_code=400, detail="Vous avez déjà une boutique")
+    
+    shop = {
+        'id': str(uuid.uuid4()),
+        'owner_id': company_id,
+        'owner_name': current_company.get('name', ''),
+        'owner_type': 'company',
+        'name': data.name,
+        'description': data.description,
+        'sector': data.sector,
+        'contact_phone': data.contact_phone,
+        'contact_email': data.contact_email,
+        'location': data.location,
+        'logo': None,
+        'banner': None,
+        'is_active': True,
+        'total_products': 0,
+        'total_views': 0,
+        'created_at': datetime.now(timezone.utc).isoformat(),
+        'updated_at': datetime.now(timezone.utc).isoformat()
+    }
+    await db.shops.insert_one(shop)
+    shop.pop('_id', None)
+    return shop
+
+
+@router.get("/company/shop/my-shop")
+async def company_get_my_shop(current_company: dict = Depends(get_current_company)):
+    company_id = current_company['id']
+    shop = await db.shops.find_one({'owner_id': company_id}, {'_id': 0})
+    if not shop:
+        return None
+    shop['total_products'] = await db.products.count_documents({'shop_id': shop['id'], 'is_deleted': {'$ne': True}})
+    return shop
+
+
+@router.put("/company/shop/update")
+async def company_update_shop(data: ShopUpdate, current_company: dict = Depends(get_current_company)):
+    company_id = current_company['id']
+    shop = await db.shops.find_one({'owner_id': company_id})
+    if not shop:
+        raise HTTPException(status_code=404, detail="Boutique non trouvée")
+    update_data = {k: v for k, v in data.dict().items() if v is not None}
+    update_data['updated_at'] = datetime.now(timezone.utc).isoformat()
+    await db.shops.update_one({'owner_id': company_id}, {'$set': update_data})
+    updated = await db.shops.find_one({'owner_id': company_id}, {'_id': 0})
+    return updated
+
+
+@router.post("/company/shop/upload-logo")
+async def company_upload_shop_logo(file: UploadFile = File(...), current_company: dict = Depends(get_current_company)):
+    company_id = current_company['id']
+    shop = await db.shops.find_one({'owner_id': company_id})
+    if not shop:
+        raise HTTPException(status_code=404, detail="Boutique non trouvée")
+    contents = await file.read()
+    result = cloudinary.uploader.upload(contents, folder="servispro/shops/logos", public_id=shop['id'])
+    await db.shops.update_one({'owner_id': company_id}, {'$set': {'logo': result['secure_url']}})
+    return {"logo": result['secure_url']}
+
+
+@router.post("/company/shop/products")
+async def company_create_product(data: ProductCreate, current_company: dict = Depends(get_current_company)):
+    company_id = current_company['id']
+    shop = await db.shops.find_one({'owner_id': company_id}, {'_id': 0, 'id': 1, 'name': 1})
+    if not shop:
+        raise HTTPException(status_code=404, detail="Créez d'abord votre boutique")
+    product = {
+        'id': str(uuid.uuid4()),
+        'shop_id': shop['id'],
+        'shop_name': shop['name'],
+        'owner_id': company_id,
+        'name': data.name,
+        'description': data.description,
+        'price': data.price,
+        'currency': data.currency or 'GNF',
+        'price_on_request': data.price_on_request or False,
+        'category_id': data.category_id,
+        'product_type': data.product_type,
+        'characteristics': data.characteristics or {},
+        'is_negotiable': data.is_negotiable,
+        'is_available': data.is_available,
+        'photos': [],
+        'total_views': 0,
+        'total_inquiries': 0,
+        'is_deleted': False,
+        'created_at': datetime.now(timezone.utc).isoformat(),
+        'updated_at': datetime.now(timezone.utc).isoformat()
+    }
+    await db.products.insert_one(product)
+    product.pop('_id', None)
+    return product
+
+
+@router.post("/company/shop/products/{product_id}/photos")
+async def company_upload_product_photos(product_id: str, files: List[UploadFile] = File(...), current_company: dict = Depends(get_current_company)):
+    company_id = current_company['id']
+    product = await db.products.find_one({'id': product_id, 'owner_id': company_id})
+    if not product:
+        raise HTTPException(status_code=404, detail="Produit non trouvé")
+    photo_urls = list(product.get('photos', []))
+    for file in files:
+        contents = await file.read()
+        result = cloudinary.uploader.upload(contents, folder=f"servispro/products/{product_id}")
+        photo_urls.append(result['secure_url'])
+    await db.products.update_one({'id': product_id}, {'$set': {'photos': photo_urls}})
+    return {"photos": photo_urls}
+
+
+@router.delete("/company/shop/products/{product_id}/photos/{photo_index}")
+async def company_delete_product_photo(product_id: str, photo_index: int, current_company: dict = Depends(get_current_company)):
+    company_id = current_company['id']
+    product = await db.products.find_one({'id': product_id, 'owner_id': company_id})
+    if not product:
+        raise HTTPException(status_code=404, detail="Produit non trouvé")
+    photos = list(product.get('photos', []))
+    if photo_index < 0 or photo_index >= len(photos):
+        raise HTTPException(status_code=400, detail="Index de photo invalide")
+    removed_url = photos.pop(photo_index)
+    delete_from_cloudinary(removed_url)
+    await db.products.update_one({'id': product_id}, {'$set': {'photos': photos}})
+    return {"photos": photos}
+
+
+@router.get("/company/shop/products")
+async def company_get_my_products(current_company: dict = Depends(get_current_company)):
+    company_id = current_company['id']
+    products = await db.products.find(
+        {'owner_id': company_id, 'is_deleted': {'$ne': True}}, {'_id': 0}
+    ).sort('created_at', -1).to_list(None)
+    return products
+
+
+@router.put("/company/shop/products/{product_id}")
+async def company_update_product(product_id: str, data: ProductUpdate, current_company: dict = Depends(get_current_company)):
+    company_id = current_company['id']
+    product = await db.products.find_one({'id': product_id, 'owner_id': company_id})
+    if not product:
+        raise HTTPException(status_code=404, detail="Produit non trouvé")
+    update_data = {k: v for k, v in data.dict().items() if v is not None}
+    update_data['updated_at'] = datetime.now(timezone.utc).isoformat()
+    await db.products.update_one({'id': product_id}, {'$set': update_data})
+    updated = await db.products.find_one({'id': product_id}, {'_id': 0})
+    return updated
+
+
+@router.delete("/company/shop/products/{product_id}")
+async def company_delete_product(product_id: str, current_company: dict = Depends(get_current_company)):
+    company_id = current_company['id']
+    result = await db.products.update_one(
+        {'id': product_id, 'owner_id': company_id},
+        {'$set': {'is_deleted': True, 'deleted_at': datetime.now(timezone.utc).isoformat()}}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Produit non trouvé")
+    return {"message": "Produit supprimé"}
+
+
+@router.get("/company/shop/messages")
+async def company_get_shop_messages(current_company: dict = Depends(get_current_company)):
+    company_id = current_company['id']
+    shop = await db.shops.find_one({'owner_id': company_id}, {'_id': 0, 'id': 1})
+    if not shop:
+        return []
+    messages = await db.product_messages.find({'shop_id': shop['id']}, {'_id': 0}).sort('created_at', -1).to_list(None)
+    return messages
+
+
+@router.get("/company/shop/stats")
+async def company_get_shop_stats(current_company: dict = Depends(get_current_company)):
+    company_id = current_company['id']
+    shop = await db.shops.find_one({'owner_id': company_id}, {'_id': 0, 'id': 1})
+    if not shop:
+        return {"total_products": 0, "total_views": 0, "total_messages": 0, "available_products": 0}
+    shop_id = shop['id']
+    total = await db.products.count_documents({'shop_id': shop_id, 'is_deleted': {'$ne': True}})
+    available = await db.products.count_documents({'shop_id': shop_id, 'is_deleted': {'$ne': True}, 'is_available': True})
+    total_messages = await db.product_messages.count_documents({'shop_id': shop_id})
+    unread_messages = await db.product_messages.count_documents({'shop_id': shop_id, 'is_read': False})
+    pipeline = [
+        {'$match': {'shop_id': shop_id, 'is_deleted': {'$ne': True}}},
+        {'$group': {'_id': None, 'total_views': {'$sum': '$total_views'}, 'total_inquiries': {'$sum': '$total_inquiries'}}}
+    ]
+    agg = await db.products.aggregate(pipeline).to_list(1)
+    views = agg[0]['total_views'] if agg else 0
+    inquiries = agg[0]['total_inquiries'] if agg else 0
+    return {
+        "total_products": total,
+        "available_products": available,
+        "total_views": views,
+        "total_inquiries": inquiries,
+        "total_messages": total_messages,
+        "unread_messages": unread_messages
+    }
+
+# Include router AFTER all route definitions
+
+
+@router.post("/marketplace/products/{product_id}/reviews")
+async def create_product_review(product_id: str, data: ProductReviewCreate, current_customer: dict = Depends(get_current_customer)):
+    """Create a review for a product (requires customer auth)"""
+    product = await db.products.find_one({'id': product_id, 'is_deleted': {'$ne': True}}, {'_id': 0})
+    if not product:
+        raise HTTPException(status_code=404, detail="Produit non trouvé")
+    
+    # Check if customer already reviewed this product
+    existing = await db.product_reviews.find_one({
+        'product_id': product_id, 
+        'customer_id': current_customer['id']
+    })
+    if existing:
+        raise HTTPException(status_code=400, detail="Vous avez déjà laissé un avis sur ce produit")
+    
+    review = {
+        'id': str(uuid.uuid4()),
+        'product_id': product_id,
+        'shop_id': product['shop_id'],
+        'customer_id': current_customer['id'],
+        'customer_name': f"{current_customer.get('first_name', '')} {current_customer.get('last_name', '')}".strip() or current_customer.get('full_name', 'Client'),
+        'rating': data.rating,
+        'comment': data.comment,
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    await db.product_reviews.insert_one(review)
+    review.pop('_id', None)
+    
+    # Update product average rating
+    pipeline = [
+        {'$match': {'product_id': product_id}},
+        {'$group': {'_id': None, 'avg_rating': {'$avg': '$rating'}, 'count': {'$sum': 1}}}
+    ]
+    agg = await db.product_reviews.aggregate(pipeline).to_list(1)
+    if agg:
+        await db.products.update_one({'id': product_id}, {'$set': {
+            'avg_rating': round(agg[0]['avg_rating'], 1),
+            'review_count': agg[0]['count']
+        }})
+    
+    return review
+
+
+@router.get("/marketplace/products/{product_id}/reviews")
+async def get_product_reviews(product_id: str):
+    """Get all reviews for a product (public)"""
+    reviews = await db.product_reviews.find(
+        {'product_id': product_id}, {'_id': 0}
+    ).sort('created_at', -1).to_list(None)
+    return reviews
+
+
+@router.get("/company/shop/reviews")
+async def company_get_shop_reviews(current_company: dict = Depends(get_current_company)):
+    """Get all reviews for the company's shop products"""
+    company_id = current_company['id']
+    shop = await db.shops.find_one({'owner_id': company_id}, {'_id': 0, 'id': 1})
+    if not shop:
+        return []
+    reviews = await db.product_reviews.find(
+        {'shop_id': shop['id']}, {'_id': 0}
+    ).sort('created_at', -1).to_list(None)
+    # Attach product name to each review
+    for review in reviews:
+        product = await db.products.find_one({'id': review['product_id']}, {'_id': 0, 'name': 1})
+        review['product_name'] = product['name'] if product else 'Produit supprimé'
+    return reviews
+
+
