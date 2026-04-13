@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Store, Package, MapPin, ShoppingBag, ArrowUpRight, Tag, Shirt, Car, Sparkles, Cpu, UtensilsCrossed, Sofa, MoreHorizontal, Footprints, Heart, Clock, Eye } from 'lucide-react';
+import { Search, Store, Package, MapPin, ShoppingBag, ArrowUpRight, Tag, Heart, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import axios from 'axios';
 import { getImageUrl } from '@/utils/imageUrl';
 
@@ -32,14 +32,13 @@ const HERO_SLIDES = [
 ];
 
 const PRODUCT_TYPE_OPTIONS = [
-  { value: 'chaussures', label: 'Chaussures', icon: Footprints, color: 'bg-amber-500' },
-  { value: 'vetements', label: 'Vêtements & Mode', icon: Shirt, color: 'bg-pink-500' },
-  { value: 'voitures', label: 'Voitures', icon: Car, color: 'bg-blue-500' },
-  { value: 'cosmetiques', label: 'Cosmétiques', icon: Sparkles, color: 'bg-purple-500' },
-  { value: 'electronique', label: 'Électronique', icon: Cpu, color: 'bg-cyan-500' },
-  { value: 'alimentation', label: 'Alimentation', icon: UtensilsCrossed, color: 'bg-green-500' },
-  { value: 'mobilier', label: 'Mobilier', icon: Sofa, color: 'bg-orange-600' },
-  { value: 'autre', label: 'Autre', icon: MoreHorizontal, color: 'bg-gray-500' },
+  { value: 'chaussures', label: 'Chaussures', image: 'https://images.unsplash.com/photo-1741787860473-0ea4d7405b24?w=300&h=300&fit=crop&q=80' },
+  { value: 'vetements', label: 'Vêtements & Mode', image: 'https://images.unsplash.com/photo-1769184059649-0764a3f3d25c?w=300&h=300&fit=crop&q=80' },
+  { value: 'voitures', label: 'Voitures', image: 'https://images.unsplash.com/photo-1758411898245-c2edbc1a1df8?w=300&h=300&fit=crop&q=80' },
+  { value: 'cosmetiques', label: 'Cosmétiques', image: 'https://images.unsplash.com/photo-1680244169777-a3d7d758a264?w=300&h=300&fit=crop&q=80' },
+  { value: 'electronique', label: 'Électronique', image: 'https://images.unsplash.com/photo-1754761986430-5d0d44d09d00?w=300&h=300&fit=crop&q=80' },
+  { value: 'alimentation', label: 'Alimentation', image: 'https://images.unsplash.com/photo-1760108273055-e9bb6e7f3a0c?w=300&h=300&fit=crop&q=80' },
+  { value: 'mobilier', label: 'Mobilier', image: 'https://images.unsplash.com/photo-1775494108186-8d7354660c64?w=300&h=300&fit=crop&q=80' },
 ];
 
 // Quick-filter categories shown in the "Offres" section header
@@ -61,6 +60,7 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
     try { return JSON.parse(localStorage.getItem('makiti_wishlist') || '[]'); } catch { return []; }
   });
   const slideInterval = useRef(null);
+  const catScrollRef = useRef(null);
 
   // Countdown timer state
   const [countdown, setCountdown] = useState({ d: 0, h: 0, m: 0, s: 0 });
@@ -349,38 +349,65 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
         </div>
       </section>
 
-      {/* ──────── CATEGORY BAR (sticky) ──────── */}
-      <section className="bg-white border-y border-gray-100 sticky top-[57px] sm:top-[49px] z-40 mt-8">
-        <div className="max-w-7xl mx-auto px-4 py-3">
-          <div className="flex items-center gap-2 overflow-x-auto pb-0.5" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
+      {/* ──────── ACHETER PAR CATEGORIE ──────── */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 mt-8 sm:mt-10" data-testid="category-section">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Acheter par catégorie</h2>
+          <div className="flex items-center gap-2">
             <button
-              onClick={() => setSelectedProductType('')}
-              className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all flex-shrink-0 ${
-                selectedProductType === '' ? 'bg-orange-500 text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-              data-testid="category-all"
+              onClick={() => catScrollRef.current?.scrollBy({ left: -240, behavior: 'smooth' })}
+              className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50 transition-colors"
+              data-testid="cat-scroll-left"
             >
-              <ShoppingBag className="h-5 w-5" />
-              Tout
+              <ChevronLeft className="h-4 w-4" />
             </button>
-            {PRODUCT_TYPE_OPTIONS.map(cat => {
-              const Icon = cat.icon;
-              const isActive = selectedProductType === cat.value;
-              return (
-                <button
-                  key={cat.value}
-                  onClick={() => setSelectedProductType(isActive ? '' : cat.value)}
-                  className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all flex-shrink-0 ${
-                    isActive ? `${cat.color} text-white shadow-md` : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                  data-testid={`category-${cat.value}`}
-                >
-                  <Icon className="h-5 w-5" />
-                  {cat.label}
-                </button>
-              );
-            })}
+            <button
+              onClick={() => catScrollRef.current?.scrollBy({ left: 240, behavior: 'smooth' })}
+              className="w-9 h-9 rounded-full bg-orange-500 flex items-center justify-center text-white hover:bg-orange-600 transition-colors"
+              data-testid="cat-scroll-right"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
           </div>
+        </div>
+        <div
+          ref={catScrollRef}
+          className="flex gap-5 sm:gap-8 overflow-x-auto pb-2"
+          style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}
+        >
+          {/* "Tout" category */}
+          <button
+            onClick={() => setSelectedProductType('')}
+            className="flex flex-col items-center gap-2 shrink-0 group"
+            data-testid="category-all"
+          >
+            <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 transition-all ${
+              selectedProductType === '' ? 'border-orange-500 shadow-lg shadow-orange-200' : 'border-gray-200 group-hover:border-orange-300'
+            }`}>
+              <div className="w-full h-full bg-gradient-to-br from-orange-400 to-amber-300 flex items-center justify-center">
+                <ShoppingBag className="h-8 w-8 sm:h-10 sm:w-10 text-white" />
+              </div>
+            </div>
+            <span className={`text-xs sm:text-sm font-medium ${selectedProductType === '' ? 'text-orange-600' : 'text-gray-700'}`}>Tout</span>
+          </button>
+          {PRODUCT_TYPE_OPTIONS.map(cat => {
+            const isActive = selectedProductType === cat.value;
+            return (
+              <button
+                key={cat.value}
+                onClick={() => setSelectedProductType(isActive ? '' : cat.value)}
+                className="flex flex-col items-center gap-2 shrink-0 group"
+                data-testid={`category-${cat.value}`}
+              >
+                <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 transition-all ${
+                  isActive ? 'border-orange-500 shadow-lg shadow-orange-200' : 'border-gray-200 group-hover:border-orange-300'
+                }`}>
+                  <img src={cat.image} alt={cat.label} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+                </div>
+                <span className={`text-xs sm:text-sm font-medium ${isActive ? 'text-orange-600' : 'text-gray-700'}`}>{cat.label}</span>
+              </button>
+            );
+          })}
         </div>
       </section>
 
