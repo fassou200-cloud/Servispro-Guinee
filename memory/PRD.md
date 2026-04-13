@@ -85,6 +85,7 @@ ServisPro is a comprehensive platform in Guinea connecting service providers, co
 - [x] Commission and service fees management
 - [x] **Backend refactoring** (8078 → 92 lines server.py)
 - [x] **AdminDashboard refactoring** (5070 → 1649 lines)
+- [x] **Makiti hero redesign** (Figma-based carousel banner, mobile responsive)
 
 ## Pending Issues
 - [ ] P3: "Erreur lors de l'approbation" (needs user reproduction steps)

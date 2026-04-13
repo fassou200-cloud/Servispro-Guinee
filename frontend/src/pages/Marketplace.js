@@ -1,15 +1,35 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Store, Package, MapPin, Filter, ShoppingBag, ArrowRight, Tag, ChevronDown, Shirt, Car, Sparkles, Cpu, UtensilsCrossed, Sofa, MoreHorizontal, Footprints } from 'lucide-react';
-import { toast } from 'sonner';
+import { Search, Store, Package, MapPin, ShoppingBag, ArrowUpRight, Tag, Shirt, Car, Sparkles, Cpu, UtensilsCrossed, Sofa, MoreHorizontal, Footprints, ChevronLeft, ChevronRight } from 'lucide-react';
 import axios from 'axios';
 import { getImageUrl } from '@/utils/imageUrl';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
+
+const HERO_SLIDES = [
+  {
+    title: 'Boutiques et produits en Guinée',
+    subtitle: 'Trouvez rapidement les produits dont vous avez besoin en explorant des boutiques locales en Guinée, avec des offres compétitives et une navigation simple.',
+    image: 'https://images.unsplash.com/photo-1713256752744-fad1d7a8684c?w=800&q=80',
+    cta: 'Explorer les boutiques',
+  },
+  {
+    title: 'Mode & accessoires tendance',
+    subtitle: 'Découvrez les dernières tendances en chaussures, vêtements et accessoires proposés par les vendeurs guinéens.',
+    image: 'https://images.unsplash.com/photo-1758525223709-2dc38e53f55d?w=800&q=80',
+    cta: 'Voir les produits',
+  },
+  {
+    title: 'Électronique & high-tech',
+    subtitle: 'Téléphones, ordinateurs, gadgets et bien plus. Comparez les prix et trouvez les meilleures offres.',
+    image: 'https://images.unsplash.com/photo-1758525223677-b718f428fc87?w=800&q=80',
+    cta: 'Parcourir',
+  },
+];
 
 const Marketplace = ({ isCustomerAuthenticated }) => {
   const navigate = useNavigate();
@@ -22,6 +42,8 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
   const [selectedProductType, setSelectedProductType] = useState('');
   const [viewMode, setViewMode] = useState('products');
   const [sortBy, setSortBy] = useState('recent');
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const slideInterval = useRef(null);
 
   const PRODUCT_TYPE_OPTIONS = [
     { value: 'chaussures', label: 'Chaussures', icon: Footprints, color: 'bg-amber-500' },
@@ -42,6 +64,22 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
     if (viewMode === 'products') loadProducts();
     else loadShops();
   }, [searchQuery, selectedCategory, selectedProductType, sortBy, viewMode]);
+
+  // Auto-advance carousel
+  useEffect(() => {
+    slideInterval.current = setInterval(() => {
+      setCurrentSlide(prev => (prev + 1) % HERO_SLIDES.length);
+    }, 5000);
+    return () => clearInterval(slideInterval.current);
+  }, []);
+
+  const goToSlide = (idx) => {
+    setCurrentSlide(idx);
+    clearInterval(slideInterval.current);
+    slideInterval.current = setInterval(() => {
+      setCurrentSlide(prev => (prev + 1) % HERO_SLIDES.length);
+    }, 5000);
+  };
 
   const loadData = async () => {
     try {
@@ -86,68 +124,142 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
     ? products.filter(p => p.product_type === selectedProductType)
     : products;
 
+  const slide = HERO_SLIDES[currentSlide];
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
-            <div className="h-10 w-10 rounded-xl bg-green-500 flex items-center justify-center">
-              <span className="text-white font-bold text-xl">S</span>
-            </div>
-            <div>
-              <span className="font-bold text-xl text-gray-900">ServisPro</span>
-              <span className="text-xs text-orange-500 ml-2 font-semibold">Makiti</span>
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
+          {/* Logo */}
+          <div className="flex items-center gap-2 cursor-pointer shrink-0" onClick={() => navigate('/')}>
+            <span className="font-bold text-lg sm:text-xl text-gray-900">ServisPro</span>
+            <span className="text-xs text-orange-500 font-semibold">Makiti</span>
+          </div>
+
+          {/* Nav links - desktop */}
+          <nav className="hidden md:flex items-center gap-5 ml-4">
+            <button onClick={() => navigate('/')} className="text-gray-500 hover:text-gray-900 text-sm font-medium">Accueil</button>
+            <button onClick={() => navigate('/browse')} className="text-gray-500 hover:text-gray-900 text-sm font-medium">Professionnels</button>
+            <button onClick={() => navigate('/rentals')} className="text-gray-500 hover:text-gray-900 text-sm font-medium">Locations</button>
+          </nav>
+
+          {/* Search bar - in header like Figma */}
+          <div className="flex-1 max-w-lg mx-auto hidden sm:block">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                data-testid="marketplace-search"
+                className="pl-10 h-10 text-sm bg-gray-50 border-gray-200 rounded-full"
+                placeholder="Rechercher un produit ou une boutique..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
           </div>
-          <nav className="hidden md:flex items-center gap-6">
-            <button onClick={() => navigate('/')} className="text-gray-600 hover:text-gray-900 font-medium text-sm">Accueil</button>
-            <button onClick={() => navigate('/browse')} className="text-gray-600 hover:text-gray-900 font-medium text-sm">Professionnels</button>
-            <button onClick={() => navigate('/rentals')} className="text-gray-600 hover:text-gray-900 font-medium text-sm">Locations</button>
-          </nav>
-          <div className="flex items-center gap-3">
+
+          {/* Auth / Account */}
+          <div className="flex items-center gap-2 shrink-0">
             {!isCustomerAuthenticated ? (
-              <>
-                <Button variant="ghost" size="sm" onClick={() => navigate('/customer/auth')} data-testid="marketplace-login-btn">Se connecter</Button>
-              </>
+              <Button variant="ghost" size="sm" onClick={() => navigate('/customer/auth')} data-testid="marketplace-login-btn" className="text-sm">
+                Se connecter
+              </Button>
             ) : (
-              <Button size="sm" variant="outline" onClick={() => navigate('/dashboard')}>Mon Dashboard</Button>
+              <Button size="sm" variant="outline" onClick={() => navigate('/dashboard')} className="text-sm">Mon Dashboard</Button>
             )}
           </div>
         </div>
-      </header>
 
-      {/* Hero Section */}
-      <section className="bg-gradient-to-br from-orange-500 via-orange-400 to-yellow-400 py-12 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
-            Makiti
-          </h1>
-          <p className="text-orange-100 text-base sm:text-lg mb-8">
-            Découvrez les boutiques et produits des vendeurs en Guinée
-          </p>
-          <div className="max-w-2xl mx-auto relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+        {/* Mobile search */}
+        <div className="sm:hidden px-4 pb-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
-              data-testid="marketplace-search"
-              className="pl-12 py-6 text-base bg-white border-0 rounded-xl shadow-lg"
+              data-testid="marketplace-search-mobile"
+              className="pl-10 h-10 text-sm bg-gray-50 border-gray-200 rounded-full"
               placeholder="Rechercher un produit ou une boutique..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
         </div>
+      </header>
+
+      {/* Hero Carousel */}
+      <section className="relative overflow-hidden" data-testid="hero-carousel">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="relative bg-gradient-to-br from-orange-500 via-orange-400 to-amber-400 rounded-2xl sm:rounded-3xl mt-4 overflow-hidden">
+            {/* Content */}
+            <div className="flex flex-col md:flex-row items-center min-h-[280px] sm:min-h-[360px] lg:min-h-[420px]">
+              {/* Text side */}
+              <div className="flex-1 px-6 sm:px-10 lg:px-14 py-8 sm:py-10 z-10 relative">
+                <h1
+                  className="text-2xl sm:text-3xl lg:text-5xl font-bold text-gray-900 leading-tight"
+                  style={{ transition: 'opacity 0.4s' }}
+                  key={currentSlide}
+                >
+                  {slide.title}
+                </h1>
+                <p className="text-gray-700/80 text-sm sm:text-base mt-3 sm:mt-4 max-w-md leading-relaxed">
+                  {slide.subtitle}
+                </p>
+                <button
+                  onClick={() => {
+                    const el = document.getElementById('products-section');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className="mt-5 sm:mt-7 inline-flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white px-5 sm:px-7 py-2.5 sm:py-3 rounded-full text-sm sm:text-base font-medium transition-colors"
+                  data-testid="hero-cta-btn"
+                >
+                  {slide.cta}
+                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-white/20">
+                    <ArrowUpRight className="h-3.5 w-3.5" />
+                  </span>
+                </button>
+              </div>
+
+              {/* Image side */}
+              <div className="hidden md:block flex-1 relative self-stretch">
+                <img
+                  src={slide.image}
+                  alt=""
+                  className="absolute inset-0 w-full h-full object-cover object-top"
+                  key={`img-${currentSlide}`}
+                />
+                {/* Gradient overlay to blend with orange */}
+                <div className="absolute inset-0 bg-gradient-to-r from-orange-400/80 via-orange-400/30 to-transparent" />
+              </div>
+            </div>
+
+            {/* Carousel dots */}
+            <div className="flex items-center justify-center gap-2 pb-5 relative z-10">
+              {HERO_SLIDES.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => goToSlide(idx)}
+                  className={`transition-all rounded-full ${
+                    idx === currentSlide
+                      ? 'w-8 h-2.5 bg-orange-700'
+                      : 'w-2.5 h-2.5 bg-white/50 hover:bg-white/70'
+                  }`}
+                  data-testid={`carousel-dot-${idx}`}
+                  aria-label={`Slide ${idx + 1}`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* Category Bar */}
-      <section className="bg-white border-b sticky top-0 z-20">
+      <section className="bg-white border-b sticky top-[57px] sm:top-[57px] z-40 mt-4">
         <div className="max-w-7xl mx-auto px-4 py-3">
-          <div className="flex items-center gap-2 overflow-x-auto pb-1" style={{scrollbarWidth: 'none'}}>
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
             <button
               onClick={() => setSelectedProductType('')}
               className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all flex-shrink-0 ${
-                selectedProductType === '' 
-                  ? 'bg-orange-500 text-white shadow-md scale-105' 
+                selectedProductType === ''
+                  ? 'bg-orange-500 text-white shadow-md scale-105'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
               data-testid="category-all"
@@ -163,8 +275,8 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
                   key={cat.value}
                   onClick={() => setSelectedProductType(isActive ? '' : cat.value)}
                   className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all flex-shrink-0 ${
-                    isActive 
-                      ? `${cat.color} text-white shadow-md scale-105` 
+                    isActive
+                      ? `${cat.color} text-white shadow-md scale-105`
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
                   data-testid={`category-${cat.value}`}
@@ -178,9 +290,9 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
         </div>
       </section>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-6" id="products-section">
         {/* View Toggle + Sort */}
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <div className="flex gap-2">
             <Button
               data-testid="view-products-btn"
@@ -232,7 +344,7 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
               <p className="text-gray-400 mt-2">Les vendeurs ajoutent bientôt leurs produits</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
               {filteredProducts.map(product => (
                 <Card
                   key={product.id}
@@ -260,7 +372,7 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
                     <h3 className="font-medium text-gray-900 text-sm line-clamp-2">{product.name}</h3>
                     <p className="text-xs text-gray-500 mt-1">{product.shop_name}</p>
                     <p className="text-orange-600 font-bold mt-2">
-                      {product.price_on_request 
+                      {product.price_on_request
                         ? <span className="text-blue-600 italic text-sm">Prix sur demande</span>
                         : <>{formatPrice(product.price)} {product.currency || 'GNF'}</>
                       }
@@ -281,7 +393,7 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
               <p className="text-gray-400 mt-2">Les vendeurs créent bientôt leurs boutiques</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {shops.map(shop => (
                 <Card
                   key={shop.id}
