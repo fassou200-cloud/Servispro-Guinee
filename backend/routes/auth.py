@@ -20,6 +20,35 @@ from utils.cloudinary_helper import upload_to_cloudinary
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
+
+def normalize_phone(raw: str) -> str:
+    """Normalize a Guinea phone number to '224XXXXXXXXX' format."""
+    phone = raw.strip().replace(" ", "").replace("-", "").replace(".", "").replace("+", "")
+    if phone.startswith('00224'):
+        phone = phone[2:]
+    if phone.startswith('224') and len(phone) > 9:
+        return phone
+    return '224' + phone
+
+
+def phone_variants(raw: str) -> list:
+    """Generate all possible phone format variants for DB lookup."""
+    phone = raw.strip().replace(" ", "").replace("-", "").replace(".", "").replace("+", "")
+    if phone.startswith('00224'):
+        phone = phone[2:]
+    if phone.startswith('224') and len(phone) > 9:
+        base = phone[3:]
+    else:
+        base = phone
+    return list(dict.fromkeys([
+        '224' + base,
+        base,
+        '+224' + base,
+        phone,
+        '+224' + base.lstrip('0'),
+        '224' + base.lstrip('0'),
+    ]))
+
 @router.post("/auth/register", response_model=AuthResponse)
 async def register(
     first_name: str = Form(...),
@@ -201,8 +230,8 @@ async def login(input_data: LoginInput, request: Request):
     else:
         collection = db.customers
     
-    # Find user
-    user = await collection.find_one({'phone_number': input_data.phone_number})
+    # Find user — try all phone number variants
+    user = await collection.find_one({'phone_number': {'$in': phone_variants(input_data.phone_number)}})
     if not user:
         # Record failed attempt
         was_blocked = record_failed_attempt(client_ip)
@@ -315,10 +344,12 @@ async def register_company(input_data: CompanyRegisterInput):
         if existing_company:
             raise HTTPException(status_code=400, detail="Ce numéro RCCM est déjà enregistré")
     
-    # Check if phone number already exists
-    existing_phone = await db.companies.find_one({'phone_number': input_data.phone_number})
-    if existing_phone:
-        raise HTTPException(status_code=400, detail="Ce numéro de téléphone est déjà enregistré")
+    # Normalize phone and check all variants
+    normalized = normalize_phone(input_data.phone_number)
+    for variant in phone_variants(input_data.phone_number):
+        existing_phone = await db.companies.find_one({'phone_number': variant})
+        if existing_phone:
+            raise HTTPException(status_code=400, detail="Ce numéro de téléphone est déjà enregistré")
     
     # Create company
     company_id = str(uuid.uuid4())
@@ -334,7 +365,7 @@ async def register_company(input_data: CompanyRegisterInput):
         'address': input_data.address,
         'city': input_data.city,
         'region': input_data.region,
-        'phone_number': input_data.phone_number,
+        'phone_number': normalized,
         'email': input_data.email,
         'website': input_data.website,
         'description': input_data.description,
@@ -386,7 +417,7 @@ async def login_company(input_data: CompanyLoginInput, request: Request):
             detail="Trop de tentatives de connexion. Veuillez réessayer dans 15 minutes."
         )
     
-    company = await db.companies.find_one({'phone_number': input_data.phone_number})
+    company = await db.companies.find_one({'phone_number': {'$in': phone_variants(input_data.phone_number)}})
     if not company:
         was_blocked = record_failed_attempt(client_ip)
         await log_audit_event(
@@ -441,7 +472,7 @@ async def reset_company_password(input_data: CompanyResetPasswordInput, request:
     if is_ip_blocked(client_ip):
         raise HTTPException(status_code=429, detail="Trop de tentatives. Veuillez réessayer dans 15 minutes.")
     
-    company = await db.companies.find_one({'phone_number': input_data.phone_number})
+    company = await db.companies.find_one({'phone_number': {'$in': phone_variants(input_data.phone_number)}})
     if not company or (company.get('email', '').lower() != input_data.email.lower()):
         record_failed_attempt(client_ip)
         await log_audit_event(
@@ -483,49 +514,24 @@ async def request_password_reset(request: PasswordResetRequest):
     phone = request.phone_number
     user_type = request.user_type
     
-    # Normalize phone number - remove + and spaces
-    phone_clean = phone.replace('+', '').replace(' ', '').replace('-', '')
+    # Use shared phone variant lookup
+    variants = phone_variants(phone)
     
-    # Extract base number (last 9 digits for Guinea)
-    if len(phone_clean) >= 9:
-        base_phone = phone_clean[-9:]
-    else:
-        base_phone = phone_clean
-    
-    # Create multiple search patterns
-    phone_patterns = [
-        phone,  # Original
-        phone_clean,  # Without special chars
-        f"+224{base_phone}",  # With +224
-        f"224{base_phone}",  # With 224
-        base_phone,  # Just the base number
-    ]
-    
-    # Find user based on type - try multiple phone formats
+    # Find user based on type
     user = None
-    matched_phone = None
     
     if user_type == 'provider':
-        for p in phone_patterns:
-            user = await db.service_providers.find_one({'phone_number': p})
-            if user:
-                matched_phone = p
-                break
+        user = await db.service_providers.find_one({'phone_number': {'$in': variants}})
     elif user_type == 'customer':
-        for p in phone_patterns:
-            user = await db.customers.find_one({'phone_number': p})
-            if user:
-                matched_phone = p
-                break
+        user = await db.customers.find_one({'phone_number': {'$in': variants}})
     elif user_type == 'company':
-        for p in phone_patterns:
-            user = await db.companies.find_one({'phone_number': p})
-            if user:
-                matched_phone = p
-                break
+        user = await db.companies.find_one({'phone_number': {'$in': variants}})
     
     if not user:
         raise HTTPException(status_code=404, detail="Aucun compte trouvé avec ce numéro de téléphone")
+    
+    # The phone number as stored in DB
+    matched_phone = user.get('phone_number', phone)
     
     # Generate OTP (6 digits)
     import random
