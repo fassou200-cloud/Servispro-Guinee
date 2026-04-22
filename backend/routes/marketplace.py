@@ -3,6 +3,8 @@ from typing import List, Optional
 from datetime import datetime, timezone
 import uuid
 import logging
+import cloudinary
+import cloudinary.uploader
 
 from database import db
 from dependencies import get_current_user, get_current_company, get_current_customer
@@ -88,9 +90,13 @@ async def upload_shop_logo(file: UploadFile = File(...), current_user: dict = De
     if not shop:
         raise HTTPException(status_code=404, detail="Boutique non trouvée")
     
-    contents = await file.read()
-    result = cloudinary.uploader.upload(contents, folder="servispro/shops/logos", public_id=shop['id'])
-    logo_url = result['secure_url']
+    try:
+        contents = await file.read()
+        result = cloudinary.uploader.upload(contents, folder="servispro/shops/logos", public_id=shop['id'])
+        logo_url = result['secure_url']
+    except Exception as e:
+        logger.error(f"Logo upload failed for shop {shop['id']}: {e}")
+        raise HTTPException(status_code=500, detail=f"Erreur lors de l'upload du logo: {str(e)}")
     
     await db.shops.update_one({'owner_id': provider_id}, {'$set': {'logo': logo_url}})
     return {"logo": logo_url}
@@ -103,9 +109,13 @@ async def upload_shop_banner(file: UploadFile = File(...), current_user: dict = 
     if not shop:
         raise HTTPException(status_code=404, detail="Boutique non trouvée")
     
-    contents = await file.read()
-    result = cloudinary.uploader.upload(contents, folder="servispro/shops/banners", public_id=shop['id'])
-    banner_url = result['secure_url']
+    try:
+        contents = await file.read()
+        result = cloudinary.uploader.upload(contents, folder="servispro/shops/banners", public_id=shop['id'])
+        banner_url = result['secure_url']
+    except Exception as e:
+        logger.error(f"Banner upload failed for shop {shop['id']}: {e}")
+        raise HTTPException(status_code=500, detail=f"Erreur lors de l'upload du banner: {str(e)}")
     
     await db.shops.update_one({'owner_id': provider_id}, {'$set': {'banner': banner_url}})
     return {"banner": banner_url}
@@ -154,9 +164,13 @@ async def upload_product_photos(product_id: str, files: List[UploadFile] = File(
     
     photo_urls = list(product.get('photos', []))
     for file in files:
-        contents = await file.read()
-        result = cloudinary.uploader.upload(contents, folder=f"servispro/products/{product_id}")
-        photo_urls.append(result['secure_url'])
+        try:
+            contents = await file.read()
+            result = cloudinary.uploader.upload(contents, folder=f"servispro/products/{product_id}")
+            photo_urls.append(result['secure_url'])
+        except Exception as e:
+            logger.error(f"Photo upload failed for product {product_id}: {e}")
+            raise HTTPException(status_code=500, detail=f"Erreur lors de l'upload de la photo: {str(e)}")
     
     await db.products.update_one({'id': product_id}, {'$set': {'photos': photo_urls}})
     return {"photos": photo_urls}
@@ -478,8 +492,12 @@ async def company_upload_shop_logo(file: UploadFile = File(...), current_company
     shop = await db.shops.find_one({'owner_id': company_id})
     if not shop:
         raise HTTPException(status_code=404, detail="Boutique non trouvée")
-    contents = await file.read()
-    result = cloudinary.uploader.upload(contents, folder="servispro/shops/logos", public_id=shop['id'])
+    try:
+        contents = await file.read()
+        result = cloudinary.uploader.upload(contents, folder="servispro/shops/logos", public_id=shop['id'])
+    except Exception as e:
+        logger.error(f"Company logo upload failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Erreur lors de l'upload du logo: {str(e)}")
     await db.shops.update_one({'owner_id': company_id}, {'$set': {'logo': result['secure_url']}})
     return {"logo": result['secure_url']}
 
@@ -525,9 +543,13 @@ async def company_upload_product_photos(product_id: str, files: List[UploadFile]
         raise HTTPException(status_code=404, detail="Produit non trouvé")
     photo_urls = list(product.get('photos', []))
     for file in files:
-        contents = await file.read()
-        result = cloudinary.uploader.upload(contents, folder=f"servispro/products/{product_id}")
-        photo_urls.append(result['secure_url'])
+        try:
+            contents = await file.read()
+            result = cloudinary.uploader.upload(contents, folder=f"servispro/products/{product_id}")
+            photo_urls.append(result['secure_url'])
+        except Exception as e:
+            logger.error(f"Company photo upload failed for product {product_id}: {e}")
+            raise HTTPException(status_code=500, detail=f"Erreur lors de l'upload de la photo: {str(e)}")
     await db.products.update_one({'id': product_id}, {'$set': {'photos': photo_urls}})
     return {"photos": photo_urls}
 
