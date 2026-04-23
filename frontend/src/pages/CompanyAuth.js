@@ -13,6 +13,7 @@ import {
   CheckCircle, AlertTriangle, User, Phone, Mail, Globe, MapPin,
   Briefcase, Shield, Lock, KeyRound
 } from 'lucide-react';
+import ForgotPassword from '@/components/ForgotPassword';
 import axios from 'axios';
 import { GUINEA_LOCATIONS, getVillesByRegion, getRegions } from '../data/guineaLocations';
 
@@ -432,7 +433,7 @@ const CompanyAuth = ({ setIsCompanyAuthenticated }) => {
 
               <button
                 type="button"
-                onClick={() => { setShowResetPassword(true); setResetData({ ...resetData, phone_number: loginData.phone_number }); }}
+                onClick={() => setShowResetPassword(true)}
                 className="w-full text-center text-sm text-emerald-400 hover:text-emerald-300 transition-colors"
                 data-testid="forgot-password-link"
               >
@@ -442,111 +443,13 @@ const CompanyAuth = ({ setIsCompanyAuthenticated }) => {
             </form>
           )}
 
-          {/* RESET PASSWORD FORM */}
+          {/* RESET PASSWORD - OTP Flow (same as clients) */}
           {showResetPassword && (
-            <form onSubmit={handleResetPassword} className="space-y-6">
-              <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-start gap-3">
-                <KeyRound className="h-5 w-5 text-emerald-400 flex-shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="font-bold text-emerald-400">Réinitialisation du mot de passe</h4>
-                  <p className="text-sm text-emerald-200/80">
-                    Entrez votre numéro de téléphone et votre email pour vérifier votre identité, puis choisissez un nouveau mot de passe.
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-slate-300 flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-emerald-400" />
-                  Numéro de téléphone *
-                </Label>
-                <Input
-                  value={resetData.phone_number}
-                  onChange={(e) => setResetData({ ...resetData, phone_number: e.target.value })}
-                  required
-                  className="h-12 bg-slate-700/50 border-slate-600 text-white"
-                  placeholder="224 6XX XX XX XX"
-                  data-testid="reset-phone-input"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-slate-300 flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-emerald-400" />
-                  Email du compte *
-                </Label>
-                <Input
-                  type="email"
-                  value={resetData.email}
-                  onChange={(e) => setResetData({ ...resetData, email: e.target.value })}
-                  required
-                  className="h-12 bg-slate-700/50 border-slate-600 text-white"
-                  placeholder="contact@entreprise.com"
-                  data-testid="reset-email-input"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-slate-300 flex items-center gap-2">
-                  <Lock className="h-4 w-4 text-emerald-400" />
-                  Nouveau mot de passe *
-                </Label>
-                <div className="relative">
-                  <Input
-                    type={showPassword ? 'text' : 'password'}
-                    value={resetData.new_password}
-                    onChange={(e) => setResetData({ ...resetData, new_password: e.target.value })}
-                    required
-                    minLength={6}
-                    className="h-12 bg-slate-700/50 border-slate-600 text-white pr-12"
-                    placeholder="Minimum 6 caractères"
-                    data-testid="reset-new-password"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
-                  >
-                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                  </button>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-slate-300 flex items-center gap-2">
-                  <Lock className="h-4 w-4 text-slate-400" />
-                  Confirmer le nouveau mot de passe *
-                </Label>
-                <Input
-                  type={showPassword ? 'text' : 'password'}
-                  value={resetData.confirm_password}
-                  onChange={(e) => setResetData({ ...resetData, confirm_password: e.target.value })}
-                  required
-                  minLength={6}
-                  className="h-12 bg-slate-700/50 border-slate-600 text-white"
-                  data-testid="reset-confirm-password"
-                />
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full h-14 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 font-bold text-lg"
-                disabled={loading}
-                data-testid="reset-password-submit"
-              >
-                {loading ? 'Réinitialisation...' : 'Réinitialiser le mot de passe'}
-              </Button>
-
-              <button
-                type="button"
-                onClick={() => { setShowResetPassword(false); setResetData({ phone_number: '', email: '', new_password: '', confirm_password: '' }); }}
-                className="w-full text-center text-sm text-slate-400 hover:text-white transition-colors"
-                data-testid="back-to-login-link"
-              >
-                <ArrowLeft className="h-3.5 w-3.5 inline mr-1" />
-                Retour à la connexion
-              </button>
-            </form>
+            <ForgotPassword
+              userType="company"
+              onBack={() => { setShowResetPassword(false); }}
+              onSuccess={() => { setShowResetPassword(false); }}
+            />
           )}
 
           {/* REGISTER STEP 1 - Company Information */}

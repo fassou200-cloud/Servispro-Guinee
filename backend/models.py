@@ -164,7 +164,8 @@ class PasswordResetRequest(BaseModel):
 class PasswordResetVerify(BaseModel):
     phone_number: str
     user_type: str
-    verification_code: str
+    verification_code: Optional[str] = None
+    otp: Optional[str] = None
     new_password: str
     
     @field_validator('new_password')
@@ -172,6 +173,14 @@ class PasswordResetVerify(BaseModel):
         if len(v) < 6:
             raise ValueError('Password must be at least 6 characters')
         return v
+    
+    @model_validator(mode='after')
+    def get_code(self):
+        code = self.otp or self.verification_code
+        if not code:
+            raise ValueError('OTP code is required')
+        self.verification_code = code
+        return self
 
 class CompanyLoginInput(BaseModel):
     phone_number: str

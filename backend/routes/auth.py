@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Request, Form
 from typing import List, Optional
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import uuid
 import bcrypt
 import logging
@@ -19,6 +19,9 @@ from utils.cloudinary_helper import upload_to_cloudinary
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+# In-memory OTP storage for password reset (consider Redis for production)
+password_reset_otps = {}
 
 
 def normalize_phone(raw: str) -> str:
@@ -558,7 +561,7 @@ async def reset_password(request: PasswordResetVerify):
     """Verify OTP and reset password"""
     phone = request.phone_number
     user_type = request.user_type
-    otp = request.otp
+    otp = request.verification_code
     new_password = request.new_password
     
     # Normalize phone number
