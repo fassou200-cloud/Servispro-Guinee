@@ -10,76 +10,39 @@ import axios from 'axios';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-// Audio context for Web Audio API
+// ─── Notification Sound System ───
+// Uses HTMLAudioElement (mp3) as primary, Web Audio API as fallback
+let notifAudio = null;
 let audioContext = null;
-let isAudioUnlocked = false;
+let isAudioReady = false;
 
-// Create and play notification sound using Web Audio API
-const playNotificationBeep = async () => {
+// Pre-load the mp3 on first user interaction
+const prepareAudio = () => {
+  if (isAudioReady) return;
   try {
-    console.log('[NotificationSound] Attempting to play notification sound...');
-    
-    // Create or resume audio context
-    if (!audioContext) {
-      audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      console.log('[NotificationSound] AudioContext created');
-    }
-    
-    // Resume if suspended (browser policy)
-    if (audioContext.state === 'suspended') {
-      console.log('[NotificationSound] Resuming suspended audio context...');
-      await audioContext.resume();
-    }
-    
-    console.log('[NotificationSound] AudioContext state:', audioContext.state);
-    
-    const now = audioContext.currentTime;
-    
-    // Create oscillator for the sound
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    
-    // Louder, more noticeable notification sound (two beeps)
-    // First beep
-    oscillator.frequency.setValueAtTime(880, now);         // A5 - higher pitch
-    oscillator.frequency.setValueAtTime(1047, now + 0.1);  // C6
-    // Pause
-    oscillator.frequency.setValueAtTime(0, now + 0.2);
-    // Second beep  
-    oscillator.frequency.setValueAtTime(880, now + 0.3);
-    oscillator.frequency.setValueAtTime(1047, now + 0.4);
-    
-    // Volume envelope - LOUDER (0.7 instead of 0.4)
-    gainNode.gain.setValueAtTime(0, now);
-    gainNode.gain.linearRampToValueAtTime(0.7, now + 0.02);
-    gainNode.gain.setValueAtTime(0.7, now + 0.1);
-    gainNode.gain.linearRampToValueAtTime(0, now + 0.2);
-    // Second beep volume
-    gainNode.gain.setValueAtTime(0, now + 0.3);
-    gainNode.gain.linearRampToValueAtTime(0.7, now + 0.32);
-    gainNode.gain.setValueAtTime(0.7, now + 0.4);
-    gainNode.gain.linearRampToValueAtTime(0, now + 0.5);
-    
-    oscillator.type = 'sine';
-    oscillator.start(now);
-    oscillator.stop(now + 0.55);
-    
-    isAudioUnlocked = true;
-    console.log('[NotificationSound] Sound played successfully!');
-    return true;
+    notifAudio = new Audio('/notification.mp3');
+    notifAudio.volume = 0.8;
+    notifAudio.load();
+    isAudioReady = true;
   } catch (e) {
-    console.error('[NotificationSound] Web Audio error:', e.message);
-    return false;
+    console.warn('[Sound] mp3 init failed, will use Web Audio fallback');
   }
 };
 
-// Unlock audio on first user interaction
-const unlockAudio = async () => {
-  if (isAudioUnlocked) return true;
-  
+// Play notification sound — mp3 first, oscillator fallback
+const playNotificationSound = async () => {
+  // Attempt 1: HTMLAudioElement (works best across browsers)
+  if (notifAudio) {
+    try {
+      notifAudio.currentTime = 0;
+      await notifAudio.play();
+      return true;
+    } catch (e) {
+      console.warn('[Sound] mp3 play failed:', e.message);
+    }
+  }
+
+  // Attempt 2: Web Audio API oscillator fallback
   try {
     if (!audioContext) {
       audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -87,11 +50,31 @@ const unlockAudio = async () => {
     if (audioContext.state === 'suspended') {
       await audioContext.resume();
     }
-    isAudioUnlocked = true;
-    console.log('[NotificationSound] Audio context unlocked on user interaction');
+    const now = audioContext.currentTime;
+    const osc = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    osc.connect(gain);
+    gain.connect(audioContext.destination);
+    osc.type = 'sine';
+    // Two-tone chime
+    osc.frequency.setValueAtTime(880, now);
+    osc.frequency.setValueAtTime(1047, now + 0.12);
+    osc.frequency.setValueAtTime(0, now + 0.22);
+    osc.frequency.setValueAtTime(880, now + 0.32);
+    osc.frequency.setValueAtTime(1047, now + 0.42);
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.6, now + 0.02);
+    gain.gain.setValueAtTime(0.6, now + 0.12);
+    gain.gain.linearRampToValueAtTime(0, now + 0.22);
+    gain.gain.setValueAtTime(0, now + 0.32);
+    gain.gain.linearRampToValueAtTime(0.6, now + 0.34);
+    gain.gain.setValueAtTime(0.6, now + 0.42);
+    gain.gain.linearRampToValueAtTime(0, now + 0.52);
+    osc.start(now);
+    osc.stop(now + 0.55);
     return true;
   } catch (e) {
-    console.error('[NotificationSound] Audio unlock failed:', e.message);
+    console.warn('[Sound] Web Audio fallback also failed:', e.message);
     return false;
   }
 };
@@ -147,7 +130,7 @@ const NotificationBell = ({ userType = 'provider' }) => {
   // Play notification sound
   const triggerNotificationSound = useCallback(async () => {
     if (!soundEnabled) return;
-    await playNotificationBeep();
+    await playNotificationSound();
   }, [soundEnabled]);
 
   // Trigger vibration
@@ -273,7 +256,7 @@ const NotificationBell = ({ userType = 'provider' }) => {
   useEffect(() => {
     // Unlock audio on first user interaction (required by browsers)
     const handleFirstInteraction = () => {
-      unlockAudio();
+      prepareAudio();
       document.removeEventListener('click', handleFirstInteraction);
       document.removeEventListener('touchstart', handleFirstInteraction);
       document.removeEventListener('keydown', handleFirstInteraction);
@@ -322,8 +305,8 @@ const NotificationBell = ({ userType = 'provider' }) => {
     const newState = !soundEnabled;
     setSoundEnabled(newState);
     if (newState) {
-      // Play a test sound when enabling
-      await playNotificationBeep();
+      prepareAudio();
+      await playNotificationSound();
     }
   };
 
