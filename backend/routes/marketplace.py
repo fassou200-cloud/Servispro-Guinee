@@ -712,3 +712,38 @@ async def company_get_shop_reviews(current_company: dict = Depends(get_current_c
     return reviews
 
 
+
+
+# ==================== PUBLIC LIMITED OFFERS ====================
+
+@router.get("/marketplace/limited-offers")
+async def get_public_limited_offers():
+    """Get active limited offers with product details for the storefront"""
+    # Check if offers are active
+    settings = await db.admin_settings.find_one({'type': 'limited_offers_settings'}, {'_id': 0})
+    if not settings or not settings.get('is_active'):
+        return {'offers': [], 'expiration_date': None, 'is_active': False}
+    
+    exp_date = settings.get('expiration_date')
+    if exp_date:
+        try:
+            exp_dt = datetime.fromisoformat(exp_date.replace('Z', '+00:00'))
+            if exp_dt < datetime.now(timezone.utc):
+                return {'offers': [], 'expiration_date': exp_date, 'is_active': False}
+        except Exception:
+            pass
+    
+    offers = await db.limited_offers.find({}, {'_id': 0}).sort('created_at', -1).to_list(50)
+    
+    enriched = []
+    for offer in offers:
+        product = await db.products.find_one({'id': offer['product_id']}, {'_id': 0})
+        if product:
+            offer['product'] = product
+            enriched.append(offer)
+    
+    return {
+        'offers': enriched,
+        'expiration_date': exp_date,
+        'is_active': True
+    }

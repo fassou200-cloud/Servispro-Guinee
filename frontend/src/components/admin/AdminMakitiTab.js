@@ -1,8 +1,17 @@
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { getImageUrl } from '@/utils/imageUrl';
-import { Building, Camera, Eye, Image as ImageIcon, Loader2, Package, Pencil, Save, Store, Trash2, X } from 'lucide-react';
+import { toast } from 'sonner';
+import {
+  Building, Camera, Eye, Image as ImageIcon, Loader2, Package, Pencil, Save, Store, Trash2, X,
+  Clock, Percent, Plus, Search, Tag, CalendarClock, Power
+} from 'lucide-react';
+import axios from 'axios';
 
-// Product types for Makiti marketplace
+const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+
 const ADMIN_PRODUCT_TYPES = [
   { value: 'chaussures', label: 'Chaussures' },
   { value: 'vetements', label: 'Vêtements & Mode' },
@@ -28,9 +37,99 @@ const AdminMakitiTab = ({
   setMakitiEditData,
   handleMakitiDeletePhoto,
   handleMakitiDeleteProduct,
-  handleMakitiUpdateProduct
+  handleMakitiUpdateProduct,
+  adminApi,
 }) => {
-  // Filter products based on category
+  const [offers, setOffers] = useState([]);
+  const [offerSettings, setOfferSettings] = useState({ expiration_date: '', is_active: false });
+  const [loadingOffers, setLoadingOffers] = useState(false);
+  const [searchProduct, setSearchProduct] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [addingDiscount, setAddingDiscount] = useState({});
+  const [showOfferSection, setShowOfferSection] = useState(true);
+
+  const token = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
+  const headers = { Authorization: `Bearer ${token}` };
+
+  useEffect(() => {
+    loadOffers();
+    loadOfferSettings();
+  }, []);
+
+  const loadOffers = async () => {
+    setLoadingOffers(true);
+    try {
+      const res = await axios.get(`${API}/admin/limited-offers`, { headers });
+      setOffers(res.data);
+    } catch (e) { console.error(e); }
+    finally { setLoadingOffers(false); }
+  };
+
+  const loadOfferSettings = async () => {
+    try {
+      const res = await axios.get(`${API}/admin/limited-offers/settings`, { headers });
+      setOfferSettings({
+        expiration_date: res.data.expiration_date || '',
+        is_active: res.data.is_active || false,
+      });
+    } catch (e) { console.error(e); }
+  };
+
+  const saveOfferSettings = async () => {
+    try {
+      await axios.put(`${API}/admin/limited-offers/settings`, offerSettings, { headers });
+      toast.success('Paramètres des offres mis à jour');
+    } catch (e) { toast.error("Erreur lors de la mise à jour"); }
+  };
+
+  const searchProducts = async (q) => {
+    setSearchProduct(q);
+    if (q.length < 2) { setSearchResults([]); return; }
+    try {
+      const res = await axios.get(`${API}/marketplace/products?search=${encodeURIComponent(q)}`);
+      const offerProductIds = new Set(offers.map(o => o.product_id));
+      setSearchResults(res.data.filter(p => !offerProductIds.has(p.id)).slice(0, 8));
+    } catch (e) { console.error(e); }
+  };
+
+  const addOffer = async (productId, discount) => {
+    if (!discount || discount < 1 || discount > 99) {
+      toast.error('Réduction entre 1% et 99%'); return;
+    }
+    try {
+      await axios.post(`${API}/admin/limited-offers`, {
+        product_id: productId,
+        discount_percent: parseInt(discount),
+      }, { headers });
+      toast.success('Produit ajouté aux offres');
+      setSearchProduct('');
+      setSearchResults([]);
+      setAddingDiscount({});
+      loadOffers();
+    } catch (e) { toast.error(e.response?.data?.detail || 'Erreur'); }
+  };
+
+  const removeOffer = async (offerId) => {
+    try {
+      await axios.delete(`${API}/admin/limited-offers/${offerId}`, { headers });
+      toast.success('Offre supprimée');
+      setOffers(offers.filter(o => o.id !== offerId));
+    } catch (e) { toast.error('Erreur lors de la suppression'); }
+  };
+
+  const updateOfferDiscount = async (offerId, newDiscount) => {
+    try {
+      await axios.put(`${API}/admin/limited-offers/${offerId}`, {
+        discount_percent: parseInt(newDiscount),
+      }, { headers });
+      toast.success('Réduction mise à jour');
+      loadOffers();
+    } catch (e) { toast.error('Erreur'); }
+  };
+
+  const formatPrice = (p) => new Intl.NumberFormat('fr-FR').format(p || 0);
+
+  // Filter products
   const filteredMakitiProducts = makitiCategoryFilter === '_none'
     ? makitiProducts.filter(p => !p.product_type)
     : makitiCategoryFilter
@@ -39,6 +138,182 @@ const AdminMakitiTab = ({
 
   return (
     <div className="space-y-6" data-testid="admin-makiti-section">
+
+      {/* ════════ OFFRES A DUREE LIMITEE ════════ */}
+      <Card className="bg-gradient-to-r from-orange-600 to-amber-500 border-0 p-5 text-white">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Tag className="h-6 w-6" />
+            <div>
+              <h3 className="text-lg font-bold">Offres à Durée Limitée</h3>
+              <p className="text-orange-100 text-sm">{offers.length} produit(s) en promotion</p>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowOfferSection(!showOfferSection)}
+            className="text-white/80 hover:text-white text-sm"
+          >
+            {showOfferSection ? 'Masquer' : 'Afficher'}
+          </button>
+        </div>
+      </Card>
+
+      {showOfferSection && (
+        <div className="space-y-4">
+          {/* Global Settings */}
+          <Card className="bg-slate-800 border-slate-700 p-5">
+            <h4 className="text-white font-semibold mb-4 flex items-center gap-2">
+              <CalendarClock className="h-4 w-4 text-orange-400" />
+              Paramètres globaux
+            </h4>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="text-slate-400 text-xs block mb-1">Date d'expiration</label>
+                <Input
+                  type="datetime-local"
+                  value={offerSettings.expiration_date ? offerSettings.expiration_date.slice(0, 16) : ''}
+                  onChange={(e) => setOfferSettings({ ...offerSettings, expiration_date: e.target.value ? new Date(e.target.value).toISOString() : '' })}
+                  className="bg-slate-700 border-slate-600 text-white"
+                  data-testid="offer-expiration-date"
+                />
+              </div>
+              <div className="flex items-end gap-3">
+                <button
+                  onClick={() => {
+                    const next = !offerSettings.is_active;
+                    setOfferSettings({ ...offerSettings, is_active: next });
+                  }}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    offerSettings.is_active ? 'bg-green-600 text-white' : 'bg-slate-600 text-slate-300'
+                  }`}
+                  data-testid="offer-toggle-active"
+                >
+                  <Power className="h-4 w-4" />
+                  {offerSettings.is_active ? 'Actif' : 'Inactif'}
+                </button>
+              </div>
+              <div className="flex items-end">
+                <button
+                  onClick={saveOfferSettings}
+                  className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-5 py-2 rounded-lg text-sm font-medium transition-colors"
+                  data-testid="offer-save-settings"
+                >
+                  <Save className="h-4 w-4" />
+                  Enregistrer
+                </button>
+              </div>
+            </div>
+          </Card>
+
+          {/* Search & Add Product */}
+          <Card className="bg-slate-800 border-slate-700 p-5">
+            <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
+              <Plus className="h-4 w-4 text-green-400" />
+              Ajouter un produit en promotion
+            </h4>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Input
+                placeholder="Rechercher un produit par nom..."
+                value={searchProduct}
+                onChange={(e) => searchProducts(e.target.value)}
+                className="pl-10 bg-slate-700 border-slate-600 text-white"
+                data-testid="offer-search-product"
+              />
+            </div>
+            {searchResults.length > 0 && (
+              <div className="mt-3 space-y-2 max-h-64 overflow-y-auto">
+                {searchResults.map(product => (
+                  <div key={product.id} className="flex items-center gap-3 bg-slate-700 rounded-lg p-3">
+                    <div className="w-12 h-12 rounded-lg overflow-hidden bg-slate-600 shrink-0">
+                      {product.photos?.[0] ? (
+                        <img src={getImageUrl(product.photos[0])} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center"><Package className="h-5 w-5 text-slate-400" /></div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white text-sm font-medium truncate">{product.name}</p>
+                      <p className="text-slate-400 text-xs">{product.shop_name} — {formatPrice(product.price)} {product.currency || 'GNF'}</p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Input
+                        type="number"
+                        min="1"
+                        max="99"
+                        placeholder="%"
+                        value={addingDiscount[product.id] || ''}
+                        onChange={(e) => setAddingDiscount({ ...addingDiscount, [product.id]: e.target.value })}
+                        className="w-16 bg-slate-600 border-slate-500 text-white text-center text-sm"
+                        data-testid={`offer-discount-input-${product.id}`}
+                      />
+                      <button
+                        onClick={() => addOffer(product.id, addingDiscount[product.id])}
+                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-xs font-medium"
+                        data-testid={`offer-add-btn-${product.id}`}
+                      >
+                        Ajouter
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+
+          {/* Current Offers List */}
+          <Card className="bg-slate-800 border-slate-700 p-5">
+            <h4 className="text-white font-semibold mb-4 flex items-center gap-2">
+              <Percent className="h-4 w-4 text-orange-400" />
+              Produits en promotion ({offers.length})
+            </h4>
+            {loadingOffers ? (
+              <div className="text-center py-8"><Loader2 className="h-6 w-6 animate-spin text-slate-400 mx-auto" /></div>
+            ) : offers.length === 0 ? (
+              <p className="text-slate-400 text-sm text-center py-6">Aucune offre. Recherchez et ajoutez des produits ci-dessus.</p>
+            ) : (
+              <div className="space-y-2">
+                {offers.map(offer => {
+                  const p = offer.product;
+                  if (!p) return null;
+                  const discounted = Math.round(p.price * (1 - offer.discount_percent / 100));
+                  return (
+                    <div key={offer.id} className="flex items-center gap-3 bg-slate-700/50 rounded-lg p-3" data-testid={`offer-item-${offer.id}`}>
+                      <div className="w-14 h-14 rounded-lg overflow-hidden bg-slate-600 shrink-0">
+                        {p.photos?.[0] ? (
+                          <img src={getImageUrl(p.photos[0])} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center"><Package className="h-6 w-6 text-slate-400" /></div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white text-sm font-medium truncate">{p.name}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="text-slate-400 text-xs line-through">{formatPrice(p.price)} {p.currency || 'GNF'}</span>
+                          <span className="text-green-400 text-sm font-bold">{formatPrice(discounted)} {p.currency || 'GNF'}</span>
+                        </div>
+                        <p className="text-slate-500 text-xs">{p.shop_name}</p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="bg-orange-500/20 text-orange-400 px-2.5 py-1 rounded-lg text-sm font-bold">-{offer.discount_percent}%</span>
+                        <button
+                          onClick={() => removeOffer(offer.id)}
+                          className="text-red-400 hover:text-red-300 p-1.5 rounded-lg hover:bg-red-500/10 transition-colors"
+                          data-testid={`offer-remove-${offer.id}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </Card>
+        </div>
+      )}
+
+      {/* ════════ EXISTING MAKITI PRODUCT MANAGEMENT ════════ */}
       {/* Category Filter Bar */}
       <Card className="bg-slate-800 border-slate-700 p-4">
         <div className="flex items-center gap-2 overflow-x-auto pb-1" style={{scrollbarWidth: 'none'}}>
@@ -49,185 +324,109 @@ const AdminMakitiTab = ({
             }`}
             data-testid="admin-cat-all"
           >
-            <Package className="h-4 w-4" /> Tous ({makitiProducts.length})
+            <Store className="h-4 w-4" /> Tous ({makitiProducts.length})
           </button>
-          {ADMIN_PRODUCT_TYPES.map(cat => {
-            const count = makitiProducts.filter(p => p.product_type === cat.value).length;
-            return (
-              <button
-                key={cat.value}
-                onClick={() => setMakitiCategoryFilter(makitiCategoryFilter === cat.value ? '' : cat.value)}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all flex-shrink-0 ${
-                  makitiCategoryFilter === cat.value ? 'bg-orange-500 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                }`}
-                data-testid={`admin-cat-${cat.value}`}
-              >
-                {cat.label} ({count})
-              </button>
-            );
-          })}
-          {(() => {
-            const uncategorized = makitiProducts.filter(p => !p.product_type).length;
-            return uncategorized > 0 ? (
-              <button
-                onClick={() => setMakitiCategoryFilter('_none')}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all flex-shrink-0 ${
-                  makitiCategoryFilter === '_none' ? 'bg-orange-500 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                }`}
-              >
-                Sans catégorie ({uncategorized})
-              </button>
-            ) : null;
-          })()}
+          {ADMIN_PRODUCT_TYPES.map(cat => (
+            <button
+              key={cat.value}
+              onClick={() => setMakitiCategoryFilter(cat.value)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all flex-shrink-0 ${
+                makitiCategoryFilter === cat.value ? 'bg-orange-500 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+              }`}
+              data-testid={`admin-cat-${cat.value}`}
+            >
+              {cat.label} ({makitiProducts.filter(p => p.product_type === cat.value).length})
+            </button>
+          ))}
+          <button
+            onClick={() => setMakitiCategoryFilter('_none')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all flex-shrink-0 ${
+              makitiCategoryFilter === '_none' ? 'bg-orange-500 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+            }`}
+          >
+            Sans catégorie ({makitiProducts.filter(p => !p.product_type).length})
+          </button>
         </div>
       </Card>
 
       {loadingMakiti ? (
-        <Card className="p-8 bg-slate-800 border-slate-700 text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-orange-500 mx-auto mb-2" />
-          <p className="text-slate-400">Chargement des produits...</p>
-        </Card>
+        <div className="text-center py-12"><Loader2 className="h-8 w-8 animate-spin text-slate-400 mx-auto" /></div>
+      ) : filteredMakitiProducts.length === 0 ? (
+        <p className="text-slate-400 text-center py-8">Aucun produit dans cette catégorie</p>
       ) : (
-        <Card className="bg-slate-800 border-slate-700">
-          <div className="p-4 border-b border-slate-700 flex items-center justify-between">
-            <h3 className="text-lg font-bold text-white">
-              Produits {makitiCategoryFilter && makitiCategoryFilter !== '_none' ? `— ${ADMIN_PRODUCT_TYPES.find(t => t.value === makitiCategoryFilter)?.label}` : makitiCategoryFilter === '_none' ? '— Sans catégorie' : ''} ({filteredMakitiProducts.length})
-            </h3>
-          </div>
-          <div className="divide-y divide-slate-700">
-            {filteredMakitiProducts.length === 0 ? (
-              <div className="p-8 text-center">
-                <Package className="h-10 w-10 text-slate-600 mx-auto mb-2" />
-                <p className="text-slate-500">Aucun produit dans cette catégorie</p>
-              </div>
-            ) : filteredMakitiProducts.map(product => {
-              const isEditing = editingMakitiProduct === product.id;
-              const isPhotosExpanded = expandedMakitiPhotos === product.id;
-              return (
-                <div key={product.id} className="p-4" data-testid={`makiti-product-${product.id}`}>
-                  <div className="flex gap-3">
-                    {/* Thumbnail */}
-                    <div
-                      className="w-20 h-20 bg-slate-700 rounded-lg flex-shrink-0 relative cursor-pointer overflow-hidden"
-                      onClick={() => setExpandedMakitiPhotos(isPhotosExpanded ? null : product.id)}
-                    >
-                      {product.photos?.length > 0 ? (
-                        <img src={getImageUrl(product.photos[0])} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center"><Package className="h-6 w-6 text-slate-500" /></div>
-                      )}
-                      {product.photos?.length > 0 && (
-                        <span className="absolute bottom-0.5 right-0.5 bg-black/60 text-white text-[10px] px-1 rounded flex items-center gap-0.5">
-                          <ImageIcon className="h-2.5 w-2.5" /> {product.photos.length}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Product Info */}
-                    <div className="flex-1 min-w-0">
-                      {isEditing ? (
-                        <div className="space-y-2">
-                          <input value={makitiEditData.name || ''} onChange={e => setMakitiEditData({...makitiEditData, name: e.target.value})} className="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-white text-sm" placeholder="Nom" />
-                          <textarea value={makitiEditData.description || ''} onChange={e => setMakitiEditData({...makitiEditData, description: e.target.value})} className="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-white text-sm resize-none" rows={2} placeholder="Description" />
-                          <div className="flex gap-2 flex-wrap">
-                            <input type="number" value={makitiEditData.price || ''} onChange={e => setMakitiEditData({...makitiEditData, price: e.target.value})} className="w-28 bg-slate-700 border border-slate-600 rounded px-2 py-1 text-white text-sm" placeholder="Prix" />
-                            <select value={makitiEditData.currency || 'GNF'} onChange={e => setMakitiEditData({...makitiEditData, currency: e.target.value})} className="bg-slate-700 border border-slate-600 rounded px-2 py-1 text-white text-sm">
-                              <option value="GNF">GNF</option>
-                              <option value="EUR">EUR</option>
-                              <option value="USD">USD</option>
-                            </select>
-                            <select value={makitiEditData.product_type || ''} onChange={e => setMakitiEditData({...makitiEditData, product_type: e.target.value})} className="bg-slate-700 border border-slate-600 rounded px-2 py-1 text-white text-sm" data-testid={`makiti-edit-type-${product.id}`}>
-                              <option value="">Catégorie...</option>
-                              {ADMIN_PRODUCT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                            </select>
-                          </div>
-                          <div className="flex gap-3 flex-wrap">
-                            <label className="flex items-center gap-1 text-xs text-slate-300"><input type="checkbox" checked={makitiEditData.price_on_request || false} onChange={e => setMakitiEditData({...makitiEditData, price_on_request: e.target.checked})} /> Prix sur demande</label>
-                            <label className="flex items-center gap-1 text-xs text-slate-300"><input type="checkbox" checked={makitiEditData.is_negotiable || false} onChange={e => setMakitiEditData({...makitiEditData, is_negotiable: e.target.checked})} /> Négociable</label>
-                            <label className="flex items-center gap-1 text-xs text-slate-300"><input type="checkbox" checked={makitiEditData.is_available !== false} onChange={e => setMakitiEditData({...makitiEditData, is_available: e.target.checked})} /> En stock</label>
-                          </div>
-                          <div className="flex gap-2">
-                            <button onClick={() => handleMakitiUpdateProduct(product.id)} className="px-3 py-1 bg-teal-600 hover:bg-teal-700 text-white text-xs rounded font-medium flex items-center gap-1"><Save className="h-3 w-3" /> Enregistrer</button>
-                            <button onClick={() => setEditingMakitiProduct(null)} className="px-3 py-1 bg-slate-600 hover:bg-slate-500 text-white text-xs rounded">Annuler</button>
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          <div className="flex items-center gap-2 mb-1">
-                            <h5 className="font-medium text-white text-sm truncate">{product.name}</h5>
-                            {product.product_type && (
-                              <span className="text-[10px] px-1.5 py-0.5 bg-orange-500/20 text-orange-400 rounded-full font-medium">
-                                {ADMIN_PRODUCT_TYPES.find(t => t.value === product.product_type)?.label || product.product_type}
-                              </span>
-                            )}
-                            {!product.product_type && (
-                              <span className="text-[10px] px-1.5 py-0.5 bg-red-500/20 text-red-400 rounded-full font-medium">Sans catégorie</span>
-                            )}
-                          </div>
-                          <p className="text-xs text-slate-400 line-clamp-1">{product.description}</p>
-                          <p className="text-teal-400 font-bold text-sm mt-1">
-                            {product.price_on_request ? <span className="text-blue-400 italic">Prix sur demande</span> : <>{Number(product.price || 0).toLocaleString('fr-FR')} {product.currency || 'GNF'}</>}
-                            {product.is_negotiable && <span className="text-xs font-normal text-slate-500 ml-1">(Négociable)</span>}
-                          </p>
-                          <div className="flex items-center gap-3 mt-1 text-[11px] text-slate-500">
-                            <span className="flex items-center gap-1"><Store className="h-3 w-3 text-teal-400" />{product.shop_name || 'Boutique'}</span>
-                            {product.company_name && <span className="flex items-center gap-1"><Building className="h-3 w-3 text-purple-400" />{product.company_name}</span>}
-                            <span className={`px-1.5 py-0.5 rounded-full ${product.is_available ? 'bg-green-900/50 text-green-400' : 'bg-red-900/50 text-red-400'}`}>
-                              {product.is_available ? 'En stock' : 'Rupture'}
-                            </span>
-                            <span className="flex items-center gap-0.5"><Eye className="h-3 w-3" />{product.total_views || 0}</span>
-                          </div>
-                        </>
-                      )}
-                    </div>
-
-                    {/* Actions */}
-                    {!isEditing && (
-                      <div className="flex flex-col gap-1 flex-shrink-0">
-                        <button onClick={() => { setEditingMakitiProduct(product.id); setMakitiEditData({ name: product.name, description: product.description, price: product.price, currency: product.currency || 'GNF', price_on_request: product.price_on_request, product_type: product.product_type || '', is_negotiable: product.is_negotiable, is_available: product.is_available }); }} className="p-1.5 bg-teal-600/20 hover:bg-teal-600/40 text-teal-400 rounded" title="Modifier">
-                          <Pencil className="h-3.5 w-3.5" />
-                        </button>
-                        <button onClick={() => handleMakitiDeleteProduct(product.id)} className="p-1.5 bg-red-600/20 hover:bg-red-600/40 text-red-400 rounded" title="Supprimer">
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {filteredMakitiProducts.map(product => (
+            <Card key={product.id} className="bg-slate-800 border-slate-700 overflow-hidden" data-testid={`admin-product-${product.id}`}>
+              <div className="p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-16 h-16 rounded-lg overflow-hidden bg-slate-700 shrink-0">
+                    {product.photos?.[0] ? (
+                      <img src={getImageUrl(product.photos[0])} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center"><Package className="h-6 w-6 text-slate-500" /></div>
                     )}
                   </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-white font-medium text-sm truncate">{product.name}</h4>
+                    <p className="text-slate-400 text-xs">{product.shop_name}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      {product.price_on_request ? (
+                        <span className="text-blue-400 text-xs italic">Prix sur demande</span>
+                      ) : (
+                        <span className="text-orange-400 text-sm font-bold">{formatPrice(product.price)} {product.currency || 'GNF'}</span>
+                      )}
+                      {product.product_type && (
+                        <span className="bg-slate-700 text-slate-300 text-xs px-2 py-0.5 rounded">{product.product_type}</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex gap-1 shrink-0">
+                    {editingMakitiProduct === product.id ? (
+                      <>
+                        <button onClick={() => handleMakitiUpdateProduct(product.id)} className="text-green-400 hover:text-green-300 p-1"><Save className="h-4 w-4" /></button>
+                        <button onClick={() => setEditingMakitiProduct(null)} className="text-slate-400 hover:text-white p-1"><X className="h-4 w-4" /></button>
+                      </>
+                    ) : (
+                      <>
+                        <button onClick={() => { setEditingMakitiProduct(product.id); setMakitiEditData({ name: product.name, price: product.price, description: product.description }); }} className="text-blue-400 hover:text-blue-300 p-1"><Pencil className="h-4 w-4" /></button>
+                        <button onClick={() => handleMakitiDeleteProduct(product.id)} className="text-red-400 hover:text-red-300 p-1"><Trash2 className="h-4 w-4" /></button>
+                      </>
+                    )}
+                  </div>
+                </div>
 
-                  {/* Photos gallery */}
-                  {isPhotosExpanded && product.photos?.length > 0 && (
-                    <div className="mt-3 bg-slate-900/50 rounded-lg p-3 border border-slate-700">
-                      <div className="flex items-center justify-between mb-2">
-                        <p className="text-xs font-medium text-slate-400">Photos ({product.photos.length})</p>
-                        <button onClick={() => setExpandedMakitiPhotos(null)} className="text-slate-500 hover:text-white"><X className="h-4 w-4" /></button>
-                      </div>
-                      <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
-                        {product.photos.map((photo, idx) => (
-                          <div key={idx} className="relative group aspect-square rounded-lg overflow-hidden border border-slate-600">
-                            <img src={getImageUrl(photo)} alt="" className="w-full h-full object-cover" />
-                            <button
-                              onClick={() => handleMakitiDeletePhoto(product.id, idx)}
-                              disabled={deletingMakitiPhoto === `${product.id}-${idx}`}
-                              className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              {deletingMakitiPhoto === `${product.id}-${idx}` ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
+                {/* Edit Form */}
+                {editingMakitiProduct === product.id && (
+                  <div className="mt-3 space-y-2 bg-slate-700/50 rounded-lg p-3">
+                    <input className="w-full bg-slate-600 text-white text-sm rounded px-3 py-2 border border-slate-500" value={makitiEditData.name || ''} onChange={(e) => setMakitiEditData({ ...makitiEditData, name: e.target.value })} placeholder="Nom" />
+                    <input className="w-full bg-slate-600 text-white text-sm rounded px-3 py-2 border border-slate-500" type="number" value={makitiEditData.price || ''} onChange={(e) => setMakitiEditData({ ...makitiEditData, price: e.target.value })} placeholder="Prix" />
+                  </div>
+                )}
+
+                {/* Photos */}
+                {product.photos?.length > 0 && (
+                  <div className="mt-3">
+                    <button onClick={() => setExpandedMakitiPhotos(expandedMakitiPhotos === product.id ? null : product.id)} className="text-slate-400 hover:text-white text-xs flex items-center gap-1">
+                      <Camera className="h-3 w-3" /> {product.photos.length} photo(s)
+                    </button>
+                    {expandedMakitiPhotos === product.id && (
+                      <div className="flex gap-2 mt-2 overflow-x-auto">
+                        {product.photos.map((url, idx) => (
+                          <div key={idx} className="relative shrink-0 w-20 h-20 rounded-lg overflow-hidden bg-slate-700">
+                            <img src={getImageUrl(url)} alt="" className="w-full h-full object-cover" />
+                            <button onClick={() => handleMakitiDeletePhoto(product.id, idx)} disabled={deletingMakitiPhoto === `${product.id}_${idx}`} className="absolute top-0.5 right-0.5 bg-red-600/90 text-white rounded p-0.5">
+                              {deletingMakitiPhoto === `${product.id}_${idx}` ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
                             </button>
                           </div>
                         ))}
                       </div>
-                    </div>
-                  )}
-
-                  {!isPhotosExpanded && product.photos?.length > 0 && (
-                    <button onClick={() => setExpandedMakitiPhotos(product.id)} className="mt-2 text-[11px] text-teal-400 hover:text-teal-300">
-                      <Camera className="h-3 w-3 inline mr-1" />Voir les {product.photos.length} photo(s)
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </Card>
+                    )}
+                  </div>
+                )}
+              </div>
+            </Card>
+          ))}
+        </div>
       )}
     </div>
   );

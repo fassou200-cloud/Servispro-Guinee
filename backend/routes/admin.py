@@ -2165,3 +2165,109 @@ async def admin_delete_product_photo(product_id: str, photo_index: int):
     return {"photos": photos}
 
 
+
+
+# ==================== LIMITED OFFERS ====================
+
+@router.get("/admin/limited-offers")
+async def get_limited_offers():
+    """Get all limited offers with product details"""
+    offers = await db.limited_offers.find({}, {'_id': 0}).sort('created_at', -1).to_list(200)
+    
+    # Enrich with product data
+    for offer in offers:
+        product = await db.products.find_one({'id': offer.get('product_id')}, {'_id': 0})
+        if product:
+            offer['product'] = product
+        else:
+            offer['product'] = None
+    
+    return offers
+
+
+@router.get("/admin/limited-offers/settings")
+async def get_offer_settings():
+    """Get global offer expiration date"""
+    settings = await db.admin_settings.find_one({'type': 'limited_offers_settings'}, {'_id': 0})
+    if not settings:
+        return {'expiration_date': None, 'is_active': False}
+    return settings
+
+
+@router.put("/admin/limited-offers/settings")
+async def update_offer_settings(data: dict = Body(...)):
+    """Update global offer settings (expiration date, active status)"""
+    update = {
+        'type': 'limited_offers_settings',
+        'expiration_date': data.get('expiration_date'),
+        'is_active': data.get('is_active', True),
+        'updated_at': datetime.now(timezone.utc).isoformat()
+    }
+    await db.admin_settings.update_one(
+        {'type': 'limited_offers_settings'},
+        {'$set': update},
+        upsert=True
+    )
+    return update
+
+
+@router.post("/admin/limited-offers")
+async def create_limited_offer(data: dict = Body(...)):
+    """Add a product to limited offers"""
+    product_id = data.get('product_id')
+    discount_percent = data.get('discount_percent', 0)
+    
+    if not product_id:
+        raise HTTPException(status_code=400, detail="product_id requis")
+    if discount_percent < 1 or discount_percent > 99:
+        raise HTTPException(status_code=400, detail="Réduction entre 1% et 99%")
+    
+    # Check product exists
+    product = await db.products.find_one({'id': product_id}, {'_id': 0})
+    if not product:
+        raise HTTPException(status_code=404, detail="Produit non trouvé")
+    
+    # Check if already in offers
+    existing = await db.limited_offers.find_one({'product_id': product_id})
+    if existing:
+        raise HTTPException(status_code=400, detail="Ce produit est déjà dans les offres")
+    
+    offer = {
+        'id': str(uuid.uuid4()),
+        'product_id': product_id,
+        'discount_percent': int(discount_percent),
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    await db.limited_offers.insert_one(offer)
+    offer.pop('_id', None)
+    offer['product'] = product
+    return offer
+
+
+@router.put("/admin/limited-offers/{offer_id}")
+async def update_limited_offer(offer_id: str, data: dict = Body(...)):
+    """Update discount percentage"""
+    discount = data.get('discount_percent')
+    if discount is not None and (discount < 1 or discount > 99):
+        raise HTTPException(status_code=400, detail="Réduction entre 1% et 99%")
+    
+    update_fields = {}
+    if discount is not None:
+        update_fields['discount_percent'] = int(discount)
+    
+    if not update_fields:
+        raise HTTPException(status_code=400, detail="Rien à mettre à jour")
+    
+    result = await db.limited_offers.update_one({'id': offer_id}, {'$set': update_fields})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Offre non trouvée")
+    return {"message": "Offre mise à jour"}
+
+
+@router.delete("/admin/limited-offers/{offer_id}")
+async def delete_limited_offer(offer_id: str):
+    """Remove a product from limited offers"""
+    result = await db.limited_offers.delete_one({'id': offer_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Offre non trouvée")
+    return {"message": "Offre supprimée"}

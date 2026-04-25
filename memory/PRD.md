@@ -90,6 +90,7 @@ ServisPro is a comprehensive platform in Guinea connecting service providers, co
 - [x] **Makiti "Acheter par catégorie"** (circular category images replacing lucide icons, left/right scroll arrows, Figma-matching layout)
 - [x] **Fix login entreprise/prestataire/client** (normalisation numéro téléphone: +224, 224, local — toutes les variantes matchent)
 - [x] **CompanyDashboard refactoring** (2470 → 1331 lines, 7 tab components extracted)
+- [x] **Offres à durée limitée admin** (CRUD offres, date d'expiration globale, % réduction, countdown réel sur Makiti)
 
 ## Pending Issues
 - [ ] P3: "Erreur lors de l'approbation" (needs user reproduction steps)

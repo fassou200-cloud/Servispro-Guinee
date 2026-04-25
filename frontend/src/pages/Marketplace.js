@@ -41,8 +41,7 @@ const PRODUCT_TYPE_OPTIONS = [
   { value: 'mobilier', label: 'Mobilier', image: 'https://images.unsplash.com/photo-1775494108186-8d7354660c64?w=300&h=300&fit=crop&q=80' },
 ];
 
-// Quick-filter categories shown in the "Offres" section header
-const QUICK_CATS = ['Chaussures', 'Cosmétiques', 'Mobilier'];
+// Quick-filter categories are no longer needed (offers come from admin now)
 
 const Marketplace = ({ isCustomerAuthenticated }) => {
   const navigate = useNavigate();
@@ -56,6 +55,9 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
   const [sortBy, setSortBy] = useState('recent');
   const [currentSlide, setCurrentSlide] = useState(0);
   const [offerFilter, setOfferFilter] = useState('');
+  const [limitedOffers, setLimitedOffers] = useState([]);
+  const [offersActive, setOffersActive] = useState(false);
+  const [offerExpiration, setOfferExpiration] = useState(null);
   const [wishlist, setWishlist] = useState(() => {
     try { return JSON.parse(localStorage.getItem('makiti_wishlist') || '[]'); } catch { return []; }
   });
@@ -80,11 +82,10 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
     return () => clearInterval(slideInterval.current);
   }, []);
 
-  // Countdown timer — counts down to next month
+  // Countdown timer — counts down to real offer expiration date
   useEffect(() => {
-    const target = new Date();
-    target.setMonth(target.getMonth() + 1, 1);
-    target.setHours(0, 0, 0, 0);
+    if (!offerExpiration) return;
+    const target = new Date(offerExpiration);
     const tick = () => {
       const diff = Math.max(0, target - Date.now());
       setCountdown({
@@ -97,7 +98,7 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
-  }, []);
+  }, [offerExpiration]);
 
   const goToSlide = (idx) => {
     setCurrentSlide(idx);
@@ -109,14 +110,20 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
 
   const loadData = async () => {
     try {
-      const [catRes, prodRes, shopRes] = await Promise.all([
+      const [catRes, prodRes, shopRes, offersRes] = await Promise.all([
         axios.get(`${API}/product-categories`),
         axios.get(`${API}/marketplace/products`),
-        axios.get(`${API}/marketplace/shops`)
+        axios.get(`${API}/marketplace/shops`),
+        axios.get(`${API}/marketplace/limited-offers`).catch(() => ({ data: { offers: [], is_active: false } })),
       ]);
       setCategories(catRes.data);
       setProducts(prodRes.data);
       setShops(shopRes.data);
+      if (offersRes.data.is_active && offersRes.data.offers?.length > 0) {
+        setLimitedOffers(offersRes.data.offers);
+        setOffersActive(true);
+        setOfferExpiration(offersRes.data.expiration_date);
+      }
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
   };
@@ -268,86 +275,67 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
       </section>
 
       {/* ──────── OFFRES A DUREE LIMITEE ──────── */}
+      {offersActive && limitedOffers.length > 0 && (
       <section className="max-w-7xl mx-auto px-4 sm:px-6 mt-8 sm:mt-10" data-testid="limited-offers-section">
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-5">
           <h2 className="text-xl sm:text-2xl font-bold text-gray-900 shrink-0">Offres à durée limitée</h2>
 
           {/* Countdown timer pill */}
+          {offerExpiration && (
           <div className="flex items-center gap-1.5 border border-orange-300 rounded-full px-4 py-1.5 text-orange-600 text-sm font-medium shrink-0">
             <Clock className="h-3.5 w-3.5" />
-            <span>Ends in:</span>
-            <span className="font-bold tabular-nums">{countdown.d} : {pad(countdown.h)} : {pad(countdown.m)} : {pad(countdown.s)}</span>
+            <span>Expire dans:</span>
+            <span className="font-bold tabular-nums">{countdown.d}j : {pad(countdown.h)}h : {pad(countdown.m)}m : {pad(countdown.s)}s</span>
           </div>
-
-          {/* View All + Quick categories */}
-          <div className="flex items-center gap-2 overflow-x-auto sm:ml-auto" style={{ scrollbarWidth: 'none' }}>
-            <button
-              onClick={() => setOfferFilter('')}
-              className={`shrink-0 px-4 py-1.5 rounded-full text-sm font-semibold transition-colors ${
-                !offerFilter ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-              data-testid="offer-filter-all"
-            >
-              View All
-            </button>
-            {QUICK_CATS.map(cat => (
-              <button
-                key={cat}
-                onClick={() => setOfferFilter(offerFilter === cat.toLowerCase() ? '' : cat.toLowerCase())}
-                className={`shrink-0 px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${
-                  offerFilter === cat.toLowerCase()
-                    ? 'border-orange-400 bg-orange-50 text-orange-700'
-                    : 'border-gray-200 text-gray-600 hover:bg-gray-50'
-                }`}
-                data-testid={`offer-cat-${cat.toLowerCase()}`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
+          )}
         </div>
 
         {/* Limited-offer product row (horizontal scroll) */}
         <div className="flex gap-4 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
-          {(filteredProducts.length > 0 ? filteredProducts : products).slice(0, 8).map(product => (
-            <div
-              key={`offer-${product.id}`}
-              className="shrink-0 w-[220px] sm:w-[260px] group cursor-pointer"
-              onClick={() => navigate(`/makiti/product/${product.id}`)}
-              data-testid={`offer-card-${product.id}`}
-            >
-              <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-gray-100 border border-gray-100">
-                {product.photos?.length > 0 ? (
-                  <img src={getImageUrl(product.photos[0])} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center"><Package className="h-10 w-10 text-gray-300" /></div>
-                )}
-                {/* Badge */}
-                {product.is_negotiable && (
-                  <span className="absolute top-3 left-3 bg-orange-500 text-white text-[11px] font-semibold px-2.5 py-1 rounded-md">Négociable</span>
-                )}
-                {/* Heart */}
-                <button
-                  onClick={(e) => toggleWishlist(product.id, e)}
-                  className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/80 backdrop-blur flex items-center justify-center hover:bg-white transition-colors"
-                  data-testid={`wishlist-${product.id}`}
-                >
-                  <Heart className={`h-4 w-4 ${wishlist.includes(product.id) ? 'fill-red-500 text-red-500' : 'text-gray-500'}`} />
-                </button>
+          {limitedOffers.map(offer => {
+            const product = offer.product;
+            if (!product) return null;
+            const discountedPrice = Math.round(product.price * (1 - offer.discount_percent / 100));
+            return (
+              <div
+                key={`offer-${offer.id}`}
+                className="shrink-0 w-[220px] sm:w-[260px] group cursor-pointer"
+                onClick={() => navigate(`/makiti/product/${product.id}`)}
+                data-testid={`offer-card-${offer.id}`}
+              >
+                <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-gray-100 border border-gray-100">
+                  {product.photos?.length > 0 ? (
+                    <img src={getImageUrl(product.photos[0])} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center"><Package className="h-10 w-10 text-gray-300" /></div>
+                  )}
+                  {/* Discount badge */}
+                  <span className="absolute top-3 left-3 bg-red-500 text-white text-sm font-bold px-2.5 py-1 rounded-lg shadow-sm">
+                    -{offer.discount_percent}%
+                  </span>
+                  {/* Heart */}
+                  <button
+                    onClick={(e) => toggleWishlist(product.id, e)}
+                    className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/80 backdrop-blur flex items-center justify-center hover:bg-white transition-colors"
+                    data-testid={`wishlist-offer-${product.id}`}
+                  >
+                    <Heart className={`h-4 w-4 ${wishlist.includes(product.id) ? 'fill-red-500 text-red-500' : 'text-gray-500'}`} />
+                  </button>
+                </div>
+                <div className="mt-2.5 px-0.5">
+                  <h3 className="font-semibold text-gray-900 text-sm line-clamp-1">{product.name}</h3>
+                  <p className="text-xs text-gray-500 mt-0.5">{product.shop_name}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-gray-400 text-xs line-through">{formatPrice(product.price)} {product.currency || 'GNF'}</span>
+                    <span className="text-red-600 font-bold text-sm">{formatPrice(discountedPrice)} {product.currency || 'GNF'}</span>
+                  </div>
+                </div>
               </div>
-              <div className="mt-2.5 px-0.5">
-                <h3 className="font-semibold text-gray-900 text-sm line-clamp-1">{product.name}</h3>
-                <p className="text-xs text-gray-500 mt-0.5">{product.shop_name}</p>
-                <p className="text-orange-600 font-bold text-sm mt-1">
-                  {product.price_on_request
-                    ? <span className="text-blue-600 italic text-xs">Prix sur demande</span>
-                    : <>{formatPrice(product.price)} {product.currency || 'GNF'}</>}
-                </p>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
+      )}
 
       {/* ──────── ACHETER PAR CATEGORIE ──────── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 mt-8 sm:mt-10" data-testid="category-section">
