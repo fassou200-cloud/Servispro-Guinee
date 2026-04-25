@@ -39,6 +39,7 @@ const ProductDetail = () => {
   const [showContactForm, setShowContactForm] = useState(false);
   const [sending, setSending] = useState(false);
   const [contactForm, setContactForm] = useState({ sender_name: '', sender_phone: '', message: '' });
+  const [phoneRevealed, setPhoneRevealed] = useState(false);
   const [reviews, setReviews] = useState([]);
   const [reviewForm, setReviewForm] = useState({ rating: 0, comment: '' });
   const [submittingReview, setSubmittingReview] = useState(false);
@@ -49,6 +50,11 @@ const ProductDetail = () => {
     setIsCustomerLoggedIn(!!token);
     fetchProduct();
     fetchReviews();
+    // Check if user already contacted this product's seller
+    try {
+      const contacted = JSON.parse(localStorage.getItem('contacted_products') || '[]');
+      if (contacted.includes(productId)) setPhoneRevealed(true);
+    } catch {}
   }, [productId]);
 
   const fetchProduct = async () => {
@@ -83,6 +89,15 @@ const ProductDetail = () => {
       toast.success('Message envoyé au vendeur !');
       setShowContactForm(false);
       setContactForm({ sender_name: '', sender_phone: '', message: '' });
+      // Reveal seller phone after sending message
+      setPhoneRevealed(true);
+      try {
+        const contacted = JSON.parse(localStorage.getItem('contacted_products') || '[]');
+        if (!contacted.includes(productId)) {
+          contacted.push(productId);
+          localStorage.setItem('contacted_products', JSON.stringify(contacted));
+        }
+      } catch {}
     } catch (err) {
       toast.error("Erreur lors de l'envoi du message");
     } finally {
@@ -267,13 +282,26 @@ const ProductDetail = () => {
               Contacter le vendeur
             </Button>
 
+            {/* Phone - only revealed after sending a message */}
             {product.shop?.contact_phone && (
-              <a
-                href={`tel:${product.shop.contact_phone}`}
-                className="flex items-center justify-center gap-2 mt-3 text-green-600 font-medium hover:underline"
-              >
-                <Phone className="h-4 w-4" /> {product.shop.contact_phone}
-              </a>
+              phoneRevealed ? (
+                <a
+                  href={`tel:${product.shop.contact_phone}`}
+                  className="flex items-center justify-center gap-2 mt-3 text-green-600 font-medium hover:underline"
+                  data-testid="seller-phone-revealed"
+                >
+                  <Phone className="h-4 w-4" /> {product.shop.contact_phone}
+                </a>
+              ) : (
+                <button
+                  onClick={() => { setShowContactForm(true); }}
+                  className="flex items-center justify-center gap-2 mt-3 text-gray-400 text-sm w-full"
+                  data-testid="seller-phone-hidden"
+                >
+                  <Phone className="h-4 w-4" />
+                  <span>Envoyez un message pour voir le numéro du vendeur</span>
+                </button>
+              )
             )}
 
             {/* Contact Form Modal */}
