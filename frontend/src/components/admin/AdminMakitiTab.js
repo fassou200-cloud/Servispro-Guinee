@@ -45,6 +45,7 @@ const AdminMakitiTab = ({
   const [loadingOffers, setLoadingOffers] = useState(false);
   const [searchProduct, setSearchProduct] = useState('');
   const [searchResults, setSearchResults] = useState([]);
+  const [allSearchResults, setAllSearchResults] = useState(0);
   const [addingDiscount, setAddingDiscount] = useState({});
   const [showOfferSection, setShowOfferSection] = useState(true);
 
@@ -84,11 +85,12 @@ const AdminMakitiTab = ({
 
   const searchProducts = async (q) => {
     setSearchProduct(q);
-    if (q.length < 2) { setSearchResults([]); return; }
+    if (q.length < 2) { setSearchResults([]); setAllSearchResults(0); return; }
     try {
       const res = await axios.get(`${API}/marketplace/products?search=${encodeURIComponent(q)}`);
       const offerProductIds = new Set(offers.map(o => o.product_id));
-      setSearchResults(res.data.filter(p => !offerProductIds.has(p.id)).slice(0, 8));
+      setAllSearchResults(res.data.length);
+      setSearchResults(res.data.filter(p => !offerProductIds.has(p.id)).slice(0, 10));
     } catch (e) { console.error(e); }
   };
 
@@ -258,6 +260,14 @@ const AdminMakitiTab = ({
                   </div>
                 ))}
               </div>
+            )}
+            {searchProduct.length >= 2 && searchResults.length === 0 && (
+              <p className="text-slate-400 text-sm mt-3 text-center py-3">
+                {allSearchResults > 0
+                  ? `${allSearchResults} produit(s) trouvé(s) pour "${searchProduct}" — tous déjà en promotion`
+                  : `Aucun produit trouvé pour "${searchProduct}"`
+                }
+              </p>
             )}
           </Card>
 
