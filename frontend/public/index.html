@@ -183,7 +183,7 @@
         </div>
 
         <!-- PWA Install Banner - iOS Safari -->
-        <div id="ios-install-banner" class="pwa-install-banner">
+        <div id="ios-install-banner" class="pwa-install-banner" style="display:none;">
             <div class="pwa-install-banner-content">
                 <img src="/icons/icon-96x96.png" alt="ServisPro" class="pwa-install-banner-icon" />
                 <div class="pwa-install-banner-text">
@@ -193,7 +193,7 @@
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;color:#007AFF;">
                             <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/>
                         </svg>
-                        <strong>Partager</strong> puis <strong>"Sur l'écran d'accueil"</strong>
+                        puis <strong>"Sur l'écran d'accueil"</strong>
                     </p>
                 </div>
             </div>
@@ -215,10 +215,22 @@
                 });
             }
             
-            // Detect iOS
+            // Detect iOS (all versions including iPad)
             function isIOS() {
-                return /iPad|iPhone|iPod/.test(navigator.userAgent) || 
-                       (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+                var ua = navigator.userAgent || '';
+                // Standard iOS detection
+                if (/iPad|iPhone|iPod/.test(ua)) return true;
+                // iPad with desktop mode (iPadOS 13+)
+                if (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) return true;
+                // Additional check for webkit on mobile
+                if (/Macintosh/.test(ua) && 'ontouchend' in document) return true;
+                return false;
+            }
+            
+            // Detect if running in Safari specifically (not Chrome/Firefox on iOS)
+            function isIOSSafari() {
+                var ua = navigator.userAgent || '';
+                return isIOS() && /Safari/.test(ua) && !/CriOS|FxiOS|OPiOS|EdgiOS/.test(ua);
             }
             
             // Detect if already installed as standalone
@@ -227,23 +239,31 @@
                        window.navigator.standalone === true;
             }
 
-            // iOS Install Banner
+            // iOS Install Banner - Show for ALL iOS browsers
             if (isIOS() && !isStandalone()) {
                 var iosBanner = document.getElementById('ios-install-banner');
                 var iosClose = document.getElementById('ios-install-close');
+                var dismissed = localStorage.getItem('ios-install-dismissed');
                 
-                // Show iOS banner after 2 seconds
-                setTimeout(function() {
-                    if (!localStorage.getItem('ios-install-dismissed') && iosBanner) {
-                        iosBanner.style.display = '';
-                        iosBanner.classList.add('show');
-                    }
-                }, 2000);
+                // Show iOS banner after 2 seconds (only if not dismissed)
+                if (!dismissed && iosBanner) {
+                    setTimeout(function() {
+                        iosBanner.style.display = 'flex';
+                        // Use double-rAF to ensure the browser has painted before animating
+                        requestAnimationFrame(function() {
+                            requestAnimationFrame(function() {
+                                iosBanner.classList.add('show');
+                            });
+                        });
+                    }, 2000);
+                }
                 
                 if (iosClose) {
                     iosClose.addEventListener('click', function() {
-                        iosBanner.classList.remove('show');
-                        iosBanner.style.display = 'none';
+                        if (iosBanner) {
+                            iosBanner.classList.remove('show');
+                            setTimeout(function() { iosBanner.style.display = 'none'; }, 300);
+                        }
                         localStorage.setItem('ios-install-dismissed', 'true');
                     });
                 }
