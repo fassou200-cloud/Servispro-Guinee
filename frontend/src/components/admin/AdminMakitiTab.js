@@ -239,22 +239,29 @@ const AdminMakitiTab = ({
                       <p className="text-slate-400 text-xs">{product.shop_name} — {formatPrice(product.price)} {product.currency || 'GNF'}</p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        onClick={() => addOffer(product.id, 0)}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap"
+                        data-testid={`offer-featured-btn-${product.id}`}
+                      >
+                        Mise en avant
+                      </button>
                       <Input
                         type="number"
-                        min="0"
+                        min="1"
                         max="99"
-                        placeholder="% (0=sans promo)"
+                        placeholder="%"
                         value={addingDiscount[product.id] ?? ''}
                         onChange={(e) => setAddingDiscount({ ...addingDiscount, [product.id]: e.target.value })}
-                        className="w-20 bg-slate-600 border-slate-500 text-white text-center text-sm"
+                        className="w-14 bg-slate-600 border-slate-500 text-white text-center text-sm"
                         data-testid={`offer-discount-input-${product.id}`}
                       />
                       <button
                         onClick={() => addOffer(product.id, addingDiscount[product.id])}
-                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-xs font-medium"
+                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap"
                         data-testid={`offer-add-btn-${product.id}`}
                       >
-                        Ajouter
+                        Promo
                       </button>
                     </div>
                   </div>
