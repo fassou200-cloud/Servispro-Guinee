@@ -21,6 +21,7 @@ import CompanyAuth from '@/pages/CompanyAuth';
 import CompanyDashboard from '@/pages/CompanyDashboard';
 import { Toaster } from '@/components/ui/sonner';
 import FeedbackButton from '@/components/FeedbackButton';
+import IOSInstallBanner from '@/components/IOSInstallBanner';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -106,6 +107,7 @@ function App() {
       </BrowserRouter>
       <Toaster />
       <FeedbackButton />
+      <IOSInstallBanner />
     </div>
   );
 }
