@@ -309,10 +309,12 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
                   ) : (
                     <div className="w-full h-full flex items-center justify-center"><Package className="h-10 w-10 text-gray-300" /></div>
                   )}
-                  {/* Discount badge */}
-                  <span className="absolute top-3 left-3 bg-red-500 text-white text-sm font-bold px-2.5 py-1 rounded-lg shadow-sm">
-                    -{offer.discount_percent}%
-                  </span>
+                  {/* Discount badge - only show if discount > 0 */}
+                  {offer.discount_percent > 0 && (
+                    <span className="absolute top-3 left-3 bg-red-500 text-white text-sm font-bold px-2.5 py-1 rounded-lg shadow-sm">
+                      -{offer.discount_percent}%
+                    </span>
+                  )}
                   {/* Heart */}
                   <button
                     onClick={(e) => toggleWishlist(product.id, e)}
@@ -325,10 +327,19 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
                 <div className="mt-2.5 px-0.5">
                   <h3 className="font-semibold text-gray-900 text-sm line-clamp-1">{product.name}</h3>
                   <p className="text-xs text-gray-500 mt-0.5">{product.shop_name}</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-gray-400 text-xs line-through">{formatPrice(product.price)} {product.currency || 'GNF'}</span>
-                    <span className="text-red-600 font-bold text-sm">{formatPrice(discountedPrice)} {product.currency || 'GNF'}</span>
-                  </div>
+                  {offer.discount_percent > 0 ? (
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-gray-400 text-xs line-through">{formatPrice(product.price)} {product.currency || 'GNF'}</span>
+                      <span className="text-red-600 font-bold text-sm">{formatPrice(discountedPrice)} {product.currency || 'GNF'}</span>
+                    </div>
+                  ) : (
+                    <p className="text-orange-600 font-bold text-sm mt-1">
+                      {product.price_on_request
+                        ? <span className="text-blue-600 italic text-xs">Prix sur demande</span>
+                        : <>{formatPrice(product.price)} {product.currency || 'GNF'}</>
+                      }
+                    </p>
+                  )}
                 </div>
               </div>
             );

@@ -2219,8 +2219,8 @@ async def create_limited_offer(data: dict = Body(...)):
     
     if not product_id:
         raise HTTPException(status_code=400, detail="product_id requis")
-    if discount_percent < 1 or discount_percent > 99:
-        raise HTTPException(status_code=400, detail="Réduction entre 1% et 99%")
+    if discount_percent < 0 or discount_percent > 99:
+        raise HTTPException(status_code=400, detail="Réduction entre 0% et 99%")
     
     # Check product exists
     product = await db.products.find_one({'id': product_id}, {'_id': 0})
@@ -2248,8 +2248,8 @@ async def create_limited_offer(data: dict = Body(...)):
 async def update_limited_offer(offer_id: str, data: dict = Body(...)):
     """Update discount percentage"""
     discount = data.get('discount_percent')
-    if discount is not None and (discount < 1 or discount > 99):
-        raise HTTPException(status_code=400, detail="Réduction entre 1% et 99%")
+    if discount is not None and (discount < 0 or discount > 99):
+        raise HTTPException(status_code=400, detail="Réduction entre 0% et 99%")
     
     update_fields = {}
     if discount is not None:

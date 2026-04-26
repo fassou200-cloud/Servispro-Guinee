@@ -95,8 +95,8 @@ const AdminMakitiTab = ({
   };
 
   const addOffer = async (productId, discount) => {
-    if (!discount || discount < 1 || discount > 99) {
-      toast.error('Réduction entre 1% et 99%'); return;
+    if (discount === '' || discount === undefined || discount === null || discount < 0 || discount > 99) {
+      toast.error('Réduction entre 0% et 99%'); return;
     }
     try {
       await axios.post(`${API}/admin/limited-offers`, {
@@ -241,12 +241,12 @@ const AdminMakitiTab = ({
                     <div className="flex items-center gap-2 shrink-0">
                       <Input
                         type="number"
-                        min="1"
+                        min="0"
                         max="99"
-                        placeholder="%"
-                        value={addingDiscount[product.id] || ''}
+                        placeholder="% (0=sans promo)"
+                        value={addingDiscount[product.id] ?? ''}
                         onChange={(e) => setAddingDiscount({ ...addingDiscount, [product.id]: e.target.value })}
-                        className="w-16 bg-slate-600 border-slate-500 text-white text-center text-sm"
+                        className="w-20 bg-slate-600 border-slate-500 text-white text-center text-sm"
                         data-testid={`offer-discount-input-${product.id}`}
                       />
                       <button
@@ -299,13 +299,23 @@ const AdminMakitiTab = ({
                       <div className="flex-1 min-w-0">
                         <p className="text-white text-sm font-medium truncate">{p.name}</p>
                         <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-slate-400 text-xs line-through">{formatPrice(p.price)} {p.currency || 'GNF'}</span>
-                          <span className="text-green-400 text-sm font-bold">{formatPrice(discounted)} {p.currency || 'GNF'}</span>
+                          {offer.discount_percent > 0 ? (
+                            <>
+                              <span className="text-slate-400 text-xs line-through">{formatPrice(p.price)} {p.currency || 'GNF'}</span>
+                              <span className="text-green-400 text-sm font-bold">{formatPrice(discounted)} {p.currency || 'GNF'}</span>
+                            </>
+                          ) : (
+                            <span className="text-orange-400 text-sm font-bold">{formatPrice(p.price)} {p.currency || 'GNF'}</span>
+                          )}
                         </div>
                         <p className="text-slate-500 text-xs">{p.shop_name}</p>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        <span className="bg-orange-500/20 text-orange-400 px-2.5 py-1 rounded-lg text-sm font-bold">-{offer.discount_percent}%</span>
+                        {offer.discount_percent > 0 ? (
+                          <span className="bg-orange-500/20 text-orange-400 px-2.5 py-1 rounded-lg text-sm font-bold">-{offer.discount_percent}%</span>
+                        ) : (
+                          <span className="bg-blue-500/20 text-blue-400 px-2.5 py-1 rounded-lg text-xs font-medium">Mis en avant</span>
+                        )}
                         <button
                           onClick={() => removeOffer(offer.id)}
                           className="text-red-400 hover:text-red-300 p-1.5 rounded-lg hover:bg-red-500/10 transition-colors"
