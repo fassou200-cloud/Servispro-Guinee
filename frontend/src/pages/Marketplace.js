@@ -63,6 +63,7 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
   });
   const slideInterval = useRef(null);
   const catScrollRef = useRef(null);
+  const offersScrollRef = useRef(null);
 
   // Countdown timer state
   const [countdown, setCountdown] = useState({ d: 0, h: 0, m: 0, s: 0 });
@@ -99,6 +100,40 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, [offerExpiration]);
+
+  // Auto-scroll offers carousel
+  useEffect(() => {
+    const el = offersScrollRef.current;
+    if (!el || limitedOffers.length === 0) return;
+    let scrollPos = 0;
+    const speed = 1; // px per frame
+    let paused = false;
+    let raf;
+    const step = () => {
+      if (!paused && el) {
+        scrollPos += speed;
+        if (scrollPos >= el.scrollWidth - el.clientWidth) {
+          scrollPos = 0;
+        }
+        el.scrollLeft = scrollPos;
+      }
+      raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    const pause = () => { paused = true; };
+    const resume = () => { paused = false; scrollPos = el.scrollLeft; };
+    el.addEventListener('mouseenter', pause);
+    el.addEventListener('mouseleave', resume);
+    el.addEventListener('touchstart', pause);
+    el.addEventListener('touchend', resume);
+    return () => {
+      cancelAnimationFrame(raf);
+      el.removeEventListener('mouseenter', pause);
+      el.removeEventListener('mouseleave', resume);
+      el.removeEventListener('touchstart', pause);
+      el.removeEventListener('touchend', resume);
+    };
+  }, [limitedOffers]);
 
   const goToSlide = (idx) => {
     setCurrentSlide(idx);
@@ -290,8 +325,12 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
           )}
         </div>
 
-        {/* Limited-offer product row (horizontal scroll) */}
-        <div className="flex gap-4 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
+        {/* Limited-offer product row (auto-scrolling carousel) */}
+        <div
+          ref={offersScrollRef}
+          className="flex gap-4 overflow-x-auto pb-2"
+          style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}
+        >
           {limitedOffers.map(offer => {
             const product = offer.product;
             if (!product) return null;
