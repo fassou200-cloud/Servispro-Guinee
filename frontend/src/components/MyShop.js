@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import {
   Store, Plus, Package, Eye, MessageCircle, Edit, Trash2, Upload, Camera,
   Check, X, Loader2, Image as ImageIcon, DollarSign, Tag, Save, Star, User,
-  ChevronLeft, ChevronRight, ZoomIn
+  ChevronLeft, ChevronRight, ZoomIn, Phone, MapPin, Mail, Pencil
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
@@ -82,6 +82,125 @@ const PRODUCT_CHARACTERISTICS = {
   autre: [
     { key: 'etat', label: 'État', type: 'select', options: ['Neuf', 'Occasion'] },
   ],
+};
+
+const ShopEditSection = ({ shop, setShop, apiPrefix, authHeaders, logoInputRef, handleUploadLogo }) => {
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    name: shop.name || '',
+    description: shop.description || '',
+    sector: shop.sector || '',
+    contact_phone: shop.contact_phone || '',
+    contact_email: shop.contact_email || '',
+    location: shop.location || '',
+  });
+
+  const handleSave = async () => {
+    if (!form.name || !form.contact_phone) {
+      toast.error('Le nom et le numéro de téléphone sont obligatoires');
+      return;
+    }
+    setSaving(true);
+    try {
+      const res = await axios.put(`${API}/${apiPrefix}/update`, form, authHeaders);
+      setShop(res.data);
+      setEditing(false);
+      toast.success('Boutique mise à jour !');
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Erreur lors de la mise à jour');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="font-bold text-lg">Informations de la boutique</h3>
+        {!editing && (
+          <Button size="sm" variant="outline" onClick={() => { setForm({ name: shop.name || '', description: shop.description || '', sector: shop.sector || '', contact_phone: shop.contact_phone || '', contact_email: shop.contact_email || '', location: shop.location || '' }); setEditing(true); }} className="gap-1" data-testid="edit-shop-btn">
+            <Pencil className="h-3.5 w-3.5" /> Modifier
+          </Button>
+        )}
+      </div>
+
+      <Card className="p-5">
+        {/* Logo */}
+        <div className="flex items-center gap-4 mb-5">
+          <div className="relative">
+            <div className="h-20 w-20 rounded-xl bg-orange-50 flex items-center justify-center overflow-hidden border-2 border-orange-200">
+              {shop.logo ? (
+                <img src={getImageUrl(shop.logo)} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <Store className="h-8 w-8 text-orange-400" />
+              )}
+            </div>
+            <input type="file" ref={logoInputRef} accept="image/*" className="hidden" onChange={handleUploadLogo} />
+            <button className="absolute -bottom-1 -right-1 bg-orange-500 text-white rounded-full p-1.5" onClick={() => logoInputRef.current?.click()}>
+              <Camera className="h-3.5 w-3.5" />
+            </button>
+          </div>
+          {!editing && (
+            <div>
+              <h4 className="font-bold text-lg">{shop.name}</h4>
+              <p className="text-sm text-gray-500 flex items-center gap-1"><Tag className="h-3 w-3" /> {shop.sector}</p>
+            </div>
+          )}
+        </div>
+
+        {editing ? (
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs font-medium text-gray-500 mb-1 block">Nom de la boutique *</label>
+              <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Nom de la boutique" data-testid="edit-shop-name" />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-gray-500 mb-1 block">Description</label>
+              <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Description de la boutique" rows={3} data-testid="edit-shop-description" />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-gray-500 mb-1 block">Secteur</label>
+              <select className="w-full px-3 py-2 border rounded-lg text-sm" value={form.sector} onChange={(e) => setForm({ ...form, sector: e.target.value })} data-testid="edit-shop-sector">
+                <option value="">Sélectionner un secteur</option>
+                {SECTORS.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-medium text-gray-500 mb-1 block">Téléphone *</label>
+                <Input value={form.contact_phone} onChange={(e) => setForm({ ...form, contact_phone: e.target.value })} placeholder="+224..." data-testid="edit-shop-phone" />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-500 mb-1 block">Email</label>
+                <Input type="email" value={form.contact_email} onChange={(e) => setForm({ ...form, contact_email: e.target.value })} placeholder="email@exemple.com" data-testid="edit-shop-email" />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-gray-500 mb-1 block">Localisation</label>
+              <Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} placeholder="Ex: Conakry, Kaloum" data-testid="edit-shop-location" />
+            </div>
+            <div className="flex gap-2 pt-2">
+              <Button onClick={handleSave} disabled={saving} className="bg-orange-500 hover:bg-orange-600 gap-1" data-testid="save-shop-btn">
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                {saving ? 'Enregistrement...' : 'Enregistrer'}
+              </Button>
+              <Button variant="outline" onClick={() => setEditing(false)} disabled={saving}>Annuler</Button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-3 text-sm">
+            {shop.description && <p className="text-gray-600">{shop.description}</p>}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+              <p className="flex items-center gap-2 text-gray-600"><Phone className="h-4 w-4 text-orange-500" /> {shop.contact_phone}</p>
+              {shop.contact_email && <p className="flex items-center gap-2 text-gray-600"><Mail className="h-4 w-4 text-orange-500" /> {shop.contact_email}</p>}
+              {shop.location && <p className="flex items-center gap-2 text-gray-600"><MapPin className="h-4 w-4 text-orange-500" /> {shop.location}</p>}
+            </div>
+          </div>
+        )}
+      </Card>
+    </div>
+  );
 };
 
 const MyShop = ({ token, apiPrefix = 'shop' }) => {
@@ -788,35 +907,7 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
 
       {/* Shop Info Section */}
       {activeSection === 'shop' && shop && (
-        <div>
-          <h3 className="font-bold text-lg mb-4">Informations de la boutique</h3>
-          <Card className="p-5">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="relative">
-                <div className="h-20 w-20 rounded-xl bg-orange-50 flex items-center justify-center overflow-hidden border-2 border-orange-200">
-                  {shop.logo ? (
-                    <img src={getImageUrl(shop.logo)} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <Store className="h-8 w-8 text-orange-400" />
-                  )}
-                </div>
-                <input type="file" ref={logoInputRef} accept="image/*" className="hidden" onChange={handleUploadLogo} />
-                <button className="absolute -bottom-1 -right-1 bg-orange-500 text-white rounded-full p-1" onClick={() => logoInputRef.current?.click()}>
-                  <Camera className="h-3 w-3" />
-                </button>
-              </div>
-              <div>
-                <h4 className="font-bold text-lg">{shop.name}</h4>
-                <p className="text-sm text-gray-500 flex items-center gap-1"><Tag className="h-3 w-3" /> {shop.sector}</p>
-              </div>
-            </div>
-            <div className="space-y-2 text-sm text-gray-600">
-              <p>{shop.description}</p>
-              <p className="flex items-center gap-2"><DollarSign className="h-4 w-4" /> {shop.contact_phone}</p>
-              {shop.location && <p className="flex items-center gap-2"><Tag className="h-4 w-4" /> {shop.location}</p>}
-            </div>
-          </Card>
-        </div>
+        <ShopEditSection shop={shop} setShop={setShop} apiPrefix={apiPrefix} authHeaders={authHeaders} logoInputRef={logoInputRef} handleUploadLogo={handleUploadLogo} />
       )}
     </div>
   );
