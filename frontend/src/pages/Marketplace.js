@@ -39,6 +39,7 @@ const PRODUCT_TYPE_OPTIONS = [
   { value: 'electronique', label: 'Électronique', image: 'https://images.unsplash.com/photo-1754761986430-5d0d44d09d00?w=300&h=300&fit=crop&q=80' },
   { value: 'alimentation', label: 'Alimentation', image: 'https://images.unsplash.com/photo-1760108273055-e9bb6e7f3a0c?w=300&h=300&fit=crop&q=80' },
   { value: 'mobilier', label: 'Mobilier', image: 'https://images.unsplash.com/photo-1775494108186-8d7354660c64?w=300&h=300&fit=crop&q=80' },
+  { value: 'bijoux', label: 'Bijoux', image: 'https://images.unsplash.com/photo-1775135946288-ab8f63edff52?w=300&h=300&fit=crop&q=80' },
 ];
 
 // Quick-filter categories are no longer needed (offers come from admin now)

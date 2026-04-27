@@ -20,6 +20,7 @@ const ADMIN_PRODUCT_TYPES = [
   { value: 'electronique', label: 'Électronique' },
   { value: 'alimentation', label: 'Alimentation' },
   { value: 'mobilier', label: 'Mobilier' },
+  { value: 'bijoux', label: 'Bijoux' },
   { value: 'autre', label: 'Autre' },
 ];
 

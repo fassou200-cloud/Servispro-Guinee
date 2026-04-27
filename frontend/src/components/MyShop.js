@@ -29,6 +29,7 @@ const PRODUCT_TYPES = [
   { value: 'electronique', label: 'Électronique' },
   { value: 'alimentation', label: 'Alimentation' },
   { value: 'mobilier', label: 'Mobilier & Décoration' },
+  { value: 'bijoux', label: 'Bijoux' },
   { value: 'autre', label: 'Autre' },
 ];
 
@@ -77,6 +78,12 @@ const PRODUCT_CHARACTERISTICS = {
     { key: 'type_produit', label: 'Type', type: 'text' },
     { key: 'matiere', label: 'Matière', type: 'text' },
     { key: 'dimensions', label: 'Dimensions', type: 'text' },
+    { key: 'etat', label: 'État', type: 'select', options: ['Neuf', 'Occasion'] },
+  ],
+  bijoux: [
+    { key: 'type_bijou', label: 'Type', type: 'select', options: ['Collier', 'Bracelet', 'Bague', 'Boucles d\'oreilles', 'Montre', 'Chaîne', 'Pendentif', 'Ensemble', 'Autre'] },
+    { key: 'matiere', label: 'Matière', type: 'select', options: ['Or', 'Argent', 'Plaqué or', 'Acier inoxydable', 'Fantaisie', 'Perles', 'Diamant', 'Autre'] },
+    { key: 'genre', label: 'Genre', type: 'select', options: ['Homme', 'Femme', 'Unisexe'] },
     { key: 'etat', label: 'État', type: 'select', options: ['Neuf', 'Occasion'] },
   ],
   autre: [
