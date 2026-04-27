@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,7 +6,7 @@ import { getImageUrl } from '@/utils/imageUrl';
 import { toast } from 'sonner';
 import {
   Building, Camera, Eye, Image as ImageIcon, Loader2, Package, Pencil, Save, Store, Trash2, X,
-  Clock, Percent, Plus, Search, Tag, CalendarClock, Power
+  Clock, Percent, Plus, Search, Tag, CalendarClock, Power, Upload
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -39,6 +39,7 @@ const AdminMakitiTab = ({
   handleMakitiDeletePhoto,
   handleMakitiDeleteProduct,
   handleMakitiUpdateProduct,
+  loadMakitiProducts,
   adminApi,
 }) => {
   const [offers, setOffers] = useState([]);
@@ -49,6 +50,8 @@ const AdminMakitiTab = ({
   const [allSearchResults, setAllSearchResults] = useState(0);
   const [addingDiscount, setAddingDiscount] = useState({});
   const [showOfferSection, setShowOfferSection] = useState(true);
+  const [uploadingPhoto, setUploadingPhoto] = useState(null);
+  const photoInputRef = useRef(null);
 
   const token = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
   const headers = { Authorization: `Bearer ${token}` };
@@ -131,6 +134,29 @@ const AdminMakitiTab = ({
   };
 
   const formatPrice = (p) => new Intl.NumberFormat('fr-FR').format(p || 0);
+
+  const handleAdminPhotoUpload = async (productId, files) => {
+    if (!files || files.length === 0) return;
+    setUploadingPhoto(productId);
+    try {
+      const formData = new FormData();
+      for (let i = 0; i < files.length; i++) {
+        formData.append('files', files[i]);
+      }
+      const res = await axios.post(`${API}/admin/products/${productId}/photos`, formData, {
+        headers: { ...headers, 'Content-Type': 'multipart/form-data' },
+      });
+      toast.success(`${files.length} photo(s) ajoutée(s)`);
+      // Update product photos in local state
+      if (typeof loadMakitiProducts === 'function') {
+        loadMakitiProducts();
+      }
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Erreur lors de l\'upload');
+    } finally {
+      setUploadingPhoto(null);
+    }
+  };
 
   // Filter products
   const filteredMakitiProducts = makitiCategoryFilter === '_none'
@@ -443,25 +469,41 @@ const AdminMakitiTab = ({
                 )}
 
                 {/* Photos */}
-                {product.photos?.length > 0 && (
-                  <div className="mt-3">
-                    <button onClick={() => setExpandedMakitiPhotos(expandedMakitiPhotos === product.id ? null : product.id)} className="text-slate-400 hover:text-white text-xs flex items-center gap-1">
-                      <Camera className="h-3 w-3" /> {product.photos.length} photo(s)
-                    </button>
-                    {expandedMakitiPhotos === product.id && (
-                      <div className="flex gap-2 mt-2 overflow-x-auto">
-                        {product.photos.map((url, idx) => (
-                          <div key={idx} className="relative shrink-0 w-20 h-20 rounded-lg overflow-hidden bg-slate-700">
-                            <img src={getImageUrl(url)} alt="" className="w-full h-full object-cover" />
-                            <button onClick={() => handleMakitiDeletePhoto(product.id, idx)} disabled={deletingMakitiPhoto === `${product.id}_${idx}`} className="absolute top-0.5 right-0.5 bg-red-600/90 text-white rounded p-0.5">
-                              {deletingMakitiPhoto === `${product.id}_${idx}` ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
-                            </button>
-                          </div>
-                        ))}
-                      </div>
+                <div className="mt-3">
+                  <div className="flex items-center gap-2">
+                    {product.photos?.length > 0 && (
+                      <button onClick={() => setExpandedMakitiPhotos(expandedMakitiPhotos === product.id ? null : product.id)} className="text-slate-400 hover:text-white text-xs flex items-center gap-1">
+                        <Camera className="h-3 w-3" /> {product.photos.length} photo(s)
+                      </button>
                     )}
+                    <label className="text-xs flex items-center gap-1 text-green-400 hover:text-green-300 cursor-pointer">
+                      <Upload className="h-3 w-3" />
+                      {uploadingPhoto === product.id ? 'Upload...' : 'Ajouter photos'}
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        className="hidden"
+                        disabled={uploadingPhoto === product.id}
+                        onChange={(e) => handleAdminPhotoUpload(product.id, e.target.files)}
+                        data-testid={`admin-upload-photo-${product.id}`}
+                      />
+                    </label>
+                    {uploadingPhoto === product.id && <Loader2 className="h-3 w-3 animate-spin text-green-400" />}
                   </div>
-                )}
+                  {expandedMakitiPhotos === product.id && product.photos?.length > 0 && (
+                    <div className="flex gap-2 mt-2 overflow-x-auto">
+                      {product.photos.map((url, idx) => (
+                        <div key={idx} className="relative shrink-0 w-20 h-20 rounded-lg overflow-hidden bg-slate-700">
+                          <img src={getImageUrl(url)} alt="" className="w-full h-full object-cover" />
+                          <button onClick={() => handleMakitiDeletePhoto(product.id, idx)} disabled={deletingMakitiPhoto === `${product.id}_${idx}`} className="absolute top-0.5 right-0.5 bg-red-600/90 text-white rounded p-0.5">
+                            {deletingMakitiPhoto === `${product.id}_${idx}` ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </Card>
           ))}
