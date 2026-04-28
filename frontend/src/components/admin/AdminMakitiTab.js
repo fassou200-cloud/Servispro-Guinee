@@ -442,7 +442,7 @@ const AdminMakitiTab = ({
                       </>
                     ) : (
                       <>
-                        <button onClick={() => { setEditingMakitiProduct(product.id); setMakitiEditData({ name: product.name, price: product.price, description: product.description, product_type: product.product_type || '' }); }} className="text-blue-400 hover:text-blue-300 p-1"><Pencil className="h-4 w-4" /></button>
+                        <button onClick={() => { setEditingMakitiProduct(product.id); setMakitiEditData({ name: product.name, price: product.price, description: product.description, product_type: product.product_type || '', price_on_request: product.price_on_request || false }); }} className="text-blue-400 hover:text-blue-300 p-1"><Pencil className="h-4 w-4" /></button>
                         <button onClick={() => handleMakitiDeleteProduct(product.id)} className="text-red-400 hover:text-red-300 p-1"><Trash2 className="h-4 w-4" /></button>
                       </>
                     )}
@@ -453,7 +453,17 @@ const AdminMakitiTab = ({
                 {editingMakitiProduct === product.id && (
                   <div className="mt-3 space-y-2 bg-slate-700/50 rounded-lg p-3">
                     <input className="w-full bg-slate-600 text-white text-sm rounded px-3 py-2 border border-slate-500" value={makitiEditData.name || ''} onChange={(e) => setMakitiEditData({ ...makitiEditData, name: e.target.value })} placeholder="Nom" />
-                    <input className="w-full bg-slate-600 text-white text-sm rounded px-3 py-2 border border-slate-500" type="number" value={makitiEditData.price || ''} onChange={(e) => setMakitiEditData({ ...makitiEditData, price: e.target.value })} placeholder="Prix" />
+                    <input className="w-full bg-slate-600 text-white text-sm rounded px-3 py-2 border border-slate-500" type="number" value={makitiEditData.price || ''} onChange={(e) => setMakitiEditData({ ...makitiEditData, price: e.target.value })} placeholder="Prix" disabled={makitiEditData.price_on_request} />
+                    <label className="flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={makitiEditData.price_on_request || false}
+                        onChange={(e) => setMakitiEditData({ ...makitiEditData, price_on_request: e.target.checked })}
+                        className="w-4 h-4 rounded border-slate-500 accent-orange-500"
+                        data-testid={`edit-price-on-request-${product.id}`}
+                      />
+                      Prix sur demande
+                    </label>
                     <select
                       className="w-full bg-slate-600 text-white text-sm rounded px-3 py-2 border border-slate-500"
                       value={makitiEditData.product_type || ''}
