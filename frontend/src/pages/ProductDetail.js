@@ -293,19 +293,54 @@ const ProductDetail = () => {
                   <Phone className="h-4 w-4" /> {product.shop.contact_phone}
                 </a>
               ) : (
-                <button
-                  onClick={() => { setShowContactForm(true); }}
-                  className="flex items-center justify-center gap-2 mt-3 text-gray-400 text-sm w-full"
-                  data-testid="seller-phone-hidden"
-                >
+                <p className="flex items-center justify-center gap-2 mt-3 text-gray-400 text-sm">
                   <Phone className="h-4 w-4" />
-                  <span>Envoyez un message pour voir le numéro du vendeur</span>
-                </button>
+                  <span>Envoyez un message pour voir le numéro</span>
+                </p>
               )
             )}
 
-            {/* Contact Form Modal */}
-            {showContactForm && (
+            {/* Contact Form - Always visible, mandatory to see phone */}
+            {!phoneRevealed && (
+              <Card className="mt-5 p-5 bg-gray-50 border border-gray-200">
+                <h3 className="font-semibold text-gray-900 text-base mb-3">Envoyer un message au vendeur</h3>
+                <form onSubmit={handleSendMessage} className="space-y-3">
+                  <Input
+                    data-testid="contact-name"
+                    placeholder="Votre nom *"
+                    value={contactForm.sender_name}
+                    onChange={(e) => setContactForm({...contactForm, sender_name: e.target.value})}
+                    required
+                  />
+                  <Input
+                    data-testid="contact-phone"
+                    placeholder="Votre numéro de téléphone *"
+                    value={contactForm.sender_phone}
+                    onChange={(e) => setContactForm({...contactForm, sender_phone: e.target.value})}
+                    required
+                  />
+                  <Textarea
+                    data-testid="contact-message"
+                    placeholder={`Bonjour, je suis intéressé par "${product.name}"...`}
+                    value={contactForm.message}
+                    onChange={(e) => setContactForm({...contactForm, message: e.target.value})}
+                    rows={3}
+                    required
+                  />
+                  <Button
+                    data-testid="send-message-btn"
+                    type="submit"
+                    className="w-full bg-green-500 hover:bg-green-600"
+                    disabled={sending}
+                  >
+                    {sending ? 'Envoi...' : 'Envoyer le message'}
+                  </Button>
+                </form>
+              </Card>
+            )}
+
+            {/* Contact Form Modal - for after phone is revealed (optional re-contact) */}
+            {phoneRevealed && showContactForm && (
               <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowContactForm(false)}>
                 <Card data-testid="contact-form" className="w-full max-w-md p-6 bg-white relative" onClick={(e) => e.stopPropagation()}>
                   <button
@@ -318,14 +353,14 @@ const ProductDetail = () => {
                   <form onSubmit={handleSendMessage} className="space-y-3">
                     <Input
                       data-testid="contact-name"
-                      placeholder="Votre nom"
+                      placeholder="Votre nom *"
                       value={contactForm.sender_name}
                       onChange={(e) => setContactForm({...contactForm, sender_name: e.target.value})}
                       required
                     />
                     <Input
                       data-testid="contact-phone"
-                      placeholder="Votre numéro de téléphone"
+                      placeholder="Votre numéro de téléphone *"
                       value={contactForm.sender_phone}
                       onChange={(e) => setContactForm({...contactForm, sender_phone: e.target.value})}
                       required
