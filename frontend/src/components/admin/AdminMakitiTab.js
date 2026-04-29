@@ -52,6 +52,10 @@ const AdminMakitiTab = ({
   const [showOfferSection, setShowOfferSection] = useState(true);
   const [uploadingPhoto, setUploadingPhoto] = useState(null);
   const photoInputRef = useRef(null);
+  const [showCreateProduct, setShowCreateProduct] = useState(false);
+  const [shops, setShops] = useState([]);
+  const [newProduct, setNewProduct] = useState({ shop_id: '', name: '', description: '', price: '', currency: 'GNF', price_on_request: false, product_type: '', is_negotiable: false });
+  const [creatingProduct, setCreatingProduct] = useState(false);
 
   const token = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
   const headers = { Authorization: `Bearer ${token}` };
@@ -157,6 +161,39 @@ const AdminMakitiTab = ({
       setUploadingPhoto(null);
     }
   };
+
+  const loadShops = async () => {
+    try {
+      const res = await axios.get(`${API}/admin/marketplace-shops`, { headers });
+      setShops(res.data);
+    } catch (e) { console.error(e); }
+  };
+
+  const handleCreateProduct = async () => {
+    if (!newProduct.shop_id) { toast.error('Sélectionnez une boutique'); return; }
+    if (!newProduct.name) { toast.error('Le nom est obligatoire'); return; }
+    setCreatingProduct(true);
+    try {
+      await axios.post(`${API}/admin/shops/${newProduct.shop_id}/products`, {
+        name: newProduct.name,
+        description: newProduct.description,
+        price: parseFloat(newProduct.price) || 0,
+        currency: newProduct.currency,
+        price_on_request: newProduct.price_on_request,
+        product_type: newProduct.product_type || null,
+        is_negotiable: newProduct.is_negotiable,
+      }, { headers });
+      toast.success('Produit créé !');
+      setNewProduct({ shop_id: '', name: '', description: '', price: '', currency: 'GNF', price_on_request: false, product_type: '', is_negotiable: false });
+      setShowCreateProduct(false);
+      if (typeof loadMakitiProducts === 'function') loadMakitiProducts();
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Erreur lors de la création');
+    } finally {
+      setCreatingProduct(false);
+    }
+  };
+
 
   // Filter products
   const filteredMakitiProducts = makitiCategoryFilter === '_none'
@@ -366,6 +403,105 @@ const AdminMakitiTab = ({
           </Card>
         </div>
       )}
+
+
+      {/* ════════ CREATE PRODUCT ════════ */}
+      <Card className="bg-slate-800 border-slate-700 p-4">
+        <div className="flex items-center justify-between">
+          <h4 className="text-white font-semibold flex items-center gap-2">
+            <Plus className="h-4 w-4 text-green-400" />
+            Créer un produit pour une boutique
+          </h4>
+          <button
+            onClick={() => { setShowCreateProduct(!showCreateProduct); if (!showCreateProduct && shops.length === 0) loadShops(); }}
+            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${showCreateProduct ? 'bg-slate-600 text-slate-300' : 'bg-green-600 hover:bg-green-700 text-white'}`}
+            data-testid="toggle-create-product"
+          >
+            {showCreateProduct ? 'Fermer' : 'Nouveau produit'}
+          </button>
+        </div>
+
+        {showCreateProduct && (
+          <div className="mt-4 space-y-3">
+            <select
+              className="w-full bg-slate-700 text-white text-sm rounded px-3 py-2 border border-slate-600"
+              value={newProduct.shop_id}
+              onChange={(e) => setNewProduct({ ...newProduct, shop_id: e.target.value })}
+              data-testid="create-product-shop"
+            >
+              <option value="">-- Sélectionner une boutique --</option>
+              {shops.map(s => <option key={s.id} value={s.id}>{s.name} ({s.sector})</option>)}
+            </select>
+            <input
+              className="w-full bg-slate-700 text-white text-sm rounded px-3 py-2 border border-slate-600"
+              placeholder="Nom du produit *"
+              value={newProduct.name}
+              onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
+              data-testid="create-product-name"
+            />
+            <textarea
+              className="w-full bg-slate-700 text-white text-sm rounded px-3 py-2 border border-slate-600 resize-none"
+              placeholder="Description"
+              rows={2}
+              value={newProduct.description}
+              onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
+              data-testid="create-product-description"
+            />
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <input
+                className="bg-slate-700 text-white text-sm rounded px-3 py-2 border border-slate-600"
+                type="number"
+                placeholder="Prix"
+                value={newProduct.price}
+                onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
+                disabled={newProduct.price_on_request}
+                data-testid="create-product-price"
+              />
+              <select
+                className="bg-slate-700 text-white text-sm rounded px-3 py-2 border border-slate-600"
+                value={newProduct.currency}
+                onChange={(e) => setNewProduct({ ...newProduct, currency: e.target.value })}
+              >
+                <option value="GNF">GNF</option>
+                <option value="EUR">EUR</option>
+                <option value="USD">USD</option>
+              </select>
+              <select
+                className="bg-slate-700 text-white text-sm rounded px-3 py-2 border border-slate-600"
+                value={newProduct.product_type}
+                onChange={(e) => setNewProduct({ ...newProduct, product_type: e.target.value })}
+                data-testid="create-product-type"
+              >
+                <option value="">-- Catégorie --</option>
+                {ADMIN_PRODUCT_TYPES.map(cat => <option key={cat.value} value={cat.value}>{cat.label}</option>)}
+              </select>
+              <label className="flex items-center gap-2 text-xs text-slate-300">
+                <input type="checkbox" checked={newProduct.is_negotiable} onChange={(e) => setNewProduct({ ...newProduct, is_negotiable: e.target.checked })} className="accent-orange-500" />
+                Négociable
+              </label>
+            </div>
+            <label className="flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={newProduct.price_on_request}
+                onChange={(e) => setNewProduct({ ...newProduct, price_on_request: e.target.checked })}
+                className="w-4 h-4 accent-orange-500"
+              />
+              Prix sur demande
+            </label>
+            <button
+              onClick={handleCreateProduct}
+              disabled={creatingProduct}
+              className="w-full bg-green-600 hover:bg-green-700 text-white py-2.5 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+              data-testid="create-product-submit"
+            >
+              {creatingProduct ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+              {creatingProduct ? 'Création...' : 'Créer le produit'}
+            </button>
+          </div>
+        )}
+      </Card>
+
 
       {/* ════════ EXISTING MAKITI PRODUCT MANAGEMENT ════════ */}
       {/* Category Filter Bar */}

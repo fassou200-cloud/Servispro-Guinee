@@ -2078,6 +2078,42 @@ async def admin_get_shops():
     return shops
 
 
+@router.post("/admin/shops/{shop_id}/products")
+async def admin_create_product_for_shop(shop_id: str, data: dict = Body(...)):
+    """Admin: create a product for any shop"""
+    shop = await db.shops.find_one({'id': shop_id}, {'_id': 0})
+    if not shop:
+        raise HTTPException(status_code=404, detail="Boutique non trouvée")
+    
+    product = {
+        'id': str(uuid.uuid4()),
+        'shop_id': shop['id'],
+        'shop_name': shop.get('name', ''),
+        'owner_id': shop.get('owner_id', ''),
+        'name': data.get('name', ''),
+        'description': data.get('description', ''),
+        'price': float(data.get('price', 0)),
+        'currency': data.get('currency', 'GNF'),
+        'price_on_request': data.get('price_on_request', False),
+        'category_id': data.get('category_id'),
+        'product_type': data.get('product_type'),
+        'characteristics': data.get('characteristics', {}),
+        'is_negotiable': data.get('is_negotiable', False),
+        'is_available': True,
+        'photos': [],
+        'total_views': 0,
+        'total_inquiries': 0,
+        'is_deleted': False,
+        'created_at': datetime.now(timezone.utc).isoformat(),
+        'updated_at': datetime.now(timezone.utc).isoformat(),
+    }
+    
+    await db.products.insert_one(product)
+    product.pop('_id', None)
+    return product
+
+
+
 @router.get("/admin/all-products")
 async def admin_get_all_products():
     """Get all products across all shops for admin"""
