@@ -1008,6 +1008,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
     handleMakitiDeletePhoto, handleAdminDocUpload, handleDeleteAdminDoc,
     handleApproveRental, handleRejectRental, handleSaveAbout, handleSaveProfile,
     fetchRefundRequests, handleRefundDecision, loadTabData,
+    confirmDelete, executeDelete,
     adminApi, API, translateProfession, translateStatus, getStatusBadge, getImageUrl,
   };
 
