@@ -276,7 +276,7 @@ const ProductDetail = () => {
             <Button
               data-testid="contact-seller-btn"
               className="w-full mt-6 bg-green-500 hover:bg-green-600 gap-2 py-6 text-base"
-              onClick={() => setShowContactForm(!showContactForm)}
+              onClick={() => setShowContactForm(true)}
             >
               <MessageCircle className="h-5 w-5" />
               Contacter le vendeur
@@ -300,51 +300,16 @@ const ProductDetail = () => {
               )
             )}
 
-            {/* Contact Form - Always visible, mandatory to see phone */}
-            {!phoneRevealed && (
-              <Card className="mt-5 p-5 bg-gray-50 border border-gray-200">
-                <h3 className="font-semibold text-gray-900 text-base mb-3">Envoyer un message au vendeur</h3>
-                <form onSubmit={handleSendMessage} className="space-y-3">
-                  <Input
-                    data-testid="contact-name"
-                    placeholder="Votre nom *"
-                    value={contactForm.sender_name}
-                    onChange={(e) => setContactForm({...contactForm, sender_name: e.target.value})}
-                    required
-                  />
-                  <Input
-                    data-testid="contact-phone"
-                    placeholder="Votre numéro de téléphone *"
-                    value={contactForm.sender_phone}
-                    onChange={(e) => setContactForm({...contactForm, sender_phone: e.target.value})}
-                    required
-                  />
-                  <Textarea
-                    data-testid="contact-message"
-                    placeholder={`Bonjour, je suis intéressé par "${product.name}"...`}
-                    value={contactForm.message}
-                    onChange={(e) => setContactForm({...contactForm, message: e.target.value})}
-                    rows={3}
-                    required
-                  />
-                  <Button
-                    data-testid="send-message-btn"
-                    type="submit"
-                    className="w-full bg-green-500 hover:bg-green-600"
-                    disabled={sending}
-                  >
-                    {sending ? 'Envoi...' : 'Envoyer le message'}
-                  </Button>
-                </form>
-              </Card>
-            )}
-
-            {/* Contact Form Modal - for after phone is revealed (optional re-contact) */}
-            {phoneRevealed && showContactForm && (
-              <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowContactForm(false)}>
-                <Card data-testid="contact-form" className="w-full max-w-md p-6 bg-white relative" onClick={(e) => e.stopPropagation()}>
+            {/* Contact Form Popup Modal */}
+            {showContactForm && (
+              <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center" onClick={() => setShowContactForm(false)}>
+                <Card
+                  data-testid="contact-form"
+                  className="w-full sm:max-w-md p-6 bg-white relative rounded-t-2xl sm:rounded-2xl animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 duration-300"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <button
-                    className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-2xl font-bold leading-none"
+                    className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center"
                     onClick={() => setShowContactForm(false)}
                   >
                     &times;
@@ -376,12 +341,15 @@ const ProductDetail = () => {
                     <Button
                       data-testid="send-message-btn"
                       type="submit"
-                      className="w-full bg-green-500 hover:bg-green-600"
+                      className="w-full bg-green-500 hover:bg-green-600 py-5 text-base"
                       disabled={sending}
                     >
                       {sending ? 'Envoi...' : 'Envoyer le message'}
                     </Button>
                   </form>
+                  {!phoneRevealed && (
+                    <p className="text-xs text-gray-400 text-center mt-3">Le numéro du vendeur sera visible après votre message</p>
+                  )}
                 </Card>
               </div>
             )}
