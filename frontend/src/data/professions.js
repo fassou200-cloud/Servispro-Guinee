@@ -128,6 +128,31 @@ export const professionGroups = [
       { id: 'proprietaire_immobilier', name: 'Propriétaire immobilier' },
       { id: 'agent_immobilier', name: 'Agent immobilier' }
     ]
+  },
+  {
+    id: 'technologies_information',
+    name: 'Technologies de l\'information',
+    icon: '💻',
+    professions: [
+      { id: 'developpeur_web', name: 'Développeur web' },
+      { id: 'developpeur_mobile', name: 'Développeur mobile' },
+      { id: 'technicien_informatique', name: 'Technicien informatique' },
+      { id: 'administrateur_reseau', name: 'Administrateur réseau' },
+      { id: 'technicien_reparation', name: 'Technicien en réparation (téléphones/ordinateurs)' },
+      { id: 'designer_graphique', name: 'Designer graphique' },
+      { id: 'community_manager', name: 'Community manager' },
+      { id: 'specialiste_cybersecurite', name: 'Spécialiste en cybersécurité' },
+      { id: 'installateur_camera', name: 'Installateur caméra/surveillance' },
+      { id: 'support_technique', name: 'Support technique' }
+    ]
+  },
+  {
+    id: 'autres',
+    name: 'Autres',
+    icon: '📋',
+    professions: [
+      { id: 'autre_metier', name: 'Autre métier (préciser)' }
+    ]
   }
 ];
 
