@@ -551,13 +551,15 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
       )}
 
       {/* Section Tabs */}
-      <div className="flex gap-2 border-b pb-2">
-        {['products', 'messages', 'reviews', 'shop'].map(section => (
+      <div className="flex gap-2 border-b pb-2 overflow-x-auto">
+        {['products', 'inquiries', 'messages', 'reviews', 'shop'].map(section => (
           <Button key={section} variant={activeSection === section ? 'default' : 'ghost'} size="sm"
-            className={activeSection === section ? 'bg-orange-500 hover:bg-orange-600' : ''}
+            className={`shrink-0 ${activeSection === section ? 'bg-orange-500 hover:bg-orange-600' : ''}`}
             onClick={() => setActiveSection(section)}
+            data-testid={`shop-tab-${section}`}
           >
             {section === 'products' && <><Package className="h-4 w-4 mr-1" /> Produits ({products.length})</>}
+            {section === 'inquiries' && <><Tag className="h-4 w-4 mr-1" /> Demandes</>}
             {section === 'messages' && <><MessageCircle className="h-4 w-4 mr-1" /> Messages {unreadCount > 0 && `(${unreadCount})`}</>}
             {section === 'reviews' && <><Star className="h-4 w-4 mr-1" /> Avis ({reviews.length})</>}
             {section === 'shop' && <><Store className="h-4 w-4 mr-1" /> Ma Boutique</>}
@@ -855,6 +857,67 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
                 </Card>
                 );
               })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Inquiries (Demandes) Section */}
+      {activeSection === 'inquiries' && (
+        <div data-testid="shop-inquiries-section">
+          <h3 className="font-bold text-lg mb-1">Historique des demandes</h3>
+          <p className="text-sm text-gray-500 mb-4">Tous les produits pour lesquels des clients vous ont contacté</p>
+          {loadingInquiries ? (
+            <div className="text-center py-12"><Loader2 className="h-8 w-8 animate-spin text-gray-400 mx-auto" /></div>
+          ) : shopInquiries.length === 0 ? (
+            <div className="text-center py-12 bg-gray-50 rounded-xl">
+              <Tag className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-500">Aucune demande pour le moment</p>
+              <p className="text-gray-400 text-xs mt-1">Vos demandes clients apparaîtront ici</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {shopInquiries.map(inq => (
+                <Card key={inq.id} className={`p-4 ${!inq.is_read ? 'border-orange-200 bg-orange-50/30' : ''}`} data-testid={`shop-inquiry-${inq.id}`}>
+                  <div className="flex gap-4">
+                    <div className="w-16 h-16 rounded-xl bg-gray-100 overflow-hidden shrink-0">
+                      {inq.product_photo ? (
+                        <img src={getImageUrl(inq.product_photo)} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center"><Package className="h-6 w-6 text-gray-300" /></div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <h4 className="font-semibold text-gray-900 text-sm truncate">{inq.product_name}</h4>
+                          <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1">
+                            <User className="h-3 w-3" /> {inq.sender_name}
+                            <span className="text-gray-300">•</span>
+                            <Phone className="h-3 w-3" /> {inq.sender_phone}
+                          </p>
+                          {inq.product_price > 0 && (
+                            <p className="text-orange-600 font-bold text-sm mt-1">
+                              {new Intl.NumberFormat('fr-FR').format(inq.product_price)} {inq.product_currency || 'GNF'}
+                            </p>
+                          )}
+                        </div>
+                        <span className="text-xs text-gray-400 shrink-0">
+                          {new Date(inq.created_at).toLocaleDateString('fr-FR')}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-3 bg-gray-50 rounded-lg p-2.5">
+                    <p className="text-xs text-gray-600 line-clamp-3">{inq.message}</p>
+                  </div>
+                  {!inq.is_read && (
+                    <div className="mt-2 flex justify-end">
+                      <span className="text-[10px] bg-orange-500 text-white px-2 py-0.5 rounded-full font-medium">Nouveau</span>
+                    </div>
+                  )}
+                </Card>
+              ))}
             </div>
           )}
         </div>
