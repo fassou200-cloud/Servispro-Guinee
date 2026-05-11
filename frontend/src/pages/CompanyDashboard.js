@@ -13,7 +13,7 @@ import {
   Building2, LogOut, FileText, Upload, Briefcase, Users, MapPin,
   CheckCircle, XCircle, Clock, Phone, Mail, Globe, Plus, Home,
   Eye, AlertTriangle, Shield, User, ExternalLink, Trash2, Edit,
-  DollarSign, Calendar, Building, Bath, Car, Trees, Waves, X, Store, MessageCircle
+  DollarSign, Calendar, Building, Bath, Car, Trees, Waves, X, Store, MessageCircle, BarChart3
 } from 'lucide-react';
 import axios from 'axios';
 import { getErrorMessage } from '@/utils/helpers';
@@ -31,6 +31,7 @@ import CompanyDocumentsTab from '@/components/company/CompanyDocumentsTab';
 import CompanyServicesTab from '@/components/company/CompanyServicesTab';
 import CompanyJobsTab from '@/components/company/CompanyJobsTab';
 import CompanyPropertyMessagesTab from '@/components/company/CompanyPropertyMessagesTab';
+import CompanyStatsTab from '@/components/company/CompanyStatsTab';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -958,6 +959,14 @@ const CompanyDashboard = () => {
           >
             <Store className="h-4 w-4 text-orange-500" /> Ma Boutique
           </Button>
+          <Button
+            variant={activeTab === 'stats' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('stats')}
+            className={`gap-2 ${activeTab === 'stats' ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-indigo-50 border-indigo-200 hover:bg-indigo-100'}`}
+            data-testid="tab-stats"
+          >
+            <BarChart3 className="h-4 w-4 text-indigo-600" /> Statistiques
+          </Button>
         </div>
 
         {/* Profile Tab */}
@@ -1030,6 +1039,9 @@ const CompanyDashboard = () => {
             API={API}
           />
         )}
+
+        {/* Statistics */}
+        {activeTab === 'stats' && <CompanyStatsTab API={API} />}
       </div>
     </div>
   );

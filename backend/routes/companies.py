@@ -636,3 +636,105 @@ async def mark_property_message_read(message_id: str, current_company: dict = De
     return {'message': 'Marqué comme lu'}
 
 
+@router.get("/company/stats")
+async def get_company_stats(current_company: dict = Depends(get_current_company)):
+    """Get aggregated statistics for the company dashboard"""
+    company_id = current_company['id']
+    is_real_estate = current_company.get('sector') == 'Immobilier'
+
+    # Services
+    services = await db.company_services.find({'company_id': company_id}, {'_id': 0}).to_list(None)
+    services_total = len(services)
+    services_available = sum(1 for s in services if s.get('is_available', True))
+
+    # Jobs
+    jobs = await db.company_job_offers.find({'company_id': company_id}, {'_id': 0}).to_list(None)
+    jobs_total = len(jobs)
+    jobs_active = sum(1 for j in jobs if j.get('is_active', True))
+    applications_total = sum(j.get('applications_count', 0) for j in jobs)
+
+    # Real estate stats
+    rentals_total = 0
+    rentals_available = 0
+    rentals_views = 0
+    sales_total = 0
+    sales_views = 0
+    rental_msgs_total = 0
+    rental_msgs_unread = 0
+    sale_inquiries_total = 0
+    sale_inquiries_pending = 0
+
+    if is_real_estate:
+        rentals = await db.rental_listings.find({'agent_id': company_id}, {'_id': 0}).to_list(None)
+        rentals_total = len(rentals)
+        rentals_available = sum(1 for r in rentals if r.get('is_available', True))
+        rentals_views = sum(r.get('views_count', 0) for r in rentals)
+
+        sales = await db.property_sales.find({'agent_id': company_id}, {'_id': 0}).to_list(None)
+        sales_total = len(sales)
+        sales_views = sum(s.get('views_count', 0) for s in sales)
+
+        rental_msgs_total = await db.property_messages.count_documents({'owner_id': company_id})
+        rental_msgs_unread = await db.property_messages.count_documents({'owner_id': company_id, 'is_read': False})
+
+        sale_inquiries_total = await db.property_inquiries.count_documents({'agent_id': company_id})
+        sale_inquiries_pending = await db.property_inquiries.count_documents({'agent_id': company_id, 'status': 'pending'})
+
+    # Shop (Makiti) stats
+    shop = await db.shops.find_one({'owner_id': company_id}, {'_id': 0})
+    shop_products_total = 0
+    shop_products_available = 0
+    shop_views = 0
+    shop_inquiries_total = 0
+    shop_inquiries_unread = 0
+    if shop:
+        products = await db.products.find({'shop_id': shop['id']}, {'_id': 0}).to_list(None)
+        shop_products_total = len(products)
+        shop_products_available = sum(1 for p in products if p.get('is_available', True))
+        shop_views = sum(p.get('total_views', 0) for p in products)
+
+        shop_inquiries_total = await db.product_messages.count_documents({'shop_id': shop['id']})
+        shop_inquiries_unread = await db.product_messages.count_documents({'shop_id': shop['id'], 'is_read': False})
+
+    # Top performing services (by category count) — quick insight
+    services_by_category = {}
+    for s in services:
+        cat = s.get('category', 'Autre')
+        services_by_category[cat] = services_by_category.get(cat, 0) + 1
+    top_categories = sorted(services_by_category.items(), key=lambda x: x[1], reverse=True)[:5]
+
+    return {
+        'is_real_estate': is_real_estate,
+        'has_shop': shop is not None,
+        'services': {
+            'total': services_total,
+            'available': services_available,
+            'top_categories': [{'category': c, 'count': n} for c, n in top_categories],
+        },
+        'jobs': {
+            'total': jobs_total,
+            'active': jobs_active,
+            'total_applications': applications_total,
+        },
+        'real_estate': {
+            'rentals_total': rentals_total,
+            'rentals_available': rentals_available,
+            'rentals_views': rentals_views,
+            'sales_total': sales_total,
+            'sales_views': sales_views,
+            'rental_messages_total': rental_msgs_total,
+            'rental_messages_unread': rental_msgs_unread,
+            'sale_inquiries_total': sale_inquiries_total,
+            'sale_inquiries_pending': sale_inquiries_pending,
+        } if is_real_estate else None,
+        'shop': {
+            'products_total': shop_products_total,
+            'products_available': shop_products_available,
+            'total_views': shop_views,
+            'inquiries_total': shop_inquiries_total,
+            'inquiries_unread': shop_inquiries_unread,
+        } if shop else None,
+        'verification_status': current_company.get('verification_status', 'pending'),
+    }
+
+
