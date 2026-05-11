@@ -222,6 +222,8 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [activeSection, setActiveSection] = useState('products');
+  const [shopInquiries, setShopInquiries] = useState([]);
+  const [loadingInquiries, setLoadingInquiries] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploadingPhotos, setUploadingPhotos] = useState(null);
   const fileInputRef = useRef(null);
@@ -239,6 +241,20 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
   const authHeaders = { headers: { Authorization: `Bearer ${token}` } };
 
   useEffect(() => { loadShopData(); }, []);
+
+  useEffect(() => {
+    if (activeSection === 'inquiries') fetchShopInquiries();
+  }, [activeSection]);
+
+  const fetchShopInquiries = async () => {
+    setLoadingInquiries(true);
+    try {
+      const res = await axios.get(`${API}/${apiPrefix}/inquiries`, authHeaders);
+      setShopInquiries(res.data);
+    } catch (e) { console.error(e); }
+    finally { setLoadingInquiries(false); }
+  };
+
 
   const loadShopData = async () => {
     try {

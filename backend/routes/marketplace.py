@@ -407,7 +407,7 @@ async def get_product_detail(product_id: str):
 
 
 @router.post("/marketplace/products/{product_id}/message")
-async def send_product_message(product_id: str, data: ProductMessageCreate):
+async def send_product_message(product_id: str, data: ProductMessageCreate, credentials: Optional[str] = None):
     product = await db.products.find_one({'id': product_id, 'is_deleted': {'$ne': True}}, {'_id': 0})
     if not product:
         raise HTTPException(status_code=404, detail="Produit non trouvé")
@@ -416,13 +416,34 @@ async def send_product_message(product_id: str, data: ProductMessageCreate):
         'id': str(uuid.uuid4()),
         'product_id': product_id,
         'product_name': product['name'],
+        'product_photo': product.get('photos', [None])[0] if product.get('photos') else None,
+        'product_price': product.get('price', 0),
+        'product_currency': product.get('currency', 'GNF'),
         'shop_id': product['shop_id'],
+        'shop_name': product.get('shop_name', ''),
+        'owner_id': product.get('owner_id', ''),
         'sender_name': data.sender_name,
         'sender_phone': data.sender_phone,
         'message': data.message,
+        'customer_id': None,
         'is_read': False,
         'created_at': datetime.now(timezone.utc).isoformat()
     }
+    
+    # Try to link to a customer account by phone number
+    sender_phone_clean = data.sender_phone.replace('+', '').replace(' ', '').replace('-', '')
+    variants = [sender_phone_clean]
+    if sender_phone_clean.startswith('224') and len(sender_phone_clean) > 9:
+        variants.append(sender_phone_clean[3:])
+        variants.append('+' + sender_phone_clean)
+    else:
+        variants.append('224' + sender_phone_clean)
+        variants.append('+224' + sender_phone_clean)
+    
+    customer = await db.customers.find_one({'phone_number': {'$in': variants}}, {'_id': 0})
+    if customer:
+        message['customer_id'] = customer['id']
+    
     await db.product_messages.insert_one(message)
     message.pop('_id', None)
     
@@ -430,6 +451,66 @@ async def send_product_message(product_id: str, data: ProductMessageCreate):
     await db.products.update_one({'id': product_id}, {'$inc': {'total_inquiries': 1}})
     
     return message
+
+
+
+# ==================== CUSTOMER INQUIRY HISTORY ====================
+
+@router.get("/customer/product-inquiries")
+async def get_customer_product_inquiries(current_customer: dict = Depends(get_current_customer)):
+    """Get all product inquiries made by the logged-in customer"""
+    customer_id = current_customer['id']
+    customer_phone = current_customer.get('phone_number', '')
+    
+    # Search by customer_id OR phone variants
+    phone_clean = customer_phone.replace('+', '').replace(' ', '').replace('-', '')
+    phone_variants = [customer_phone, phone_clean]
+    if phone_clean.startswith('224') and len(phone_clean) > 9:
+        phone_variants.extend([phone_clean[3:], '+' + phone_clean])
+    else:
+        phone_variants.extend(['224' + phone_clean, '+224' + phone_clean])
+    
+    inquiries = await db.product_messages.find(
+        {'$or': [
+            {'customer_id': customer_id},
+            {'sender_phone': {'$in': phone_variants}}
+        ]},
+        {'_id': 0}
+    ).sort('created_at', -1).to_list(100)
+    
+    return inquiries
+
+
+@router.get("/shop/inquiries")
+async def get_shop_inquiries(current_user: dict = Depends(get_current_user)):
+    """Get all product inquiries received by the shop (provider)"""
+    provider_id = current_user['id']
+    shop = await db.shops.find_one({'owner_id': provider_id}, {'_id': 0})
+    if not shop:
+        return []
+    
+    inquiries = await db.product_messages.find(
+        {'shop_id': shop['id']},
+        {'_id': 0}
+    ).sort('created_at', -1).to_list(200)
+    
+    return inquiries
+
+
+@router.get("/company/shop/inquiries")
+async def get_company_shop_inquiries(current_company: dict = Depends(get_current_company)):
+    """Get all product inquiries received by the company shop"""
+    company_id = current_company['id']
+    shop = await db.shops.find_one({'owner_id': company_id}, {'_id': 0})
+    if not shop:
+        return []
+    
+    inquiries = await db.product_messages.find(
+        {'shop_id': shop['id']},
+        {'_id': 0}
+    ).sort('created_at', -1).to_list(200)
+    
+    return inquiries
 
 
 @router.post("/company/shop/create")

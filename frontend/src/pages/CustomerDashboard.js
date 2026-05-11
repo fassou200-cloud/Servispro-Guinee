@@ -9,7 +9,7 @@ import {
   Home, LogOut, Search, Building, User, CheckCircle, Clock, Briefcase,
   ArrowRight, MapPin, Calendar, Star, Bell, Settings, ChevronRight,
   Phone, Shield, Sparkles, TrendingUp, MessageCircle, DollarSign, 
-  Mail, RefreshCw, Eye, Send, Loader2, Wallet, AlertTriangle, CreditCard, Banknote, X
+  Mail, RefreshCw, Eye, Send, Loader2, Wallet, AlertTriangle, CreditCard, Banknote, X, ShoppingBag, Package
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
@@ -87,6 +87,10 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
   // Rating popup state
   const [showRatingPopup, setShowRatingPopup] = useState(false);
   const [ratingJobData, setRatingJobData] = useState(null);
+  
+  // Product inquiries history
+  const [productInquiries, setProductInquiries] = useState([]);
+  const [loadingProductInquiries, setLoadingProductInquiries] = useState(false);
 
   useEffect(() => {
     const storedCustomer = localStorage.getItem('customer');
@@ -114,6 +118,8 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
     } else if (activeTab === 'creances') {
       fetchCreditHistory();
       fetchRefundRequests();
+    } else if (activeTab === 'achats') {
+      fetchProductInquiries();
     }
   }, [activeTab]);
 
@@ -134,6 +140,22 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
       setLoadingJobs(false);
     }
   };
+
+  const fetchProductInquiries = async () => {
+    setLoadingProductInquiries(true);
+    try {
+      const token = localStorage.getItem('customerToken');
+      const res = await axios.get(`${API}/customer/product-inquiries`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setProductInquiries(res.data);
+    } catch (e) {
+      console.error('Failed to fetch product inquiries:', e);
+    } finally {
+      setLoadingProductInquiries(false);
+    }
+  };
+
 
   const fetchBalance = async () => {
     try {
@@ -497,6 +519,20 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
             {balance > 0 && (
               <span className="ml-2 px-2 py-0.5 bg-purple-500 text-white text-xs rounded-full">
                 {balance.toLocaleString('fr-FR')} GNF
+              </span>
+            )}
+          </Button>
+          <Button
+            variant={activeTab === 'achats' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('achats')}
+            className={`rounded-xl ${activeTab === 'achats' ? 'bg-orange-600 hover:bg-orange-700' : ''}`}
+            data-testid="tab-achats"
+          >
+            <ShoppingBag className="h-4 w-4 mr-2" />
+            Mes Achats Makiti
+            {productInquiries.length > 0 && (
+              <span className="ml-2 px-2 py-0.5 bg-orange-500 text-white text-xs rounded-full">
+                {productInquiries.length}
               </span>
             )}
           </Button>
@@ -1360,6 +1396,56 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
           </div>
         )}
       </div>
+
+      {/* Mes Achats Makiti Tab */}
+      {activeTab === 'achats' && (
+        <div className="space-y-4">
+          <h2 className="text-xl font-bold">Mes Demandes de Produits</h2>
+          <p className="text-gray-500 text-sm">Historique de tous les produits pour lesquels vous avez contacté un vendeur</p>
+          
+          {loadingProductInquiries ? (
+            <div className="text-center py-12"><Loader2 className="h-8 w-8 animate-spin text-gray-400 mx-auto" /></div>
+          ) : productInquiries.length === 0 ? (
+            <Card className="p-8 text-center">
+              <ShoppingBag className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+              <h3 className="font-semibold text-gray-600">Aucune demande</h3>
+              <p className="text-gray-400 text-sm mt-1">Vous n'avez pas encore contacté de vendeur sur Makiti</p>
+              <Button className="mt-4 bg-orange-500 hover:bg-orange-600" onClick={() => navigate('/makiti')}>
+                Explorer Makiti
+              </Button>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {productInquiries.map(inq => (
+                <Card key={inq.id} className="p-4 hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate(`/makiti/product/${inq.product_id}`)}>
+                  <div className="flex gap-4">
+                    <div className="w-16 h-16 rounded-xl bg-gray-100 overflow-hidden shrink-0">
+                      {inq.product_photo ? (
+                        <img src={getImageUrl(inq.product_photo)} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center"><Package className="h-6 w-6 text-gray-300" /></div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold text-gray-900 text-sm truncate">{inq.product_name}</h4>
+                      <p className="text-xs text-gray-500 mt-0.5">{inq.shop_name}</p>
+                      {inq.product_price > 0 && (
+                        <p className="text-orange-600 font-bold text-sm mt-1">{new Intl.NumberFormat('fr-FR').format(inq.product_price)} {inq.product_currency || 'GNF'}</p>
+                      )}
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-xs text-gray-400">{new Date(inq.created_at).toLocaleDateString('fr-FR')}</p>
+                    </div>
+                  </div>
+                  <div className="mt-2 bg-gray-50 rounded-lg p-2.5">
+                    <p className="text-xs text-gray-600 line-clamp-2">{inq.message}</p>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Rating Popup */}
       <RatingPopup
