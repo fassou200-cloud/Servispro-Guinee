@@ -93,6 +93,7 @@ ServisPro is a comprehensive platform in Guinea connecting service providers, co
 - [x] **Offres à durée limitée admin** (CRUD offres, date d'expiration globale, % réduction, countdown réel sur Makiti)
 - [x] **Historique demandes clients (Customer "Mes Achats" + Shop "Demandes")** (Feb 2026 — onglet riche avec photo produit, prix, nom/téléphone client, message, statut nouveau/lu — providers + companies)
 - [x] **CustomerDashboard refactoring** (Feb 2026 — 1466 → 548 lignes, 4 sous-composants extraits : CustomerOverviewTab, CustomerDemandesTab, CustomerCreancesTab, CustomerAchatsTab dans `/components/customer/`)
+- [x] **CompanyDashboard refactoring complet** (Feb 2026 — 1331 → 1038 lignes, 4 nouveaux sous-composants : CompanyDocumentsTab, CompanyServicesTab, CompanyJobsTab, CompanyPropertyMessagesTab dans `/components/company/` — total 11 composants company)
 
 ## Pending Issues
 - [ ] P3: "Erreur lors de l'approbation" (needs user reproduction steps)

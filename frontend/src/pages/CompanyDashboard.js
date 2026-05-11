@@ -27,6 +27,10 @@ import CompanyRentalsTab from '@/components/company/CompanyRentalsTab';
 import CompanyCreateRentalTab from '@/components/company/CompanyCreateRentalTab';
 import CompanySalesTab from '@/components/company/CompanySalesTab';
 import CompanyCreateSaleTab from '@/components/company/CompanyCreateSaleTab';
+import CompanyDocumentsTab from '@/components/company/CompanyDocumentsTab';
+import CompanyServicesTab from '@/components/company/CompanyServicesTab';
+import CompanyJobsTab from '@/components/company/CompanyJobsTab';
+import CompanyPropertyMessagesTab from '@/components/company/CompanyPropertyMessagesTab';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -962,131 +966,20 @@ const CompanyDashboard = () => {
 
         {/* Documents Tab */}
         {activeTab === 'documents' && (
-          <Card className="p-8">
-            <h3 className="text-2xl font-heading font-bold text-foreground mb-6 flex items-center gap-2">
-              <Shield className="h-6 w-6 text-primary" />
-              Documents de l'Entreprise
-            </h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Logo */}
-              <DocumentUploadCard
-                title="Logo de l'Entreprise"
-                document={company.logo}
-                docType="logo"
-                onUpload={handleDocumentUpload}
-                isImage
-              />
-
-              {/* Licence */}
-              <DocumentUploadCard
-                title="Licence d'Exploitation"
-                document={company.licence_exploitation}
-                docType="licence_exploitation"
-                onUpload={handleDocumentUpload}
-                required
-              />
-
-              {/* RCCM */}
-              <DocumentUploadCard
-                title="Document RCCM"
-                document={company.rccm_document}
-                docType="rccm_document"
-                onUpload={handleDocumentUpload}
-                required
-              />
-
-              {/* NIF */}
-              <DocumentUploadCard
-                title="Document NIF"
-                document={company.nif_document}
-                docType="nif_document"
-                onUpload={handleDocumentUpload}
-              />
-
-              {/* Attestation Fiscale */}
-              <DocumentUploadCard
-                title="Attestation de Régularité Fiscale"
-                document={company.attestation_fiscale}
-                docType="attestation_fiscale"
-                onUpload={handleDocumentUpload}
-              />
-            </div>
-
-            {/* Additional Documents */}
-            {company.documents_additionnels && company.documents_additionnels.length > 0 && (
-              <div className="mt-8">
-                <h4 className="font-heading font-bold text-foreground mb-4">Autres Documents</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {company.documents_additionnels.map((doc, idx) => (
-                    <a
-                      key={idx}
-                      href={`${BACKEND_URL}${doc}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-4 bg-muted rounded-xl hover:bg-muted/80 transition-colors flex items-center gap-3"
-                    >
-                      <FileText className="h-5 w-5 text-primary" />
-                      <span className="text-foreground">Document {idx + 1}</span>
-                      <ExternalLink className="h-4 w-4 text-muted-foreground ml-auto" />
-                    </a>
-                  ))}
-                </div>
-              </div>
-            )}
-          </Card>
+          <CompanyDocumentsTab
+            company={company}
+            handleDocumentUpload={handleDocumentUpload}
+            BACKEND_URL={BACKEND_URL}
+          />
         )}
 
         {/* Services Tab */}
         {activeTab === 'services' && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-2xl font-heading font-bold text-foreground">
-                Mes Services ({services.length})
-              </h3>
-            </div>
-
-            {services.length === 0 ? (
-              <Card className="p-8 text-center">
-                <Briefcase className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Aucun service publié</p>
-                {company.verification_status === 'approved' && (
-                  <Button className="mt-4" onClick={() => setActiveTab('create-service')}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Créer un service
-                  </Button>
-                )}
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {services.map(service => (
-                  <Card key={service.id} className="p-6">
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <h4 className="text-lg font-heading font-bold text-foreground">{service.title}</h4>
-                        <p className="text-sm text-muted-foreground">{service.category}</p>
-                      </div>
-                      <span className={`px-2 py-1 rounded text-xs ${service.is_available ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                        {service.is_available ? 'Disponible' : 'Indisponible'}
-                      </span>
-                    </div>
-                    <p className="text-foreground text-sm mb-4 line-clamp-2">{service.description}</p>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                        <MapPin className="h-4 w-4" />
-                        {service.location}
-                      </div>
-                      <div className="text-primary font-bold">
-                        {service.price_min && service.price_max 
-                          ? `${service.price_min.toLocaleString()} - ${service.price_max.toLocaleString()} GNF`
-                          : 'Prix sur devis'}
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </div>
+          <CompanyServicesTab
+            services={services}
+            company={company}
+            setActiveTab={setActiveTab}
+          />
         )}
 
         {/* Create Service Tab */}
@@ -1095,65 +988,11 @@ const CompanyDashboard = () => {
 
         {/* Job Offers Tab */}
         {activeTab === 'jobs' && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-2xl font-heading font-bold text-foreground">
-                Mes Offres d'Emploi ({jobOffers.length})
-              </h3>
-            </div>
-
-            {jobOffers.length === 0 ? (
-              <Card className="p-8 text-center">
-                <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Aucune offre d'emploi publiée</p>
-                {company.verification_status === 'approved' && (
-                  <Button className="mt-4" onClick={() => setActiveTab('create-job')}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Publier une offre
-                  </Button>
-                )}
-              </Card>
-            ) : (
-              <div className="space-y-4">
-                {jobOffers.map(job => (
-                  <Card key={job.id} className="p-6">
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <h4 className="text-lg font-heading font-bold text-foreground">{job.title}</h4>
-                        <div className="flex items-center gap-3 mt-1">
-                          <span className="text-sm text-primary font-medium">{job.contract_type}</span>
-                          <span className="text-sm text-muted-foreground flex items-center gap-1">
-                            <MapPin className="h-4 w-4" />
-                            {job.location}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <span className={`px-2 py-1 rounded text-xs ${job.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                          {job.is_active ? 'Active' : 'Inactive'}
-                        </span>
-                        <p className="text-sm text-muted-foreground mt-1">{job.applications_count} candidature(s)</p>
-                      </div>
-                    </div>
-                    <p className="text-foreground text-sm mb-4 line-clamp-2">{job.description}</p>
-                    <div className="flex items-center justify-between">
-                      {job.deadline && (
-                        <span className="text-sm text-muted-foreground flex items-center gap-1">
-                          <Calendar className="h-4 w-4" />
-                          Date limite: {new Date(job.deadline).toLocaleDateString('fr-FR')}
-                        </span>
-                      )}
-                      {job.salary_min && job.salary_max && (
-                        <span className="text-primary font-bold">
-                          {job.salary_min.toLocaleString()} - {job.salary_max.toLocaleString()} GNF
-                        </span>
-                      )}
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </div>
+          <CompanyJobsTab
+            jobOffers={jobOffers}
+            company={company}
+            setActiveTab={setActiveTab}
+          />
         )}
 
         {/* Create Job Offer Tab */}
@@ -1185,144 +1024,12 @@ const CompanyDashboard = () => {
 
         {/* Property Messages */}
         {activeTab === 'property-messages' && isRealEstateSector && (
-          <Card className="p-6">
-            <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-              <MessageCircle className="h-5 w-5 text-blue-600" />
-              Messages des Clients ({propertyMessages.length})
-            </h3>
-            {propertyMessages.length === 0 ? (
-              <div className="text-center py-12 bg-gray-50 rounded-xl">
-                <MessageCircle className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-500">Aucun message pour le moment</p>
-                <p className="text-gray-400 text-sm">Les clients vous contacteront via vos annonces</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {propertyMessages.map(msg => (
-                  <div 
-                    key={msg.id} 
-                    className={`p-4 rounded-xl border ${msg.is_read ? 'bg-white border-gray-200' : 'bg-blue-50 border-blue-200'}`}
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="flex items-center gap-2">
-                        <div className={`h-8 w-8 rounded-full flex items-center justify-center ${msg.message_type === 'sale' ? 'bg-orange-100' : 'bg-emerald-100'}`}>
-                          {msg.message_type === 'sale' ? (
-                            <Building className="h-4 w-4 text-orange-600" />
-                          ) : (
-                            <Home className="h-4 w-4 text-emerald-600" />
-                          )}
-                        </div>
-                        <div>
-                          <p className="font-semibold text-sm">{msg.sender_name}</p>
-                          <a href={`tel:${msg.sender_phone}`} className="text-xs text-blue-600 hover:underline">{msg.sender_phone}</a>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${msg.message_type === 'sale' ? 'bg-orange-100 text-orange-700' : 'bg-emerald-100 text-emerald-700'}`}>
-                          {msg.message_type === 'sale' ? 'Vente' : 'Location'}
-                        </span>
-                        <span className="text-xs text-gray-400">{new Date(msg.created_at).toLocaleDateString('fr-FR')}</span>
-                      </div>
-                    </div>
-                    {msg.rental_title && (
-                      <p className="text-xs text-gray-500 mb-1">Annonce: {msg.rental_title || msg.property_info}</p>
-                    )}
-                    <p className="text-sm text-gray-700">{msg.message}</p>
-                    {!msg.is_read && (
-                      <button
-                        onClick={async () => {
-                          try {
-                            const token = localStorage.getItem('companyToken');
-                            await axios.put(`${API}/company/property-messages/${msg.id}/read`, {}, {
-                              headers: { Authorization: `Bearer ${token}` }
-                            });
-                            setPropertyMessages(prev => prev.map(m => m.id === msg.id ? {...m, is_read: true} : m));
-                          } catch (err) {
-                            console.error(err);
-                          }
-                        }}
-                        className="mt-2 text-xs text-blue-600 hover:underline"
-                      >
-                        Marquer comme lu
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </Card>
-        )}
-      </div>
-    </div>
-  );
-};
-
-// Document Upload Card Component
-const DocumentUploadCard = ({ title, document, docType, onUpload, required, isImage }) => {
-  const [uploading, setUploading] = useState(false);
-
-  const handleFileChange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    setUploading(true);
-    await onUpload(docType, file);
-    setUploading(false);
-  };
-
-  return (
-    <div className="p-6 bg-muted rounded-xl">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <FileText className={`h-5 w-5 ${document ? 'text-green-600' : 'text-muted-foreground'}`} />
-          <span className="font-medium text-foreground">{title}</span>
-          {required && <span className="text-red-500">*</span>}
-        </div>
-        {document ? (
-          <CheckCircle className="h-5 w-5 text-green-600" />
-        ) : (
-          <XCircle className="h-5 w-5 text-muted-foreground" />
-        )}
-      </div>
-
-      {isImage && document && (
-        <div className="mb-4">
-          <img src={`${BACKEND_URL}${document}`} alt={title} className="h-24 w-24 object-cover rounded-lg" />
-        </div>
-      )}
-
-      <div className="flex gap-2">
-        {document && (
-          <a
-            href={`${BACKEND_URL}${document}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-1"
-          >
-            <Button variant="outline" className="w-full">
-              <Eye className="h-4 w-4 mr-2" />
-              Voir
-            </Button>
-          </a>
-        )}
-        <div className="flex-1">
-          <input
-            type="file"
-            accept={isImage ? "image/*" : ".pdf,.jpg,.jpeg,.png"}
-            onChange={handleFileChange}
-            className="hidden"
-            id={`doc-${docType}`}
+          <CompanyPropertyMessagesTab
+            propertyMessages={propertyMessages}
+            setPropertyMessages={setPropertyMessages}
+            API={API}
           />
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={() => document.getElementById(`doc-${docType}`).click()}
-            disabled={uploading}
-          >
-            <Upload className="h-4 w-4 mr-2" />
-            {uploading ? 'Envoi...' : document ? 'Remplacer' : 'Télécharger'}
-          </Button>
-        </div>
+        )}
       </div>
     </div>
   );
