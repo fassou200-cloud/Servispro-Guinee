@@ -1,37 +1,67 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   BarChart3, Briefcase, Users, Building, Home, Store, Eye,
-  MessageCircle, TrendingUp, Loader2, RefreshCw, CheckCircle, Clock, Mail
+  MessageCircle, TrendingUp, Loader2, RefreshCw, CheckCircle, Clock, Mail,
+  DollarSign, Calendar
 } from 'lucide-react';
 import axios from 'axios';
 
-const StatCard = ({ icon: Icon, label, value, subValue, colorClass = 'text-primary', bgClass = 'bg-primary/10', testId }) => (
-  <Card className="p-5" data-testid={testId}>
+const StatCard = ({ icon: Icon, label, value, subValue, colorClass = 'text-primary', bgClass = 'bg-primary/10', testId, highlight = false }) => (
+  <Card className={`p-5 ${highlight ? 'bg-gradient-to-br from-emerald-50 to-green-50 border-emerald-200' : ''}`} data-testid={testId}>
     <div className="flex items-start gap-4">
       <div className={`w-12 h-12 rounded-xl ${bgClass} flex items-center justify-center shrink-0`}>
         <Icon className={`h-6 w-6 ${colorClass}`} />
       </div>
       <div className="min-w-0">
         <p className="text-sm text-muted-foreground truncate">{label}</p>
-        <p className="text-2xl font-bold text-foreground">{value}</p>
+        <p className={`font-bold text-foreground ${highlight ? 'text-2xl' : 'text-2xl'}`}>{value}</p>
         {subValue && <p className="text-xs text-muted-foreground mt-0.5">{subValue}</p>}
       </div>
     </div>
   </Card>
 );
 
+const PERIOD_PRESETS = [
+  { key: 'all', label: 'Tout', days: null },
+  { key: '7d', label: '7 jours', days: 7 },
+  { key: '30d', label: '30 jours', days: 30 },
+  { key: '90d', label: '90 jours', days: 90 },
+  { key: 'custom', label: 'Personnalisé', days: null },
+];
+
+const isoDay = (d) => d.toISOString().slice(0, 10);
+
 const CompanyStatsTab = ({ API }) => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [period, setPeriod] = useState('all');
+  const [customStart, setCustomStart] = useState('');
+  const [customEnd, setCustomEnd] = useState('');
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('companyToken');
+      const params = {};
+      if (period !== 'all') {
+        if (period === 'custom') {
+          if (customStart) params.start_date = customStart;
+          if (customEnd) params.end_date = customEnd + 'T23:59:59';
+        } else {
+          const preset = PERIOD_PRESETS.find(p => p.key === period);
+          if (preset && preset.days) {
+            const start = new Date();
+            start.setDate(start.getDate() - preset.days);
+            params.start_date = start.toISOString();
+          }
+        }
+      }
       const res = await axios.get(`${API}/company/stats`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
+        params,
       });
       setStats(res.data);
     } catch (e) {
@@ -39,11 +69,14 @@ const CompanyStatsTab = ({ API }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [API, period, customStart, customEnd]);
 
-  useEffect(() => { fetchStats(); }, []);
+  useEffect(() => {
+    // Auto-fetch when period changes (except custom — wait for explicit apply)
+    if (period !== 'custom') fetchStats();
+  }, [period, fetchStats]);
 
-  if (loading) {
+  if (loading && !stats) {
     return (
       <div className="flex items-center justify-center py-16">
         <Loader2 className="h-10 w-10 animate-spin text-primary" />
@@ -63,11 +96,12 @@ const CompanyStatsTab = ({ API }) => {
   }
 
   const isVerified = stats.verification_status === 'approved';
+  const formatGNF = (n) => new Intl.NumberFormat('fr-FR').format(Math.round(n || 0)) + ' GNF';
 
   return (
     <div className="space-y-6" data-testid="company-stats-tab">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
             <BarChart3 className="h-6 w-6 text-white" />
@@ -77,11 +111,59 @@ const CompanyStatsTab = ({ API }) => {
             <p className="text-sm text-muted-foreground">Vue d'ensemble de votre activité sur ServisPro</p>
           </div>
         </div>
-        <Button onClick={fetchStats} variant="outline" size="sm" data-testid="refresh-stats-btn">
-          <RefreshCw className="h-4 w-4 mr-2" />
+        <Button onClick={fetchStats} variant="outline" size="sm" data-testid="refresh-stats-btn" disabled={loading}>
+          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
           Actualiser
         </Button>
       </div>
+
+      {/* Period Filter (only if shop exists — affects sales calc) */}
+      {stats.shop && (
+        <Card className="p-4">
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+              <Calendar className="h-4 w-4 text-primary" />
+              Période ventes :
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              {PERIOD_PRESETS.map(p => (
+                <Button
+                  key={p.key}
+                  size="sm"
+                  variant={period === p.key ? 'default' : 'outline'}
+                  onClick={() => setPeriod(p.key)}
+                  className={period === p.key ? 'bg-indigo-600 hover:bg-indigo-700' : ''}
+                  data-testid={`period-${p.key}`}
+                >
+                  {p.label}
+                </Button>
+              ))}
+            </div>
+            {period === 'custom' && (
+              <div className="flex items-center gap-2 flex-wrap mt-2 w-full">
+                <Input
+                  type="date"
+                  value={customStart}
+                  onChange={(e) => setCustomStart(e.target.value)}
+                  className="w-auto"
+                  data-testid="period-custom-start"
+                />
+                <span className="text-sm text-muted-foreground">→</span>
+                <Input
+                  type="date"
+                  value={customEnd}
+                  onChange={(e) => setCustomEnd(e.target.value)}
+                  className="w-auto"
+                  data-testid="period-custom-end"
+                />
+                <Button size="sm" onClick={fetchStats} disabled={!customStart || !customEnd}>
+                  Appliquer
+                </Button>
+              </div>
+            )}
+          </div>
+        </Card>
+      )}
 
       {/* Verification banner */}
       {!isVerified && (
@@ -93,6 +175,58 @@ const CompanyStatsTab = ({ API }) => {
             </p>
           </div>
         </Card>
+      )}
+
+      {/* SALES HIGHLIGHT (shop only) */}
+      {stats.shop && (
+        <div>
+          <h4 className="font-heading font-semibold text-foreground mb-3 flex items-center gap-2">
+            <DollarSign className="h-5 w-5 text-emerald-600" />
+            Ventes Makiti
+            <span className="text-xs font-normal text-muted-foreground">
+              ({PERIOD_PRESETS.find(p => p.key === period)?.label || 'Personnalisé'})
+            </span>
+          </h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatCard
+              icon={DollarSign}
+              label="Montant des ventes"
+              value={formatGNF(stats.shop.total_sales)}
+              subValue={`${stats.shop.inquiries_processed} vente(s) traitée(s)`}
+              colorClass="text-emerald-700"
+              bgClass="bg-emerald-200"
+              testId="stat-total-sales"
+              highlight
+            />
+            <StatCard
+              icon={CheckCircle}
+              label="Demandes traitées"
+              value={stats.shop.inquiries_processed}
+              subValue="Demandes converties en vente"
+              colorClass="text-green-600"
+              bgClass="bg-green-100"
+              testId="stat-inquiries-processed"
+            />
+            <StatCard
+              icon={MessageCircle}
+              label="Demandes en attente"
+              value={Math.max(0, stats.shop.inquiries_total - stats.shop.inquiries_processed - stats.shop.inquiries_cancelled)}
+              subValue="À traiter"
+              colorClass="text-orange-600"
+              bgClass="bg-orange-100"
+              testId="stat-inquiries-pending"
+            />
+            <StatCard
+              icon={TrendingUp}
+              label="Taux conversion"
+              value={stats.shop.inquiries_total > 0 ? `${((stats.shop.inquiries_processed / stats.shop.inquiries_total) * 100).toFixed(1)}%` : '—'}
+              subValue="Traitées / Total demandes"
+              colorClass="text-teal-600"
+              bgClass="bg-teal-100"
+              testId="stat-conversion-rate"
+            />
+          </div>
+        </div>
       )}
 
       {/* Services & Jobs */}
@@ -217,9 +351,9 @@ const CompanyStatsTab = ({ API }) => {
             />
             <StatCard
               icon={MessageCircle}
-              label="Demandes clients"
+              label="Demandes totales"
               value={stats.shop.inquiries_total}
-              subValue={`${stats.shop.inquiries_unread} nouvelle(s)`}
+              subValue={`${stats.shop.inquiries_unread} non lue(s)`}
               colorClass="text-fuchsia-600"
               bgClass="bg-fuchsia-100"
               testId="stat-shop-inquiries"

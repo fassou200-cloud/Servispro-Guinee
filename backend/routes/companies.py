@@ -637,8 +637,13 @@ async def mark_property_message_read(message_id: str, current_company: dict = De
 
 
 @router.get("/company/stats")
-async def get_company_stats(current_company: dict = Depends(get_current_company)):
-    """Get aggregated statistics for the company dashboard"""
+async def get_company_stats(
+    start_date: str = None,
+    end_date: str = None,
+    current_company: dict = Depends(get_current_company),
+):
+    """Get aggregated statistics for the company dashboard.
+    Optional ISO date filters (start_date, end_date) restrict the sales aggregation."""
     company_id = current_company['id']
     is_real_estate = current_company.get('sector') == 'Immobilier'
 
@@ -687,6 +692,9 @@ async def get_company_stats(current_company: dict = Depends(get_current_company)
     shop_views = 0
     shop_inquiries_total = 0
     shop_inquiries_unread = 0
+    shop_inquiries_processed = 0
+    shop_inquiries_cancelled = 0
+    shop_total_sales = 0.0
     if shop:
         products = await db.products.find({'shop_id': shop['id']}, {'_id': 0}).to_list(None)
         shop_products_total = len(products)
@@ -695,6 +703,24 @@ async def get_company_stats(current_company: dict = Depends(get_current_company)
 
         shop_inquiries_total = await db.product_messages.count_documents({'shop_id': shop['id']})
         shop_inquiries_unread = await db.product_messages.count_documents({'shop_id': shop['id'], 'is_read': False})
+
+        # Sales aggregation: processed inquiries within optional date range
+        sales_query = {'shop_id': shop['id'], 'status': 'processed'}
+        if start_date or end_date:
+            date_filter = {}
+            if start_date:
+                date_filter['$gte'] = start_date
+            if end_date:
+                date_filter['$lte'] = end_date
+            sales_query['processed_at'] = date_filter
+
+        processed_msgs = await db.product_messages.find(sales_query, {'_id': 0}).to_list(None)
+        shop_inquiries_processed = len(processed_msgs)
+        shop_total_sales = sum(m.get('product_price', 0) for m in processed_msgs)
+
+        shop_inquiries_cancelled = await db.product_messages.count_documents({
+            'shop_id': shop['id'], 'status': 'cancelled'
+        })
 
     # Top performing services (by category count) — quick insight
     services_by_category = {}
@@ -706,6 +732,7 @@ async def get_company_stats(current_company: dict = Depends(get_current_company)
     return {
         'is_real_estate': is_real_estate,
         'has_shop': shop is not None,
+        'date_filter': {'start_date': start_date, 'end_date': end_date},
         'services': {
             'total': services_total,
             'available': services_available,
@@ -733,6 +760,9 @@ async def get_company_stats(current_company: dict = Depends(get_current_company)
             'total_views': shop_views,
             'inquiries_total': shop_inquiries_total,
             'inquiries_unread': shop_inquiries_unread,
+            'inquiries_processed': shop_inquiries_processed,
+            'inquiries_cancelled': shop_inquiries_cancelled,
+            'total_sales': shop_total_sales,
         } if shop else None,
         'verification_status': current_company.get('verification_status', 'pending'),
     }

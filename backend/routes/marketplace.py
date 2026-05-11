@@ -513,6 +513,49 @@ async def get_company_shop_inquiries(current_company: dict = Depends(get_current
     return inquiries
 
 
+async def _update_inquiry_status(inquiry_id: str, shop_id: str, status: str):
+    """Helper: update an inquiry status. status in {'pending','processed','cancelled'}"""
+    if status not in ('pending', 'processed', 'cancelled'):
+        raise HTTPException(status_code=400, detail="Statut invalide")
+    update_fields = {'status': status}
+    if status == 'processed':
+        update_fields['processed_at'] = datetime.now(timezone.utc).isoformat()
+        update_fields['is_read'] = True
+    result = await db.product_messages.update_one(
+        {'id': inquiry_id, 'shop_id': shop_id},
+        {'$set': update_fields}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Demande introuvable")
+    return {'message': 'Statut mis à jour', 'status': status}
+
+
+@router.put("/shop/inquiries/{inquiry_id}/status")
+async def update_shop_inquiry_status(
+    inquiry_id: str,
+    body: dict = Body(...),
+    current_user: dict = Depends(get_current_user),
+):
+    """Provider: mark inquiry as processed (counts as sale) or cancelled"""
+    shop = await db.shops.find_one({'owner_id': current_user['id']}, {'_id': 0, 'id': 1})
+    if not shop:
+        raise HTTPException(status_code=404, detail="Boutique introuvable")
+    return await _update_inquiry_status(inquiry_id, shop['id'], body.get('status', ''))
+
+
+@router.put("/company/shop/inquiries/{inquiry_id}/status")
+async def update_company_shop_inquiry_status(
+    inquiry_id: str,
+    body: dict = Body(...),
+    current_company: dict = Depends(get_current_company),
+):
+    """Company: mark inquiry as processed (counts as sale) or cancelled"""
+    shop = await db.shops.find_one({'owner_id': current_company['id']}, {'_id': 0, 'id': 1})
+    if not shop:
+        raise HTTPException(status_code=404, detail="Boutique introuvable")
+    return await _update_inquiry_status(inquiry_id, shop['id'], body.get('status', ''))
+
+
 @router.post("/company/shop/create")
 async def company_create_shop(data: ShopCreate, current_company: dict = Depends(get_current_company)):
     company_id = current_company['id']

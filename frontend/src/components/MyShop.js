@@ -255,6 +255,19 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
     finally { setLoadingInquiries(false); }
   };
 
+  const updateInquiryStatus = async (inquiryId, status) => {
+    try {
+      await axios.put(`${API}/${apiPrefix}/inquiries/${inquiryId}/status`, { status }, authHeaders);
+      setShopInquiries(prev => prev.map(i => i.id === inquiryId
+        ? { ...i, status, processed_at: status === 'processed' ? new Date().toISOString() : i.processed_at, is_read: true }
+        : i
+      ));
+      toast.success(status === 'processed' ? 'Demande marquée comme traitée' : 'Demande annulée');
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Erreur lors de la mise à jour');
+    }
+  };
+
 
   const loadShopData = async () => {
     try {
@@ -877,8 +890,16 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
             </div>
           ) : (
             <div className="space-y-3">
-              {shopInquiries.map(inq => (
-                <Card key={inq.id} className={`p-4 ${!inq.is_read ? 'border-orange-200 bg-orange-50/30' : ''}`} data-testid={`shop-inquiry-${inq.id}`}>
+              {shopInquiries.map(inq => {
+                const status = inq.status || 'pending';
+                const statusConfig = {
+                  pending: { label: 'En attente', class: 'bg-orange-100 text-orange-700' },
+                  processed: { label: 'Traitée (vente)', class: 'bg-green-100 text-green-700' },
+                  cancelled: { label: 'Annulée', class: 'bg-gray-100 text-gray-600' },
+                };
+                const cfg = statusConfig[status];
+                return (
+                <Card key={inq.id} className={`p-4 ${status === 'pending' && !inq.is_read ? 'border-orange-200 bg-orange-50/30' : ''}`} data-testid={`shop-inquiry-${inq.id}`}>
                   <div className="flex gap-4">
                     <div className="w-16 h-16 rounded-xl bg-gray-100 overflow-hidden shrink-0">
                       {inq.product_photo ? (
@@ -891,7 +912,7 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
                           <h4 className="font-semibold text-gray-900 text-sm truncate">{inq.product_name}</h4>
-                          <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1">
+                          <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1 flex-wrap">
                             <User className="h-3 w-3" /> {inq.sender_name}
                             <span className="text-gray-300">•</span>
                             <Phone className="h-3 w-3" /> {inq.sender_phone}
@@ -902,22 +923,48 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
                             </p>
                           )}
                         </div>
-                        <span className="text-xs text-gray-400 shrink-0">
-                          {new Date(inq.created_at).toLocaleDateString('fr-FR')}
-                        </span>
+                        <div className="flex flex-col items-end gap-1 shrink-0">
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${cfg.class}`}>
+                            {cfg.label}
+                          </span>
+                          <span className="text-xs text-gray-400">
+                            {new Date(inq.created_at).toLocaleDateString('fr-FR')}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
                   <div className="mt-3 bg-gray-50 rounded-lg p-2.5">
                     <p className="text-xs text-gray-600 line-clamp-3">{inq.message}</p>
                   </div>
-                  {!inq.is_read && (
-                    <div className="mt-2 flex justify-end">
-                      <span className="text-[10px] bg-orange-500 text-white px-2 py-0.5 rounded-full font-medium">Nouveau</span>
+                  {status === 'pending' && (
+                    <div className="mt-3 flex gap-2 justify-end">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                        onClick={() => updateInquiryStatus(inq.id, 'cancelled')}
+                        data-testid={`inquiry-cancel-${inq.id}`}
+                      >
+                        <X className="h-3.5 w-3.5 mr-1" /> Annuler
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                        onClick={() => updateInquiryStatus(inq.id, 'processed')}
+                        data-testid={`inquiry-process-${inq.id}`}
+                      >
+                        <Check className="h-3.5 w-3.5 mr-1" /> Traiter (vente)
+                      </Button>
                     </div>
                   )}
+                  {status === 'processed' && inq.processed_at && (
+                    <p className="text-[10px] text-green-600 mt-2 text-right">
+                      Traitée le {new Date(inq.processed_at).toLocaleDateString('fr-FR')}
+                    </p>
+                  )}
                 </Card>
-              ))}
+              );})}
             </div>
           )}
         </div>
