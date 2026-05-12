@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Search, Store, Package, MapPin, ShoppingBag, ArrowUpRight, Tag, Heart, Clock, ChevronLeft, ChevronRight, Lightbulb, Send, Loader2 } from 'lucide-react';
+import { Search, Store, Package, MapPin, ShoppingBag, ArrowUpRight, Tag, Heart, Clock, ChevronLeft, ChevronRight, Smile, Send, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
 import { getImageUrl } from '@/utils/imageUrl';
@@ -84,6 +84,14 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
       toast.error('Veuillez décrire le produit recherché');
       return;
     }
+    if (!suggestName.trim()) {
+      toast.error('Veuillez renseigner votre nom');
+      return;
+    }
+    if (!suggestPhone.trim() || suggestPhone.trim().length < 8) {
+      toast.error('Veuillez renseigner un numéro de téléphone valide');
+      return;
+    }
     setSuggestSubmitting(true);
     try {
       const customer = (() => {
@@ -91,8 +99,8 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
       })();
       await axios.post(`${API}/makiti/product-suggestion`, {
         suggestion: suggestion.trim(),
-        contact_name: suggestName.trim() || null,
-        contact_phone: suggestPhone.trim() || null,
+        contact_name: suggestName.trim(),
+        contact_phone: suggestPhone.trim(),
         customer_id: customer?.id || null,
       });
       toast.success('Merci ! Votre suggestion a été envoyée à notre équipe.');
@@ -658,8 +666,17 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
         <DialogContent className="sm:max-w-lg" data-testid="suggest-product-modal">
           <DialogHeader>
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow-lg shadow-orange-500/30">
-                <Lightbulb className="h-6 w-6 text-white" />
+              <div className="relative shrink-0">
+                <div className="w-16 h-16 rounded-full overflow-hidden ring-4 ring-orange-100 shadow-lg shadow-orange-500/30 bg-gradient-to-br from-orange-100 to-amber-100">
+                  <img
+                    src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=200&h=200&fit=crop&q=80&crop=faces"
+                    alt="Assistant Makiti souriant"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-green-500 border-2 border-white flex items-center justify-center shadow-md">
+                  <Smile className="h-3.5 w-3.5 text-white" strokeWidth={2.5} />
+                </div>
               </div>
               <DialogTitle className="text-xl">Vous cherchez un produit ?</DialogTitle>
             </div>
@@ -679,27 +696,30 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
                 className="resize-none"
                 data-testid="suggest-text-input"
                 maxLength={500}
+                required
               />
               <p className="text-xs text-gray-400 mt-1">{suggestion.length}/500</p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="text-sm font-medium text-gray-700 mb-1 block">Votre nom (facultatif)</label>
+                <label className="text-sm font-medium text-gray-700 mb-1 block">Votre nom *</label>
                 <Input
                   value={suggestName}
                   onChange={(e) => setSuggestName(e.target.value)}
                   placeholder="Pour vous recontacter"
                   data-testid="suggest-name-input"
+                  required
                 />
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-700 mb-1 block">Téléphone (facultatif)</label>
+                <label className="text-sm font-medium text-gray-700 mb-1 block">Téléphone *</label>
                 <Input
                   value={suggestPhone}
                   onChange={(e) => setSuggestPhone(e.target.value)}
                   placeholder="+224..."
                   data-testid="suggest-phone-input"
+                  required
                 />
               </div>
             </div>
@@ -715,7 +735,7 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
               </Button>
               <Button
                 onClick={submitSuggestion}
-                disabled={suggestSubmitting || suggestion.trim().length < 3}
+                disabled={suggestSubmitting || suggestion.trim().length < 3 || !suggestName.trim() || !suggestPhone.trim()}
                 className="flex-1 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white"
                 data-testid="suggest-submit-btn"
               >

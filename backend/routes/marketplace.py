@@ -929,16 +929,24 @@ async def admin_delete_makiti_search(search_id: str):
 @router.post("/makiti/product-suggestion")
 async def submit_product_suggestion(body: dict = Body(...)):
     """Public: user suggests a product they want us to add or find for them.
-    Body: { suggestion: str, contact_name?: str, contact_phone?: str, customer_id?: str }"""
+    Body: { suggestion: str, contact_name: str, contact_phone: str, customer_id?: str }
+    All fields except customer_id are now required."""
     suggestion = (body.get('suggestion') or '').strip()
+    contact_name = (body.get('contact_name') or '').strip()
+    contact_phone = (body.get('contact_phone') or '').strip()
+
     if len(suggestion) < 3:
-        raise HTTPException(status_code=400, detail="Suggestion trop courte")
+        raise HTTPException(status_code=400, detail="Veuillez décrire le produit recherché")
+    if not contact_name:
+        raise HTTPException(status_code=400, detail="Le nom est obligatoire")
+    if len(contact_phone) < 8:
+        raise HTTPException(status_code=400, detail="Numéro de téléphone invalide")
 
     doc = {
         'id': str(uuid.uuid4()),
         'suggestion': suggestion[:1000],
-        'contact_name': (body.get('contact_name') or '').strip()[:100] or None,
-        'contact_phone': (body.get('contact_phone') or '').strip()[:30] or None,
+        'contact_name': contact_name[:100],
+        'contact_phone': contact_phone[:30],
         'customer_id': body.get('customer_id'),
         'status': 'pending',
         'created_at': datetime.now(timezone.utc).isoformat(),
