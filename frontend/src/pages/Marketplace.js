@@ -3,7 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Store, Package, MapPin, ShoppingBag, ArrowUpRight, Tag, Heart, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Search, Store, Package, MapPin, ShoppingBag, ArrowUpRight, Tag, Heart, Clock, ChevronLeft, ChevronRight, Lightbulb, Send, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import axios from 'axios';
 import { getImageUrl } from '@/utils/imageUrl';
 
@@ -69,12 +72,91 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
   // Countdown timer state
   const [countdown, setCountdown] = useState({ d: 0, h: 0, m: 0, s: 0 });
 
+  // Product suggestion modal (exit intent)
+  const [showSuggestModal, setShowSuggestModal] = useState(false);
+  const [suggestion, setSuggestion] = useState('');
+  const [suggestName, setSuggestName] = useState('');
+  const [suggestPhone, setSuggestPhone] = useState('');
+  const [suggestSubmitting, setSuggestSubmitting] = useState(false);
+
+  const submitSuggestion = async () => {
+    if (suggestion.trim().length < 3) {
+      toast.error('Veuillez décrire le produit recherché');
+      return;
+    }
+    setSuggestSubmitting(true);
+    try {
+      const customer = (() => {
+        try { return JSON.parse(localStorage.getItem('customer') || 'null'); } catch { return null; }
+      })();
+      await axios.post(`${API}/makiti/product-suggestion`, {
+        suggestion: suggestion.trim(),
+        contact_name: suggestName.trim() || null,
+        contact_phone: suggestPhone.trim() || null,
+        customer_id: customer?.id || null,
+      });
+      toast.success('Merci ! Votre suggestion a été envoyée à notre équipe.');
+      setShowSuggestModal(false);
+      setSuggestion('');
+      setSuggestName('');
+      setSuggestPhone('');
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Erreur lors de l\'envoi');
+    } finally {
+      setSuggestSubmitting(false);
+    }
+  };
+
   useEffect(() => { loadData(); }, []);
 
   useEffect(() => {
     if (viewMode === 'products') loadProducts();
     else loadShops();
   }, [searchQuery, selectedProductType, sortBy, viewMode]);
+
+  // Debounced search query logging (admin visibility)
+  useEffect(() => {
+    const q = (searchQuery || '').trim();
+    if (q.length < 2) return;
+    const customer = (() => {
+      try { return JSON.parse(localStorage.getItem('customer') || 'null'); } catch { return null; }
+    })();
+    const timer = setTimeout(() => {
+      axios.post(`${API}/makiti/search-log`, {
+        query: q,
+        results_count: viewMode === 'products' ? products.length : shops.length,
+        customer_id: customer?.id || null,
+      }).catch(() => {});
+    }, 1200);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Exit-intent detection — show "suggest a product" modal once per session
+  useEffect(() => {
+    if (sessionStorage.getItem('makiti_exit_modal_shown')) return;
+
+    let timeoutId;
+    const handleMouseLeave = (e) => {
+      // Trigger only when the cursor exits via the top edge (likely about to close tab / change URL)
+      if (e.clientY <= 0 && !sessionStorage.getItem('makiti_exit_modal_shown')) {
+        sessionStorage.setItem('makiti_exit_modal_shown', '1');
+        setShowSuggestModal(true);
+      }
+    };
+    // Mobile fallback: show after 60s on page if not shown yet
+    timeoutId = setTimeout(() => {
+      if (!sessionStorage.getItem('makiti_exit_modal_shown')) {
+        sessionStorage.setItem('makiti_exit_modal_shown', '1');
+        setShowSuggestModal(true);
+      }
+    }, 60000);
+
+    document.addEventListener('mouseleave', handleMouseLeave);
+    return () => {
+      document.removeEventListener('mouseleave', handleMouseLeave);
+      clearTimeout(timeoutId);
+    };
+  }, []);
 
   // Carousel auto-advance
   useEffect(() => {
@@ -570,6 +652,83 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
           )
         )}
       </div>
+
+      {/* Product Suggestion Modal (Exit Intent) */}
+      <Dialog open={showSuggestModal} onOpenChange={setShowSuggestModal}>
+        <DialogContent className="sm:max-w-lg" data-testid="suggest-product-modal">
+          <DialogHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow-lg shadow-orange-500/30">
+                <Lightbulb className="h-6 w-6 text-white" />
+              </div>
+              <DialogTitle className="text-xl">Vous cherchez un produit ?</DialogTitle>
+            </div>
+            <DialogDescription className="text-gray-600">
+              Dites-nous ce que vous aimeriez trouver sur Makiti et notre équipe travaillera à le rendre disponible.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 mt-2">
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-1 block">Quel produit recherchez-vous ? *</label>
+              <Textarea
+                value={suggestion}
+                onChange={(e) => setSuggestion(e.target.value)}
+                placeholder="Ex: Lave-linge automatique 8kg, smartphone reconditionné, vélo électrique..."
+                rows={3}
+                className="resize-none"
+                data-testid="suggest-text-input"
+                maxLength={500}
+              />
+              <p className="text-xs text-gray-400 mt-1">{suggestion.length}/500</p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-1 block">Votre nom (facultatif)</label>
+                <Input
+                  value={suggestName}
+                  onChange={(e) => setSuggestName(e.target.value)}
+                  placeholder="Pour vous recontacter"
+                  data-testid="suggest-name-input"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-1 block">Téléphone (facultatif)</label>
+                <Input
+                  value={suggestPhone}
+                  onChange={(e) => setSuggestPhone(e.target.value)}
+                  placeholder="+224..."
+                  data-testid="suggest-phone-input"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowSuggestModal(false)}
+                className="flex-1"
+                data-testid="suggest-cancel-btn"
+              >
+                Non merci
+              </Button>
+              <Button
+                onClick={submitSuggestion}
+                disabled={suggestSubmitting || suggestion.trim().length < 3}
+                className="flex-1 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white"
+                data-testid="suggest-submit-btn"
+              >
+                {suggestSubmitting ? (
+                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Envoi...</>
+                ) : (
+                  <><Send className="h-4 w-4 mr-2" /> Envoyer ma suggestion</>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

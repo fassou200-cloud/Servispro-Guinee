@@ -27,6 +27,7 @@ import AdminRevenueTab from '@/components/admin/AdminRevenueTab';
 import AdminRefundsTab from '@/components/admin/AdminRefundsTab';
 import AdminFeedbacksTab from '@/components/admin/AdminFeedbacksTab';
 import AdminMakitiTab from '@/components/admin/AdminMakitiTab';
+import AdminMakitiInsights from '@/components/admin/AdminMakitiInsights';
 import AdminSettingsTab from '@/components/admin/AdminSettingsTab';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -1253,6 +1254,15 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
             Makiti
           </Button>
           <Button
+            variant={activeTab === 'makiti-insights' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('makiti-insights')}
+            className={activeTab === 'makiti-insights' ? 'bg-indigo-600 hover:bg-indigo-700' : 'border-slate-600 text-slate-300'}
+            data-testid="admin-makiti-insights-tab"
+          >
+            <TrendingUp className="h-4 w-4 mr-2" />
+            Insights Makiti
+          </Button>
+          <Button
             variant={activeTab === 'settings' ? 'default' : 'outline'}
             onClick={() => setActiveTab('settings')}
             className={activeTab === 'settings' ? 'bg-purple-600 hover:bg-purple-700' : 'border-slate-600 text-slate-300'}
@@ -1539,6 +1549,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
 
         {/* Makiti Tab - All Products by Category */}
         {activeTab === 'makiti' && <AdminMakitiTab {...allTabProps} />}
+        {activeTab === 'makiti-insights' && <AdminMakitiInsights />}
 
 
         {/* Messages Tab */}

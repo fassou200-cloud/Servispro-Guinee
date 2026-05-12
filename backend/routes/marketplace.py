@@ -871,3 +871,116 @@ async def get_public_limited_offers():
         'expiration_date': exp_date,
         'is_active': True
     }
+
+
+# ==================== MAKITI SEARCH TRACKING ====================
+
+@router.post("/makiti/search-log")
+async def log_makiti_search(body: dict = Body(...)):
+    """Log a user search query on Makiti (public, no auth required).
+    Body: { query: str, results_count?: int, customer_id?: str }
+    Stored only for non-trivial queries (>= 2 chars)."""
+    query = (body.get('query') or '').strip()
+    if len(query) < 2:
+        return {'logged': False}
+
+    doc = {
+        'id': str(uuid.uuid4()),
+        'query': query[:200],  # cap length
+        'results_count': int(body.get('results_count') or 0),
+        'customer_id': body.get('customer_id'),
+        'created_at': datetime.now(timezone.utc).isoformat(),
+    }
+    await db.makiti_searches.insert_one(doc)
+    doc.pop('_id', None)
+    return {'logged': True, 'id': doc['id']}
+
+
+@router.get("/admin/makiti/searches")
+async def admin_list_makiti_searches(limit: int = 200):
+    """Admin: list recent search queries with frequency aggregation."""
+    recent = await db.makiti_searches.find({}, {'_id': 0}).sort('created_at', -1).to_list(limit)
+
+    # Aggregate top queries
+    freq = {}
+    for r in recent:
+        q = (r.get('query') or '').lower()
+        freq[q] = freq.get(q, 0) + 1
+    top = sorted(freq.items(), key=lambda x: x[1], reverse=True)[:20]
+
+    return {
+        'recent': recent,
+        'top_queries': [{'query': q, 'count': c} for q, c in top],
+        'total': await db.makiti_searches.count_documents({}),
+    }
+
+
+@router.delete("/admin/makiti/searches/{search_id}")
+async def admin_delete_makiti_search(search_id: str):
+    """Admin: delete a search log entry."""
+    result = await db.makiti_searches.delete_one({'id': search_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Recherche introuvable")
+    return {'deleted': True}
+
+
+# ==================== MAKITI PRODUCT SUGGESTIONS ====================
+
+@router.post("/makiti/product-suggestion")
+async def submit_product_suggestion(body: dict = Body(...)):
+    """Public: user suggests a product they want us to add or find for them.
+    Body: { suggestion: str, contact_name?: str, contact_phone?: str, customer_id?: str }"""
+    suggestion = (body.get('suggestion') or '').strip()
+    if len(suggestion) < 3:
+        raise HTTPException(status_code=400, detail="Suggestion trop courte")
+
+    doc = {
+        'id': str(uuid.uuid4()),
+        'suggestion': suggestion[:1000],
+        'contact_name': (body.get('contact_name') or '').strip()[:100] or None,
+        'contact_phone': (body.get('contact_phone') or '').strip()[:30] or None,
+        'customer_id': body.get('customer_id'),
+        'status': 'pending',
+        'created_at': datetime.now(timezone.utc).isoformat(),
+    }
+    await db.product_suggestions.insert_one(doc)
+    doc.pop('_id', None)
+    return {'success': True, 'id': doc['id']}
+
+
+@router.get("/admin/makiti/product-suggestions")
+async def admin_list_product_suggestions(status: Optional[str] = None):
+    """Admin: list product suggestions, optionally filtered by status."""
+    query = {}
+    if status:
+        query['status'] = status
+    suggestions = await db.product_suggestions.find(query, {'_id': 0}).sort('created_at', -1).to_list(200)
+    return {
+        'suggestions': suggestions,
+        'total': await db.product_suggestions.count_documents({}),
+        'pending': await db.product_suggestions.count_documents({'status': 'pending'}),
+    }
+
+
+@router.put("/admin/makiti/product-suggestions/{suggestion_id}/status")
+async def admin_update_suggestion_status(suggestion_id: str, body: dict = Body(...)):
+    """Admin: update suggestion status (pending|reviewed|added|rejected)."""
+    status = body.get('status', '')
+    if status not in ('pending', 'reviewed', 'added', 'rejected'):
+        raise HTTPException(status_code=400, detail="Statut invalide")
+    result = await db.product_suggestions.update_one(
+        {'id': suggestion_id},
+        {'$set': {'status': status, 'updated_at': datetime.now(timezone.utc).isoformat()}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Suggestion introuvable")
+    return {'updated': True, 'status': status}
+
+
+@router.delete("/admin/makiti/product-suggestions/{suggestion_id}")
+async def admin_delete_product_suggestion(suggestion_id: str):
+    """Admin: delete a product suggestion."""
+    result = await db.product_suggestions.delete_one({'id': suggestion_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Suggestion introuvable")
+    return {'deleted': True}
