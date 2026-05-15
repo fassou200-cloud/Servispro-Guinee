@@ -411,7 +411,17 @@ async def send_product_message(product_id: str, data: ProductMessageCreate, cred
     product = await db.products.find_one({'id': product_id, 'is_deleted': {'$ne': True}}, {'_id': 0})
     if not product:
         raise HTTPException(status_code=404, detail="Produit non trouvé")
-    
+
+    sender_name = (data.sender_name or '').strip()
+    sender_phone = (data.sender_phone or '').strip()
+    message_text = (data.message or '').strip()
+    if not sender_name:
+        raise HTTPException(status_code=400, detail="Le nom est obligatoire")
+    if len(sender_phone) < 8:
+        raise HTTPException(status_code=400, detail="Le numéro de téléphone est obligatoire (minimum 8 chiffres)")
+    if not message_text:
+        raise HTTPException(status_code=400, detail="Le message est obligatoire")
+
     message = {
         'id': str(uuid.uuid4()),
         'product_id': product_id,
@@ -422,16 +432,16 @@ async def send_product_message(product_id: str, data: ProductMessageCreate, cred
         'shop_id': product['shop_id'],
         'shop_name': product.get('shop_name', ''),
         'owner_id': product.get('owner_id', ''),
-        'sender_name': data.sender_name,
-        'sender_phone': data.sender_phone,
-        'message': data.message,
+        'sender_name': sender_name,
+        'sender_phone': sender_phone,
+        'message': message_text,
         'customer_id': None,
         'is_read': False,
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     
     # Try to link to a customer account by phone number
-    sender_phone_clean = data.sender_phone.replace('+', '').replace(' ', '').replace('-', '')
+    sender_phone_clean = sender_phone.replace('+', '').replace(' ', '').replace('-', '')
     variants = [sender_phone_clean]
     if sender_phone_clean.startswith('224') and len(sender_phone_clean) > 9:
         variants.append(sender_phone_clean[3:])

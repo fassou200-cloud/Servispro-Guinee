@@ -80,13 +80,28 @@ const ProductDetail = () => {
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!contactForm.sender_name || !contactForm.sender_phone || !contactForm.message) {
-      toast.error('Veuillez remplir tous les champs');
+    const name = contactForm.sender_name.trim();
+    const phone = contactForm.sender_phone.trim();
+    const message = contactForm.message.trim();
+    if (!name) {
+      toast.error('Veuillez renseigner votre nom');
+      return;
+    }
+    if (!phone || phone.length < 8) {
+      toast.error('Le numéro de téléphone est obligatoire (minimum 8 chiffres)');
+      return;
+    }
+    if (!message) {
+      toast.error('Veuillez écrire un message');
       return;
     }
     setSending(true);
     try {
-      await axios.post(`${API}/marketplace/products/${productId}/message`, contactForm);
+      await axios.post(`${API}/marketplace/products/${productId}/message`, {
+        sender_name: name,
+        sender_phone: phone,
+        message,
+      });
       toast.success('Message envoyé au vendeur !');
       setShowContactForm(false);
       setContactForm({ sender_name: '', sender_phone: '', message: '' });
@@ -100,7 +115,7 @@ const ProductDetail = () => {
         }
       } catch {}
     } catch (err) {
-      toast.error("Erreur lors de l'envoi du message");
+      toast.error(err.response?.data?.detail || "Erreur lors de l'envoi du message");
     } finally {
       setSending(false);
     }
@@ -386,6 +401,8 @@ const ProductDetail = () => {
                       placeholder="Votre numéro de téléphone *"
                       value={contactForm.sender_phone}
                       onChange={(e) => setContactForm({...contactForm, sender_phone: e.target.value})}
+                      type="tel"
+                      minLength={8}
                       required
                     />
                     <Textarea
@@ -399,8 +416,8 @@ const ProductDetail = () => {
                     <Button
                       data-testid="send-message-btn"
                       type="submit"
-                      className="w-full bg-green-500 hover:bg-green-600 py-5 text-base"
-                      disabled={sending}
+                      className="w-full bg-green-500 hover:bg-green-600 py-5 text-base disabled:opacity-50"
+                      disabled={sending || !contactForm.sender_name.trim() || contactForm.sender_phone.trim().length < 8 || !contactForm.message.trim()}
                     >
                       {sending ? 'Envoi...' : 'Envoyer le message'}
                     </Button>
