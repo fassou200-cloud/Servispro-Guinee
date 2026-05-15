@@ -16,6 +16,7 @@ import {
 import ForgotPassword from '@/components/ForgotPassword';
 import axios from 'axios';
 import { GUINEA_LOCATIONS, getVillesByRegion, getRegions } from '../data/guineaLocations';
+import { formatGuineanPhone } from '@/utils/phone';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -389,6 +390,7 @@ const CompanyAuth = ({ setIsCompanyAuthenticated }) => {
                   name="phone_number"
                   value={loginData.phone_number}
                   onChange={(e) => setLoginData({ ...loginData, phone_number: e.target.value })}
+                  onBlur={(e) => setLoginData((prev) => ({ ...prev, phone_number: formatGuineanPhone(e.target.value) }))}
                   required
                   className="h-12 bg-slate-700/50 border-slate-600 text-white"
                   placeholder="224 6XX XX XX XX"
@@ -584,6 +586,8 @@ const CompanyAuth = ({ setIsCompanyAuthenticated }) => {
                   <Input
                     value={formData.phone_number}
                     onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
+                    onBlur={(e) => setFormData((prev) => ({ ...prev, phone_number: formatGuineanPhone(e.target.value) }))}
+                    type="tel"
                     required
                     className="h-12 bg-slate-700/50 border-slate-600 text-white"
                     placeholder="6XX XX XX XX"
@@ -641,6 +645,8 @@ const CompanyAuth = ({ setIsCompanyAuthenticated }) => {
                     <Input
                       value={formData.contact_person_phone}
                       onChange={(e) => setFormData({ ...formData, contact_person_phone: e.target.value })}
+                      onBlur={(e) => setFormData((prev) => ({ ...prev, contact_person_phone: formatGuineanPhone(e.target.value) }))}
+                      type="tel"
                       required
                       className="h-12 bg-slate-700/50 border-slate-600 text-white"
                       placeholder="6XX XX XX XX"

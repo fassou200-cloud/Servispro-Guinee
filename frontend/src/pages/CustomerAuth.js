@@ -13,6 +13,7 @@ import axios from 'axios';
 import { getRegions, getVillesByRegion, getCommunesByVille, getQuartiersByCommune } from '@/data/guineaLocations';
 import ForgotPassword from '@/components/ForgotPassword';
 import TermsConditionsModal from '@/components/TermsConditionsModal';
+import { formatGuineanPhone } from '@/utils/phone';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -380,6 +381,7 @@ const CustomerAuth = ({ setIsCustomerAuthenticated }) => {
                       type="tel"
                       value={formData.phone_number}
                       onChange={handleChange}
+                      onBlur={(e) => setFormData((prev) => ({ ...prev, phone_number: formatGuineanPhone(e.target.value) }))}
                       required
                       className="pl-10 h-12 rounded-xl border-gray-200 focus:border-green-500 focus:ring-green-500"
                       placeholder="+224 6XX XXX XXX"

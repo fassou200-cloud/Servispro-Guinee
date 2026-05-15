@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { ArrowLeft, Phone, KeyRound, Send, Loader2, CheckCircle, Lock } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
+import { formatGuineanPhone } from '@/utils/phone';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -126,6 +127,7 @@ const ForgotPassword = ({ userType = 'provider', onBack, onSuccess }) => {
                 type="tel"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
+                onBlur={(e) => setPhoneNumber(formatGuineanPhone(e.target.value))}
                 placeholder="6XX XX XX XX"
                 className="pl-10 h-12 rounded-xl"
                 required

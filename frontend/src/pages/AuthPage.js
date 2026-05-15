@@ -18,6 +18,7 @@ import { getProfessionGroups, getProfessionsByGroup } from '@/data/professions';
 import { getErrorMessage } from '@/utils/helpers';
 import ForgotPassword from '@/components/ForgotPassword';
 import TermsConditionsModal from '@/components/TermsConditionsModal';
+import { formatGuineanPhone } from '@/utils/phone';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -586,8 +587,10 @@ const AuthPage = ({ setIsAuthenticated }) => {
                         id="phone_number"
                         name="phone_number"
                         data-testid="auth-phone-input"
+                        type="tel"
                         value={formData.phone_number}
                         onChange={handleChange}
+                        onBlur={(e) => setFormData((prev) => ({ ...prev, phone_number: formatGuineanPhone(e.target.value) }))}
                         required
                         className="h-12 pl-10 rounded-xl border-slate-200 font-mono"
                         placeholder="+224 620 00 00 00"
@@ -850,8 +853,10 @@ const AuthPage = ({ setIsAuthenticated }) => {
                         id="phone_number"
                         name="phone_number"
                         data-testid="auth-phone-input"
+                        type="tel"
                         value={formData.phone_number}
                         onChange={handleChange}
+                        onBlur={(e) => setFormData((prev) => ({ ...prev, phone_number: formatGuineanPhone(e.target.value) }))}
                         className="h-12 pl-10 rounded-xl border-slate-200 font-mono"
                         placeholder="+224 620 00 00 00"
                       />
