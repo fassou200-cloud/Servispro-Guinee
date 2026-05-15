@@ -19,6 +19,7 @@ import { getErrorMessage } from '@/utils/helpers';
 import ForgotPassword from '@/components/ForgotPassword';
 import TermsConditionsModal from '@/components/TermsConditionsModal';
 import { formatGuineanPhone } from '@/utils/phone';
+import GuineaFlag from '@/components/GuineaFlag';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -582,7 +583,7 @@ const AuthPage = ({ setIsAuthenticated }) => {
                       Numéro de Téléphone *
                     </Label>
                     <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 z-10"><GuineaFlag /></span>
                       <Input
                         id="phone_number"
                         name="phone_number"
@@ -592,7 +593,7 @@ const AuthPage = ({ setIsAuthenticated }) => {
                         onChange={handleChange}
                         onBlur={(e) => setFormData((prev) => ({ ...prev, phone_number: formatGuineanPhone(e.target.value) }))}
                         required
-                        className="h-12 pl-10 rounded-xl border-slate-200 font-mono"
+                        className="h-12 pl-12 rounded-xl border-slate-200 font-mono"
                         placeholder="+224 620 00 00 00"
                       />
                     </div>
@@ -848,7 +849,7 @@ const AuthPage = ({ setIsAuthenticated }) => {
                       Numéro de Téléphone *
                     </Label>
                     <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 z-10"><GuineaFlag /></span>
                       <Input
                         id="phone_number"
                         name="phone_number"
@@ -857,7 +858,7 @@ const AuthPage = ({ setIsAuthenticated }) => {
                         value={formData.phone_number}
                         onChange={handleChange}
                         onBlur={(e) => setFormData((prev) => ({ ...prev, phone_number: formatGuineanPhone(e.target.value) }))}
-                        className="h-12 pl-10 rounded-xl border-slate-200 font-mono"
+                        className="h-12 pl-12 rounded-xl border-slate-200 font-mono"
                         placeholder="+224 620 00 00 00"
                       />
                     </div>

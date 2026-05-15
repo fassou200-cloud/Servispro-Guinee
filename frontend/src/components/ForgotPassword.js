@@ -7,6 +7,7 @@ import { ArrowLeft, Phone, KeyRound, Send, Loader2, CheckCircle, Lock } from 'lu
 import axios from 'axios';
 import { toast } from 'sonner';
 import { formatGuineanPhone } from '@/utils/phone';
+import GuineaFlag from '@/components/GuineaFlag';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -122,14 +123,14 @@ const ForgotPassword = ({ userType = 'provider', onBack, onSuccess }) => {
           <div className="space-y-2">
             <Label className="text-sm text-slate-600">Numéro de téléphone</Label>
             <div className="relative">
-              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 z-10"><GuineaFlag /></span>
               <Input
                 type="tel"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
                 onBlur={(e) => setPhoneNumber(formatGuineanPhone(e.target.value))}
                 placeholder="6XX XX XX XX"
-                className="pl-10 h-12 rounded-xl"
+                className="pl-12 h-12 rounded-xl"
                 required
               />
             </div>

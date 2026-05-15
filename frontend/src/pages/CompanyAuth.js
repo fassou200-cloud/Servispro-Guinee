@@ -17,6 +17,7 @@ import ForgotPassword from '@/components/ForgotPassword';
 import axios from 'axios';
 import { GUINEA_LOCATIONS, getVillesByRegion, getRegions } from '../data/guineaLocations';
 import { formatGuineanPhone } from '@/utils/phone';
+import GuineaFlag from '@/components/GuineaFlag';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -385,17 +386,20 @@ const CompanyAuth = ({ setIsCompanyAuthenticated }) => {
                   <Phone className="h-4 w-4 text-emerald-400" />
                   Numéro de téléphone *
                 </Label>
-                <Input
-                  id="phone_login"
-                  name="phone_number"
-                  value={loginData.phone_number}
-                  onChange={(e) => setLoginData({ ...loginData, phone_number: e.target.value })}
-                  onBlur={(e) => setLoginData((prev) => ({ ...prev, phone_number: formatGuineanPhone(e.target.value) }))}
-                  required
-                  className="h-12 bg-slate-700/50 border-slate-600 text-white"
-                  placeholder="224 6XX XX XX XX"
-                  data-testid="company-login-phone"
-                />
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 z-10"><GuineaFlag /></span>
+                  <Input
+                    id="phone_login"
+                    name="phone_number"
+                    value={loginData.phone_number}
+                    onChange={(e) => setLoginData({ ...loginData, phone_number: e.target.value })}
+                    onBlur={(e) => setLoginData((prev) => ({ ...prev, phone_number: formatGuineanPhone(e.target.value) }))}
+                    required
+                    className="h-12 pl-12 bg-slate-700/50 border-slate-600 text-white"
+                    placeholder="224 6XX XX XX XX"
+                    data-testid="company-login-phone"
+                  />
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -583,16 +587,19 @@ const CompanyAuth = ({ setIsCompanyAuthenticated }) => {
                     <Phone className="h-4 w-4 text-emerald-400" />
                     Téléphone entreprise *
                   </Label>
-                  <Input
-                    value={formData.phone_number}
-                    onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
-                    onBlur={(e) => setFormData((prev) => ({ ...prev, phone_number: formatGuineanPhone(e.target.value) }))}
-                    type="tel"
-                    required
-                    className="h-12 bg-slate-700/50 border-slate-600 text-white"
-                    placeholder="6XX XX XX XX"
-                    data-testid="company-phone-input"
-                  />
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 z-10"><GuineaFlag /></span>
+                    <Input
+                      value={formData.phone_number}
+                      onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
+                      onBlur={(e) => setFormData((prev) => ({ ...prev, phone_number: formatGuineanPhone(e.target.value) }))}
+                      type="tel"
+                      required
+                      className="h-12 pl-12 bg-slate-700/50 border-slate-600 text-white"
+                      placeholder="6XX XX XX XX"
+                      data-testid="company-phone-input"
+                    />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label className="text-slate-300 flex items-center gap-2">
@@ -642,15 +649,18 @@ const CompanyAuth = ({ setIsCompanyAuthenticated }) => {
                   </div>
                   <div className="space-y-2">
                     <Label className="text-slate-300">Téléphone *</Label>
-                    <Input
-                      value={formData.contact_person_phone}
-                      onChange={(e) => setFormData({ ...formData, contact_person_phone: e.target.value })}
-                      onBlur={(e) => setFormData((prev) => ({ ...prev, contact_person_phone: formatGuineanPhone(e.target.value) }))}
-                      type="tel"
-                      required
-                      className="h-12 bg-slate-700/50 border-slate-600 text-white"
-                      placeholder="6XX XX XX XX"
-                    />
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 z-10"><GuineaFlag /></span>
+                      <Input
+                        value={formData.contact_person_phone}
+                        onChange={(e) => setFormData({ ...formData, contact_person_phone: e.target.value })}
+                        onBlur={(e) => setFormData((prev) => ({ ...prev, contact_person_phone: formatGuineanPhone(e.target.value) }))}
+                        type="tel"
+                        required
+                        className="h-12 pl-12 bg-slate-700/50 border-slate-600 text-white"
+                        placeholder="6XX XX XX XX"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>

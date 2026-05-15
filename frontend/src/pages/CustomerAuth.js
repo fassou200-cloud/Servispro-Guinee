@@ -14,6 +14,7 @@ import { getRegions, getVillesByRegion, getCommunesByVille, getQuartiersByCommun
 import ForgotPassword from '@/components/ForgotPassword';
 import TermsConditionsModal from '@/components/TermsConditionsModal';
 import { formatGuineanPhone } from '@/utils/phone';
+import GuineaFlag from '@/components/GuineaFlag';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -374,7 +375,7 @@ const CustomerAuth = ({ setIsCustomerAuthenticated }) => {
                     Numéro de téléphone *
                   </Label>
                   <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 z-10"><GuineaFlag className="h-4 w-6" /></span>
                     <Input
                       id="phone_number"
                       name="phone_number"
@@ -383,7 +384,7 @@ const CustomerAuth = ({ setIsCustomerAuthenticated }) => {
                       onChange={handleChange}
                       onBlur={(e) => setFormData((prev) => ({ ...prev, phone_number: formatGuineanPhone(e.target.value) }))}
                       required
-                      className="pl-10 h-12 rounded-xl border-gray-200 focus:border-green-500 focus:ring-green-500"
+                      className="pl-12 h-12 rounded-xl border-gray-200 focus:border-green-500 focus:ring-green-500"
                       placeholder="+224 6XX XXX XXX"
                     />
                   </div>
