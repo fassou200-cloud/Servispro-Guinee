@@ -32,6 +32,7 @@ import CompanyServicesTab from '@/components/company/CompanyServicesTab';
 import CompanyJobsTab from '@/components/company/CompanyJobsTab';
 import CompanyPropertyMessagesTab from '@/components/company/CompanyPropertyMessagesTab';
 import CompanyStatsTab from '@/components/company/CompanyStatsTab';
+import GuineaFlag from '@/components/GuineaFlag';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -758,8 +759,8 @@ const CompanyDashboard = () => {
                 <Home className="h-4 w-4" />
                 Accueil
               </Button>
-              <h1 className="text-2xl font-heading font-bold text-foreground">
-                Espace Entreprise
+              <h1 className="text-2xl font-heading font-bold text-foreground flex items-center gap-2">
+                Espace Entreprise <GuineaFlag className="h-4 w-6" />
               </h1>
             </div>
             <div className="flex items-center gap-6">

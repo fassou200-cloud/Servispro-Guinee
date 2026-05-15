@@ -446,7 +446,7 @@ const AuthPage = ({ setIsAuthenticated }) => {
             </div>
             <div>
               <h1 className="text-2xl font-heading font-bold">ServisPro</h1>
-              <p className="text-sm opacity-80">Guinée 🇬🇳</p>
+              <p className="text-sm opacity-80 flex items-center gap-1.5">Guinée <GuineaFlag className="h-3 w-4" /></p>
             </div>
           </div>
           

@@ -16,6 +16,7 @@ import { CustomerOverviewTab } from '@/components/customer/CustomerOverviewTab';
 import { CustomerDemandesTab } from '@/components/customer/CustomerDemandesTab';
 import { CustomerCreancesTab } from '@/components/customer/CustomerCreancesTab';
 import { CustomerAchatsTab } from '@/components/customer/CustomerAchatsTab';
+import GuineaFlag from '@/components/GuineaFlag';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -309,8 +310,8 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
                   S
                 </div>
                 <div>
-                  <h1 className="text-lg font-heading font-bold text-gray-900">
-                    ServisPro
+                  <h1 className="text-lg font-heading font-bold text-gray-900 flex items-center gap-2">
+                    ServisPro <GuineaFlag className="h-3.5 w-5" />
                   </h1>
                   <p className="text-xs text-gray-500">Espace Client</p>
                 </div>

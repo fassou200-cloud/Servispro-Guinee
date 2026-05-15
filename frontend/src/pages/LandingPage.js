@@ -16,6 +16,7 @@ import {
 import axios from 'axios';
 import { toast } from 'sonner';
 import { getImageUrl } from '@/utils/imageUrl';
+import GuineaFlag from '@/components/GuineaFlag';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -341,7 +342,7 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
                 <h1 className="text-xl font-heading font-bold text-gray-900">
                   ServisPro
                 </h1>
-                <p className="text-xs text-gray-500">Guinée 🇬🇳</p>
+                <p className="text-xs text-gray-500 flex items-center gap-1.5">Guinée <GuineaFlag className="h-3 w-4" /></p>
               </div>
             </div>
             
@@ -1451,7 +1452,7 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
               © 2024 ServisPro Guinée. Tous droits réservés.
             </p>
             <div className="flex items-center gap-4 text-sm text-gray-500">
-              <span>🇬🇳 Made in Guinea with ❤️</span>
+              <span className="inline-flex items-center gap-2"><GuineaFlag className="h-3.5 w-5" /> Made in Guinea with ❤️</span>
             </div>
           </div>
         </div>
