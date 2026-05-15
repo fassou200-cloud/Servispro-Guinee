@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { ArrowLeft, Store, Phone, MapPin, Tag, MessageCircle, Check, Package, ChevronLeft, ChevronRight, Eye, Star, User, X } from 'lucide-react';
+import { formatGuineanPhone } from '@/utils/phone';
 import { toast } from 'sonner';
 import axios from 'axios';
 import { getImageUrl } from '@/utils/imageUrl';
@@ -401,6 +402,7 @@ const ProductDetail = () => {
                       placeholder="Votre numéro de téléphone *"
                       value={contactForm.sender_phone}
                       onChange={(e) => setContactForm({...contactForm, sender_phone: e.target.value})}
+                      onBlur={(e) => setContactForm({...contactForm, sender_phone: formatGuineanPhone(e.target.value)})}
                       type="tel"
                       minLength={8}
                       required

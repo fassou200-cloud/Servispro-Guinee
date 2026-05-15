@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Search, Store, Package, MapPin, ShoppingBag, ArrowUpRight, Tag, Heart, Clock, ChevronLeft, ChevronRight, Smile, Send, Loader2 } from 'lucide-react';
+import { formatGuineanPhone } from '@/utils/phone';
 import { toast } from 'sonner';
 import axios from 'axios';
 import { getImageUrl } from '@/utils/imageUrl';
@@ -717,7 +718,9 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
                 <Input
                   value={suggestPhone}
                   onChange={(e) => setSuggestPhone(e.target.value)}
+                  onBlur={(e) => setSuggestPhone(formatGuineanPhone(e.target.value))}
                   placeholder="+224..."
+                  type="tel"
                   data-testid="suggest-phone-input"
                   required
                 />
