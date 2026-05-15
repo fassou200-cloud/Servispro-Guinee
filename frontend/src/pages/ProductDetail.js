@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, Store, Phone, MapPin, Tag, MessageCircle, Check, Package, ChevronLeft, ChevronRight, Eye, Star, User } from 'lucide-react';
+import { ArrowLeft, Store, Phone, MapPin, Tag, MessageCircle, Check, Package, ChevronLeft, ChevronRight, Eye, Star, User, X } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
 import { getImageUrl } from '@/utils/imageUrl';
@@ -37,6 +37,7 @@ const ProductDetail = () => {
   const [loading, setLoading] = useState(true);
   const [currentPhoto, setCurrentPhoto] = useState(0);
   const [showContactForm, setShowContactForm] = useState(false);
+  const [showAuthGate, setShowAuthGate] = useState(false);
   const [sending, setSending] = useState(false);
   const [contactForm, setContactForm] = useState({ sender_name: '', sender_phone: '', message: '' });
   const [phoneRevealed, setPhoneRevealed] = useState(false);
@@ -276,11 +277,68 @@ const ProductDetail = () => {
             <Button
               data-testid="contact-seller-btn"
               className="w-full mt-6 bg-green-500 hover:bg-green-600 gap-2 py-6 text-base"
-              onClick={() => setShowContactForm(true)}
+              onClick={() => {
+                if (isCustomerLoggedIn) {
+                  setShowContactForm(true);
+                } else {
+                  setShowAuthGate(true);
+                }
+              }}
             >
               <MessageCircle className="h-5 w-5" />
               Contacter le vendeur
             </Button>
+
+            {/* Auth Gate Popup (non-logged-in users) */}
+            {showAuthGate && (
+              <div
+                className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+                onClick={() => setShowAuthGate(false)}
+                data-testid="auth-gate-modal"
+              >
+                <Card
+                  className="w-full sm:max-w-md p-6 bg-white relative rounded-2xl animate-in fade-in zoom-in-95 duration-200"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <button
+                    onClick={() => setShowAuthGate(false)}
+                    className="absolute top-3 right-3 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center"
+                    data-testid="auth-gate-close"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center">
+                      <User className="h-6 w-6 text-white" />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900">Vous n'êtes pas un client</h3>
+                  </div>
+                  <p className="text-gray-600 text-sm mb-6">
+                    Créez un compte client pour profiter pleinement de Makiti et garder l'historique de vos demandes.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => {
+                        setShowAuthGate(false);
+                        setShowContactForm(true);
+                      }}
+                      data-testid="auth-gate-continue-btn"
+                    >
+                      Continuer sans compte
+                    </Button>
+                    <Button
+                      className="flex-1 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white"
+                      onClick={() => navigate('/customer/auth')}
+                      data-testid="auth-gate-create-account-btn"
+                    >
+                      Créer un compte
+                    </Button>
+                  </div>
+                </Card>
+              </div>
+            )}
 
             {/* Phone - only revealed after sending a message */}
             {product.shop?.contact_phone && (
