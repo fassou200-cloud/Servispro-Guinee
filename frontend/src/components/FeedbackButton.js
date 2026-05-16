@@ -147,7 +147,7 @@ const FeedbackButton = ({ className = '' }) => {
                 {/* Phone (Required) */}
                 <div className="space-y-2">
                   <Label htmlFor="user_phone" className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                    <GuineaFlag className="h-3 w-4" />
+                    <HelpCircle className="h-4 w-4 text-gray-400" />
                     Téléphone *
                   </Label>
                   <div className="relative">
