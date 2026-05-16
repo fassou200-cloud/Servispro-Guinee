@@ -5,39 +5,42 @@ import uuid
 import logging
 
 from database import db
-from dependencies import get_current_user
+from dependencies import get_current_user, get_current_customer
 from models import ReviewCreate, Review, FeedbackCreate, Feedback, FeedbackStatus, SurveyData
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
 @router.post("/reviews", response_model=Review)
-async def create_review(review_data: ReviewCreate):
+async def create_review(review_data: ReviewCreate, current_customer: dict = Depends(get_current_customer)):
     # Verify provider exists
     provider = await db.service_providers.find_one({'id': review_data.service_provider_id}, {'_id': 0})
     if not provider:
         raise HTTPException(status_code=404, detail="Service provider not found")
-    
+
+    # Force customer identity from authenticated session (anti-spoof)
+    customer_id = current_customer.get('id')
+
     # Verify the job exists and is COMPLETED (not just Accepted)
     job = await db.job_offers.find_one({
         'id': review_data.job_id,
         'service_provider_id': review_data.service_provider_id,
-        'customer_id': review_data.customer_id,
+        'customer_id': customer_id,
         'status': 'Completed'  # Only allow reviews for fully completed jobs
     })
-    
+
     if not job:
         raise HTTPException(
-            status_code=403, 
+            status_code=403,
             detail="Vous ne pouvez évaluer un prestataire que si le travail a été terminé et confirmé"
         )
-    
+
     # Check if customer already reviewed this job
     existing_review = await db.reviews.find_one({
         'job_id': review_data.job_id,
-        'customer_id': review_data.customer_id
+        'customer_id': customer_id
     })
-    
+
     if existing_review:
         raise HTTPException(
             status_code=400,
@@ -52,7 +55,7 @@ async def create_review(review_data: ReviewCreate):
         'rating': review_data.rating,
         'comment': review_data.comment,
         'job_id': review_data.job_id,
-        'customer_id': review_data.customer_id,
+        'customer_id': customer_id,
         'survey': review_data.survey.model_dump() if review_data.survey else None,
         'created_at': datetime.now(timezone.utc).isoformat()
     }

@@ -25,11 +25,18 @@ const ReviewForm = ({ providerId, onSuccess }) => {
     setSubmitting(true);
 
     try {
+      const customerToken = localStorage.getItem('customerToken');
+      if (!customerToken) {
+        toast.error('Veuillez vous connecter pour laisser un avis');
+        return;
+      }
       await axios.post(`${API}/reviews`, {
         service_provider_id: providerId,
         reviewer_name: formData.reviewer_name,
         rating: formData.rating,
         comment: formData.comment
+      }, {
+        headers: { Authorization: `Bearer ${customerToken}` }
       });
 
       toast.success('Avis soumis avec succès !');

@@ -505,14 +505,25 @@ async def update_visit_request(visit_id: str, update_data: VisitRequestUpdate, c
 
 
 @router.put("/visit-requests/{visit_id}/payment")
-async def update_visit_payment_status(visit_id: str, payment_data: VisitPaymentUpdate):
-    """Update the payment status of a visit request"""
+async def update_visit_payment_status(
+    visit_id: str,
+    payment_data: VisitPaymentUpdate,
+    current_customer: dict = Depends(get_current_customer),
+):
+    """Update the payment status of a visit request. Only the owner customer can update."""
     now = datetime.now(timezone.utc).isoformat()
-    
+
     # Find the visit request
     request = await db.visit_requests.find_one({'id': visit_id}, {'_id': 0})
     if not request:
         raise HTTPException(status_code=404, detail="Demande de visite non trouvée")
+
+    # Authorization: only the customer who created this visit request can update
+    customer_phone = current_customer.get('phone_number', '')
+    request_phone = (request.get('customer_phone') or '').replace('+', '').replace(' ', '')
+    user_phone = customer_phone.replace('+', '').replace(' ', '')
+    if request_phone and user_phone and request_phone != user_phone and not user_phone.endswith(request_phone[-9:]):
+        raise HTTPException(status_code=403, detail="Vous ne pouvez modifier que vos propres demandes")
     
     # Update payment status
     update_doc = {

@@ -12,12 +12,12 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 @router.post("/jobs", response_model=JobOffer)
-async def create_job_offer(job_data: JobOfferCreate):
+async def create_job_offer(job_data: JobOfferCreate, current_customer: dict = Depends(get_current_customer)):
     # Verify provider exists
     provider = await db.service_providers.find_one({'id': job_data.service_provider_id}, {'_id': 0})
     if not provider:
         raise HTTPException(status_code=404, detail="Service provider not found")
-    
+
     job_id = str(uuid.uuid4())
     job_doc = {
         'id': job_id,
@@ -27,8 +27,9 @@ async def create_job_offer(job_data: JobOfferCreate):
         'description': job_data.description,
         'location': job_data.location,
         'scheduled_date': job_data.scheduled_date,
-        'customer_id': job_data.customer_id,
-        'customer_phone': job_data.customer_phone,
+        # Force customer identity from authenticated session (anti-spoof)
+        'customer_id': current_customer.get('id'),
+        'customer_phone': current_customer.get('phone_number') or job_data.customer_phone,
         'status': JobStatus.PENDING.value,
         'created_at': datetime.now(timezone.utc).isoformat()
     }
@@ -136,29 +137,35 @@ async def customer_confirm_complete(job_id: str, current_user: dict = Depends(ge
 
 
 @router.get("/customer/jobs")
-async def get_customer_jobs():
-    """Get jobs for a customer to confirm completion"""
-    # Get jobs awaiting customer confirmation
-    jobs = await db.job_offers.find(
-        {'status': {'$in': ['Accepted', 'ProviderCompleted']}}, 
-        {'_id': 0}
-    ).sort('created_at', -1).to_list(None)
-    
+async def get_customer_jobs(current_customer: dict = Depends(get_current_customer)):
+    """Get jobs for the AUTHENTICATED customer only."""
+    customer_id = current_customer.get('id')
+    customer_phone = current_customer.get('phone_number')
+
+    # Match either by customer_id (preferred) or customer_phone (legacy entries)
+    query = {
+        '$or': [
+            {'customer_id': customer_id},
+            {'customer_phone': customer_phone},
+        ]
+    }
+    jobs = await db.job_offers.find(query, {'_id': 0}).sort('created_at', -1).to_list(None)
+
     # Enrich with provider info and review status
     for job in jobs:
         provider = await db.service_providers.find_one(
-            {'id': job.get('service_provider_id')}, 
+            {'id': job.get('service_provider_id')},
             {'_id': 0, 'first_name': 1, 'last_name': 1, 'profession': 1}
         )
         if provider:
             job['provider_name'] = f"{provider.get('first_name', '')} {provider.get('last_name', '')}"
             job['provider_profession'] = provider.get('profession', '')
-        
+
         # Check if this job has been reviewed
         review = await db.reviews.find_one({'job_id': job.get('id')}, {'_id': 0, 'rating': 1})
         job['has_review'] = review is not None
         job['review_rating'] = review.get('rating') if review else None
-    
+
     return jobs
 
 

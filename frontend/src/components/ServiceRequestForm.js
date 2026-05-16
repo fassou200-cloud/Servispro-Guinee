@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getErrorMessage } from '@/utils/helpers';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +16,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 const ServiceRequestForm = ({ providerId, providerName, provider, onSuccess }) => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   
@@ -90,7 +92,16 @@ const ServiceRequestForm = ({ providerId, providerName, provider, onSuccess }) =
         scheduled_date: scheduledDateTime
       };
 
-      await axios.post(`${API}/jobs`, payload);
+      const customerToken = localStorage.getItem('customerToken');
+      if (!customerToken) {
+        toast.error("Veuillez vous connecter en tant que client pour envoyer une demande");
+        navigate('/customer/auth');
+        return;
+      }
+
+      await axios.post(`${API}/jobs`, payload, {
+        headers: { Authorization: `Bearer ${customerToken}` }
+      });
       
       setSubmitted(true);
       toast.success('Demande envoyée avec succès !');

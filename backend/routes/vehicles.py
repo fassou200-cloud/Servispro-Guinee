@@ -393,8 +393,12 @@ async def delete_vehicle_photo(vehicle_id: str, photo_url: str, current_user: di
 # Vehicle Booking Routes
 
 @router.post("/vehicles/{vehicle_id}/book")
-async def create_vehicle_booking(vehicle_id: str, booking_data: VehicleBookingCreate):
-    """Create a booking request for a vehicle"""
+async def create_vehicle_booking(
+    vehicle_id: str,
+    booking_data: VehicleBookingCreate,
+    current_customer: dict = Depends(get_current_customer),
+):
+    """Create a booking request for a vehicle (authenticated customer only)"""
     vehicle = await db.vehicle_listings.find_one({'id': vehicle_id}, {'_id': 0})
     if not vehicle:
         raise HTTPException(status_code=404, detail="Véhicule non trouvé")

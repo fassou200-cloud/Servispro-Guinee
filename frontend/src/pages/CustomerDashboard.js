@@ -92,7 +92,10 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
 
   const fetchJobs = async () => {
     try {
-      const response = await axios.get(`${API}/customer/jobs`);
+      const token = localStorage.getItem('customerToken');
+      const response = await axios.get(`${API}/customer/jobs`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setJobs(response.data);
     } catch (error) {
       console.error('Failed to fetch jobs:', error);
