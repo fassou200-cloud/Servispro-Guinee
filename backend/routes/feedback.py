@@ -69,6 +69,14 @@ async def create_review(review_data: ReviewCreate, current_customer: dict = Depe
 @router.post("/feedback", response_model=Feedback)
 async def submit_feedback(feedback_data: FeedbackCreate):
     """Submit feedback about platform issues, bugs, or feature requests"""
+    # Enforce required phone for contact-type messages so admin can follow up
+    phone = (feedback_data.user_phone or '').strip()
+    phone_digits = ''.join(c for c in phone if c.isdigit())
+    if len(phone_digits) < 8:
+        raise HTTPException(
+            status_code=400,
+            detail="Le numéro de téléphone est obligatoire (minimum 8 chiffres)"
+        )
     feedback_id = str(uuid.uuid4())
     feedback_doc = {
         'id': feedback_id,

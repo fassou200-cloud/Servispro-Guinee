@@ -20,6 +20,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
+import { formatGuineanPhone } from '@/utils/phone';
+import GuineaFlag from '@/components/GuineaFlag';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -43,6 +45,11 @@ const FeedbackButton = ({ className = '' }) => {
   const handleSubmit = async () => {
     if (!formData.user_name.trim()) {
       toast.error('Veuillez entrer votre nom');
+      return;
+    }
+    const phoneDigits = formData.user_phone.replace(/[^\d]/g, '');
+    if (phoneDigits.length < 8) {
+      toast.error('Le numéro de téléphone est obligatoire (minimum 8 chiffres)');
       return;
     }
     if (!formData.title.trim()) {
@@ -137,21 +144,27 @@ const FeedbackButton = ({ className = '' }) => {
                   />
                 </div>
 
-                {/* Phone (Optional) */}
+                {/* Phone (Required) */}
                 <div className="space-y-2">
                   <Label htmlFor="user_phone" className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                    <HelpCircle className="h-4 w-4 text-gray-400" />
-                    Téléphone (optionnel)
+                    <GuineaFlag className="h-3 w-4" />
+                    Téléphone *
                   </Label>
-                  <Input
-                    id="user_phone"
-                    name="user_phone"
-                    value={formData.user_phone}
-                    onChange={handleChange}
-                    placeholder="Ex: 224 6XX XXX XXX"
-                    className="border-gray-200 focus:border-green-500 focus:ring-green-500"
-                    data-testid="contact-phone-input"
-                  />
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 z-10"><GuineaFlag /></span>
+                    <Input
+                      id="user_phone"
+                      name="user_phone"
+                      type="tel"
+                      value={formData.user_phone}
+                      onChange={handleChange}
+                      onBlur={(e) => setFormData((prev) => ({ ...prev, user_phone: formatGuineanPhone(e.target.value) }))}
+                      placeholder="Ex: 224 6XX XXX XXX"
+                      required
+                      className="pl-12 border-gray-200 focus:border-green-500 focus:ring-green-500"
+                      data-testid="contact-phone-input"
+                    />
+                  </div>
                 </div>
 
                 {/* Title/Subject */}
