@@ -171,10 +171,17 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
   // Pagination state for providers
   const [providerPage, setProviderPage] = useState(1);
   const [providersPerPage] = useState(10);
+  const [providerStatusFilter, setProviderStatusFilter] = useState('all');
   
   // Pagination state for customers
   const [customerPage, setCustomerPage] = useState(1);
   const [customersPerPage] = useState(10);
+  const [customerActiveFilter, setCustomerActiveFilter] = useState('all'); // all | active | inactive
+
+  // Pagination state for agents (real-estate providers)
+  const [agentPage, setAgentPage] = useState(1);
+  const [agentsPerPage] = useState(10);
+  const [agentStatusFilter, setAgentStatusFilter] = useState('all');
 
   // Sort and paginate providers - "En attente" first, then "Approuvé", then others
   const sortedAndPaginatedProviders = useMemo(() => {
@@ -185,12 +192,16 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
       'rejected': 2
     };
     
-    // Sort providers
-    const sorted = [...providers].sort((a, b) => {
+    // Filter
+    const filtered = providerStatusFilter === 'all'
+      ? providers
+      : providers.filter((p) => (p.verification_status || 'pending') === providerStatusFilter);
+
+    // Sort
+    const sorted = [...filtered].sort((a, b) => {
       const statusA = statusOrder[a.verification_status || 'pending'] ?? 3;
       const statusB = statusOrder[b.verification_status || 'pending'] ?? 3;
       if (statusA !== statusB) return statusA - statusB;
-      // Secondary sort by created_at (newest first)
       return new Date(b.created_at) - new Date(a.created_at);
     });
     
@@ -202,13 +213,24 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
       items: sorted.slice(startIndex, endIndex),
       totalItems: sorted.length,
       totalPages: Math.ceil(sorted.length / providersPerPage),
-      currentPage: providerPage
+      currentPage: providerPage,
+      pendingCount: providers.filter((p) => (p.verification_status || 'pending') === 'pending').length,
     };
-  }, [providers, providerPage, providersPerPage]);
+  }, [providers, providerPage, providersPerPage, providerStatusFilter]);
 
-  // Sort and paginate customers - newest first
+  // Sort and paginate customers - inactive first (need action), then newest first
   const sortedAndPaginatedCustomers = useMemo(() => {
-    const sorted = [...customers].sort((a, b) => {
+    const filtered = customerActiveFilter === 'all'
+      ? customers
+      : customerActiveFilter === 'inactive'
+        ? customers.filter((c) => c.is_active === false)
+        : customers.filter((c) => c.is_active !== false);
+
+    const sorted = [...filtered].sort((a, b) => {
+      // Inactive customers first (need attention), then by created_at
+      const inactiveA = a.is_active === false ? 0 : 1;
+      const inactiveB = b.is_active === false ? 0 : 1;
+      if (inactiveA !== inactiveB) return inactiveA - inactiveB;
       return new Date(b.created_at) - new Date(a.created_at);
     });
     
@@ -219,9 +241,41 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
       items: sorted.slice(startIndex, endIndex),
       totalItems: sorted.length,
       totalPages: Math.ceil(sorted.length / customersPerPage),
-      currentPage: customerPage
+      currentPage: customerPage,
+      inactiveCount: customers.filter((c) => c.is_active === false).length,
     };
-  }, [customers, customerPage, customersPerPage]);
+  }, [customers, customerPage, customersPerPage, customerActiveFilter]);
+
+  // Sort and paginate agents immobilier — pending first
+  const sortedAndPaginatedAgents = useMemo(() => {
+    const statusOrder = { 'pending': 0, 'approved': 1, 'rejected': 2 };
+    const filtered = agentStatusFilter === 'all'
+      ? agentsImmobilier
+      : agentsImmobilier.filter((a) => (a.verification_status || 'pending') === agentStatusFilter);
+
+    const sorted = [...filtered].sort((a, b) => {
+      const statusA = statusOrder[a.verification_status || 'pending'] ?? 3;
+      const statusB = statusOrder[b.verification_status || 'pending'] ?? 3;
+      if (statusA !== statusB) return statusA - statusB;
+      return new Date(b.created_at) - new Date(a.created_at);
+    });
+
+    const startIndex = (agentPage - 1) * agentsPerPage;
+    const endIndex = startIndex + agentsPerPage;
+
+    return {
+      items: sorted.slice(startIndex, endIndex),
+      totalItems: sorted.length,
+      totalPages: Math.ceil(sorted.length / agentsPerPage),
+      currentPage: agentPage,
+      pendingCount: agentsImmobilier.filter((a) => (a.verification_status || 'pending') === 'pending').length,
+    };
+  }, [agentsImmobilier, agentPage, agentsPerPage, agentStatusFilter]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => { setProviderPage(1); }, [providerStatusFilter]);
+  useEffect(() => { setCustomerPage(1); }, [customerActiveFilter]);
+  useEffect(() => { setAgentPage(1); }, [agentStatusFilter]);
   
   // Refund requests state
   const [refundRequests, setRefundRequests] = useState([]);
@@ -986,6 +1040,10 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
     serviceFees, savingFees, visitFeesStats, loadingVisitFees, demandStats, loadingDemandStats,
     providerPage, customersPerPage, customerPage,
     sortedAndPaginatedProviders, sortedAndPaginatedCustomers,
+    sortedAndPaginatedAgents, agentPage, setAgentPage,
+    providerStatusFilter, setProviderStatusFilter,
+    customerActiveFilter, setCustomerActiveFilter,
+    agentStatusFilter, setAgentStatusFilter,
     refundRequests, loadingRefunds, processingRefund,
     editAboutModal, editAboutText, savingAbout,
     editProfileModal, editProfileData, savingProfile,

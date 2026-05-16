@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getImageUrl } from '@/utils/imageUrl';
-import { AlertCircle, Building, CheckCircle, Home, Trash2, UserCheck, UserX } from 'lucide-react';
+import { AlertCircle, Building, CheckCircle, ChevronLeft, ChevronRight, Home, Trash2, UserCheck, UserX } from 'lucide-react';
 
 const AdminAgentsTab = ({
   agentsImmobilier,
@@ -13,18 +13,53 @@ const AdminAgentsTab = ({
   handleApproveProvider,
   handleRejectProvider,
   BACKEND_URL,
-  translateStatus
+  translateStatus,
+  sortedAndPaginatedAgents,
+  agentPage,
+  setAgentPage,
+  agentStatusFilter,
+  setAgentStatusFilter,
 }) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div className="space-y-4">
-        <h2 className="text-lg font-heading font-bold text-white mb-4">Agents Immobiliers</h2>
-        {agentsImmobilier.length === 0 ? (
+        <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+          <h2 className="text-lg font-heading font-bold text-white">
+            Agents Immobiliers ({sortedAndPaginatedAgents.totalItems})
+            {sortedAndPaginatedAgents.pendingCount > 0 && (
+              <span className="ml-2 text-xs font-medium text-orange-300 bg-orange-500/20 border border-orange-500/40 px-2 py-0.5 rounded-full">
+                {sortedAndPaginatedAgents.pendingCount} à approuver
+              </span>
+            )}
+          </h2>
+        </div>
+        <div className="flex gap-1 mb-3">
+          {[
+            { key: 'all', label: 'Tous' },
+            { key: 'pending', label: 'En attente' },
+            { key: 'approved', label: 'Approuvés' },
+            { key: 'rejected', label: 'Rejetés' },
+          ].map((opt) => (
+            <button
+              key={opt.key}
+              onClick={() => setAgentStatusFilter(opt.key)}
+              className={`px-2.5 py-1 text-xs rounded-full transition-colors ${
+                agentStatusFilter === opt.key
+                  ? 'bg-amber-500 text-white'
+                  : 'bg-slate-700/50 text-slate-300 hover:bg-slate-700'
+              }`}
+              data-testid={`agents-filter-${opt.key}`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+        {sortedAndPaginatedAgents.totalItems === 0 ? (
           <Card className="p-8 bg-slate-800 border-slate-700 text-center">
-            <p className="text-slate-400">Aucun agent immobilier inscrit</p>
+            <p className="text-slate-400">Aucun agent immobilier {agentStatusFilter !== 'all' ? `(${agentStatusFilter})` : 'inscrit'}</p>
           </Card>
         ) : (
-          agentsImmobilier.map((agent) => (
+          sortedAndPaginatedAgents.items.map((agent) => (
             <Card
               key={agent.id}
               className={`p-4 bg-slate-800 border-slate-700 cursor-pointer transition-colors ${
@@ -60,6 +95,40 @@ const AdminAgentsTab = ({
               </div>
             </Card>
           ))
+        )}
+
+        {/* Pagination */}
+        {sortedAndPaginatedAgents.totalPages > 1 && (
+          <div className="flex items-center justify-between gap-3 pt-2" data-testid="agents-pagination">
+            <span className="text-xs text-slate-400">
+              {(agentPage - 1) * 10 + 1}–{Math.min(agentPage * 10, sortedAndPaginatedAgents.totalItems)} sur {sortedAndPaginatedAgents.totalItems}
+            </span>
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setAgentPage((p) => Math.max(1, p - 1))}
+                disabled={agentPage === 1}
+                className="bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-700 disabled:opacity-40"
+                data-testid="agents-prev-page"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-sm text-white px-2">
+                {agentPage} / {sortedAndPaginatedAgents.totalPages}
+              </span>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setAgentPage((p) => Math.min(sortedAndPaginatedAgents.totalPages, p + 1))}
+                disabled={agentPage === sortedAndPaginatedAgents.totalPages}
+                className="bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-700 disabled:opacity-40"
+                data-testid="agents-next-page"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         )}
       </div>
 

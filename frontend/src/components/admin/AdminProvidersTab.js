@@ -23,15 +23,22 @@ const AdminProvidersTab = ({
   refreshTabData,
   BACKEND_URL,
   translateProfession,
-  translateStatus
+  translateStatus,
+  providerStatusFilter,
+  setProviderStatusFilter,
 }) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Providers List */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
           <h2 className="text-lg font-heading font-bold text-white">
             Liste des Prestataires ({sortedAndPaginatedProviders.totalItems})
+            {sortedAndPaginatedProviders.pendingCount > 0 && (
+              <span className="ml-2 text-xs font-medium text-orange-300 bg-orange-500/20 border border-orange-500/40 px-2 py-0.5 rounded-full">
+                {sortedAndPaginatedProviders.pendingCount} à approuver
+              </span>
+            )}
           </h2>
           <Button
             variant="ghost"
@@ -42,6 +49,27 @@ const AdminProvidersTab = ({
           >
             <RefreshCw className={`h-4 w-4 ${tabLoading ? 'animate-spin' : ''}`} />
           </Button>
+        </div>
+        <div className="flex gap-1 mb-3">
+          {[
+            { key: 'all', label: 'Tous' },
+            { key: 'pending', label: 'En attente' },
+            { key: 'approved', label: 'Approuvés' },
+            { key: 'rejected', label: 'Rejetés' },
+          ].map((opt) => (
+            <button
+              key={opt.key}
+              onClick={() => setProviderStatusFilter(opt.key)}
+              className={`px-2.5 py-1 text-xs rounded-full transition-colors ${
+                providerStatusFilter === opt.key
+                  ? 'bg-amber-500 text-white'
+                  : 'bg-slate-700/50 text-slate-300 hover:bg-slate-700'
+              }`}
+              data-testid={`providers-filter-${opt.key}`}
+            >
+              {opt.label}
+            </button>
+          ))}
         </div>
         {tabLoading && !loadedTabs['providers'] ? (
           <Card className="p-8 bg-slate-800 border-slate-700 text-center">

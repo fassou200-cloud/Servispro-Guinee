@@ -10,13 +10,44 @@ const AdminCustomersTab = ({
   setCustomerPage,
   setSelectedCustomer,
   sortedAndPaginatedCustomers,
+  customerActiveFilter,
+  setCustomerActiveFilter,
   confirmDelete,
   handleToggleCustomerActive
 }) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div className="space-y-4">
-        <h2 className="text-lg font-heading font-bold text-white mb-4">Liste des Clients ({sortedAndPaginatedCustomers.totalItems})</h2>
+        <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+          <h2 className="text-lg font-heading font-bold text-white">
+            Liste des Clients ({sortedAndPaginatedCustomers.totalItems})
+            {sortedAndPaginatedCustomers.inactiveCount > 0 && (
+              <span className="ml-2 text-xs font-medium text-red-300 bg-red-500/20 border border-red-500/40 px-2 py-0.5 rounded-full">
+                {sortedAndPaginatedCustomers.inactiveCount} désactivé(s)
+              </span>
+            )}
+          </h2>
+        </div>
+        <div className="flex gap-1 mb-3">
+          {[
+            { key: 'all', label: 'Tous' },
+            { key: 'active', label: 'Actifs' },
+            { key: 'inactive', label: 'Désactivés' },
+          ].map((opt) => (
+            <button
+              key={opt.key}
+              onClick={() => setCustomerActiveFilter(opt.key)}
+              className={`px-2.5 py-1 text-xs rounded-full transition-colors ${
+                customerActiveFilter === opt.key
+                  ? 'bg-amber-500 text-white'
+                  : 'bg-slate-700/50 text-slate-300 hover:bg-slate-700'
+              }`}
+              data-testid={`customers-filter-${opt.key}`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
         {customers.length === 0 ? (
           <Card className="p-8 bg-slate-800 border-slate-700 text-center">
             <p className="text-slate-400">Aucun client inscrit</p>
