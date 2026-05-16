@@ -2,7 +2,12 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { getImageUrl } from '@/utils/imageUrl';
-import { Building, Camera, CheckCircle, Eye, FileText, Image as ImageIcon, Loader2, MapPin, MessageCircle, Package, Pencil, Save, Store, Trash2, UserCheck, UserCircle, UserX, X, XCircle } from 'lucide-react';
+import { Building, Camera, CheckCircle, ChevronLeft, ChevronRight, Eye, FileText, Image as ImageIcon, Loader2, MapPin, MessageCircle, Package, Pencil, Save, Store, Trash2, UserCheck, UserCircle, UserX, X, XCircle } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+
+const COMPANIES_PER_PAGE = 10;
+
+const STATUS_ORDER = { pending: 0, approved: 1, rejected: 2 };
 
 const AdminCompaniesTab = ({
   adminProductEditData,
@@ -35,18 +40,77 @@ const AdminCompaniesTab = ({
   adminApi,
   translateStatus
 }) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState('all'); // 'all' | 'pending' | 'approved' | 'rejected'
+
+  // Sort: pending companies first, then approved, then rejected; within each group, newest first
+  const sortedCompanies = useMemo(() => {
+    const filtered = statusFilter === 'all'
+      ? companies
+      : companies.filter((c) => (c.verification_status || 'pending') === statusFilter);
+    return [...filtered].sort((a, b) => {
+      const aOrder = STATUS_ORDER[a.verification_status] ?? 99;
+      const bOrder = STATUS_ORDER[b.verification_status] ?? 99;
+      if (aOrder !== bOrder) return aOrder - bOrder;
+      return (b.created_at || '').localeCompare(a.created_at || '');
+    });
+  }, [companies, statusFilter]);
+
+  const pendingCount = useMemo(
+    () => companies.filter((c) => (c.verification_status || 'pending') === 'pending').length,
+    [companies]
+  );
+
+  const totalPages = Math.max(1, Math.ceil(sortedCompanies.length / COMPANIES_PER_PAGE));
+  const pageStart = (currentPage - 1) * COMPANIES_PER_PAGE;
+  const pageItems = sortedCompanies.slice(pageStart, pageStart + COMPANIES_PER_PAGE);
+
+  // Reset page when filter changes or company list shrinks
+  useEffect(() => { setCurrentPage(1); }, [statusFilter]);
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [totalPages, currentPage]);
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div className="space-y-4">
-        <h2 className="text-lg font-heading font-bold text-white mb-4">
-          Entreprises ({companies.length})
-        </h2>
-        {companies.length === 0 ? (
+        <div className="flex items-center justify-between gap-3 flex-wrap mb-2">
+          <h2 className="text-lg font-heading font-bold text-white">
+            Entreprises ({companies.length})
+            {pendingCount > 0 && (
+              <span className="ml-2 text-xs font-medium text-orange-300 bg-orange-500/20 border border-orange-500/40 px-2 py-0.5 rounded-full">
+                {pendingCount} à approuver
+              </span>
+            )}
+          </h2>
+          <div className="flex gap-1">
+            {[
+              { key: 'all', label: 'Tous' },
+              { key: 'pending', label: 'En attente' },
+              { key: 'approved', label: 'Approuvés' },
+              { key: 'rejected', label: 'Rejetés' },
+            ].map((opt) => (
+              <button
+                key={opt.key}
+                onClick={() => setStatusFilter(opt.key)}
+                className={`px-2.5 py-1 text-xs rounded-full transition-colors ${
+                  statusFilter === opt.key
+                    ? 'bg-teal-500 text-white'
+                    : 'bg-slate-700/50 text-slate-300 hover:bg-slate-700'
+                }`}
+                data-testid={`companies-filter-${opt.key}`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        {sortedCompanies.length === 0 ? (
           <Card className="p-8 bg-slate-800 border-slate-700 text-center">
-            <p className="text-slate-400">Aucune entreprise inscrite</p>
+            <p className="text-slate-400">Aucune entreprise {statusFilter !== 'all' ? `(${statusFilter})` : 'inscrite'}</p>
           </Card>
         ) : (
-          companies.map((company) => (
+          pageItems.map((company) => (
             <Card
               key={company.id}
               className={`p-4 bg-slate-800 border-slate-700 cursor-pointer transition-colors ${
@@ -90,6 +154,40 @@ const AdminCompaniesTab = ({
               </div>
             </Card>
           ))
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between gap-3 pt-2" data-testid="companies-pagination">
+            <span className="text-xs text-slate-400">
+              {pageStart + 1}–{Math.min(pageStart + COMPANIES_PER_PAGE, sortedCompanies.length)} sur {sortedCompanies.length}
+            </span>
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-700 disabled:opacity-40"
+                data-testid="companies-prev-page"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-sm text-white px-2">
+                {currentPage} / {totalPages}
+              </span>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-700 disabled:opacity-40"
+                data-testid="companies-next-page"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         )}
       </div>
 
