@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { getErrorMessage } from '@/utils/helpers';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -40,7 +40,10 @@ const COMPANY_SECTORS = [
 
 const CompanyAuth = ({ setIsCompanyAuthenticated }) => {
   const navigate = useNavigate();
-  const [isLogin, setIsLogin] = useState(true);
+  const location = useLocation();
+  // Default to login, but switch to register if URL contains ?mode=register
+  const initialIsLogin = !(/[?&](mode=register|signup=1)/.test(location.search));
+  const [isLogin, setIsLogin] = useState(initialIsLogin);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);

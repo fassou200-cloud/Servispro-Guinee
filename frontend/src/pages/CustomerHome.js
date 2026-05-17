@@ -103,7 +103,7 @@ const CustomerHome = ({ isCustomerAuthenticated }) => {
                   Se connecter
                 </button>
                 <button 
-                  onClick={() => navigate('/auth')}
+                  onClick={() => navigate('/auth?mode=register')}
                   className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
                 >
                   S'inscrire
@@ -206,7 +206,7 @@ const CustomerHome = ({ isCustomerAuthenticated }) => {
 
             {/* Enterprise Card */}
             <button
-              onClick={() => navigate('/company/auth')}
+              onClick={() => navigate('/company/auth?mode=register')}
               data-testid="enterprise-card"
               className="group relative bg-gradient-to-br from-purple-600 to-indigo-600 rounded-2xl p-6 md:p-8 text-left transition-all hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
             >
