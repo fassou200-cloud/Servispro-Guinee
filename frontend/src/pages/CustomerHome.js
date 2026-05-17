@@ -136,7 +136,7 @@ const CustomerHome = ({ isCustomerAuthenticated }) => {
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuLabel className="text-xs text-gray-500 font-normal">
-                    Devenir prestataire
+                    Espace prestataire
                   </DropdownMenuLabel>
                   <DropdownMenuItem
                     onClick={() => navigate('/auth')}
