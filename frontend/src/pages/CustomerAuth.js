@@ -8,7 +8,7 @@ import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ArrowLeft, User, Phone, Lock, Eye, EyeOff, Sparkles, Shield, CheckCircle, MapPin, FileText } from 'lucide-react';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { getRegions, getVillesByRegion, getCommunesByVille, getQuartiersByCommune } from '@/data/guineaLocations';
 import ForgotPassword from '@/components/ForgotPassword';
@@ -21,7 +21,10 @@ const API = `${BACKEND_URL}/api`;
 
 const CustomerAuth = ({ setIsCustomerAuthenticated }) => {
   const navigate = useNavigate();
-  const [isLogin, setIsLogin] = useState(true);
+  const location = useLocation();
+  // Default to login, but switch to register if URL contains ?mode=register OR ?signup=1
+  const initialIsLogin = !(/[?&](mode=register|signup=1)/.test(location.search));
+  const [isLogin, setIsLogin] = useState(initialIsLogin);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);

@@ -346,7 +346,7 @@ const ProductDetail = () => {
                     </Button>
                     <Button
                       className="flex-1 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white"
-                      onClick={() => navigate('/customer/auth')}
+                      onClick={() => navigate('/customer/auth?mode=register')}
                       data-testid="auth-gate-create-account-btn"
                     >
                       Créer un compte
