@@ -1029,7 +1029,7 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
             <Button
               size="lg"
               variant="outline"
-              onClick={() => navigate('/auth')}
+              onClick={() => navigate('/auth?mode=register')}
               className="h-14 px-10 text-lg font-bold border-2 border-white/30 text-white hover:bg-white/10 rounded-xl"
             >
               Devenir Prestataire
@@ -1426,7 +1426,7 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
                 <li><button onClick={() => navigate('/browse')} className="text-gray-400 hover:text-white transition-colors">Tous les Services</button></li>
                 <li><button onClick={() => navigate('/rentals')} className="text-gray-400 hover:text-white transition-colors">Locations</button></li>
                 <li><button onClick={() => navigate('/property-sales')} className="text-gray-400 hover:text-white transition-colors">Ventes</button></li>
-                <li><button onClick={() => navigate('/auth')} className="text-gray-400 hover:text-white transition-colors">Devenir Prestataire</button></li>
+                <li><button onClick={() => navigate('/auth?mode=register')} className="text-gray-400 hover:text-white transition-colors">Devenir Prestataire</button></li>
                 <li><button onClick={() => navigate('/company/auth')} className="text-gray-400 hover:text-white transition-colors">Espace Entreprise</button></li>
               </ul>
             </div>
