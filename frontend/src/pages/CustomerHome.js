@@ -1,8 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  MapPin, ChevronRight, User, Building, ShoppingBag, Briefcase
+  MapPin, ChevronRight, User, Building, ShoppingBag, Briefcase, ChevronDown, LogIn, UserPlus
 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const CustomerHome = ({ isCustomerAuthenticated }) => {
   const navigate = useNavigate();
@@ -95,20 +103,59 @@ const CustomerHome = ({ isCustomerAuthenticated }) => {
             </div>
             
             {!isCustomerAuthenticated ? (
-              <>
-                <button 
-                  onClick={() => navigate('/customer/auth')}
-                  className="hidden md:block text-gray-600 hover:text-gray-900 font-medium transition-colors"
-                >
-                  Se connecter
-                </button>
-                <button 
-                  onClick={() => navigate('/auth?mode=register')}
-                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-                >
-                  S'inscrire
-                </button>
-              </>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className="flex items-center gap-1.5 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                    data-testid="header-account-btn"
+                  >
+                    <User className="h-4 w-4" />
+                    Mon compte
+                    <ChevronDown className="h-4 w-4" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel className="text-xs text-gray-500 font-normal">
+                    Espace Client
+                  </DropdownMenuLabel>
+                  <DropdownMenuItem
+                    onClick={() => navigate('/customer/auth')}
+                    data-testid="menu-customer-login"
+                    className="gap-2 cursor-pointer"
+                  >
+                    <LogIn className="h-4 w-4 text-green-600" />
+                    Se connecter
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => navigate('/customer/auth?mode=register')}
+                    data-testid="menu-customer-register"
+                    className="gap-2 cursor-pointer"
+                  >
+                    <UserPlus className="h-4 w-4 text-green-600" />
+                    Créer un compte
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel className="text-xs text-gray-500 font-normal">
+                    Devenir prestataire
+                  </DropdownMenuLabel>
+                  <DropdownMenuItem
+                    onClick={() => navigate('/auth')}
+                    data-testid="menu-provider-login"
+                    className="gap-2 cursor-pointer"
+                  >
+                    <LogIn className="h-4 w-4 text-orange-600" />
+                    Connexion prestataire
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => navigate('/auth?mode=register')}
+                    data-testid="menu-provider-register"
+                    className="gap-2 cursor-pointer"
+                  >
+                    <UserPlus className="h-4 w-4 text-orange-600" />
+                    Inscription prestataire
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <button 
                 onClick={() => navigate('/customer/dashboard')}
