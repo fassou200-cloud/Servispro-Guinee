@@ -946,6 +946,17 @@ const CompanyAuth = ({ setIsCompanyAuthenticated }) => {
                 </div>
               </div>
 
+              {/* Security Reassurance Banner */}
+              <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-start gap-3">
+                <Lock className="h-5 w-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="font-bold text-emerald-400">Vos documents sont sécurisés</h4>
+                  <p className="text-sm text-emerald-200/80">
+                    Tous vos fichiers sont chiffrés et restent strictement confidentiels. Seule notre équipe de vérification y a accès, dans le seul but de valider votre entreprise.
+                  </p>
+                </div>
+              </div>
+
               {/* Action Buttons */}
               <div className="flex gap-4">
                 <Button
