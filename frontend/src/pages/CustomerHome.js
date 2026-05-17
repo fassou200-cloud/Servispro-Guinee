@@ -124,7 +124,7 @@ const CustomerHome = ({ isCustomerAuthenticated }) => {
                     className="gap-2 cursor-pointer"
                   >
                     <LogIn className="h-4 w-4 text-green-600" />
-                    Se connecter
+                    Connexion client
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => navigate('/customer/auth?mode=register')}
@@ -132,7 +132,7 @@ const CustomerHome = ({ isCustomerAuthenticated }) => {
                     className="gap-2 cursor-pointer"
                   >
                     <UserPlus className="h-4 w-4 text-green-600" />
-                    Créer un compte
+                    Inscription client
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuLabel className="text-xs text-gray-500 font-normal">
