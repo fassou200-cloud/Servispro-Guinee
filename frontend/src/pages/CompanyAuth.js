@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { 
   Building2, FileText, Upload, Eye, EyeOff, ArrowLeft, ArrowRight,
@@ -14,6 +15,7 @@ import {
   Briefcase, Shield, Lock, KeyRound
 } from 'lucide-react';
 import ForgotPassword from '@/components/ForgotPassword';
+import TermsConditionsModal from '@/components/TermsConditionsModal';
 import axios from 'axios';
 import { GUINEA_LOCATIONS, getVillesByRegion, getRegions } from '../data/guineaLocations';
 import { formatGuineanPhone } from '@/utils/phone';
@@ -51,6 +53,8 @@ const CompanyAuth = ({ setIsCompanyAuthenticated }) => {
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [resetStep, setResetStep] = useState(1); // 1 = verify, 2 = new password
   const [resetData, setResetData] = useState({ phone_number: '', email: '', new_password: '', confirm_password: '' });
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
   
   // Login form
   const [loginData, setLoginData] = useState({
@@ -153,6 +157,12 @@ const CompanyAuth = ({ setIsCompanyAuthenticated }) => {
   const handleRegisterStep1 = async (e) => {
     e.preventDefault();
     
+    // Check terms acceptance for registration
+    if (!termsAccepted) {
+      toast.error('Vous devez accepter les Conditions Générales d\'Utilisation pour créer un compte');
+      return;
+    }
+
     // Validate passwords match
     if (formData.password !== formData.confirm_password) {
       toast.error('Les mots de passe ne correspondent pas');
@@ -718,10 +728,41 @@ const CompanyAuth = ({ setIsCompanyAuthenticated }) => {
                 </div>
               </div>
 
+              {/* Terms and Conditions */}
+              <div className="flex items-start gap-3 p-4 bg-emerald-500/10 rounded-xl border border-emerald-500/30">
+                <Checkbox
+                  id="terms-company"
+                  checked={termsAccepted}
+                  onCheckedChange={setTermsAccepted}
+                  className="mt-0.5 border-emerald-400 data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"
+                  data-testid="company-terms-checkbox"
+                />
+                <div className="flex-1">
+                  <label
+                    htmlFor="terms-company"
+                    className="text-sm text-slate-200 cursor-pointer"
+                  >
+                    J'accepte les{' '}
+                    <button
+                      type="button"
+                      onClick={() => setShowTermsModal(true)}
+                      className="text-emerald-400 hover:text-emerald-300 underline font-medium inline-flex items-center gap-1"
+                      data-testid="company-terms-link"
+                    >
+                      <FileText className="h-3.5 w-3.5" />
+                      Conditions Générales d'Utilisation
+                    </button>
+                  </label>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Vous devez accepter les CGU pour créer votre compte entreprise
+                  </p>
+                </div>
+              </div>
+
               <Button
                 type="submit"
-                className="w-full h-14 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 font-bold text-lg"
-                disabled={loading}
+                className="w-full h-14 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={loading || !termsAccepted}
                 data-testid="company-register-submit"
               >
                 {loading ? 'Création en cours...' : (
@@ -929,6 +970,13 @@ const CompanyAuth = ({ setIsCompanyAuthenticated }) => {
         </Card>
         </div>
       </div>
+
+      {/* Terms and Conditions Modal */}
+      <TermsConditionsModal
+        open={showTermsModal}
+        onOpenChange={setShowTermsModal}
+        onAccept={() => setTermsAccepted(true)}
+      />
     </div>
   );
 };

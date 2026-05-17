@@ -1,111 +1,81 @@
-# ServisPro - Product Requirements Document
+# ServisPro — Product Requirements Document
 
-## Overview
-ServisPro is a comprehensive platform in Guinea connecting service providers, companies, and clients. It includes a virtual marketplace (Makiti), a real estate section, and a service directory.
+## Original Problem Statement
+ServisPro est une plateforme guinéenne (Conakry) qui connecte clients, prestataires et entreprises de services. Elle inclut :
+- Annuaire des prestataires (Browse)
+- Marketplace "Makiti" (boutiques + produits)
+- Immobilier (Locations + Ventes)
+- Espace Entreprise (création de boutique, statistiques de ventes)
+- Espace Admin (modération, statistiques, insights)
+
+## Personas
+- **Client** : recherche des prestataires, produits, biens immobiliers
+- **Prestataire** : propose ses services, reçoit des demandes
+- **Entreprise** : gère sa boutique Makiti, ses ventes, ses produits
+- **Admin** : valide les entreprises/prestataires, modère
+
+## Core Requirements (état actuel)
+- Localisation guinéenne : numéros auto-formatés en `+224`, drapeau guinéen sur les champs téléphone
+- Auth-gate sur Makiti avant de contacter un vendeur
+- Validation stricte des numéros côté front + back
+- Pagination & tri Admin (Companies, Customers, Providers, Agents)
+- Sécurité : 5 endpoints publics protégés (`Depends(get_current_user)`)
+- Stats entreprise : ventes Makiti (basées sur demandes traitées)
+- Tracking : recherches Makiti + suggestions produits (exit-intent)
+- CGU obligatoires : Client, Prestataire, **Entreprise** (✅ ajouté Feb 2026)
+
+## Changelog
+- **2026-02-17** : Renommé items dropdown "Mon compte" → "Connexion client" / "Inscription client" (CustomerHome.js)
+- **2026-02-17** : Ajout CGU obligatoires à `/company/auth` (CompanyAuth.js) avec `TermsConditionsModal`
+- (antérieur) : Refactoring CustomerDashboard.js (1466→548) et CompanyDashboard.js (1331→1038)
+- (antérieur) : Makiti Auth Gate, Insights, Tracking, Shop Inquiries, Stats Entreprise
+- (antérieur) : Pagination Admin complète, sécurisation des endpoints, localisation guinéenne globale
+
+## Roadmap
+
+### P0
+- Intégration Mobile Money (paiement réel pour Makiti/services)
+
+### P1
+- Refactor `CompanyDashboard.js` (~1038 lignes) via Context API
+
+### P2
+- Statut "En ligne/Hors ligne" en temps réel via WebSockets
+- Bug "Erreur lors de l'approbation" (Admin) — besoin de repro user
+
+### P3
+- Localisation i18next pour textes français hardcodés
+- MongoDB Atlas Security Configuration (manuel — user)
 
 ## Architecture
-- **Frontend**: React (CRA) with Tailwind CSS + shadcn/ui
-- **Backend**: FastAPI (Python) with Motor (async MongoDB driver)
-- **Database**: MongoDB (`servispro_production`)
-- **Image Hosting**: Cloudinary (with `f_auto` for HEIC compatibility)
-- **PWA**: Service Worker + manifest.json for installable web app
-
-## Backend Structure (Refactored Feb 2026)
 ```
-/app/backend/
-├── server.py           # 92 lines - Main app, middleware, router inclusion
-├── database.py         # MongoDB connection
-├── config.py           # JWT, admin accounts, rate limiting, CORS
-├── models.py           # All Pydantic models and enums (~870 lines)
-├── dependencies.py     # Auth dependencies (get_current_user, etc.)
-├── middleware.py        # Security, rate limiting, admin auth middleware
-├── utils/
-│   ├── cloudinary_helper.py  # Upload/delete Cloudinary functions
-│   └── security.py           # Audit logging, IP blocking, contact filtering
-├── routes/
-│   ├── auth.py          # Auth routes (register, login, password reset)
-│   ├── providers.py     # Provider profile, documents
-│   ├── companies.py     # Company profile, services, jobs, properties
-│   ├── rentals.py       # Rental listings, visit requests, chat
-│   ├── property_sales.py # Property sales, inquiries
-│   ├── vehicles.py      # Vehicle listings, vehicle sales
-│   ├── marketplace.py   # Shops, products, reviews (Makiti)
-│   ├── admin.py         # Admin management, stats, settings
-│   ├── jobs.py          # Job offers, completion flow
-│   ├── notifications.py # Notification system
-│   ├── payments.py      # Payments, credits, refunds
-│   └── feedback.py      # Feedback, provider reviews
-└── tests/
+/app/
+├── backend/
+│   ├── server.py
+│   ├── models.py
+│   ├── config.py
+│   ├── middleware.py
+│   └── routes/ (auth, marketplace, companies, feedback, …)
+└── frontend/src/
+    ├── components/{admin,company,customer,ui}/
+    ├── components/{GuineaFlag, TermsConditionsModal}.{jsx,js}
+    ├── pages/ (CustomerHome, CustomerAuth, CompanyAuth, AuthPage, …)
+    └── utils/phone.js
 ```
 
-## Frontend Structure (Refactored Feb 2026)
-```
-/app/frontend/src/
-├── pages/
-│   ├── AdminDashboard.js   # 1649 lines (refactored from 5070)
-│   ├── CompanyDashboard.js # 2470 lines (pending refactor)
-│   ├── Marketplace.js      # Makiti with category icons
-│   └── ...
-├── components/
-│   ├── admin/              # Extracted admin tab components
-│   │   ├── AdminProvidersTab.js
-│   │   ├── AdminCustomersTab.js
-│   │   ├── AdminRentalsTab.js
-│   │   ├── AdminAgentsTab.js
-│   │   ├── AdminSalesTab.js
-│   │   ├── AdminCompaniesTab.js
-│   │   ├── AdminRevenueTab.js
-│   │   ├── AdminRefundsTab.js
-│   │   ├── AdminFeedbacksTab.js
-│   │   ├── AdminMakitiTab.js
-│   │   └── AdminSettingsTab.js
-│   ├── MyShop.js
-│   └── ...
-└── utils/
-    └── imageUrl.js         # getImageUrl with f_auto for HEIC
-```
+## Key API endpoints
+- `GET /api/company/stats`
+- `POST /api/marketplace/searches`
+- `POST /api/marketplace/suggestions`
+- `PUT /api/shop/inquiries/{id}/status`
 
-## Completed Features
-- [x] Service provider registration/login with verification
-- [x] Customer registration/login
-- [x] Company registration/login with document upload
-- [x] Admin dashboard with 14 management tabs
-- [x] Makiti Marketplace with category filtering (icons)
-- [x] Dynamic product characteristics by category
-- [x] Currency selector (GNF, EUR, USD) + "Prix sur demande"
-- [x] Real estate: Rentals, property sales, visit requests
-- [x] Vehicle listings and sales
-- [x] Admin message monitoring (client-to-seller)
-- [x] Company password reset (phone+email verification)
-- [x] HEIC image fix (Cloudinary f_auto)
-- [x] PWA with iOS install banner
-- [x] Payment simulation system
-- [x] Notification system
-- [x] Feedback system
-- [x] Commission and service fees management
-- [x] **Backend refactoring** (8078 → 92 lines server.py)
-- [x] **AdminDashboard refactoring** (5070 → 1649 lines)
-- [x] **Makiti hero redesign** (Figma-based carousel banner, mobile responsive)
-- [x] **Makiti full Figma design** (countdown timer, "Offres à durée limitée" section, heart/wishlist icons, category quick-filters, updated product cards)
-- [x] **Makiti "Acheter par catégorie"** (circular category images replacing lucide icons, left/right scroll arrows, Figma-matching layout)
-- [x] **Fix login entreprise/prestataire/client** (normalisation numéro téléphone: +224, 224, local — toutes les variantes matchent)
-- [x] **CompanyDashboard refactoring** (2470 → 1331 lines, 7 tab components extracted)
-- [x] **Offres à durée limitée admin** (CRUD offres, date d'expiration globale, % réduction, countdown réel sur Makiti)
-- [x] **Historique demandes clients (Customer "Mes Achats" + Shop "Demandes")** (Feb 2026 — onglet riche avec photo produit, prix, nom/téléphone client, message, statut nouveau/lu — providers + companies)
-- [x] **CustomerDashboard refactoring** (Feb 2026 — 1466 → 548 lignes, 4 sous-composants extraits : CustomerOverviewTab, CustomerDemandesTab, CustomerCreancesTab, CustomerAchatsTab dans `/components/customer/`)
-- [x] **CompanyDashboard refactoring complet** (Feb 2026 — 1331 → 1038 lignes, 4 nouveaux sous-composants : CompanyDocumentsTab, CompanyServicesTab, CompanyJobsTab, CompanyPropertyMessagesTab dans `/components/company/` — total 11 composants company)
-- [x] **Onglet Statistiques Entreprise** (Feb 2026 — KPI cards : services/jobs/candidatures/immobilier vues+messages/boutique vues+demandes/taux engagement + barre top catégories. Endpoint `GET /api/company/stats` agrégé)
+## DB schema (extraits récents)
+- `product_messages.status` ∈ {pending, processed, cancelled}
+- `marketplace_searches` `{query, count, timestamp}`
+- `marketplace_suggestions` `{product_name, category, description, user_phone, status}`
 
-## Pending Issues
-- [ ] P3: "Erreur lors de l'approbation" (needs user reproduction steps)
-- [ ] P3: Notification sound not playing (browser media policy)
+## Credentials
+Voir `/app/memory/test_credentials.md`. Admin prod : `servispro@servisprogn.com`.
 
-## Upcoming Tasks
-- [ ] P1: Terms & Conditions for Company Registration
-- [ ] P0: Real Mobile Money Integration
-- [ ] P2: WebSockets for real-time status
-- [ ] P4: i18next localization
-
-## Admin Credentials
-- Email: servispro@servisprogn.com
-- Password: Servisproguinea2026#
+## Language
+Toutes les interactions agent ↔ utilisateur doivent être en **français**.
