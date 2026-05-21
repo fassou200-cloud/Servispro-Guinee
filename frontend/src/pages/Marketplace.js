@@ -57,7 +57,7 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProductType, setSelectedProductType] = useState('');
   const [viewMode, setViewMode] = useState('products');
-  const [sortBy, setSortBy] = useState('recent');
+  const [sortBy, setSortBy] = useState('smart');
   const [currentSlide, setCurrentSlide] = useState(0);
   const [offerFilter, setOfferFilter] = useState('');
   const [limitedOffers, setLimitedOffers] = useState([]);
@@ -260,6 +260,10 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
       const params = new URLSearchParams();
       if (searchQuery) params.append('search', searchQuery);
       if (sortBy) params.append('sort_by', sortBy);
+      const customer = (() => {
+        try { return JSON.parse(localStorage.getItem('customer') || 'null'); } catch { return null; }
+      })();
+      if (customer?.id) params.append('customer_id', customer.id);
       const res = await axios.get(`${API}/marketplace/products?${params}`);
       setProducts(res.data);
     } catch (err) { console.error(err); }
@@ -279,8 +283,18 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
   const toggleWishlist = (id, e) => {
     e.stopPropagation();
     setWishlist(prev => {
-      const next = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id];
+      const isAdding = !prev.includes(id);
+      const next = isAdding ? [...prev, id] : prev.filter(x => x !== id);
       localStorage.setItem('makiti_wishlist', JSON.stringify(next));
+      // Track favorite for popularity score (fire & forget)
+      const customer = (() => {
+        try { return JSON.parse(localStorage.getItem('customer') || 'null'); } catch { return null; }
+      })();
+      axios.post(`${API}/makiti/favorite-toggle`, {
+        product_id: id,
+        action: isAdding ? 'add' : 'remove',
+        customer_id: customer?.id || null,
+      }).catch(() => {});
       return next;
     });
   };
@@ -557,10 +571,11 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
           </div>
           {viewMode === 'products' && (
             <select data-testid="sort-filter" className="px-3 py-2 border rounded-lg text-sm bg-white" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+              <option value="smart">Pour vous</option>
+              <option value="popular">Populaires</option>
               <option value="recent">Plus récents</option>
               <option value="price_asc">Prix croissant</option>
               <option value="price_desc">Prix décroissant</option>
-              <option value="popular">Populaires</option>
             </select>
           )}
         </div>

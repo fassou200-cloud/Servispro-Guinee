@@ -61,7 +61,13 @@ const ProductDetail = () => {
 
   const fetchProduct = async () => {
     try {
-      const res = await axios.get(`${API}/marketplace/products/${productId}`);
+      const customer = (() => {
+        try { return JSON.parse(localStorage.getItem('customer') || 'null'); } catch { return null; }
+      })();
+      const url = customer?.id
+        ? `${API}/marketplace/products/${productId}?customer_id=${encodeURIComponent(customer.id)}`
+        : `${API}/marketplace/products/${productId}`;
+      const res = await axios.get(url);
       setProduct(res.data);
     } catch (err) {
       console.error(err);

@@ -357,7 +357,8 @@ async def browse_products(
     search: Optional[str] = None,
     min_price: Optional[float] = None,
     max_price: Optional[float] = None,
-    sort_by: Optional[str] = "recent"
+    sort_by: Optional[str] = "smart",
+    customer_id: Optional[str] = None,
 ):
     query = {'is_deleted': {'$ne': True}, 'is_available': True}
     
@@ -378,20 +379,85 @@ async def browse_products(
     if max_price is not None:
         query.setdefault('price', {})['$lte'] = max_price
     
-    sort_field = ('created_at', -1)
-    if sort_by == "price_asc":
-        sort_field = ('price', 1)
+    # Simple Mongo sorts
+    simple_sort = None
+    if sort_by == "recent":
+        simple_sort = ('created_at', -1)
+    elif sort_by == "price_asc":
+        simple_sort = ('price', 1)
     elif sort_by == "price_desc":
-        sort_field = ('price', -1)
+        simple_sort = ('price', -1)
     elif sort_by == "popular":
-        sort_field = ('total_views', -1)
+        # Pure popularity by engagement (views + inquiries + favorites)
+        products = await db.products.find(query, {'_id': 0}).to_list(None)
+        for p in products:
+            p['_engagement'] = (
+                int(p.get('total_views') or 0)
+                + int(p.get('total_inquiries') or 0) * 3
+                + int(p.get('total_favorites') or 0) * 2
+            )
+        products.sort(key=lambda x: x.get('_engagement', 0), reverse=True)
+        for p in products:
+            p.pop('_engagement', None)
+        return products
     
-    products = await db.products.find(query, {'_id': 0}).sort(*sort_field).to_list(None)
+    if simple_sort is not None:
+        products = await db.products.find(query, {'_id': 0}).sort(*simple_sort).to_list(None)
+        return products
+    
+    # ---- Smart mix (default): popularity + recency + personalization ----
+    products = await db.products.find(query, {'_id': 0}).to_list(None)
+    if not products:
+        return []
+    
+    # Personalization: top categories the customer has recently viewed
+    preferred_types = set()
+    if customer_id:
+        recent_views = await db.customer_product_views.find(
+            {'customer_id': customer_id}, {'_id': 0, 'product_type': 1}
+        ).sort('viewed_at', -1).to_list(30)
+        type_counts = {}
+        for v in recent_views:
+            t = (v.get('product_type') or '').strip()
+            if t:
+                type_counts[t] = type_counts.get(t, 0) + 1
+        # Top 3 categories
+        preferred_types = {t for t, _ in sorted(type_counts.items(), key=lambda x: x[1], reverse=True)[:3]}
+    
+    now = datetime.now(timezone.utc)
+    for p in products:
+        engagement = (
+            int(p.get('total_views') or 0)
+            + int(p.get('total_inquiries') or 0) * 3
+            + int(p.get('total_favorites') or 0) * 2
+        )
+        # Recency bonus so brand new products are not buried
+        recency_bonus = 0
+        try:
+            created = datetime.fromisoformat(str(p.get('created_at', '')).replace('Z', '+00:00'))
+            age_days = max(0, (now - created).days)
+            if age_days <= 7:
+                recency_bonus = 25
+            elif age_days <= 30:
+                recency_bonus = 12
+            elif age_days <= 90:
+                recency_bonus = 5
+        except Exception:
+            pass
+        score = engagement + recency_bonus
+        # Personalization boost
+        if preferred_types and p.get('product_type') in preferred_types:
+            score = score * 1.5
+        p['_score'] = score
+    
+    products.sort(key=lambda x: x.get('_score', 0), reverse=True)
+    for p in products:
+        p.pop('_score', None)
     return products
 
 
 @router.get("/marketplace/products/{product_id}")
-async def get_product_detail(product_id: str):
+async def get_product_detail(product_id: str, customer_id: Optional[str] = None):
     product = await db.products.find_one({'id': product_id, 'is_deleted': {'$ne': True}}, {'_id': 0})
     if not product:
         raise HTTPException(status_code=404, detail="Produit non trouvé")
@@ -399,11 +465,73 @@ async def get_product_detail(product_id: str):
     # Increment view count
     await db.products.update_one({'id': product_id}, {'$inc': {'total_views': 1}})
     
+    # Personalised tracking — record this view for the customer (used for recommendations)
+    if customer_id:
+        try:
+            await db.customer_product_views.update_one(
+                {'customer_id': customer_id, 'product_id': product_id},
+                {'$set': {
+                    'customer_id': customer_id,
+                    'product_id': product_id,
+                    'product_type': product.get('product_type'),
+                    'category_id': product.get('category_id'),
+                    'viewed_at': datetime.now(timezone.utc).isoformat(),
+                }, '$inc': {'view_count': 1}},
+                upsert=True,
+            )
+        except Exception as e:
+            logger.warning(f"Failed to log customer product view: {e}")
+    
     # Get shop info
     shop = await db.shops.find_one({'id': product['shop_id']}, {'_id': 0, 'id': 1, 'name': 1, 'logo': 1, 'contact_phone': 1, 'location': 1, 'sector': 1})
     product['shop'] = shop
     
     return product
+
+
+@router.post("/makiti/favorite-toggle")
+async def toggle_product_favorite(body: dict = Body(...)):
+    """Track favourite add/remove. Increments/decrements product.total_favorites and
+    stores per-customer favourites when customer_id is provided.
+    Body: { product_id: str, action: 'add'|'remove', customer_id?: str }
+    """
+    product_id = (body.get('product_id') or '').strip()
+    action = (body.get('action') or '').strip().lower()
+    customer_id = body.get('customer_id')
+    if not product_id or action not in ('add', 'remove'):
+        raise HTTPException(status_code=400, detail="Paramètres invalides")
+    
+    product = await db.products.find_one({'id': product_id}, {'_id': 0, 'id': 1, 'product_type': 1})
+    if not product:
+        raise HTTPException(status_code=404, detail="Produit non trouvé")
+    
+    delta = 1 if action == 'add' else -1
+    await db.products.update_one(
+        {'id': product_id},
+        {'$inc': {'total_favorites': delta}}
+    )
+    # Make sure counter never goes negative
+    await db.products.update_one(
+        {'id': product_id, 'total_favorites': {'$lt': 0}},
+        {'$set': {'total_favorites': 0}}
+    )
+    
+    if customer_id:
+        if action == 'add':
+            await db.customer_favorites.update_one(
+                {'customer_id': customer_id, 'product_id': product_id},
+                {'$set': {
+                    'customer_id': customer_id,
+                    'product_id': product_id,
+                    'product_type': product.get('product_type'),
+                    'created_at': datetime.now(timezone.utc).isoformat(),
+                }},
+                upsert=True,
+            )
+        else:
+            await db.customer_favorites.delete_one({'customer_id': customer_id, 'product_id': product_id})
+    
+    return {'ok': True, 'action': action}
 
 
 @router.post("/marketplace/products/{product_id}/message")
