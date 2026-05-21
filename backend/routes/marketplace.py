@@ -453,6 +453,24 @@ async def browse_products(
     products.sort(key=lambda x: x.get('_score', 0), reverse=True)
     for p in products:
         p.pop('_score', None)
+    
+    # ---- 2-hour rotation : every product gets prime exposure within 24h ----
+    # 12 time-slots × 2h = 24h. We bucket the score-sorted list into 12 equal
+    # groups and rotate which bucket is first based on the current 2-hour slot.
+    NUM_SLOTS = 12
+    slot = (int(now.timestamp()) // (2 * 3600)) % NUM_SLOTS
+    n = len(products)
+    if n >= NUM_SLOTS:
+        buckets = []
+        for i in range(NUM_SLOTS):
+            start = (i * n) // NUM_SLOTS
+            end = ((i + 1) * n) // NUM_SLOTS
+            buckets.append(products[start:end])
+        rotated = []
+        for i in range(NUM_SLOTS):
+            rotated.extend(buckets[(slot + i) % NUM_SLOTS])
+        products = rotated
+    
     return products
 
 
