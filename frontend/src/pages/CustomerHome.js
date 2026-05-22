@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  MapPin, ChevronRight, User, Building, ShoppingBag, Briefcase, ChevronDown, LogIn, UserPlus
+  MapPin, ChevronRight, User, Building, ShoppingBag, Briefcase, ChevronDown, LogIn, UserPlus, Building2
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -115,7 +115,8 @@ const CustomerHome = ({ isCustomerAuthenticated }) => {
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel className="text-xs text-gray-500 font-normal">
+                  <DropdownMenuLabel className="text-xs text-gray-500 font-normal flex items-center gap-1.5">
+                    <User className="h-3.5 w-3.5 text-green-600" />
                     Espace Client
                   </DropdownMenuLabel>
                   <DropdownMenuItem
@@ -135,7 +136,8 @@ const CustomerHome = ({ isCustomerAuthenticated }) => {
                     Inscription client
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuLabel className="text-xs text-gray-500 font-normal">
+                  <DropdownMenuLabel className="text-xs text-gray-500 font-normal flex items-center gap-1.5">
+                    <Briefcase className="h-3.5 w-3.5 text-orange-600" />
                     Espace prestataire
                   </DropdownMenuLabel>
                   <DropdownMenuItem
@@ -155,7 +157,8 @@ const CustomerHome = ({ isCustomerAuthenticated }) => {
                     Inscription prestataire
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuLabel className="text-xs text-gray-500 font-normal">
+                  <DropdownMenuLabel className="text-xs text-gray-500 font-normal flex items-center gap-1.5">
+                    <Building2 className="h-3.5 w-3.5 text-emerald-600" />
                     Espace entreprise
                   </DropdownMenuLabel>
                   <DropdownMenuItem
