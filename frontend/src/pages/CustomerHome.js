@@ -154,6 +154,26 @@ const CustomerHome = ({ isCustomerAuthenticated }) => {
                     <UserPlus className="h-4 w-4 text-orange-600" />
                     Inscription prestataire
                   </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel className="text-xs text-gray-500 font-normal">
+                    Espace entreprise
+                  </DropdownMenuLabel>
+                  <DropdownMenuItem
+                    onClick={() => navigate('/company/auth')}
+                    data-testid="menu-company-login"
+                    className="gap-2 cursor-pointer"
+                  >
+                    <LogIn className="h-4 w-4 text-emerald-600" />
+                    Connexion entreprise
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => navigate('/company/auth?mode=register')}
+                    data-testid="menu-company-register"
+                    className="gap-2 cursor-pointer"
+                  >
+                    <UserPlus className="h-4 w-4 text-emerald-600" />
+                    Inscription entreprise
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
