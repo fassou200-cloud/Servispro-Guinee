@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Search, Store, Package, MapPin, ShoppingBag, ArrowUpRight, Tag, Heart, Clock, ChevronLeft, ChevronRight, Smile, Send, Loader2, Sparkles } from 'lucide-react';
+import { Search, Store, Package, MapPin, ShoppingBag, ArrowUpRight, Tag, Heart, Clock, ChevronLeft, ChevronRight, Smile, Send, Loader2 } from 'lucide-react';
 import { formatGuineanPhone } from '@/utils/phone';
 import { toast } from 'sonner';
 import axios from 'axios';
@@ -605,25 +605,9 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
                     ) : (
                       <div className="w-full h-full flex items-center justify-center"><Package className="h-12 w-12 text-gray-300" /></div>
                     )}
-                    <div className="absolute top-2.5 left-2.5 flex flex-col gap-1 items-start">
-                      {(() => {
-                        try {
-                          const created = new Date(product.created_at);
-                          const ageDays = (Date.now() - created.getTime()) / 86400000;
-                          if (ageDays <= 7) {
-                            return (
-                              <span className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-[11px] font-bold px-2.5 py-1 rounded-md shadow-sm flex items-center gap-1" data-testid={`new-badge-${product.id}`}>
-                                <Sparkles className="h-3 w-3" /> Nouveau
-                              </span>
-                            );
-                          }
-                        } catch {}
-                        return null;
-                      })()}
-                      {product.is_negotiable && (
-                        <span className="bg-orange-500 text-white text-[11px] font-semibold px-2.5 py-1 rounded-md shadow-sm">Négociable</span>
-                      )}
-                    </div>
+                    {product.is_negotiable && (
+                      <span className="absolute top-2.5 left-2.5 bg-orange-500 text-white text-[11px] font-semibold px-2.5 py-1 rounded-md shadow-sm">Négociable</span>
+                    )}
                     <button
                       onClick={(e) => toggleWishlist(product.id, e)}
                       className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-white/80 backdrop-blur flex items-center justify-center hover:bg-white transition-colors shadow-sm"
