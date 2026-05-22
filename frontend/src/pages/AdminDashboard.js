@@ -819,8 +819,11 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
     { value: 'voitures', label: 'Voitures' },
     { value: 'cosmetiques', label: 'Cosmétiques' },
     { value: 'electronique', label: 'Électronique' },
+    { value: 'ordinateurs', label: 'Ordinateurs portables' },
+    { value: 'smartphones', label: 'Smartphones' },
     { value: 'alimentation', label: 'Alimentation' },
     { value: 'mobilier', label: 'Mobilier' },
+    { value: 'bijoux', label: 'Bijoux' },
     { value: 'autre', label: 'Autre' },
   ];
 
