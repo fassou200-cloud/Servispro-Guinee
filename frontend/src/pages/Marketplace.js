@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Search, Store, Package, MapPin, ShoppingBag, ArrowUpRight, Tag, Heart, Clock, ChevronLeft, ChevronRight, Smile, Send, Loader2, Briefcase, Home } from 'lucide-react';
+import { Search, Store, Package, MapPin, ShoppingBag, ArrowUpRight, Tag, Heart, Clock, ChevronLeft, ChevronRight, Smile, Send, Loader2, Briefcase, Home, Building } from 'lucide-react';
 import { formatGuineanPhone } from '@/utils/phone';
 import { toast } from 'sonner';
 import axios from 'axios';
@@ -571,7 +571,7 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
             </span>
           </button>
 
-          {/* Trouver une maison — navigates to rentals/sales */}
+          {/* Trouver une maison (location) */}
           <button
             onClick={() => navigate('/rentals')}
             className="flex flex-col items-center gap-2 shrink-0 group"
@@ -583,7 +583,23 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
               </div>
             </div>
             <span className="text-xs sm:text-sm font-medium text-gray-700 group-hover:text-blue-600 text-center leading-tight">
-              Trouver une<br />maison
+              Louer une<br />maison
+            </span>
+          </button>
+
+          {/* Vente maison */}
+          <button
+            onClick={() => navigate('/property-sales')}
+            className="flex flex-col items-center gap-2 shrink-0 group"
+            data-testid="category-house-sale"
+          >
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-gray-200 group-hover:border-purple-400 transition-all relative">
+              <div className="w-full h-full bg-gradient-to-br from-purple-500 to-fuchsia-600 flex items-center justify-center">
+                <Building className="h-8 w-8 sm:h-10 sm:w-10 text-white" />
+              </div>
+            </div>
+            <span className="text-xs sm:text-sm font-medium text-gray-700 group-hover:text-purple-600 text-center leading-tight">
+              Vente<br />maison
             </span>
           </button>
         </div>
