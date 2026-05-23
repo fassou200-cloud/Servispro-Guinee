@@ -237,6 +237,40 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
     };
   }, [limitedOffers]);
 
+  // Auto-scroll categories carousel (same behaviour as offers)
+  useEffect(() => {
+    const el = catScrollRef.current;
+    if (!el) return;
+    let scrollPos = 0;
+    const speed = 0.6; // a bit slower than offers, categories are smaller
+    let paused = false;
+    let raf;
+    const step = () => {
+      if (!paused && el) {
+        scrollPos += speed;
+        if (scrollPos >= el.scrollWidth - el.clientWidth) {
+          scrollPos = 0;
+        }
+        el.scrollLeft = scrollPos;
+      }
+      raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    const pause = () => { paused = true; };
+    const resume = () => { paused = false; scrollPos = el.scrollLeft; };
+    el.addEventListener('mouseenter', pause);
+    el.addEventListener('mouseleave', resume);
+    el.addEventListener('touchstart', pause);
+    el.addEventListener('touchend', resume);
+    return () => {
+      cancelAnimationFrame(raf);
+      el.removeEventListener('mouseenter', pause);
+      el.removeEventListener('mouseleave', resume);
+      el.removeEventListener('touchstart', pause);
+      el.removeEventListener('touchend', resume);
+    };
+  }, []);
+
   const goToSlide = (idx) => {
     setCurrentSlide(idx);
     clearInterval(slideInterval.current);
