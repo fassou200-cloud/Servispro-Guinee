@@ -119,9 +119,10 @@ const BrowseRentals = () => {
             </div>
             
             <Button
-              onClick={() => navigate('/auth')}
+              onClick={() => navigate('/company/auth')}
               variant="outline"
               className="gap-2"
+              data-testid="publish-rental-btn"
             >
               <Building className="h-4 w-4" />
               Publier une annonce
