@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Search, Store, Package, MapPin, ShoppingBag, ArrowUpRight, Tag, Heart, Clock, ChevronLeft, ChevronRight, Smile, Send, Loader2 } from 'lucide-react';
+import { Search, Store, Package, MapPin, ShoppingBag, ArrowUpRight, Tag, Heart, Clock, ChevronLeft, ChevronRight, Smile, Send, Loader2, Briefcase } from 'lucide-react';
 import { formatGuineanPhone } from '@/utils/phone';
 import { toast } from 'sonner';
 import axios from 'axios';
@@ -554,6 +554,22 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
               </button>
             );
           })}
+
+          {/* Trouver un professionnel — navigates away from Makiti */}
+          <button
+            onClick={() => navigate('/browse')}
+            className="flex flex-col items-center gap-2 shrink-0 group"
+            data-testid="category-find-pro"
+          >
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-gray-200 group-hover:border-green-400 transition-all relative">
+              <div className="w-full h-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
+                <Briefcase className="h-8 w-8 sm:h-10 sm:w-10 text-white" />
+              </div>
+            </div>
+            <span className="text-xs sm:text-sm font-medium text-gray-700 group-hover:text-green-600 text-center leading-tight">
+              Trouver un<br />professionnel
+            </span>
+          </button>
         </div>
       </section>
 
