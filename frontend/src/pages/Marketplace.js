@@ -822,6 +822,74 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
         )}
       </div>
 
+      {/* ──────── FOOTER ──────── */}
+      <footer className="mt-12 sm:mt-16 py-8 px-4 sm:px-6 bg-gray-50 border-t border-gray-200" data-testid="marketplace-footer">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            {/* Logo & Copyright */}
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-lg text-gray-900 tracking-tight">ServisPro</span>
+                <span className="text-sm text-orange-500 font-semibold -ml-0.5">Makiti</span>
+              </div>
+              <div className="hidden sm:block h-8 w-px bg-gray-300" />
+              <p className="text-xs text-gray-500">© {new Date().getFullYear()} Tous droits réservés à ServisPro</p>
+            </div>
+
+            {/* Social */}
+            <div className="flex items-center gap-3 flex-wrap justify-center md:justify-end">
+              <span className="text-sm text-gray-500 hidden lg:inline">Suivez-nous :</span>
+              <a
+                href="https://www.facebook.com/profile.php?id=100090427284060&sk=directory_intro"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-all hover:scale-105 shadow-lg shadow-blue-600/20"
+                data-testid="footer-facebook"
+              >
+                <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                </svg>
+                <span className="font-medium text-sm">Facebook</span>
+              </a>
+              <a
+                href="https://www.instagram.com/servisproguinee/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 hover:from-purple-700 hover:via-pink-700 hover:to-orange-600 text-white rounded-full transition-all hover:scale-105 shadow-lg shadow-pink-600/20"
+                data-testid="footer-instagram"
+              >
+                <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                </svg>
+                <span className="font-medium text-sm">Instagram</span>
+              </a>
+            </div>
+          </div>
+
+          {/* Phone numbers row */}
+          <div className="mt-6 pt-6 border-t border-gray-200 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-2 text-gray-700" data-testid="footer-phones">
+              <div className="flex items-center justify-center w-9 h-9 rounded-full bg-green-100 text-green-700 shrink-0">
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                </svg>
+              </div>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                <a href="tel:+224622176429" className="font-semibold hover:text-green-600 transition-colors">+224 622 17 64 29</a>
+                <span className="text-gray-300">·</span>
+                <a href="tel:+224610062189" className="font-semibold hover:text-green-600 transition-colors">+224 610 06 21 89</a>
+                <span className="text-gray-300">·</span>
+                <a href="tel:+224624250706" className="font-semibold hover:text-green-600 transition-colors">+224 624 25 07 06</a>
+              </div>
+            </div>
+            <div className="text-center md:text-right">
+              <p className="text-sm text-gray-600">Conakry, Guinée</p>
+              <p className="text-xs text-gray-400">Plateforme de services professionnels</p>
+            </div>
+          </div>
+        </div>
+      </footer>
+
       {/* Product Suggestion Modal (Exit Intent) */}
       <Dialog open={showSuggestModal} onOpenChange={setShowSuggestModal}>
         <DialogContent className="sm:max-w-lg" data-testid="suggest-product-modal">
