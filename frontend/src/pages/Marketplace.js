@@ -5,7 +5,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Search, Store, Package, MapPin, ShoppingBag, ArrowUpRight, Tag, Heart, Clock, ChevronLeft, ChevronRight, Smile, Send, Loader2, Briefcase, Home, Building } from 'lucide-react';
+import { Search, Store, Package, MapPin, ShoppingBag, ArrowUpRight, Tag, Heart, Clock, ChevronLeft, ChevronRight, Smile, Send, Loader2, Briefcase, Home, Building, User as UserIcon, ChevronDown, LogIn, UserPlus, Building2 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { formatGuineanPhone } from '@/utils/phone';
 import { toast } from 'sonner';
 import axios from 'axios';
@@ -322,7 +330,7 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
       <header className="bg-white border-b border-gray-100 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-2.5 flex items-center gap-4">
           <div className="flex items-center gap-2 cursor-pointer shrink-0" onClick={() => navigate('/')}>
-            <span className="font-bold text-lg sm:text-xl text-gray-900 tracking-tight">ServicePro</span>
+            <span className="font-bold text-lg sm:text-xl text-gray-900 tracking-tight">ServisPro</span>
             <span className="text-sm text-orange-500 font-semibold -ml-0.5">Makiti</span>
           </div>
 
@@ -348,11 +356,54 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
 
           <div className="flex items-center gap-2 shrink-0">
             {!isCustomerAuthenticated ? (
-              <Button variant="ghost" size="sm" onClick={() => navigate('/customer/auth')} data-testid="marketplace-login-btn" className="text-sm font-medium">
-                Se connecter
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className="flex items-center gap-1.5 bg-green-500 hover:bg-green-600 text-white px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                    data-testid="marketplace-account-btn"
+                  >
+                    <UserIcon className="h-4 w-4" />
+                    <span className="hidden sm:inline">Mon compte</span>
+                    <ChevronDown className="h-4 w-4" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel className="text-xs text-gray-500 font-normal flex items-center gap-1.5">
+                    <UserIcon className="h-3.5 w-3.5 text-green-600" />
+                    Espace Client
+                  </DropdownMenuLabel>
+                  <DropdownMenuItem onClick={() => navigate('/customer/auth')} className="gap-2 cursor-pointer" data-testid="mk-menu-customer-login">
+                    <LogIn className="h-4 w-4 text-green-600" /> Connexion client
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/customer/auth?mode=register')} className="gap-2 cursor-pointer" data-testid="mk-menu-customer-register">
+                    <UserPlus className="h-4 w-4 text-green-600" /> Inscription client
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel className="text-xs text-gray-500 font-normal flex items-center gap-1.5">
+                    <Briefcase className="h-3.5 w-3.5 text-orange-600" />
+                    Espace prestataire
+                  </DropdownMenuLabel>
+                  <DropdownMenuItem onClick={() => navigate('/auth')} className="gap-2 cursor-pointer" data-testid="mk-menu-provider-login">
+                    <LogIn className="h-4 w-4 text-orange-600" /> Connexion prestataire
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/auth?mode=register')} className="gap-2 cursor-pointer" data-testid="mk-menu-provider-register">
+                    <UserPlus className="h-4 w-4 text-orange-600" /> Inscription prestataire
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel className="text-xs text-gray-500 font-normal flex items-center gap-1.5">
+                    <Building2 className="h-3.5 w-3.5 text-emerald-600" />
+                    Espace entreprise
+                  </DropdownMenuLabel>
+                  <DropdownMenuItem onClick={() => navigate('/company/auth')} className="gap-2 cursor-pointer" data-testid="mk-menu-company-login">
+                    <LogIn className="h-4 w-4 text-emerald-600" /> Connexion entreprise
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/company/auth?mode=register')} className="gap-2 cursor-pointer" data-testid="mk-menu-company-register">
+                    <UserPlus className="h-4 w-4 text-emerald-600" /> Inscription entreprise
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
-              <Button size="sm" variant="outline" onClick={() => navigate('/dashboard')} className="text-sm">Mon Dashboard</Button>
+              <Button size="sm" variant="outline" onClick={() => navigate('/customer/dashboard')} className="text-sm" data-testid="marketplace-dashboard-btn">Mon compte</Button>
             )}
           </div>
         </div>
@@ -494,6 +545,50 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
         </div>
       </section>
       )}
+
+      {/* ──────── ESPACE ENTREPRISE BANNER ──────── */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 mt-8 sm:mt-10" data-testid="company-cta-banner">
+        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 p-6 sm:p-8 lg:p-10">
+          <div className="absolute -right-10 -top-10 w-48 h-48 sm:w-64 sm:h-64 rounded-full bg-white/10 blur-2xl pointer-events-none" />
+          <div className="absolute -left-6 -bottom-10 w-40 h-40 rounded-full bg-yellow-300/10 blur-2xl pointer-events-none" />
+          <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-5 z-10">
+            <div className="flex items-start gap-4">
+              <div className="hidden sm:flex shrink-0 w-14 h-14 rounded-2xl bg-white/15 backdrop-blur items-center justify-center">
+                <Building2 className="h-7 w-7 text-white" />
+              </div>
+              <div>
+                <span className="inline-block text-[10px] sm:text-xs font-semibold tracking-wider uppercase text-emerald-100 bg-white/10 backdrop-blur px-2.5 py-1 rounded-full">
+                  Espace Entreprise
+                </span>
+                <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mt-2 leading-tight">
+                  Créez votre boutique et vendez vos produits
+                </h3>
+                <p className="text-emerald-100 text-sm sm:text-base mt-1.5 max-w-xl">
+                  Rejoignez des centaines d'entreprises guinéennes sur Makiti. Inscription rapide, gestion simple, ventes décuplées.
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2.5 shrink-0">
+              <button
+                onClick={() => navigate('/company/auth?mode=register')}
+                className="inline-flex items-center justify-center gap-1.5 bg-white text-emerald-700 hover:bg-emerald-50 font-semibold px-5 py-3 rounded-xl text-sm transition-colors shadow-md"
+                data-testid="company-cta-register"
+              >
+                <UserPlus className="h-4 w-4" />
+                Créer ma boutique
+              </button>
+              <button
+                onClick={() => navigate('/company/auth')}
+                className="inline-flex items-center justify-center gap-1.5 bg-white/10 hover:bg-white/20 text-white font-medium px-5 py-3 rounded-xl text-sm border border-white/30 backdrop-blur transition-colors"
+                data-testid="company-cta-login"
+              >
+                <LogIn className="h-4 w-4" />
+                Se connecter
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* ──────── ACHETER PAR CATEGORIE ──────── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 mt-8 sm:mt-10" data-testid="category-section">

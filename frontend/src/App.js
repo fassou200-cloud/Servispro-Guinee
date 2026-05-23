@@ -51,7 +51,8 @@ function App() {
       <BrowserRouter>
         <Routes>
           {/* Public Routes */}
-          <Route path="/" element={<CustomerHome isCustomerAuthenticated={isCustomerAuthenticated} />} />
+          <Route path="/" element={<Marketplace isCustomerAuthenticated={isCustomerAuthenticated} />} />
+          <Route path="/home-classic" element={<CustomerHome isCustomerAuthenticated={isCustomerAuthenticated} />} />
           <Route path="/old-landing" element={<LandingPage isCustomerAuthenticated={isCustomerAuthenticated} />} />
           <Route path="/browse" element={<BrowseProviders isCustomerAuthenticated={isCustomerAuthenticated} />} />
           <Route path="/provider/:providerId" element={<ProviderProfile isCustomerAuthenticated={isCustomerAuthenticated} />} />
