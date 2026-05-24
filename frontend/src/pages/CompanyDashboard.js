@@ -70,6 +70,7 @@ const CompanyDashboard = () => {
   const [jobOffers, setJobOffers] = useState([]);
   const [rentals, setRentals] = useState([]);
   const [sales, setSales] = useState([]);
+  const [interimBadge, setInterimBadge] = useState({ pending_applications: 0, open_missions: 0 });
 
   // Service form state
   const [showServiceForm, setShowServiceForm] = useState(false);
@@ -189,6 +190,21 @@ const CompanyDashboard = () => {
 
     fetchCompanyProfile();
   }, [navigate]);
+
+  // Fetch interim badge (poll every 30s)
+  useEffect(() => {
+    const fetchBadge = async () => {
+      const token = localStorage.getItem('companyToken');
+      if (!token) return;
+      try {
+        const res = await axios.get(`${API}/interim/company/badge`, { headers: { Authorization: `Bearer ${token}` } });
+        setInterimBadge(res.data || {});
+      } catch { /* silent */ }
+    };
+    fetchBadge();
+    const id = setInterval(fetchBadge, 30000);
+    return () => clearInterval(id);
+  }, []);
 
   // Fetch services and job offers
   useEffect(() => {
@@ -972,10 +988,15 @@ const CompanyDashboard = () => {
           <Button
             variant={activeTab === 'interim' ? 'default' : 'outline'}
             onClick={() => setActiveTab('interim')}
-            className={`gap-2 ${activeTab === 'interim' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-emerald-50 border-emerald-200 hover:bg-emerald-100'}`}
+            className={`gap-2 relative ${activeTab === 'interim' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-emerald-50 border-emerald-200 hover:bg-emerald-100'}`}
             data-testid="tab-interim"
           >
             <Briefcase className="h-4 w-4 text-emerald-600" /> Intérim
+            {interimBadge.pending_applications > 0 && (
+              <span className="ml-1 px-1.5 py-0.5 bg-red-500 text-white text-xs rounded-full font-bold" data-testid="company-badge-applications">
+                {interimBadge.pending_applications}
+              </span>
+            )}
           </Button>
         </div>
 

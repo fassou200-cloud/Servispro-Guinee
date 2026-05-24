@@ -100,14 +100,26 @@ const Dashboard = ({ setIsAuthenticated }) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [jobs, setJobs] = useState([]);
   const [stats, setStats] = useState({ pending: 0, accepted: 0, completed: 0, total: 0 });
+  const [interimBadge, setInterimBadge] = useState({ available_missions: 0, unpaid_commissions: 0, total: 0 });
 
   useEffect(() => {
     fetchProfile();
     fetchJobs();
+    fetchInterimBadge();
     // Poll for new jobs every 10 seconds
-    const interval = setInterval(fetchJobs, 10000);
+    const interval = setInterval(() => { fetchJobs(); fetchInterimBadge(); }, 10000);
     return () => clearInterval(interval);
   }, []);
+
+  const fetchInterimBadge = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`${API}/interim/provider/badge`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setInterimBadge(res.data || {});
+    } catch { /* silent */ }
+  };
 
   const fetchProfile = async () => {
     try {
@@ -700,7 +712,7 @@ const Dashboard = ({ setIsAuthenticated }) => {
           <Button
             variant={activeTab === 'interim' ? 'default' : 'outline'}
             onClick={() => setActiveTab('interim')}
-            className={`gap-2 rounded-xl whitespace-nowrap ${
+            className={`gap-2 rounded-xl whitespace-nowrap relative ${
               activeTab === 'interim'
                 ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg'
                 : 'text-gray-600 hover:text-gray-900 hover:bg-emerald-50 border-emerald-200'
@@ -709,7 +721,16 @@ const Dashboard = ({ setIsAuthenticated }) => {
           >
             <Briefcase className="h-4 w-4" />
             Intérim
-            {user?.interim_suspended && <span className="ml-1 px-1.5 py-0.5 bg-red-500 text-white text-xs rounded-full">!</span>}
+            {interimBadge.unpaid_commissions > 0 && (
+              <span className="ml-1 px-1.5 py-0.5 bg-red-500 text-white text-xs rounded-full font-bold" data-testid="badge-unpaid">
+                {interimBadge.unpaid_commissions}
+              </span>
+            )}
+            {interimBadge.unpaid_commissions === 0 && interimBadge.available_missions > 0 && (
+              <span className="ml-1 px-1.5 py-0.5 bg-amber-500 text-white text-xs rounded-full font-bold" data-testid="badge-available">
+                {interimBadge.available_missions}
+              </span>
+            )}
           </Button>
         </div>
 

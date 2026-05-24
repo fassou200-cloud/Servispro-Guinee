@@ -523,3 +523,52 @@ async def admin_list_missions(status: Optional[str] = None):
         'cancelled': await db.interim_missions.count_documents({'status': 'cancelled'}),
     }
     return {'missions': missions, 'counts': counts}
+
+
+# ======================================================================
+# Notification badges (lightweight counts)
+# ======================================================================
+
+@router.get("/interim/provider/badge")
+async def provider_interim_badge(current_user: dict = Depends(get_current_user)):
+    """Returns counts for the provider's interim tab pastille."""
+    # All open missions the provider hasn't applied to
+    applied_ids = await db.mission_applications.distinct('mission_id', {'provider_id': current_user['id']})
+    available = await db.interim_missions.count_documents({
+        'status': 'open',
+        'id': {'$nin': applied_ids},
+    })
+    pending_applications = await db.mission_applications.count_documents({
+        'provider_id': current_user['id'],
+        'status': 'pending',
+    })
+    unpaid_commissions = await db.interim_commissions.count_documents({
+        'provider_id': current_user['id'],
+        'status': {'$in': ['pending', 'rejected']},
+    })
+    return {
+        'available_missions': available,
+        'pending_applications': pending_applications,
+        'unpaid_commissions': unpaid_commissions,
+        'total': available + unpaid_commissions,
+    }
+
+
+@router.get("/interim/company/badge")
+async def company_interim_badge(current_company: dict = Depends(get_current_company)):
+    """Returns counts for the company's interim tab pastille."""
+    # Get all mission IDs of this company
+    mission_ids = await db.interim_missions.distinct('id', {'company_id': current_company['id']})
+    pending_applications = await db.mission_applications.count_documents({
+        'mission_id': {'$in': mission_ids},
+        'status': 'pending',
+    })
+    open_missions = await db.interim_missions.count_documents({
+        'company_id': current_company['id'],
+        'status': 'open',
+    })
+    return {
+        'pending_applications': pending_applications,
+        'open_missions': open_missions,
+        'total': pending_applications,
+    }
