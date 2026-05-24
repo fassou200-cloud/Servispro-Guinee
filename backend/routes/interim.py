@@ -497,6 +497,8 @@ async def admin_reject_commission(commission_id: str, data: dict = Body(default=
     commission = await db.interim_commissions.find_one({'id': commission_id})
     if not commission:
         raise HTTPException(status_code=404, detail="Commission introuvable")
+    if commission['status'] not in ('submitted', 'pending'):
+        raise HTTPException(status_code=400, detail=f"Impossible de rejeter une commission {commission['status']}")
     await db.interim_commissions.update_one(
         {'id': commission_id},
         {'$set': {

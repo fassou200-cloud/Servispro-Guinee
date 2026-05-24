@@ -1,8 +1,8 @@
 # Test Credentials
 
 ## Database Active
-- Preview pointe sur : **`servispro_production`** (Atlas Cluster0) ⚠️ BASE PRODUCTION
-- 38 entreprises, 184 produits Makiti
+- Preview pointe actuellement sur : **`servispro_dev`** (basculement Feb 2026 pour tests Intérim)
+- Production (`servispro_production`) reste intacte sur https://servisprogn.com
 
 ## Admin Accounts (hardcoded in config.py — fonctionnent sur toutes les BD)
 - Username: servispro@servisprogn.com / Password: Servisproguinea2026#
@@ -10,8 +10,40 @@
 - Username: barthelemy.haba@servisprogn.com / Password: DDraper2026Servisprogn
 - Login URL: /admin
 
-## Test Accounts servispro_dev (basculement temporaire désactivé)
-Si besoin de retester sur la base dev (`servispro_dev`), basculer `DB_NAME` dans `/app/backend/.env`.
-Comptes test dans dev :
-- **Entreprise** : 224620000001 / TestCompany2026! (approved, avec boutique 2 produits)
-- **Client** : 224620000002 / TestClient2026!
+## Test Accounts — servispro_dev
+
+### Entreprise (déjà créée)
+- **Login** : 224620000001 / TestCompany2026!
+- Statut : approved, boutique avec 2 produits
+- URL connexion : `/company/auth`
+
+### Client (déjà créé)
+- **Login** : 224620000002 / TestClient2026!
+- URL connexion : `/customer/auth`
+
+### Prestataires (créés Feb 2026 pour tests Intérim)
+- **Prestataire 1 — Mamadou Diallo (Électricien)**
+  - Phone : +224620100001
+  - Password : TestProvider2026!
+  - Profession : Électricien — Conakry/Kaloum/Sandervalia
+  - Tarif journalier : 200 000 GNF
+  - `is_interim=true`, `verification_status=approved`
+
+- **Prestataire 2 — Fatoumata Camara (Agent de sécurité)**
+  - Phone : +224620100002
+  - Password : TestProvider2026!
+  - Profession : Agent de sécurité — Conakry/Ratoma/Lambanyi
+  - Tarif journalier : 100 000 GNF
+  - `is_interim=true`, `verification_status=approved`
+
+- URL connexion : `/auth`
+- Payload login (POST `/api/auth/login`) :
+  ```json
+  {"phone_number":"+224620100001","password":"TestProvider2026!","user_type":"provider"}
+  ```
+
+## Script de re-création
+Si la BD dev est nettoyée, relancer :
+```bash
+cd /app/backend && python3 scripts/seed_test_providers.py
+```
