@@ -17,6 +17,16 @@
 - Statut : approved, boutique avec 2 produits
 - URL connexion : `/company/auth`
 
+### Entreprise démo Intérim (créée Feb 2026)
+- **Login** : +224620200001 / BoutiqueDemo2026!
+- Nom : **Boutique Demo Conakry**
+- Secteur : Commerce général · Kaloum, Conakry
+- Statut : approved
+- **3 missions ouvertes** prêtes pour les prestataires test :
+  - Électricien câblage boutique (250 000 GNF/jour, 3 jours, 1 place)
+  - Agents de sécurité événement (120 000 GNF/jour, 2 jours, 2 places)
+  - Plombier installation sanitaire (à négocier, 5 jours, 1 place)
+
 ### Client (déjà créé)
 - **Login** : 224620000002 / TestClient2026!
 - URL connexion : `/customer/auth`
