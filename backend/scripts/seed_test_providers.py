@@ -64,6 +64,32 @@ async def seed():
             'daily_rate': 100000,
             'created_at': now_iso,
         },
+        {
+            'id': str(uuid.uuid4()),
+            'first_name': 'Ibrahima',
+            'last_name': 'Sow',
+            'phone_number': '+224620100003',
+            'password': bcrypt.hashpw(b'TestProvider2026!', bcrypt.gensalt()).decode(),
+            'profession': 'Plombier',
+            'profession_group': 'Métiers techniques',
+            'years_experience': '7',
+            'about_me': 'Plombier qualifié, intervention rapide à Conakry et environs.',
+            'profile_picture': None,
+            'online_status': True,
+            'price': 120000,
+            'location': 'Conakry',
+            'region': 'Conakry',
+            'ville': 'Matam',
+            'commune': 'Matam',
+            'quartier': 'Coleyah',
+            'verification_status': 'approved',
+            'is_active': True,
+            'is_interim': True,
+            'interim_suspended': False,
+            'skills': ['Plombier', 'Installation sanitaire', 'Dépannage fuites'],
+            'daily_rate': 150000,
+            'created_at': now_iso,
+        },
     ]
 
     for p in providers:
@@ -75,6 +101,7 @@ async def seed():
     print("\n--- LOGIN INFO ---")
     print("Prestataire 1 : +224620100001 / TestProvider2026!")
     print("Prestataire 2 : +224620100002 / TestProvider2026!")
+    print("Prestataire 3 : +224620100003 / TestProvider2026!")
 
 
 if __name__ == '__main__':

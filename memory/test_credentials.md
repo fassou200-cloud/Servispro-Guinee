@@ -36,6 +36,13 @@
   - Tarif journalier : 100 000 GNF
   - `is_interim=true`, `verification_status=approved`
 
+- **Prestataire 3 — Ibrahima Sow (Plombier)**
+  - Phone : +224620100003
+  - Password : TestProvider2026!
+  - Profession : Plombier — Conakry/Matam/Coleyah
+  - Tarif journalier : 150 000 GNF
+  - `is_interim=true`, `verification_status=approved`
+
 - URL connexion : `/auth`
 - Payload login (POST `/api/auth/login`) :
   ```json
