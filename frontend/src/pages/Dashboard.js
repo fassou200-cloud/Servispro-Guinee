@@ -28,6 +28,7 @@ import RealEstateFeesCard from '@/components/RealEstateFeesCard';
 import VisitRequestsList from '@/components/VisitRequestsList';
 import ProviderReviews from '@/components/ProviderReviews';
 import MyShop from '@/components/MyShop';
+import ProviderInterimTab from '@/components/provider/ProviderInterimTab';
 import { getImageUrl } from '@/utils/imageUrl';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -696,6 +697,20 @@ const Dashboard = ({ setIsAuthenticated }) => {
             <Star className="h-4 w-4" />
             Avis Clients
           </Button>
+          <Button
+            variant={activeTab === 'interim' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('interim')}
+            className={`gap-2 rounded-xl whitespace-nowrap ${
+              activeTab === 'interim'
+                ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-emerald-50 border-emerald-200'
+            }`}
+            data-testid="provider-interim-tab-btn"
+          >
+            <Briefcase className="h-4 w-4" />
+            Intérim
+            {user?.interim_suspended && <span className="ml-1 px-1.5 py-0.5 bg-red-500 text-white text-xs rounded-full">!</span>}
+          </Button>
         </div>
 
         {/* Tab Content - White Theme */}
@@ -990,6 +1005,10 @@ const Dashboard = ({ setIsAuthenticated }) => {
 
         {activeTab === 'reviews' && user && (
           <ProviderReviews providerId={user.id} />
+        )}
+
+        {activeTab === 'interim' && user && (
+          <ProviderInterimTab user={user} />
         )}
       </div>
     </div>

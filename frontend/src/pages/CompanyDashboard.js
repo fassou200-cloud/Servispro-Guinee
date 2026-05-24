@@ -32,6 +32,7 @@ import CompanyServicesTab from '@/components/company/CompanyServicesTab';
 import CompanyJobsTab from '@/components/company/CompanyJobsTab';
 import CompanyPropertyMessagesTab from '@/components/company/CompanyPropertyMessagesTab';
 import CompanyStatsTab from '@/components/company/CompanyStatsTab';
+import CompanyInterimTab from '@/components/company/CompanyInterimTab';
 import GuineaFlag from '@/components/GuineaFlag';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -968,6 +969,14 @@ const CompanyDashboard = () => {
           >
             <BarChart3 className="h-4 w-4 text-indigo-600" /> Statistiques
           </Button>
+          <Button
+            variant={activeTab === 'interim' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('interim')}
+            className={`gap-2 ${activeTab === 'interim' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-emerald-50 border-emerald-200 hover:bg-emerald-100'}`}
+            data-testid="tab-interim"
+          >
+            <Briefcase className="h-4 w-4 text-emerald-600" /> Intérim
+          </Button>
         </div>
 
         {/* Profile Tab */}
@@ -1043,6 +1052,9 @@ const CompanyDashboard = () => {
 
         {/* Statistics */}
         {activeTab === 'stats' && <CompanyStatsTab API={API} />}
+
+        {/* Interim */}
+        {activeTab === 'interim' && <CompanyInterimTab />}
       </div>
     </div>
   );

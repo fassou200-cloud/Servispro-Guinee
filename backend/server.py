@@ -39,6 +39,7 @@ from routes.jobs import router as jobs_router
 from routes.notifications import router as notifications_router
 from routes.payments import router as payments_router
 from routes.feedback import router as feedback_router
+from routes.interim import router as interim_router
 
 # Configure logging
 logging.basicConfig(
@@ -63,6 +64,7 @@ app.include_router(jobs_router, prefix="/api")
 app.include_router(notifications_router, prefix="/api")
 app.include_router(payments_router, prefix="/api")
 app.include_router(feedback_router, prefix="/api")
+app.include_router(interim_router, prefix="/api")
 
 # Serve uploaded files
 app.mount("/api/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")

@@ -27,6 +27,7 @@ import AdminRevenueTab from '@/components/admin/AdminRevenueTab';
 import AdminRefundsTab from '@/components/admin/AdminRefundsTab';
 import AdminFeedbacksTab from '@/components/admin/AdminFeedbacksTab';
 import AdminMakitiTab from '@/components/admin/AdminMakitiTab';
+import AdminInterimTab from '@/components/admin/AdminInterimTab';
 import AdminMakitiInsights from '@/components/admin/AdminMakitiInsights';
 import AdminSettingsTab from '@/components/admin/AdminSettingsTab';
 
@@ -1324,6 +1325,15 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
             Insights Makiti
           </Button>
           <Button
+            variant={activeTab === 'interim' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('interim')}
+            className={activeTab === 'interim' ? 'bg-emerald-600 hover:bg-emerald-700' : 'border-slate-600 text-slate-300'}
+            data-testid="admin-interim-tab"
+          >
+            <Briefcase className="h-4 w-4 mr-2" />
+            Intérim
+          </Button>
+          <Button
             variant={activeTab === 'settings' ? 'default' : 'outline'}
             onClick={() => setActiveTab('settings')}
             className={activeTab === 'settings' ? 'bg-purple-600 hover:bg-purple-700' : 'border-slate-600 text-slate-300'}
@@ -1611,6 +1621,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
         {/* Makiti Tab - All Products by Category */}
         {activeTab === 'makiti' && <AdminMakitiTab {...allTabProps} />}
         {activeTab === 'makiti-insights' && <AdminMakitiInsights />}
+        {activeTab === 'interim' && <AdminInterimTab />}
 
 
         {/* Messages Tab */}

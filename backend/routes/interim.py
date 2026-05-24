@@ -1,0 +1,523 @@
+"""
+Interim/Temp-staffing module for ServisPro.
+
+Workflow:
+1. Company publishes a mission (POST /interim/missions).
+2. Providers (interim-enabled, not suspended) browse and apply.
+3. Company sees applications, accepts one (or several) provider(s).
+4. Once accepted, the company contacts the provider directly to start the mission.
+5. Company marks the mission as completed → a commission record is generated for
+   the provider to pay ServisPro (configurable %).
+6. Provider submits proof of transfer (operator + reference number).
+7. Admin validates or rejects the commission.
+8. If a provider has any unpaid commission older than the platform tolerance, the
+   provider is auto-suspended from applying to new missions until cleared.
+"""
+from fastapi import APIRouter, HTTPException, Depends, Body, Query
+from typing import Optional
+from datetime import datetime, timezone
+import uuid
+import logging
+
+from database import db
+from dependencies import get_current_user, get_current_company
+
+logger = logging.getLogger(__name__)
+router = APIRouter()
+
+
+# ======================================================================
+# Helpers
+# ======================================================================
+
+async def _get_interim_settings():
+    """Returns the current interim settings (commission_percent + payment_methods).
+    Lazy-creates with sane defaults the first time it is called.
+    """
+    s = await db.admin_settings.find_one({'type': 'interim_settings'}, {'_id': 0})
+    if s:
+        return s
+    default = {
+        'type': 'interim_settings',
+        'commission_percent': 10.0,           # 10 % par défaut
+        'payment_methods': [],                # liste de comptes ServisPro
+        'updated_at': datetime.now(timezone.utc).isoformat(),
+    }
+    await db.admin_settings.insert_one(default)
+    default.pop('_id', None)
+    return default
+
+
+async def _provider_has_unpaid_commission(provider_id: str) -> bool:
+    """A provider with any commission whose status is NOT 'validated' (and not
+    'rejected' for the same period) is considered to have unpaid dues."""
+    count = await db.interim_commissions.count_documents({
+        'provider_id': provider_id,
+        'status': {'$in': ['pending', 'submitted', 'rejected']},
+    })
+    return count > 0
+
+
+# ======================================================================
+# Mission CRUD (Company side)
+# ======================================================================
+
+@router.post("/interim/missions")
+async def create_mission(data: dict = Body(...), current_company: dict = Depends(get_current_company)):
+    title = (data.get('title') or '').strip()
+    description = (data.get('description') or '').strip()
+    job_type = (data.get('job_type') or '').strip()           # ex: "Électricien"
+    location_city = (data.get('location_city') or '').strip()
+    location_region = (data.get('location_region') or '').strip()
+    start_date = (data.get('start_date') or '').strip()        # ISO
+    end_date = (data.get('end_date') or '').strip()            # ISO (optional)
+    daily_rate = float(data.get('daily_rate') or 0)
+    num_providers_needed = int(data.get('num_providers_needed') or 1)
+    documents_required = data.get('documents_required') or []
+
+    if not title or not job_type or not description:
+        raise HTTPException(status_code=400, detail="Titre, description et métier sont obligatoires")
+    if daily_rate <= 0 and not data.get('rate_negotiable'):
+        raise HTTPException(status_code=400, detail="Indiquez un taux journalier ou cochez 'à négocier'")
+
+    mission = {
+        'id': str(uuid.uuid4()),
+        'company_id': current_company['id'],
+        'company_name': current_company.get('company_name') or current_company.get('name', ''),
+        'title': title,
+        'description': description,
+        'job_type': job_type,
+        'location_city': location_city,
+        'location_region': location_region,
+        'start_date': start_date or None,
+        'end_date': end_date or None,
+        'daily_rate': daily_rate,
+        'rate_negotiable': bool(data.get('rate_negotiable')),
+        'num_providers_needed': max(1, num_providers_needed),
+        'documents_required': documents_required,
+        'status': 'open',          # open | closed | completed | cancelled
+        'applications_count': 0,
+        'accepted_count': 0,
+        'created_at': datetime.now(timezone.utc).isoformat(),
+        'updated_at': datetime.now(timezone.utc).isoformat(),
+    }
+    await db.interim_missions.insert_one(mission)
+    mission.pop('_id', None)
+    return mission
+
+
+@router.get("/interim/missions/mine")
+async def my_company_missions(current_company: dict = Depends(get_current_company)):
+    missions = await db.interim_missions.find(
+        {'company_id': current_company['id']}, {'_id': 0}
+    ).sort('created_at', -1).to_list(None)
+    return missions
+
+
+@router.get("/interim/missions")
+async def list_open_missions(
+    job_type: Optional[str] = None,
+    city: Optional[str] = None,
+):
+    """Public list of open missions — accessible to logged-in providers."""
+    query = {'status': 'open'}
+    if job_type:
+        query['job_type'] = job_type
+    if city:
+        query['location_city'] = city
+    missions = await db.interim_missions.find(query, {'_id': 0}).sort('created_at', -1).to_list(200)
+    return missions
+
+
+@router.get("/interim/missions/{mission_id}")
+async def get_mission(mission_id: str):
+    mission = await db.interim_missions.find_one({'id': mission_id}, {'_id': 0})
+    if not mission:
+        raise HTTPException(status_code=404, detail="Mission introuvable")
+    return mission
+
+
+@router.put("/interim/missions/{mission_id}")
+async def update_mission(mission_id: str, data: dict = Body(...), current_company: dict = Depends(get_current_company)):
+    mission = await db.interim_missions.find_one({'id': mission_id, 'company_id': current_company['id']})
+    if not mission:
+        raise HTTPException(status_code=404, detail="Mission introuvable")
+    if mission.get('status') == 'completed':
+        raise HTTPException(status_code=400, detail="Mission terminée — non modifiable")
+    allowed = {'title', 'description', 'job_type', 'location_city', 'location_region',
+               'start_date', 'end_date', 'daily_rate', 'rate_negotiable',
+               'num_providers_needed', 'documents_required', 'status'}
+    update = {k: v for k, v in data.items() if k in allowed}
+    update['updated_at'] = datetime.now(timezone.utc).isoformat()
+    await db.interim_missions.update_one({'id': mission_id}, {'$set': update})
+    updated = await db.interim_missions.find_one({'id': mission_id}, {'_id': 0})
+    return updated
+
+
+@router.delete("/interim/missions/{mission_id}")
+async def delete_mission(mission_id: str, current_company: dict = Depends(get_current_company)):
+    mission = await db.interim_missions.find_one({'id': mission_id, 'company_id': current_company['id']})
+    if not mission:
+        raise HTTPException(status_code=404, detail="Mission introuvable")
+    if mission.get('accepted_count', 0) > 0:
+        raise HTTPException(status_code=400, detail="Impossible de supprimer : prestataire(s) déjà accepté(s)")
+    await db.interim_missions.delete_one({'id': mission_id})
+    await db.mission_applications.delete_many({'mission_id': mission_id})
+    return {'deleted': True}
+
+
+# ======================================================================
+# Applications (Provider side)
+# ======================================================================
+
+@router.post("/interim/missions/{mission_id}/apply")
+async def apply_to_mission(mission_id: str, data: dict = Body(default={}), current_user: dict = Depends(get_current_user)):
+    # Suspension check
+    if current_user.get('interim_suspended'):
+        raise HTTPException(status_code=403, detail="Compte intérim suspendu : commission(s) à régler")
+    if await _provider_has_unpaid_commission(current_user['id']):
+        # Auto-flag the suspension flag for consistency
+        await db.service_providers.update_one({'id': current_user['id']}, {'$set': {'interim_suspended': True}})
+        raise HTTPException(status_code=403, detail="Vous avez une commission impayée — règlez-la avant de postuler à nouveau")
+
+    mission = await db.interim_missions.find_one({'id': mission_id})
+    if not mission:
+        raise HTTPException(status_code=404, detail="Mission introuvable")
+    if mission.get('status') != 'open':
+        raise HTTPException(status_code=400, detail="Cette mission n'est plus ouverte aux candidatures")
+
+    existing = await db.mission_applications.find_one({'mission_id': mission_id, 'provider_id': current_user['id']})
+    if existing:
+        raise HTTPException(status_code=400, detail="Vous avez déjà postulé à cette mission")
+
+    application = {
+        'id': str(uuid.uuid4()),
+        'mission_id': mission_id,
+        'mission_title': mission.get('title', ''),
+        'company_id': mission['company_id'],
+        'company_name': mission.get('company_name', ''),
+        'provider_id': current_user['id'],
+        'provider_name': f"{current_user.get('first_name','')} {current_user.get('last_name','')}".strip(),
+        'provider_phone': current_user.get('phone_number', ''),
+        'provider_city': current_user.get('city', ''),
+        'cover_message': (data.get('cover_message') or '').strip()[:1000],
+        'proposed_rate': float(data.get('proposed_rate') or 0) or None,
+        'status': 'pending',     # pending | accepted | rejected | withdrawn
+        'created_at': datetime.now(timezone.utc).isoformat(),
+    }
+    await db.mission_applications.insert_one(application)
+    await db.interim_missions.update_one({'id': mission_id}, {'$inc': {'applications_count': 1}})
+    application.pop('_id', None)
+    return application
+
+
+@router.get("/interim/applications/mine")
+async def my_provider_applications(current_user: dict = Depends(get_current_user)):
+    apps = await db.mission_applications.find(
+        {'provider_id': current_user['id']}, {'_id': 0}
+    ).sort('created_at', -1).to_list(None)
+    return apps
+
+
+@router.get("/interim/missions/{mission_id}/applications")
+async def list_mission_applications(mission_id: str, current_company: dict = Depends(get_current_company)):
+    mission = await db.interim_missions.find_one({'id': mission_id, 'company_id': current_company['id']}, {'_id': 0, 'id': 1})
+    if not mission:
+        raise HTTPException(status_code=404, detail="Mission introuvable")
+    apps = await db.mission_applications.find(
+        {'mission_id': mission_id}, {'_id': 0}
+    ).sort('created_at', -1).to_list(None)
+    return apps
+
+
+@router.post("/interim/applications/{application_id}/accept")
+async def accept_application(application_id: str, current_company: dict = Depends(get_current_company)):
+    app_doc = await db.mission_applications.find_one({'id': application_id})
+    if not app_doc:
+        raise HTTPException(status_code=404, detail="Candidature introuvable")
+    if app_doc['company_id'] != current_company['id']:
+        raise HTTPException(status_code=403, detail="Non autorisé")
+    if app_doc['status'] != 'pending':
+        raise HTTPException(status_code=400, detail=f"Candidature déjà {app_doc['status']}")
+
+    mission = await db.interim_missions.find_one({'id': app_doc['mission_id']})
+    if not mission:
+        raise HTTPException(status_code=404, detail="Mission introuvable")
+    if mission.get('accepted_count', 0) >= mission.get('num_providers_needed', 1):
+        raise HTTPException(status_code=400, detail="Quota de prestataires atteint pour cette mission")
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+    await db.mission_applications.update_one(
+        {'id': application_id},
+        {'$set': {'status': 'accepted', 'accepted_at': now_iso}}
+    )
+    new_count = mission.get('accepted_count', 0) + 1
+    mission_update = {'accepted_count': new_count, 'updated_at': now_iso}
+    if new_count >= mission.get('num_providers_needed', 1):
+        mission_update['status'] = 'closed'
+    await db.interim_missions.update_one({'id': mission['id']}, {'$set': mission_update})
+    return {'ok': True, 'status': 'accepted'}
+
+
+@router.post("/interim/applications/{application_id}/reject")
+async def reject_application(application_id: str, data: dict = Body(default={}), current_company: dict = Depends(get_current_company)):
+    app_doc = await db.mission_applications.find_one({'id': application_id})
+    if not app_doc:
+        raise HTTPException(status_code=404, detail="Candidature introuvable")
+    if app_doc['company_id'] != current_company['id']:
+        raise HTTPException(status_code=403, detail="Non autorisé")
+    await db.mission_applications.update_one(
+        {'id': application_id},
+        {'$set': {'status': 'rejected', 'rejected_at': datetime.now(timezone.utc).isoformat(),
+                  'rejection_reason': (data.get('reason') or '').strip()[:500]}}
+    )
+    return {'ok': True, 'status': 'rejected'}
+
+
+@router.post("/interim/applications/{application_id}/withdraw")
+async def withdraw_application(application_id: str, current_user: dict = Depends(get_current_user)):
+    app_doc = await db.mission_applications.find_one({'id': application_id})
+    if not app_doc:
+        raise HTTPException(status_code=404, detail="Candidature introuvable")
+    if app_doc['provider_id'] != current_user['id']:
+        raise HTTPException(status_code=403, detail="Non autorisé")
+    if app_doc['status'] not in ('pending',):
+        raise HTTPException(status_code=400, detail=f"Impossible de retirer une candidature {app_doc['status']}")
+    await db.mission_applications.update_one({'id': application_id}, {'$set': {'status': 'withdrawn'}})
+    await db.interim_missions.update_one({'id': app_doc['mission_id']}, {'$inc': {'applications_count': -1}})
+    return {'ok': True}
+
+
+# ======================================================================
+# Complete a mission → generate commission(s) for accepted provider(s)
+# ======================================================================
+
+@router.post("/interim/missions/{mission_id}/complete")
+async def complete_mission(mission_id: str, data: dict = Body(default={}), current_company: dict = Depends(get_current_company)):
+    mission = await db.interim_missions.find_one({'id': mission_id, 'company_id': current_company['id']})
+    if not mission:
+        raise HTTPException(status_code=404, detail="Mission introuvable")
+    if mission.get('status') == 'completed':
+        raise HTTPException(status_code=400, detail="Déjà marquée terminée")
+
+    # Optional override of days worked
+    days_worked = int(data.get('days_worked') or 1)
+    daily_rate_override = float(data.get('daily_rate') or 0) or mission.get('daily_rate', 0)
+
+    settings = await _get_interim_settings()
+    commission_percent = float(settings.get('commission_percent') or 10.0)
+
+    accepted = await db.mission_applications.find(
+        {'mission_id': mission_id, 'status': 'accepted'}, {'_id': 0}
+    ).to_list(None)
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+    created_commissions = []
+    for app_doc in accepted:
+        gross = daily_rate_override * days_worked
+        commission_amount = round(gross * commission_percent / 100)
+        commission = {
+            'id': str(uuid.uuid4()),
+            'mission_id': mission_id,
+            'mission_title': mission.get('title', ''),
+            'application_id': app_doc['id'],
+            'company_id': mission['company_id'],
+            'company_name': mission.get('company_name', ''),
+            'provider_id': app_doc['provider_id'],
+            'provider_name': app_doc.get('provider_name', ''),
+            'provider_phone': app_doc.get('provider_phone', ''),
+            'days_worked': days_worked,
+            'daily_rate': daily_rate_override,
+            'gross_amount': gross,
+            'commission_percent': commission_percent,
+            'commission_amount': commission_amount,
+            'currency': 'GNF',
+            'status': 'pending',           # pending | submitted | validated | rejected
+            'created_at': now_iso,
+        }
+        await db.interim_commissions.insert_one(commission)
+        commission.pop('_id', None)
+        created_commissions.append(commission)
+        # Auto-suspend the provider (must pay commission before applying elsewhere)
+        await db.service_providers.update_one({'id': app_doc['provider_id']}, {'$set': {'interim_suspended': True}})
+
+    await db.interim_missions.update_one(
+        {'id': mission_id},
+        {'$set': {'status': 'completed', 'completed_at': now_iso, 'updated_at': now_iso,
+                  'days_worked': days_worked}}
+    )
+
+    return {'ok': True, 'commissions_created': len(created_commissions), 'commissions': created_commissions}
+
+
+# ======================================================================
+# Commissions (Provider submits payment proof)
+# ======================================================================
+
+@router.get("/interim/commissions/mine")
+async def my_commissions(current_user: dict = Depends(get_current_user)):
+    commissions = await db.interim_commissions.find(
+        {'provider_id': current_user['id']}, {'_id': 0}
+    ).sort('created_at', -1).to_list(None)
+    return commissions
+
+
+@router.get("/interim/payment-methods")
+async def public_payment_methods(current_user: dict = Depends(get_current_user)):
+    """Provider-facing endpoint : returns where to transfer the commission."""
+    settings = await _get_interim_settings()
+    return {
+        'commission_percent': settings.get('commission_percent', 10.0),
+        'payment_methods': settings.get('payment_methods', []),
+    }
+
+
+@router.post("/interim/commissions/{commission_id}/submit-payment")
+async def submit_commission_payment(commission_id: str, data: dict = Body(...), current_user: dict = Depends(get_current_user)):
+    payment_method = (data.get('payment_method') or '').strip()    # orange_money | mtn_money | bank | other
+    transfer_reference = (data.get('transfer_reference') or '').strip()
+    sender_phone = (data.get('sender_phone') or '').strip()
+    note = (data.get('note') or '').strip()
+
+    if payment_method not in ('orange_money', 'mtn_money', 'bank', 'other'):
+        raise HTTPException(status_code=400, detail="Mode de paiement invalide")
+    if not transfer_reference:
+        raise HTTPException(status_code=400, detail="La référence du transfert est obligatoire")
+
+    commission = await db.interim_commissions.find_one({'id': commission_id, 'provider_id': current_user['id']})
+    if not commission:
+        raise HTTPException(status_code=404, detail="Commission introuvable")
+    if commission['status'] not in ('pending', 'rejected'):
+        raise HTTPException(status_code=400, detail=f"Cette commission est déjà {commission['status']}")
+
+    await db.interim_commissions.update_one(
+        {'id': commission_id},
+        {'$set': {
+            'status': 'submitted',
+            'payment_method': payment_method,
+            'transfer_reference': transfer_reference[:100],
+            'sender_phone': sender_phone[:30],
+            'payment_note': note[:500],
+            'submitted_at': datetime.now(timezone.utc).isoformat(),
+            'rejection_reason': None,
+        }}
+    )
+    return {'ok': True, 'status': 'submitted'}
+
+
+# ======================================================================
+# Admin endpoints  (protected by AdminAuthMiddleware on /api/admin/*)
+# ======================================================================
+
+@router.get("/admin/interim/settings")
+async def admin_get_interim_settings():
+    return await _get_interim_settings()
+
+
+@router.put("/admin/interim/settings")
+async def admin_update_interim_settings(data: dict = Body(...)):
+    update = {'updated_at': datetime.now(timezone.utc).isoformat()}
+    if 'commission_percent' in data:
+        try:
+            cp = float(data['commission_percent'])
+            if cp < 0 or cp > 100:
+                raise ValueError
+            update['commission_percent'] = cp
+        except (TypeError, ValueError):
+            raise HTTPException(status_code=400, detail="commission_percent doit être un nombre entre 0 et 100")
+    if 'payment_methods' in data:
+        methods = data['payment_methods']
+        if not isinstance(methods, list):
+            raise HTTPException(status_code=400, detail="payment_methods doit être une liste")
+        clean = []
+        for m in methods:
+            if not isinstance(m, dict):
+                continue
+            clean.append({
+                'id': m.get('id') or str(uuid.uuid4()),
+                'type': (m.get('type') or 'other').strip(),      # orange_money | mtn_money | bank | other
+                'label': (m.get('label') or '').strip()[:100],
+                'account_name': (m.get('account_name') or '').strip()[:100],
+                'account_number': (m.get('account_number') or '').strip()[:100],
+                'instructions': (m.get('instructions') or '').strip()[:500],
+            })
+        update['payment_methods'] = clean
+
+    await db.admin_settings.update_one(
+        {'type': 'interim_settings'},
+        {'$set': update},
+        upsert=True,
+    )
+    return await _get_interim_settings()
+
+
+@router.get("/admin/interim/commissions")
+async def admin_list_commissions(status: Optional[str] = None, limit: int = Query(200, ge=1, le=1000)):
+    query = {}
+    if status:
+        query['status'] = status
+    commissions = await db.interim_commissions.find(query, {'_id': 0}).sort('created_at', -1).to_list(limit)
+    counts = {
+        'pending': await db.interim_commissions.count_documents({'status': 'pending'}),
+        'submitted': await db.interim_commissions.count_documents({'status': 'submitted'}),
+        'validated': await db.interim_commissions.count_documents({'status': 'validated'}),
+        'rejected': await db.interim_commissions.count_documents({'status': 'rejected'}),
+    }
+    return {'commissions': commissions, 'counts': counts}
+
+
+@router.post("/admin/interim/commissions/{commission_id}/validate")
+async def admin_validate_commission(commission_id: str):
+    commission = await db.interim_commissions.find_one({'id': commission_id})
+    if not commission:
+        raise HTTPException(status_code=404, detail="Commission introuvable")
+    if commission['status'] != 'submitted':
+        raise HTTPException(status_code=400, detail="La commission doit être soumise pour être validée")
+    await db.interim_commissions.update_one(
+        {'id': commission_id},
+        {'$set': {'status': 'validated', 'validated_at': datetime.now(timezone.utc).isoformat()}}
+    )
+    # Auto-unsuspend the provider if no other unpaid commission remains
+    provider_id = commission['provider_id']
+    still_unpaid = await db.interim_commissions.count_documents({
+        'provider_id': provider_id,
+        'status': {'$in': ['pending', 'submitted', 'rejected']},
+    })
+    if still_unpaid == 0:
+        await db.service_providers.update_one(
+            {'id': provider_id},
+            {'$set': {'interim_suspended': False}}
+        )
+    return {'ok': True, 'status': 'validated', 'provider_unsuspended': still_unpaid == 0}
+
+
+@router.post("/admin/interim/commissions/{commission_id}/reject")
+async def admin_reject_commission(commission_id: str, data: dict = Body(default={})):
+    reason = (data.get('reason') or '').strip()[:500]
+    commission = await db.interim_commissions.find_one({'id': commission_id})
+    if not commission:
+        raise HTTPException(status_code=404, detail="Commission introuvable")
+    await db.interim_commissions.update_one(
+        {'id': commission_id},
+        {'$set': {
+            'status': 'rejected',
+            'rejected_at': datetime.now(timezone.utc).isoformat(),
+            'rejection_reason': reason or 'Référence de paiement invalide',
+        }}
+    )
+    return {'ok': True, 'status': 'rejected'}
+
+
+@router.get("/admin/interim/missions")
+async def admin_list_missions(status: Optional[str] = None):
+    query = {}
+    if status:
+        query['status'] = status
+    missions = await db.interim_missions.find(query, {'_id': 0}).sort('created_at', -1).to_list(500)
+    counts = {
+        'open': await db.interim_missions.count_documents({'status': 'open'}),
+        'closed': await db.interim_missions.count_documents({'status': 'closed'}),
+        'completed': await db.interim_missions.count_documents({'status': 'completed'}),
+        'cancelled': await db.interim_missions.count_documents({'status': 'cancelled'}),
+    }
+    return {'missions': missions, 'counts': counts}
