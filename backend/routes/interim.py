@@ -268,6 +268,19 @@ async def accept_application(application_id: str, current_company: dict = Depend
     if new_count >= mission.get('num_providers_needed', 1):
         mission_update['status'] = 'closed'
     await db.interim_missions.update_one({'id': mission['id']}, {'$set': mission_update})
+
+    # Auto-rejeter toutes les candidatures encore en attente quand la mission est fermée
+    if mission_update.get('status') == 'closed':
+        await db.mission_applications.update_many(
+            {'mission_id': mission['id'], 'status': 'pending'},
+            {'$set': {
+                'status': 'rejected',
+                'rejected_at': now_iso,
+                'rejection_reason': 'Mission fermée — nombre de prestataires requis atteint',
+                'auto_rejected': True,
+            }}
+        )
+
     return {'ok': True, 'status': 'accepted'}
 
 

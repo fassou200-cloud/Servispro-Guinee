@@ -186,16 +186,21 @@ const ProviderInterimTab = ({ user }) => {
               <h3 className="font-bold">{a.mission_title}</h3>
               <p className="text-sm text-gray-600">{a.company_name}</p>
               {a.cover_message && <p className="text-xs text-gray-500 italic mt-1">« {a.cover_message} »</p>}
+              {a.status === 'rejected' && a.rejection_reason && (
+                <p className="text-xs text-red-600 mt-1.5">
+                  {a.auto_rejected ? '🔒 ' : '✗ '}{a.rejection_reason}
+                </p>
+              )}
               <p className="text-xs text-gray-400 mt-1">{new Date(a.created_at).toLocaleDateString('fr-FR')}</p>
             </div>
             <Badge className={
               a.status === 'accepted' ? 'bg-green-600' :
-              a.status === 'rejected' ? 'bg-red-500' :
+              a.status === 'rejected' ? (a.auto_rejected ? 'bg-gray-500' : 'bg-red-500') :
               a.status === 'withdrawn' ? 'bg-gray-400' :
               'bg-orange-500'
             }>
               {a.status === 'accepted' ? <><CheckCircle className="h-3 w-3 mr-1" /> Accepté</> :
-               a.status === 'rejected' ? <><XCircle className="h-3 w-3 mr-1" /> Rejeté</> :
+               a.status === 'rejected' ? (a.auto_rejected ? <>Mission fermée</> : <><XCircle className="h-3 w-3 mr-1" /> Rejeté</>) :
                a.status === 'withdrawn' ? 'Retiré' :
                <><Clock className="h-3 w-3 mr-1" /> En attente</>}
             </Badge>
