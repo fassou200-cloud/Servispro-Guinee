@@ -488,6 +488,7 @@ const CompanyInterimTab = () => {
             <Label>Motif du rejet *</Label>
             <Textarea
               rows={3}
+              autoFocus
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
               placeholder="Ex: Le 28 mai n'a pas été travaillé, présence absente sur site."
