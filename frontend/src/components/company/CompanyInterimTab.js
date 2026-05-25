@@ -29,6 +29,8 @@ const blankForm = {
 
 const CompanyInterimTab = () => {
   const [missions, setMissions] = useState([]);
+  const [timesheets, setTimesheets] = useState([]);
+  const [view, setView] = useState('missions');     // missions | timesheets
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -43,14 +45,57 @@ const CompanyInterimTab = () => {
   const loadMissions = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${API}/interim/missions/mine`, auth());
-      setMissions(res.data || []);
+      const [m, t] = await Promise.all([
+        axios.get(`${API}/interim/missions/mine`, auth()),
+        axios.get(`${API}/interim/timesheets/company`, auth()),
+      ]);
+      setMissions(m.data || []);
+      setTimesheets(t.data || []);
     } catch (e) {
       toast.error("Erreur de chargement des missions");
     } finally {
       setLoading(false);
     }
   }, []);
+
+  const validateTs = async (id) => {
+    try {
+      await axios.post(`${API}/interim/timesheets/${id}/validate`, {}, auth());
+      toast.success('Pointage validé');
+      loadMissions();
+    } catch (e) { toast.error(e.response?.data?.detail || 'Erreur'); }
+  };
+
+  const rejectTs = async (id) => {
+    const reason = window.prompt('Motif (optionnel) :', '');
+    if (reason === null) return;
+    try {
+      await axios.post(`${API}/interim/timesheets/${id}/reject`, { reason }, auth());
+      toast.success('Pointage rejeté');
+      loadMissions();
+    } catch (e) { toast.error(e.response?.data?.detail || 'Erreur'); }
+  };
+
+  const [rateProviderModal, setRateProviderModal] = useState(null);   // {mission_id, provider_id, provider_name}
+  const [rateForm, setRateForm] = useState({ stars: 5, comment: '' });
+
+  const submitRateProvider = async () => {
+    if (!rateProviderModal) return;
+    try {
+      await axios.post(`${API}/interim/missions/${rateProviderModal.mission_id}/rate-provider`, {
+        provider_id: rateProviderModal.provider_id,
+        stars: rateForm.stars,
+        comment: rateForm.comment,
+      }, auth());
+      toast.success('Note envoyée');
+      setRateProviderModal(null);
+    } catch (e) { toast.error(e.response?.data?.detail || 'Erreur'); }
+  };
+
+  const downloadInvoice = (missionId, providerId, companyId) => {
+    const url = `${API}/interim/missions/${missionId}/invoice/${providerId}?token=${companyId}`;
+    window.open(url, '_blank');
+  };
 
   useEffect(() => { loadMissions(); }, [loadMissions]);
 
@@ -167,6 +212,20 @@ const CompanyInterimTab = () => {
         </Button>
       </div>
 
+      <div className="flex gap-2 flex-wrap">
+        <Button variant={view === 'missions' ? 'default' : 'outline'} onClick={() => setView('missions')} className={view === 'missions' ? 'bg-emerald-600' : ''} data-testid="company-view-missions">
+          <Briefcase className="h-4 w-4 mr-1" /> Mes missions ({missions.length})
+        </Button>
+        <Button variant={view === 'timesheets' ? 'default' : 'outline'} onClick={() => setView('timesheets')} className={view === 'timesheets' ? 'bg-emerald-600' : ''} data-testid="company-view-timesheets">
+          <Clock className="h-4 w-4 mr-1" /> Pointages ({timesheets.length})
+          {timesheets.filter(t => t.status === 'submitted').length > 0 && (
+            <span className="ml-1 px-1.5 py-0.5 bg-red-500 text-white text-xs rounded-full font-bold">{timesheets.filter(t => t.status === 'submitted').length}</span>
+          )}
+        </Button>
+      </div>
+
+      {view === 'missions' && (
+      <>
       {missions.length === 0 ? (
         <Card className="p-10 text-center text-gray-500">
           <Briefcase className="h-12 w-12 mx-auto text-gray-300 mb-3" />
@@ -193,6 +252,11 @@ const CompanyInterimTab = () => {
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
+                {m.status === 'completed' && m.accepted_count > 0 && (
+                  <Button size="sm" variant="ghost" onClick={() => toggleExpand(m.id)} className="gap-1 text-emerald-600">
+                    Actions terminales {expanded[m.id] ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </Button>
+                )}
                 {m.status !== 'completed' && m.accepted_count > 0 && (
                   <Button size="sm" variant="outline" className="text-blue-600 border-blue-200 hover:bg-blue-50" onClick={() => openComplete(m)} data-testid={`complete-mission-${m.id}`}>
                     Marquer terminée
@@ -247,7 +311,19 @@ const CompanyInterimTab = () => {
                       })() : a.status === 'pending' && m.status === 'completed' ? (
                         <Badge className="bg-gray-500">Mission terminée</Badge>
                       ) : (
-                        <Badge variant={a.status === 'accepted' ? 'default' : 'secondary'} className={a.status === 'accepted' ? 'bg-emerald-600' : ''}>{a.status}</Badge>
+                        <div className="flex flex-col gap-1.5 items-end">
+                          <Badge variant={a.status === 'accepted' ? 'default' : 'secondary'} className={a.status === 'accepted' ? 'bg-emerald-600' : ''}>{a.status}</Badge>
+                          {a.status === 'accepted' && m.status === 'completed' && (
+                            <div className="flex gap-1.5">
+                              <Button size="sm" variant="outline" className="h-7 text-amber-600 border-amber-300" onClick={() => { setRateProviderModal({ mission_id: m.id, provider_id: a.provider_id, provider_name: a.provider_name }); setRateForm({ stars: 5, comment: '' }); }} data-testid={`rate-prov-${a.id}`}>
+                                ⭐ Noter
+                              </Button>
+                              <Button size="sm" variant="outline" className="h-7 text-emerald-600 border-emerald-300" onClick={() => downloadInvoice(m.id, a.provider_id, m.company_id)} data-testid={`invoice-${a.id}`}>
+                                <FileText className="h-3 w-3 mr-1" /> Facture
+                              </Button>
+                            </div>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
@@ -257,6 +333,38 @@ const CompanyInterimTab = () => {
           </Card>
         );
       })}
+      </>
+      )}
+
+      {view === 'timesheets' && (timesheets.length === 0 ? (
+        <Card className="p-10 text-center text-gray-500"><Clock className="h-12 w-12 mx-auto text-gray-300 mb-3" />Aucun pointage reçu.</Card>
+      ) : timesheets.map(t => (
+        <Card key={t.id} className="p-4" data-testid={`company-ts-${t.id}`}>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h3 className="font-bold">{t.mission_title}</h3>
+              <p className="text-sm text-gray-700">Prestataire : <strong>{t.provider_name}</strong></p>
+              <p className="text-sm text-gray-700"><strong>{t.days_worked}</strong> jour(s) travaillé(s)</p>
+              {t.notes && <p className="text-xs text-gray-500 italic mt-1">« {t.notes} »</p>}
+              {t.rejection_reason && <p className="text-xs text-red-600 mt-1">✗ {t.rejection_reason}</p>}
+            </div>
+            <div className="flex flex-col gap-2 shrink-0">
+              {t.status === 'submitted' ? (
+                <>
+                  <Button size="sm" onClick={() => validateTs(t.id)} className="bg-emerald-600 hover:bg-emerald-700 h-8" data-testid={`validate-ts-${t.id}`}>
+                    <CheckCircle className="h-3.5 w-3.5 mr-1" /> Valider
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => rejectTs(t.id)} className="h-8 text-red-600 border-red-200" data-testid={`reject-ts-${t.id}`}>
+                    <XCircle className="h-3.5 w-3.5 mr-1" /> Rejeter
+                  </Button>
+                </>
+              ) : (
+                <Badge className={t.status === 'validated' ? 'bg-green-600' : 'bg-red-500'}>{t.status === 'validated' ? 'Validé' : 'Rejeté'}</Badge>
+              )}
+            </div>
+          </div>
+        </Card>
+      )))}
 
       {/* Create mission dialog */}
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
@@ -347,6 +455,34 @@ const CompanyInterimTab = () => {
           </div>
         </DialogContent>
       </Dialog>
+      {/* Rate provider modal */}
+      <Dialog open={!!rateProviderModal} onOpenChange={(o) => !o && setRateProviderModal(null)}>
+        <DialogContent data-testid="rate-provider-dialog">
+          <DialogHeader>
+            <DialogTitle>Noter : {rateProviderModal?.provider_name}</DialogTitle>
+            <DialogDescription>Donnez votre avis sur ce prestataire après la mission.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Note</Label>
+              <div className="flex gap-1 text-3xl">
+                {[1,2,3,4,5].map(s => (
+                  <button key={s} type="button" onClick={() => setRateForm({ ...rateForm, stars: s })} className={s <= rateForm.stars ? 'text-amber-400' : 'text-gray-300'} data-testid={`comp-star-${s}`}>★</button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <Label>Commentaire (optionnel)</Label>
+              <Textarea rows={3} value={rateForm.comment} onChange={(e) => setRateForm({ ...rateForm, comment: e.target.value })} maxLength={1000} />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 mt-2">
+            <Button variant="outline" onClick={() => setRateProviderModal(null)}>Annuler</Button>
+            <Button onClick={submitRateProvider} className="bg-amber-500 hover:bg-amber-600" data-testid="submit-rate-prov-btn">Envoyer</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Delete mission confirmation */}
       <Dialog open={!!deletingId} onOpenChange={(o) => !o && setDeletingId(null)}>
         <DialogContent className="sm:max-w-md" data-testid="delete-mission-dialog">

@@ -1,0 +1,42 @@
+{
+  "summary": "Backend-only end-to-end testing of Interim Phase 2 (Availability calendar / Timesheets / HTML Invoice / Bidirectional ratings). 28 pytest cases all pass against preview backend (DB: servispro_dev). Coverage: provider availability PUT/GET + company read-through; auto-population of mission_busy_dates from accepted applications on open/closed missions; timesheet submit/re-submit/validate/reject lifecycle with company scoping; HTML invoice with provider_id token / company_id token / invalid token / missing token; bidirectional ratings with 1-5 star validation, completed-mission constraint, accepted-application constraint for providers, in-place update on re-rate, and aggregated summary endpoints.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "GET /api/interim/missions/{mission_id}/invoice/{provider_id}", "issue": "Invoice endpoint is unauthenticated and uses provider_id or company_id (UUID) directly as the 'token' query param. Anyone with both UUIDs (which are public on /interim/missions list + /interim/missions/{id}/applications for the company side) can render the invoice. Recommend a signed/HMAC token bound to mission_id+provider_id+ts."},
+      {"endpoint": "GET /api/interim/availability/mine", "issue": "_get_busy_dates_from_missions filters mission status in ('open','closed') only — completed missions are NOT considered busy. Behaviourally OK but worth documenting; this means a provider on a 'completed' mission still appears available for the same period in the calendar."},
+      {"endpoint": "POST /api/interim/missions/{id}/timesheet", "issue": "Endpoint allows submitting a timesheet at any mission lifecycle stage (even 'open'). It only requires an accepted application. Consider restricting to mission status in ('closed','completed') so providers can't pre-clock hours before work starts."},
+      {"endpoint": "POST /api/interim/timesheets/{ts_id}/reject", "issue": "No state check — a previously validated or already-rejected timesheet can be re-rejected (overwriting state). Recommend asserting status == 'submitted'."},
+      {"endpoint": "POST /api/interim/missions/{id}/rate-provider", "issue": "No check that the rated provider has an accepted application on the mission. Company could rate any provider_id string for a completed mission they own. Recommend cross-checking mission_applications."}
+    ]
+  },
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_interim_phase2.py",
+    "/app/test_reports/pytest/pytest_interim_phase2.xml"
+  ],
+  "action_items": [
+    "Consider replacing the invoice 'token' (= raw UUID) with a signed HMAC/JWT to prevent unauthenticated PII/financial-data leakage.",
+    "Add status guard on /interim/timesheets/{ts_id}/reject (only allow status=='submitted').",
+    "Add mission-status guard on POST /interim/missions/{id}/timesheet (only when status in ('closed','completed')).",
+    "Add accepted-app validation inside /interim/missions/{id}/rate-provider (defence-in-depth)."
+  ],
+  "critical_code_review_comments": [
+    "interim_phase2.py L236: `if not token or token not in (provider_id,)` then fallback to company_id match — the auth model is just 'know-the-UUID'. This is effectively security-through-obscurity for a financial document. Use a signed token (HMAC over mission_id|provider_id|secret) or require Depends(get_current_user/company) and check ownership.",
+    "interim_phase2.py L44: status filter excludes 'completed' from mission_busy_dates. If the product intent is 'block the calendar even while the mission is completed but in the same date range', expand the filter; otherwise document.",
+    "interim_phase2.py L142-177 submit_timesheet: no mission-status check; a provider could submit a timesheet on an 'open' mission. Add `if mission.get('status') not in ('closed','completed'): 400`.",
+    "interim_phase2.py L211-225 reject_timesheet: no state check, allowing reject on already validated/rejected entries.",
+    "interim_phase2.py L365-397 rate_provider: trusts caller-supplied provider_id; should validate via mission_applications collection.",
+    "interim_phase2.py L252-253 invoice math fallbacks: `days = ... or 1` and `rate = ... or 0` — for the seeded Plombier mission with daily_rate=0 the invoice renders 0 GNF everywhere, which is correct but ugly; consider showing a 'tarif à négocier' notice when both timesheet and commission are absent.",
+    "interim_phase2.py L437-458 ratings summary endpoints are unauthenticated. Probably intended (public reputation), but expose `comment` and `company_name` of every rater — confirm with product.",
+    "interim_phase2.py general: no Pydantic schemas on POST bodies (`data: dict = Body(...)`), so payload validation is hand-rolled. Acceptable for now but tougher to maintain than Pydantic models."
+  ],
+  "updated_files": ["/app/backend/tests/test_interim_phase2.py (new)"],
+  "success_rate": {"backend": "100% (28/28)", "frontend": "not tested (out of scope)"},
+  "test_credentials": "Company: +224620200001 / BoutiqueDemo2026! ; Providers: +224620100001|2|3 / TestProvider2026!",
+  "seed_data_creation": "Tests reuse seeded servispro_dev data (Boutique Demo Conakry + Mamadou/Fatoumata/Ibrahima + seeded Plombier completed mission with Fatoumata accepted). Each test class cleans its own writes (provider_availability for P1, interim_timesheets for the Plombier mission, interim_ratings for the Plombier mission). One temporary mission + application are inserted for the mission_busy_dates test and removed in the same fixture's finally.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Reusable regression suite at /app/backend/tests/test_interim_phase2.py. Phase 1 tests at /app/backend/tests/test_interim.py — both can be run together. Phase 2 endpoints all live under /api/interim/* (no /admin prefix). The seeded completed Plombier mission (daily_rate=0) is the linchpin for the rating + invoice tests; if it gets deleted, regenerate it or re-run /app/backend/scripts/seed_test_providers.py + the demo company seed.",
+  "rca of the issue": "N/A — all targeted behaviours pass. Findings above are design/hardening recommendations, not functional bugs."
+}

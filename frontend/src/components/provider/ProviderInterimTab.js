@@ -9,6 +9,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Briefcase, Coins, MapPin, Calendar, Send, Loader2, AlertTriangle, CheckCircle, Clock, XCircle, FileText } from 'lucide-react';
+import AvailabilityCalendar from './AvailabilityCalendar';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const auth = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
@@ -28,10 +29,12 @@ const COMMISSION_LABEL = {
 };
 
 const ProviderInterimTab = ({ user }) => {
-  const [view, setView] = useState('missions');             // missions | applications | commissions
+  const [view, setView] = useState('missions');             // missions | applications | commissions | availability | timesheets
   const [missions, setMissions] = useState([]);
   const [applications, setApplications] = useState([]);
   const [commissions, setCommissions] = useState([]);
+  const [timesheets, setTimesheets] = useState([]);
+  const [availability, setAvailability] = useState({ manual_unavailable_dates: [], mission_busy_dates: [] });
   const [loading, setLoading] = useState(true);
   const [applyTo, setApplyTo] = useState(null);             // mission object
   const [applyForm, setApplyForm] = useState({ cover_message: '', proposed_rate: '' });
@@ -46,14 +49,18 @@ const ProviderInterimTab = ({ user }) => {
   const loadAll = useCallback(async () => {
     setLoading(true);
     try {
-      const [m, a, c] = await Promise.all([
+      const [m, a, c, ts, av] = await Promise.all([
         axios.get(`${API}/interim/missions`, auth()),
         axios.get(`${API}/interim/applications/mine`, auth()),
         axios.get(`${API}/interim/commissions/mine`, auth()),
+        axios.get(`${API}/interim/timesheets/mine`, auth()),
+        axios.get(`${API}/interim/availability/mine`, auth()),
       ]);
       setMissions(m.data || []);
       setApplications(a.data || []);
       setCommissions(c.data || []);
+      setTimesheets(ts.data || []);
+      setAvailability(av.data || { manual_unavailable_dates: [], mission_busy_dates: [] });
     } catch {
       toast.error('Erreur de chargement');
     } finally { setLoading(false); }
@@ -115,6 +122,59 @@ const ProviderInterimTab = ({ user }) => {
     }
   };
 
+  const toggleUnavailableDate = async (dateStr) => {
+    const current = new Set(availability.manual_unavailable_dates || []);
+    if (current.has(dateStr)) current.delete(dateStr); else current.add(dateStr);
+    try {
+      const res = await axios.put(`${API}/interim/availability`, { unavailable_dates: Array.from(current) }, auth());
+      setAvailability((a) => ({ ...a, manual_unavailable_dates: res.data.unavailable_dates }));
+    } catch (e) { toast.error(e.response?.data?.detail || 'Erreur'); }
+  };
+
+  const [tsModalApp, setTsModalApp] = useState(null);
+  const [tsForm, setTsForm] = useState({ days_worked: '', notes: '' });
+
+  const openTimesheet = (app) => {
+    const existing = timesheets.find(t => t.mission_id === app.mission_id);
+    if (existing) {
+      setTsForm({ days_worked: existing.days_worked, notes: existing.notes || '' });
+    } else {
+      setTsForm({ days_worked: '', notes: '' });
+    }
+    setTsModalApp(app);
+  };
+
+  const submitTimesheet = async () => {
+    if (!Number(tsForm.days_worked) || Number(tsForm.days_worked) <= 0) {
+      toast.error('Indiquez le nombre de jours travaillés'); return;
+    }
+    try {
+      await axios.post(`${API}/interim/missions/${tsModalApp.mission_id}/timesheet`, {
+        days_worked: Number(tsForm.days_worked),
+        notes: tsForm.notes,
+      }, auth());
+      toast.success('Pointage envoyé');
+      setTsModalApp(null);
+      loadAll();
+    } catch (e) { toast.error(e.response?.data?.detail || 'Erreur'); }
+  };
+
+  const [rateCompanyApp, setRateCompanyApp] = useState(null);
+  const [rateForm, setRateForm] = useState({ stars: 5, comment: '' });
+
+  const submitRateCompany = async () => {
+    try {
+      await axios.post(`${API}/interim/missions/${rateCompanyApp.mission_id}/rate-company`, rateForm, auth());
+      toast.success('Note envoyée');
+      setRateCompanyApp(null);
+    } catch (e) { toast.error(e.response?.data?.detail || 'Erreur'); }
+  };
+
+  const downloadInvoice = (missionId) => {
+    const url = `${API}/interim/missions/${missionId}/invoice/${user.id}?token=${user.id}`;
+    window.open(url, '_blank');
+  };
+
   if (loading) return <div className="text-center py-10 text-gray-500"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></div>;
 
   const unpaidCount = commissions.filter(c => ['pending', 'rejected'].includes(c.status)).length;
@@ -133,10 +193,16 @@ const ProviderInterimTab = ({ user }) => {
 
       <div className="flex gap-2 flex-wrap">
         <Button variant={view === 'missions' ? 'default' : 'outline'} onClick={() => setView('missions')} className={view === 'missions' ? 'bg-emerald-600' : ''} data-testid="view-missions-btn">
-          <Briefcase className="h-4 w-4 mr-1" /> Missions disponibles ({missions.length})
+          <Briefcase className="h-4 w-4 mr-1" /> Missions ({missions.length})
         </Button>
         <Button variant={view === 'applications' ? 'default' : 'outline'} onClick={() => setView('applications')} className={view === 'applications' ? 'bg-emerald-600' : ''} data-testid="view-applications-btn">
-          <Send className="h-4 w-4 mr-1" /> Mes candidatures ({applications.length})
+          <Send className="h-4 w-4 mr-1" /> Candidatures ({applications.length})
+        </Button>
+        <Button variant={view === 'timesheets' ? 'default' : 'outline'} onClick={() => setView('timesheets')} className={view === 'timesheets' ? 'bg-emerald-600' : ''} data-testid="view-timesheets-btn">
+          <Clock className="h-4 w-4 mr-1" /> Pointages ({timesheets.length})
+        </Button>
+        <Button variant={view === 'availability' ? 'default' : 'outline'} onClick={() => setView('availability')} className={view === 'availability' ? 'bg-emerald-600' : ''} data-testid="view-availability-btn">
+          <FileText className="h-4 w-4 mr-1" /> Disponibilité
         </Button>
         <Button variant={view === 'commissions' ? 'default' : 'outline'} onClick={() => setView('commissions')} className={view === 'commissions' ? 'bg-emerald-600' : ''} data-testid="view-commissions-btn">
           <Coins className="h-4 w-4 mr-1" /> Commissions ({commissions.length})
@@ -184,7 +250,7 @@ const ProviderInterimTab = ({ user }) => {
         return (
         <Card key={a.id} className="p-4" data-testid={`my-application-${a.id}`}>
           <div className="flex items-start justify-between gap-3">
-            <div>
+            <div className="flex-1">
               <h3 className="font-bold">{a.mission_title}</h3>
               <p className="text-sm text-gray-600">{a.company_name}</p>
               {a.cover_message && <p className="text-xs text-gray-500 italic mt-1">« {a.cover_message} »</p>}
@@ -199,6 +265,24 @@ const ProviderInterimTab = ({ user }) => {
                 </p>
               )}
               <p className="text-xs text-gray-400 mt-1">{new Date(a.created_at).toLocaleDateString('fr-FR')}</p>
+
+              {a.status === 'accepted' && (
+                <div className="flex flex-wrap gap-2 mt-3">
+                  <Button size="sm" variant="outline" onClick={() => openTimesheet(a)} className="h-8 text-blue-600 border-blue-300" data-testid={`open-ts-${a.id}`}>
+                    <Clock className="h-3.5 w-3.5 mr-1" /> Pointer mes jours
+                  </Button>
+                  {a.mission_status === 'completed' && (
+                    <>
+                      <Button size="sm" variant="outline" onClick={() => downloadInvoice(a.mission_id)} className="h-8 text-emerald-600 border-emerald-300" data-testid={`invoice-${a.id}`}>
+                        <FileText className="h-3.5 w-3.5 mr-1" /> Facture
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => { setRateCompanyApp(a); setRateForm({ stars: 5, comment: '' }); }} className="h-8 text-amber-600 border-amber-300" data-testid={`rate-${a.id}`}>
+                        ⭐ Noter l'entreprise
+                      </Button>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
             <Badge className={
               a.status === 'accepted' ? 'bg-green-600' :
@@ -246,6 +330,36 @@ const ProviderInterimTab = ({ user }) => {
           </Card>
         );
       }))}
+
+      {view === 'timesheets' && (timesheets.length === 0 ? (
+        <Card className="p-10 text-center text-gray-500"><Clock className="h-12 w-12 mx-auto text-gray-300 mb-3" />Aucun pointage. Soumettez-en un depuis vos candidatures acceptées.</Card>
+      ) : timesheets.map(t => (
+        <Card key={t.id} className="p-4" data-testid={`my-timesheet-${t.id}`}>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h3 className="font-bold">{t.mission_title}</h3>
+              <p className="text-sm text-gray-700"><strong>{t.days_worked}</strong> jour(s) travaillé(s)</p>
+              {t.notes && <p className="text-xs text-gray-500 italic mt-1">« {t.notes} »</p>}
+              {t.rejection_reason && <p className="text-xs text-red-600 mt-1">✗ {t.rejection_reason}</p>}
+            </div>
+            <Badge className={
+              t.status === 'validated' ? 'bg-green-600' :
+              t.status === 'rejected' ? 'bg-red-500' :
+              'bg-blue-500'
+            }>
+              {t.status === 'validated' ? 'Validé' : t.status === 'rejected' ? 'Rejeté' : 'En vérification'}
+            </Badge>
+          </div>
+        </Card>
+      )))}
+
+      {view === 'availability' && (
+        <AvailabilityCalendar
+          unavailable={new Set(availability.manual_unavailable_dates)}
+          busyByMission={new Set(availability.mission_busy_dates)}
+          onToggle={toggleUnavailableDate}
+        />
+      )}
 
       {/* Apply dialog */}
       <Dialog open={!!applyTo} onOpenChange={(o) => !o && setApplyTo(null)}>
@@ -331,6 +445,58 @@ const ProviderInterimTab = ({ user }) => {
           </div>
         </DialogContent>
       </Dialog>
+      {/* Timesheet modal */}
+      <Dialog open={!!tsModalApp} onOpenChange={(o) => !o && setTsModalApp(null)}>
+        <DialogContent data-testid="timesheet-dialog">
+          <DialogHeader>
+            <DialogTitle>Pointage : {tsModalApp?.mission_title}</DialogTitle>
+            <DialogDescription>Renseignez vos jours travaillés. L'entreprise validera votre pointage.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Nombre de jours travaillés *</Label>
+              <Input type="number" min="0.5" step="0.5" value={tsForm.days_worked} onChange={(e) => setTsForm({ ...tsForm, days_worked: e.target.value })} data-testid="ts-days-input" />
+            </div>
+            <div>
+              <Label>Notes (optionnel)</Label>
+              <Textarea rows={3} value={tsForm.notes} onChange={(e) => setTsForm({ ...tsForm, notes: e.target.value })} placeholder="Détails sur le travail effectué…" maxLength={1000} />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 mt-2">
+            <Button variant="outline" onClick={() => setTsModalApp(null)}>Annuler</Button>
+            <Button onClick={submitTimesheet} className="bg-emerald-600 hover:bg-emerald-700" data-testid="submit-ts-btn">Envoyer le pointage</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Rate company modal */}
+      <Dialog open={!!rateCompanyApp} onOpenChange={(o) => !o && setRateCompanyApp(null)}>
+        <DialogContent data-testid="rate-company-dialog">
+          <DialogHeader>
+            <DialogTitle>Noter : {rateCompanyApp?.company_name}</DialogTitle>
+            <DialogDescription>Votre avis aide les futurs prestataires.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Note</Label>
+              <div className="flex gap-1 text-3xl">
+                {[1,2,3,4,5].map(s => (
+                  <button key={s} type="button" onClick={() => setRateForm({ ...rateForm, stars: s })} className={s <= rateForm.stars ? 'text-amber-400' : 'text-gray-300'} data-testid={`star-${s}`}>★</button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <Label>Commentaire (optionnel)</Label>
+              <Textarea rows={3} value={rateForm.comment} onChange={(e) => setRateForm({ ...rateForm, comment: e.target.value })} maxLength={1000} />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 mt-2">
+            <Button variant="outline" onClick={() => setRateCompanyApp(null)}>Annuler</Button>
+            <Button onClick={submitRateCompany} className="bg-amber-500 hover:bg-amber-600" data-testid="submit-rating-btn">Envoyer la note</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Decline mission confirmation */}
       <Dialog open={!!decliningMission} onOpenChange={(o) => !o && setDecliningMission(null)}>
         <DialogContent className="sm:max-w-md" data-testid="decline-mission-dialog">
