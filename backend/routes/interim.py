@@ -118,13 +118,19 @@ async def my_company_missions(current_company: dict = Depends(get_current_compan
 async def list_open_missions(
     job_type: Optional[str] = None,
     city: Optional[str] = None,
+    current_user: Optional[dict] = Depends(get_current_user),
 ):
-    """Public list of open missions — accessible to logged-in providers."""
+    """Public list of open missions — accessible to logged-in providers.
+    Excludes missions the current provider has declined."""
     query = {'status': 'open'}
     if job_type:
         query['job_type'] = job_type
     if city:
         query['location_city'] = city
+    # Exclude missions this provider has declined
+    declined_ids = await db.mission_declines.distinct('mission_id', {'provider_id': current_user['id']})
+    if declined_ids:
+        query['id'] = {'$nin': declined_ids}
     missions = await db.interim_missions.find(query, {'_id': 0}).sort('created_at', -1).to_list(200)
     return missions
 
@@ -532,6 +538,40 @@ async def admin_list_missions(status: Optional[str] = None):
     return {'missions': missions, 'counts': counts}
 
 
+@router.post("/interim/missions/{mission_id}/decline")
+async def decline_mission(mission_id: str, current_user: dict = Depends(get_current_user)):
+    """Provider marks a mission as 'not interested' — it disappears from his available list & badge.
+    Idempotent. Cannot decline a mission to which the provider has already applied/accepted."""
+    mission = await db.interim_missions.find_one({'id': mission_id}, {'_id': 0, 'id': 1})
+    if not mission:
+        raise HTTPException(status_code=404, detail="Mission introuvable")
+    existing_app = await db.mission_applications.find_one({
+        'mission_id': mission_id,
+        'provider_id': current_user['id'],
+        'status': {'$in': ['pending', 'accepted']},
+    })
+    if existing_app:
+        raise HTTPException(status_code=400, detail="Impossible de rejeter une mission à laquelle vous avez postulé")
+
+    await db.mission_declines.update_one(
+        {'mission_id': mission_id, 'provider_id': current_user['id']},
+        {'$set': {
+            'mission_id': mission_id,
+            'provider_id': current_user['id'],
+            'declined_at': datetime.now(timezone.utc).isoformat(),
+        }},
+        upsert=True,
+    )
+    return {'ok': True, 'declined': True}
+
+
+@router.post("/interim/missions/{mission_id}/undecline")
+async def undecline_mission(mission_id: str, current_user: dict = Depends(get_current_user)):
+    """Revert a decline so the mission reappears in the available list."""
+    await db.mission_declines.delete_one({'mission_id': mission_id, 'provider_id': current_user['id']})
+    return {'ok': True}
+
+
 # ======================================================================
 # Notification badges (lightweight counts)
 # ======================================================================
@@ -539,11 +579,13 @@ async def admin_list_missions(status: Optional[str] = None):
 @router.get("/interim/provider/badge")
 async def provider_interim_badge(current_user: dict = Depends(get_current_user)):
     """Returns counts for the provider's interim tab pastille."""
-    # All open missions the provider hasn't applied to
+    # All open missions the provider hasn't applied to OR declined
     applied_ids = await db.mission_applications.distinct('mission_id', {'provider_id': current_user['id']})
+    declined_ids = await db.mission_declines.distinct('mission_id', {'provider_id': current_user['id']})
+    excluded = list(set(applied_ids) | set(declined_ids))
     available = await db.interim_missions.count_documents({
         'status': 'open',
-        'id': {'$nin': applied_ids},
+        'id': {'$nin': excluded},
     })
     pending_applications = await db.mission_applications.count_documents({
         'provider_id': current_user['id'],

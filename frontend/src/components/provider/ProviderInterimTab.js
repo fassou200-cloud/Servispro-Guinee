@@ -101,6 +101,15 @@ const ProviderInterimTab = ({ user }) => {
     } finally { setSubmitting(false); }
   };
 
+  const declineMission = async (missionId) => {
+    if (!window.confirm("Masquer cette mission ? Elle ne s'affichera plus dans votre liste.")) return;
+    try {
+      await axios.post(`${API}/interim/missions/${missionId}/decline`, {}, auth());
+      toast.success('Mission masquée');
+      loadAll();
+    } catch (e) { toast.error(e.response?.data?.detail || 'Erreur'); }
+  };
+
   if (loading) return <div className="text-center py-10 text-gray-500"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></div>;
 
   const unpaidCount = commissions.filter(c => ['pending', 'rejected'].includes(c.status)).length;
@@ -148,9 +157,16 @@ const ProviderInterimTab = ({ user }) => {
                   <span className="flex items-center gap-1 text-emerald-700 font-semibold"><Coins className="h-3 w-3" /> {m.rate_negotiable ? 'À négocier' : `${fmt(m.daily_rate)} GNF/jour`}</span>
                 </div>
               </div>
-              <Button disabled={!!alreadyApplied || suspended} onClick={() => openApply(m)} className="bg-emerald-600 hover:bg-emerald-700" data-testid={`apply-mission-${m.id}`}>
-                {alreadyApplied ? 'Déjà postulé' : 'Postuler'}
-              </Button>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0">
+                <Button disabled={!!alreadyApplied || suspended} onClick={() => openApply(m)} className="bg-emerald-600 hover:bg-emerald-700" data-testid={`apply-mission-${m.id}`}>
+                  {alreadyApplied ? 'Déjà postulé' : 'Postuler'}
+                </Button>
+                {!alreadyApplied && (
+                  <Button variant="outline" onClick={() => declineMission(m.id)} className="text-gray-500 border-gray-300 hover:bg-gray-50" data-testid={`decline-mission-${m.id}`}>
+                    Pas intéressé
+                  </Button>
+                )}
+              </div>
             </div>
           </Card>
         );
