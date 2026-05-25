@@ -135,9 +135,11 @@ async def submit_timesheet(mission_id: str, data: dict = Body(...), current_user
     if not app_doc:
         raise HTTPException(status_code=400, detail="Aucune candidature acceptée trouvée pour cette mission")
 
-    mission = await db.interim_missions.find_one({'id': mission_id}, {'_id': 0, 'id': 1, 'company_id': 1, 'daily_rate': 1, 'title': 1})
+    mission = await db.interim_missions.find_one({'id': mission_id}, {'_id': 0, 'id': 1, 'company_id': 1, 'daily_rate': 1, 'title': 1, 'status': 1})
     if not mission:
         raise HTTPException(status_code=404, detail="Mission introuvable")
+    if mission.get('status') not in ('closed', 'completed'):
+        raise HTTPException(status_code=400, detail="Le pointage n'est possible que lorsque la mission est fermée ou terminée")
 
     timesheet = await db.interim_timesheets.find_one({'mission_id': mission_id, 'provider_id': current_user['id']})
     now_iso = datetime.now(timezone.utc).isoformat()
@@ -213,6 +215,8 @@ async def reject_timesheet(ts_id: str, data: dict = Body(default={}), current_co
     ts = await db.interim_timesheets.find_one({'id': ts_id})
     if not ts or ts['company_id'] != current_company['id']:
         raise HTTPException(status_code=404, detail="Pointage introuvable")
+    if ts['status'] != 'submitted':
+        raise HTTPException(status_code=400, detail=f"Pointage déjà {ts['status']}")
     reason = (data.get('reason') or '').strip()[:500]
     await db.interim_timesheets.update_one(
         {'id': ts_id},
@@ -374,6 +378,12 @@ async def rate_provider(mission_id: str, data: dict = Body(...), current_company
         raise HTTPException(status_code=404, detail="Mission introuvable")
     if mission.get('status') != 'completed':
         raise HTTPException(status_code=400, detail="La mission doit être terminée")
+    # Vérifier que ce prestataire a bien été accepté sur cette mission
+    accepted = await db.mission_applications.find_one({
+        'mission_id': mission_id, 'provider_id': provider_id, 'status': 'accepted'
+    })
+    if not accepted:
+        raise HTTPException(status_code=400, detail="Ce prestataire n'a pas été accepté sur cette mission")
     existing = await db.interim_ratings.find_one({
         'mission_id': mission_id, 'provider_id': provider_id, 'direction': 'company_to_provider'
     })

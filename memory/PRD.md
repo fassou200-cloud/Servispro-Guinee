@@ -37,7 +37,8 @@ ServisPro est une plateforme guinéenne (Conakry) qui connecte clients, prestata
   - Admin valide ou rejette → auto-unsuspend du prestataire
 
 ## Changelog
-- **2026-02-24** : Module Intérim complet (backend + 3 onglets UI). 28 tests pytest passent.
+- **2026-02-25** : **Phase 2 Intérim livrée** (28/28 tests). Backend : `routes/interim_phase2.py` (availability, timesheets, invoice HTML, ratings). Frontend : `AvailabilityCalendar.js`, 2 nouvelles vues côté prestataire (Pointages + Disponibilité) et 1 côté entreprise (Pointages), modales Pointage + Notation, boutons Facture + Noter sur missions complétées.
+- **2026-02-24** : Module Intérim Phase 1 complet
 - **2026-02-23** : Footer Makiti avec numéros tel: cliquables, réseaux sociaux, copyright
 - **2026-02-23** : Landing = Makiti, logo "ServisPro Makiti", dropdown Mon compte 3 espaces, bandeau Espace Entreprise
 - **2026-02-22** : Catégories étendues (Ordinateurs portables, Smartphones), bouton "Publier annonce" Rentals → `/company/auth`
