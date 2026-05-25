@@ -118,6 +118,7 @@ const BrowseProviders = ({ isCustomerAuthenticated }) => {
   const [providers, setProviders] = useState([]);
   const [filteredProviders, setFilteredProviders] = useState([]);
   const [providerStats, setProviderStats] = useState({});
+  const [interimStats, setInterimStats] = useState({});
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'All');
   const [searchQuery, setSearchQuery] = useState('');
@@ -194,24 +195,44 @@ const BrowseProviders = ({ isCustomerAuthenticated }) => {
     try {
       const response = await axios.get(`${API}/providers`);
       setProviders(response.data);
-      
-      const statsPromises = response.data.map(provider => 
+
+      const statsPromises = response.data.map(provider =>
         axios.get(`${API}/reviews/${provider.id}/stats`)
           .then(res => ({ id: provider.id, stats: res.data }))
           .catch(() => ({ id: provider.id, stats: { total_reviews: 0, average_rating: 0 } }))
       );
-      
-      const stats = await Promise.all(statsPromises);
+      const interimPromises = response.data.map(provider =>
+        axios.get(`${API}/interim/ratings/provider/${provider.id}`)
+          .then(res => ({ id: provider.id, stats: res.data }))
+          .catch(() => ({ id: provider.id, stats: { count: 0, average: 0 } }))
+      );
+
+      const [stats, interim] = await Promise.all([
+        Promise.all(statsPromises),
+        Promise.all(interimPromises),
+      ]);
       const statsMap = {};
-      stats.forEach(({ id, stats }) => {
-        statsMap[id] = stats;
-      });
+      stats.forEach(({ id, stats }) => { statsMap[id] = stats; });
       setProviderStats(statsMap);
+      const interimMap = {};
+      interim.forEach(({ id, stats }) => { interimMap[id] = stats; });
+      setInterimStats(interimMap);
     } catch (error) {
       toast.error('Échec du chargement des prestataires');
     } finally {
       setLoading(false);
     }
+  };
+
+  const combinedRating = (provider) => {
+    const cs = providerStats[provider.id] || { total_reviews: 0, average_rating: 0 };
+    const is_ = interimStats[provider.id] || { count: 0, average: 0 };
+    const cCount = cs.total_reviews || 0;
+    const iCount = is_.count || 0;
+    const total = cCount + iCount;
+    if (total === 0) return null;
+    const avg = ((cs.average_rating || 0) * cCount + (is_.average || 0) * iCount) / total;
+    return { avg: Math.round(avg * 10) / 10, total, cCount, iCount };
   };
 
   const filterProviders = () => {
@@ -582,7 +603,6 @@ const BrowseProviders = ({ isCustomerAuthenticated }) => {
             {filteredProviders.map((provider) => {
               const Icon = categoryIcons[provider.profession] || MoreHorizontal;
               const colorClass = categoryColors[provider.profession] || 'from-gray-500 to-gray-600';
-              const stats = providerStats[provider.id];
               
               return (
                 <Card
@@ -642,15 +662,25 @@ const BrowseProviders = ({ isCustomerAuthenticated }) => {
                     </div>
 
                     {/* Rating */}
-                    {stats?.total_reviews > 0 && (
-                      <div className="flex items-center gap-2 mb-3">
-                        <div className="flex items-center gap-1">
-                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                          <span className="font-bold text-gray-900">{stats.average_rating}</span>
+                    {(() => {
+                      const combined = combinedRating(provider);
+                      if (!combined) return null;
+                      return (
+                        <div className="flex items-center gap-2 mb-3 flex-wrap" data-testid={`combined-rating-${provider.id}`}>
+                          <div className="flex items-center gap-1">
+                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                            <span className="font-bold text-gray-900">{combined.avg.toFixed(1)}</span>
+                          </div>
+                          <span className="text-sm text-gray-500">({combined.total} avis)</span>
+                          {combined.cCount > 0 && combined.iCount > 0 && (
+                            <span className="text-[10px] text-gray-400">· {combined.cCount} clients · {combined.iCount} entreprises</span>
+                          )}
+                          {combined.iCount > 0 && combined.cCount === 0 && (
+                            <span className="text-[10px] text-amber-600 font-semibold">Intérim</span>
+                          )}
                         </div>
-                        <span className="text-sm text-gray-500">({stats.total_reviews} avis)</span>
-                      </div>
-                    )}
+                      );
+                    })()}
 
                     {/* About */}
                     {provider.about_me && (
