@@ -9,6 +9,8 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Briefcase, Plus, Users, CheckCircle, XCircle, Loader2, Trash2, MapPin, Calendar, Coins, ChevronDown, ChevronUp, Clock, FileText } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { GUINEA_REGIONS, getCitiesForRegion } from '@/constants/guineaLocations';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const auth = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('companyToken')}` } });
@@ -410,11 +412,32 @@ const CompanyInterimTab = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <Label>Région</Label>
-                <Input value={form.location_region} onChange={(e) => setForm({ ...form, location_region: e.target.value })} placeholder="Conakry" />
+                <Select
+                  value={form.location_region || undefined}
+                  onValueChange={(v) => setForm({ ...form, location_region: v, location_city: '' })}
+                >
+                  <SelectTrigger data-testid="mission-region-select"><SelectValue placeholder="Sélectionner une région" /></SelectTrigger>
+                  <SelectContent>
+                    {GUINEA_REGIONS.map(r => (
+                      <SelectItem key={r} value={r}>{r}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
-                <Label>Ville</Label>
-                <Input value={form.location_city} onChange={(e) => setForm({ ...form, location_city: e.target.value })} placeholder="Kaloum" />
+                <Label>Ville / Préfecture</Label>
+                <Select
+                  value={form.location_city || undefined}
+                  onValueChange={(v) => setForm({ ...form, location_city: v })}
+                  disabled={!form.location_region}
+                >
+                  <SelectTrigger data-testid="mission-city-select"><SelectValue placeholder={form.location_region ? 'Sélectionner une ville' : 'Choisir d\'abord une région'} /></SelectTrigger>
+                  <SelectContent>
+                    {getCitiesForRegion(form.location_region).map(c => (
+                      <SelectItem key={c} value={c}>{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
