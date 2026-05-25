@@ -69,6 +69,8 @@ async def create_mission(data: dict = Body(...), current_company: dict = Depends
     job_type = (data.get('job_type') or '').strip()           # ex: "Électricien"
     location_city = (data.get('location_city') or '').strip()
     location_region = (data.get('location_region') or '').strip()
+    location_commune = (data.get('location_commune') or '').strip()
+    location_quartier = (data.get('location_quartier') or '').strip()
     start_date = (data.get('start_date') or '').strip()        # ISO
     end_date = (data.get('end_date') or '').strip()            # ISO (optional)
     daily_rate = float(data.get('daily_rate') or 0)
@@ -89,6 +91,8 @@ async def create_mission(data: dict = Body(...), current_company: dict = Depends
         'job_type': job_type,
         'location_city': location_city,
         'location_region': location_region,
+        'location_commune': location_commune,
+        'location_quartier': location_quartier,
         'start_date': start_date or None,
         'end_date': end_date or None,
         'daily_rate': daily_rate,
@@ -151,6 +155,7 @@ async def update_mission(mission_id: str, data: dict = Body(...), current_compan
     if mission.get('status') == 'completed':
         raise HTTPException(status_code=400, detail="Mission terminée — non modifiable")
     allowed = {'title', 'description', 'job_type', 'location_city', 'location_region',
+               'location_commune', 'location_quartier',
                'start_date', 'end_date', 'daily_rate', 'rate_negotiable',
                'num_providers_needed', 'documents_required', 'status'}
     update = {k: v for k, v in data.items() if k in allowed}

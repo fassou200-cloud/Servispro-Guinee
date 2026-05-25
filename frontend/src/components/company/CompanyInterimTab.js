@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Briefcase, Plus, Users, CheckCircle, XCircle, Loader2, Trash2, MapPin, Calendar, Coins, ChevronDown, ChevronUp, Clock, FileText } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { GUINEA_REGIONS, getCitiesForRegion } from '@/constants/guineaLocations';
+import { getRegions, getVillesByRegion, getCommunesByVille } from '@/data/guineaLocations';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const auth = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('companyToken')}` } });
@@ -25,6 +25,7 @@ const statusBadge = (s) => ({
 
 const blankForm = {
   title: '', description: '', job_type: '', location_region: '', location_city: '',
+  location_commune: '', location_quartier: '',
   start_date: '', end_date: '', daily_rate: '', rate_negotiable: false,
   num_providers_needed: 1, documents_required: [],
 };
@@ -257,7 +258,7 @@ const CompanyInterimTab = () => {
                 </div>
                 <p className="text-sm text-gray-600 mt-1 line-clamp-2">{m.description}</p>
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 mt-2">
-                  {m.location_city && <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {m.location_city}{m.location_region ? `, ${m.location_region}` : ''}</span>}
+                  {m.location_city && <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {[m.location_quartier, m.location_commune, m.location_city, m.location_region].filter(Boolean).join(', ')}</span>}
                   {m.start_date && <span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> {m.start_date}{m.end_date ? ` → ${m.end_date}` : ''}</span>}
                   <span className="flex items-center gap-1"><Coins className="h-3 w-3" /> {m.rate_negotiable ? 'À négocier' : `${fmt(m.daily_rate)} GNF/jour`}</span>
                   <span className="flex items-center gap-1"><Users className="h-3 w-3" /> {m.accepted_count || 0}/{m.num_providers_needed} retenu(s) · {m.applications_count || 0} candidature(s)</span>
@@ -409,35 +410,75 @@ const CompanyInterimTab = () => {
                 <Input type="number" min="1" value={form.num_providers_needed} onChange={(e) => setForm({ ...form, num_providers_needed: e.target.value })} />
               </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <Label>Région</Label>
-                <Select
-                  value={form.location_region || undefined}
-                  onValueChange={(v) => setForm({ ...form, location_region: v, location_city: '' })}
-                >
-                  <SelectTrigger data-testid="mission-region-select"><SelectValue placeholder="Sélectionner une région" /></SelectTrigger>
-                  <SelectContent>
-                    {GUINEA_REGIONS.map(r => (
-                      <SelectItem key={r} value={r}>{r}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            {/* Localisation - 4 niveaux comme dans l'inscription prestataire */}
+            <div className="p-4 bg-slate-50 rounded-xl space-y-3" data-testid="mission-location-section">
+              <div className="flex items-center gap-2 text-slate-700 font-medium text-sm">
+                <MapPin className="h-4 w-4 text-orange-500" />
+                Localisation
               </div>
-              <div>
-                <Label>Ville / Préfecture</Label>
-                <Select
-                  value={form.location_city || undefined}
-                  onValueChange={(v) => setForm({ ...form, location_city: v })}
-                  disabled={!form.location_region}
-                >
-                  <SelectTrigger data-testid="mission-city-select"><SelectValue placeholder={form.location_region ? 'Sélectionner une ville' : 'Choisir d\'abord une région'} /></SelectTrigger>
-                  <SelectContent>
-                    {getCitiesForRegion(form.location_region).map(c => (
-                      <SelectItem key={c} value={c}>{c}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs text-slate-600">Région *</Label>
+                  <Select
+                    value={form.location_region || undefined}
+                    onValueChange={(v) => setForm({ ...form, location_region: v, location_city: '', location_commune: '' })}
+                  >
+                    <SelectTrigger data-testid="mission-region-select"><SelectValue placeholder="Région" /></SelectTrigger>
+                    <SelectContent>
+                      {getRegions().map(r => (
+                        <SelectItem key={r.id} value={r.name}>{r.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-slate-600">Ville *</Label>
+                  <Select
+                    value={form.location_city || undefined}
+                    onValueChange={(v) => setForm({ ...form, location_city: v, location_commune: '' })}
+                    disabled={!form.location_region}
+                  >
+                    <SelectTrigger data-testid="mission-city-select"><SelectValue placeholder="Ville" /></SelectTrigger>
+                    <SelectContent>
+                      {(() => {
+                        const region = getRegions().find(r => r.name === form.location_region);
+                        return region ? getVillesByRegion(region.id).map(v => (
+                          <SelectItem key={v.id} value={v.name}>{v.name}</SelectItem>
+                        )) : null;
+                      })()}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-slate-600">Commune *</Label>
+                  <Select
+                    value={form.location_commune || undefined}
+                    onValueChange={(v) => setForm({ ...form, location_commune: v })}
+                    disabled={!form.location_city}
+                  >
+                    <SelectTrigger data-testid="mission-commune-select"><SelectValue placeholder="Commune" /></SelectTrigger>
+                    <SelectContent>
+                      {(() => {
+                        const region = getRegions().find(r => r.name === form.location_region);
+                        if (!region) return null;
+                        const ville = getVillesByRegion(region.id).find(v => v.name === form.location_city);
+                        if (!ville) return null;
+                        return getCommunesByVille(region.id, ville.id).map(c => (
+                          <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
+                        ));
+                      })()}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-slate-600">Quartier</Label>
+                  <Input
+                    value={form.location_quartier}
+                    onChange={(e) => setForm({ ...form, location_quartier: e.target.value })}
+                    placeholder="Entrez le quartier"
+                    data-testid="mission-quartier-input"
+                  />
+                </div>
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
