@@ -226,7 +226,7 @@ const CompanyInterimTab = () => {
                       {a.proposed_rate ? <p className="text-xs text-emerald-700 mt-1">Taux proposé : {fmt(a.proposed_rate)} GNF/jour</p> : null}
                     </div>
                     <div className="flex items-center gap-2">
-                      {a.status === 'pending' ? (() => {
+                      {a.status === 'pending' && m.status !== 'completed' ? (() => {
                         const quotaReached = (m.accepted_count || 0) >= (m.num_providers_needed || 1);
                         return (
                           <>
@@ -244,7 +244,9 @@ const CompanyInterimTab = () => {
                             </Button>
                           </>
                         );
-                      })() : (
+                      })() : a.status === 'pending' && m.status === 'completed' ? (
+                        <Badge className="bg-gray-500">Mission terminée</Badge>
+                      ) : (
                         <Badge variant={a.status === 'accepted' ? 'default' : 'secondary'} className={a.status === 'accepted' ? 'bg-emerald-600' : ''}>{a.status}</Badge>
                       )}
                     </div>

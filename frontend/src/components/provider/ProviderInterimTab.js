@@ -179,34 +179,44 @@ const ProviderInterimTab = ({ user }) => {
 
       {view === 'applications' && (applications.length === 0 ? (
         <Card className="p-10 text-center text-gray-500"><Send className="h-12 w-12 mx-auto text-gray-300 mb-3" />Aucune candidature.</Card>
-      ) : applications.map((a) => (
+      ) : applications.map((a) => {
+        const quotaReached = a.status === 'pending' && ['closed', 'completed'].includes(a.mission_status);
+        return (
         <Card key={a.id} className="p-4" data-testid={`my-application-${a.id}`}>
           <div className="flex items-start justify-between gap-3">
             <div>
               <h3 className="font-bold">{a.mission_title}</h3>
               <p className="text-sm text-gray-600">{a.company_name}</p>
               {a.cover_message && <p className="text-xs text-gray-500 italic mt-1">« {a.cover_message} »</p>}
+              {quotaReached && (
+                <p className="text-xs text-gray-600 mt-1.5 bg-gray-100 px-2 py-1 rounded inline-block">
+                  🔒 Quota atteint ({a.mission_accepted_count}/{a.mission_num_providers_needed}) — l'entreprise peut encore vous sélectionner en remplacement
+                </p>
+              )}
               {a.status === 'rejected' && a.rejection_reason && (
                 <p className="text-xs text-red-600 mt-1.5">
-                  {a.auto_rejected ? '🔒 ' : '✗ '}{a.rejection_reason}
+                  ✗ {a.rejection_reason}
                 </p>
               )}
               <p className="text-xs text-gray-400 mt-1">{new Date(a.created_at).toLocaleDateString('fr-FR')}</p>
             </div>
             <Badge className={
               a.status === 'accepted' ? 'bg-green-600' :
-              a.status === 'rejected' ? (a.auto_rejected ? 'bg-gray-500' : 'bg-red-500') :
+              a.status === 'rejected' ? 'bg-red-500' :
               a.status === 'withdrawn' ? 'bg-gray-400' :
+              quotaReached ? 'bg-gray-500' :
               'bg-orange-500'
             }>
               {a.status === 'accepted' ? <><CheckCircle className="h-3 w-3 mr-1" /> Accepté</> :
-               a.status === 'rejected' ? (a.auto_rejected ? <>Mission fermée</> : <><XCircle className="h-3 w-3 mr-1" /> Rejeté</>) :
+               a.status === 'rejected' ? <><XCircle className="h-3 w-3 mr-1" /> Rejeté</> :
                a.status === 'withdrawn' ? 'Retiré' :
+               quotaReached ? 'Quota atteint' :
                <><Clock className="h-3 w-3 mr-1" /> En attente</>}
             </Badge>
           </div>
         </Card>
-      )))}
+        );
+      }))}
 
       {view === 'commissions' && (commissions.length === 0 ? (
         <Card className="p-10 text-center text-gray-500"><Coins className="h-12 w-12 mx-auto text-gray-300 mb-3" />Aucune commission à payer.</Card>

@@ -222,6 +222,19 @@ async def my_provider_applications(current_user: dict = Depends(get_current_user
     apps = await db.mission_applications.find(
         {'provider_id': current_user['id']}, {'_id': 0}
     ).sort('created_at', -1).to_list(None)
+    # Enrichir avec le statut actuel de la mission (pour affichage "Quota atteint")
+    mission_ids = list({a['mission_id'] for a in apps})
+    missions = await db.interim_missions.find(
+        {'id': {'$in': mission_ids}},
+        {'_id': 0, 'id': 1, 'status': 1, 'accepted_count': 1, 'num_providers_needed': 1}
+    ).to_list(None)
+    mission_status = {m['id']: m for m in missions}
+    for a in apps:
+        ms = mission_status.get(a['mission_id'])
+        if ms:
+            a['mission_status'] = ms.get('status')
+            a['mission_accepted_count'] = ms.get('accepted_count', 0)
+            a['mission_num_providers_needed'] = ms.get('num_providers_needed', 1)
     return apps
 
 
@@ -359,6 +372,17 @@ async def complete_mission(mission_id: str, data: dict = Body(default={}), curre
         {'id': mission_id},
         {'$set': {'status': 'completed', 'completed_at': now_iso, 'updated_at': now_iso,
                   'days_worked': days_worked}}
+    )
+
+    # Auto-rejeter toutes les candidatures encore en attente : la mission est définitivement terminée
+    await db.mission_applications.update_many(
+        {'mission_id': mission_id, 'status': 'pending'},
+        {'$set': {
+            'status': 'rejected',
+            'rejected_at': now_iso,
+            'rejection_reason': 'Mission terminée par l\'entreprise',
+            'auto_rejected': True,
+        }}
     )
 
     return {'ok': True, 'commissions_created': len(created_commissions), 'commissions': created_commissions}
