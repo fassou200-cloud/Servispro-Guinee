@@ -196,7 +196,11 @@ const CompanyInterimTab = () => {
                   <div key={a.id} className="flex flex-wrap items-center justify-between gap-2 p-3 bg-gray-50 rounded-lg" data-testid={`application-${a.id}`}>
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-sm">{a.provider_name || 'Prestataire'}</p>
-                      <p className="text-xs text-gray-500">{a.provider_city} · {a.provider_phone}</p>
+                      <p className="text-xs text-gray-500">
+                        {a.provider_city}
+                        {a.provider_phone && !a.phone_locked ? <> · <span className="font-mono text-emerald-700">{a.provider_phone}</span></> : null}
+                        {a.phone_locked && <> · <span className="italic text-gray-400">📞 visible après acceptation</span></>}
+                      </p>
                       {a.cover_message && <p className="text-xs text-gray-600 mt-1 italic">« {a.cover_message} »</p>}
                       {a.proposed_rate ? <p className="text-xs text-emerald-700 mt-1">Taux proposé : {fmt(a.proposed_rate)} GNF/jour</p> : null}
                     </div>

@@ -227,6 +227,13 @@ async def list_mission_applications(mission_id: str, current_company: dict = Dep
     apps = await db.mission_applications.find(
         {'mission_id': mission_id}, {'_id': 0}
     ).sort('created_at', -1).to_list(None)
+    # Masquer le numéro tant que la candidature n'est pas acceptée (anti-contournement)
+    for a in apps:
+        if a.get('status') != 'accepted':
+            a['provider_phone'] = None
+            a['phone_locked'] = True
+        else:
+            a['phone_locked'] = False
     return apps
 
 
