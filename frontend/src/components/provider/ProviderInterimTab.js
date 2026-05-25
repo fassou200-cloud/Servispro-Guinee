@@ -46,7 +46,7 @@ const ProviderInterimTab = ({ user }) => {
     setLoading(true);
     try {
       const [m, a, c] = await Promise.all([
-        axios.get(`${API}/interim/missions`),
+        axios.get(`${API}/interim/missions`, auth()),
         axios.get(`${API}/interim/applications/mine`, auth()),
         axios.get(`${API}/interim/commissions/mine`, auth()),
       ]);
