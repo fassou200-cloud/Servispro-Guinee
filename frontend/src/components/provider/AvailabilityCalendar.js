@@ -36,26 +36,25 @@ const AvailabilityCalendar = ({ unavailable, busyByMission, onToggle }) => {
   };
 
   return (
-    <Card className="p-4" data-testid="availability-calendar">
-      <div className="flex items-center justify-between mb-3">
+    <Card className="p-3 max-w-md" data-testid="availability-calendar">
+      <div className="flex items-center justify-between mb-2">
         <Button size="sm" variant="ghost" onClick={prev}><ChevronLeft className="h-4 w-4" /></Button>
-        <h3 className="font-bold">{MONTHS[month]} {year}</h3>
+        <h3 className="font-bold text-sm">{MONTHS[month]} {year}</h3>
         <Button size="sm" variant="ghost" onClick={next}><ChevronRight className="h-4 w-4" /></Button>
       </div>
-      <div className="grid grid-cols-7 gap-1 mb-2 text-center text-xs text-gray-500 font-semibold">
+      <div className="grid grid-cols-7 gap-1 mb-1 text-center text-xs text-gray-500 font-semibold">
         {DAYS.map((d, i) => <div key={i}>{d}</div>)}
       </div>
       <div className="grid grid-cols-7 gap-1">
         {cells.map((d, idx) => {
           if (d === null) return <div key={idx} />;
           const ds = dateStr(d);
-          const dDate = new Date(ds);
           const todayStr = today.toISOString().slice(0, 10);
           const isPast = ds < todayStr;
           const isBusy = busyByMission.has(ds);
           const isUnavailable = unavailable.has(ds);
           const isToday = ds === todayStr;
-          let cls = 'aspect-square flex items-center justify-center text-sm rounded transition-all';
+          let cls = 'h-9 w-full flex items-center justify-center text-sm rounded transition-all';
           if (isBusy) cls += ' bg-red-200 text-red-800 cursor-not-allowed font-bold';
           else if (isPast) cls += ' bg-gray-100 text-gray-400 cursor-not-allowed';
           else if (isUnavailable) cls += ' bg-gray-300 text-gray-700 cursor-pointer hover:bg-gray-400';
@@ -76,11 +75,11 @@ const AvailabilityCalendar = ({ unavailable, busyByMission, onToggle }) => {
           );
         })}
       </div>
-      <div className="flex items-center flex-wrap gap-3 mt-4 text-xs text-gray-600">
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-emerald-50 border border-emerald-200" /> Disponible</span>
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-gray-300" /> Indisponible (vous)</span>
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-red-200" /> Mission en cours</span>
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-gray-100 border border-gray-200" /> Passée</span>
+      <div className="flex items-center flex-wrap gap-2 mt-3 text-xs text-gray-600">
+        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-emerald-50 border border-emerald-200" /> Disponible</span>
+        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-gray-300" /> Indisponible</span>
+        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-red-200" /> Mission</span>
+        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-gray-100 border border-gray-200" /> Passée</span>
       </div>
     </Card>
   );
