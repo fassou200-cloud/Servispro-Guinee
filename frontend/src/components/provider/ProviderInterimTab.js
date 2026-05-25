@@ -466,18 +466,19 @@ const ProviderInterimTab = ({ user }) => {
           {tsModalApp && (
             <div className="space-y-3">
               <TimesheetCalendar
-                startDate={missions.find(m => m.id === tsModalApp.mission_id)?.start_date || applications.find(a => a.id === tsModalApp.id)?.mission_start_date}
-                endDate={missions.find(m => m.id === tsModalApp.mission_id)?.end_date || applications.find(a => a.id === tsModalApp.id)?.mission_end_date}
+                startDate={tsModalApp.mission_start_date}
+                endDate={tsModalApp.mission_end_date}
                 selected={new Set(tsForm.worked_dates || [])}
                 onToggle={toggleWorkedDate}
               />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <Label>Total jours travaillés *</Label>
-                  <Input type="number" min="0.5" step="0.5" value={tsForm.days_worked} onChange={(e) => setTsForm({ ...tsForm, days_worked: e.target.value })} data-testid="ts-days-input" />
+                  <Input type="number" min="0.5" step="0.5" value={tsForm.days_worked} readOnly className="bg-gray-50" data-testid="ts-days-input" />
+                  <p className="text-xs text-gray-400 mt-1">Calculé depuis les jours cochés</p>
                 </div>
-                <div className="flex items-end text-xs text-gray-500">
-                  {tsForm.worked_dates.length > 0 && `${tsForm.worked_dates.length} jour(s) sélectionné(s) dans le calendrier`}
+                <div className="flex items-end text-xs text-emerald-700">
+                  {tsForm.worked_dates.length > 0 ? `✓ ${tsForm.worked_dates.length} jour(s) sélectionné(s)` : 'Cliquez sur les jours travaillés ci-dessus'}
                 </div>
               </div>
               <div>

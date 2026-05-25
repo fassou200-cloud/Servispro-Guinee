@@ -10,9 +10,9 @@ const DAYS = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
  * Click days you worked, within the mission start/end window.
  */
 const TimesheetCalendar = ({ startDate, endDate, selected, onToggle }) => {
-  const start = startDate ? new Date(startDate) : null;
-  const end = endDate ? new Date(endDate) : start;
-  const initial = start || new Date();
+  const startIso = startDate ? String(startDate).slice(0, 10) : null;
+  const endIso = endDate ? String(endDate).slice(0, 10) : startIso;
+  const initial = startIso ? new Date(startIso) : new Date();
   const [year, setYear] = useState(initial.getFullYear());
   const [month, setMonth] = useState(initial.getMonth());
 
@@ -26,10 +26,9 @@ const TimesheetCalendar = ({ startDate, endDate, selected, onToggle }) => {
 
   const dateStr = (d) => `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
   const inWindow = (d) => {
-    if (!start) return true;
+    if (!startIso) return false;
     const ds = dateStr(d);
-    const dDate = new Date(ds);
-    return dDate >= start && (!end || dDate <= end);
+    return ds >= startIso && (!endIso || ds <= endIso);
   };
 
   const prev = () => { if (month === 0) { setMonth(11); setYear(y => y - 1); } else { setMonth(m => m - 1); } };

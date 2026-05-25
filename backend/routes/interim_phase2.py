@@ -135,11 +135,26 @@ async def submit_timesheet(mission_id: str, data: dict = Body(...), current_user
     if not app_doc:
         raise HTTPException(status_code=400, detail="Aucune candidature acceptée trouvée pour cette mission")
 
-    mission = await db.interim_missions.find_one({'id': mission_id}, {'_id': 0, 'id': 1, 'company_id': 1, 'daily_rate': 1, 'title': 1, 'status': 1})
+    mission = await db.interim_missions.find_one({'id': mission_id}, {'_id': 0, 'id': 1, 'company_id': 1, 'daily_rate': 1, 'title': 1, 'status': 1, 'start_date': 1, 'end_date': 1})
     if not mission:
         raise HTTPException(status_code=404, detail="Mission introuvable")
     if mission.get('status') != 'closed':
         raise HTTPException(status_code=400, detail="Le pointage n'est possible que lorsque la mission est en cours (fermée mais pas encore terminée)")
+
+    # Valide les dates par rapport à la fenêtre de mission
+    sd = _date_str(mission.get('start_date'))
+    ed = _date_str(mission.get('end_date')) or sd
+    cleaned_dates = []
+    for d in worked_dates:
+        ds = _date_str(d)
+        if not ds:
+            continue
+        if sd and ds < sd:
+            raise HTTPException(status_code=400, detail=f"La date {ds} est avant le début de la mission ({sd})")
+        if ed and ds > ed:
+            raise HTTPException(status_code=400, detail=f"La date {ds} est après la fin de la mission ({ed})")
+        cleaned_dates.append(ds)
+    cleaned_dates = sorted(set(cleaned_dates))
 
     timesheet = await db.interim_timesheets.find_one({'mission_id': mission_id, 'provider_id': current_user['id']})
     now_iso = datetime.now(timezone.utc).isoformat()
@@ -150,7 +165,7 @@ async def submit_timesheet(mission_id: str, data: dict = Body(...), current_user
             {'id': timesheet['id']},
             {'$set': {
                 'days_worked': float(days_worked),
-                'worked_dates': sorted({_date_str(d) for d in worked_dates if d}),
+                'worked_dates': cleaned_dates,
                 'notes': notes,
                 'status': 'submitted',
                 'updated_at': now_iso,
@@ -169,7 +184,7 @@ async def submit_timesheet(mission_id: str, data: dict = Body(...), current_user
             'provider_name': f"{current_user.get('first_name','')} {current_user.get('last_name','')}".strip(),
             'application_id': app_doc['id'],
             'days_worked': float(days_worked),
-            'worked_dates': sorted({_date_str(d) for d in worked_dates if d}),
+            'worked_dates': cleaned_dates,
             'notes': notes,
             'status': 'submitted',
             'created_at': now_iso,

@@ -226,7 +226,7 @@ async def my_provider_applications(current_user: dict = Depends(get_current_user
     mission_ids = list({a['mission_id'] for a in apps})
     missions = await db.interim_missions.find(
         {'id': {'$in': mission_ids}},
-        {'_id': 0, 'id': 1, 'status': 1, 'accepted_count': 1, 'num_providers_needed': 1}
+        {'_id': 0, 'id': 1, 'status': 1, 'accepted_count': 1, 'num_providers_needed': 1, 'start_date': 1, 'end_date': 1}
     ).to_list(None)
     mission_status = {m['id']: m for m in missions}
     for a in apps:
@@ -235,6 +235,8 @@ async def my_provider_applications(current_user: dict = Depends(get_current_user
             a['mission_status'] = ms.get('status')
             a['mission_accepted_count'] = ms.get('accepted_count', 0)
             a['mission_num_providers_needed'] = ms.get('num_providers_needed', 1)
+            a['mission_start_date'] = ms.get('start_date')
+            a['mission_end_date'] = ms.get('end_date')
     return apps
 
 
