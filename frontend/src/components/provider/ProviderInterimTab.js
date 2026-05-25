@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Briefcase, Coins, MapPin, Calendar, Send, Loader2, AlertTriangle, CheckCircle, Clock, XCircle, FileText } from 'lucide-react';
 import AvailabilityCalendar from './AvailabilityCalendar';
+import TimesheetCalendar from './TimesheetCalendar';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const auth = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
@@ -132,16 +133,25 @@ const ProviderInterimTab = ({ user }) => {
   };
 
   const [tsModalApp, setTsModalApp] = useState(null);
-  const [tsForm, setTsForm] = useState({ days_worked: '', notes: '' });
+  const [tsForm, setTsForm] = useState({ days_worked: '', notes: '', worked_dates: [] });
 
   const openTimesheet = (app) => {
     const existing = timesheets.find(t => t.mission_id === app.mission_id);
     if (existing) {
-      setTsForm({ days_worked: existing.days_worked, notes: existing.notes || '' });
+      setTsForm({ days_worked: existing.days_worked, notes: existing.notes || '', worked_dates: existing.worked_dates || [] });
     } else {
-      setTsForm({ days_worked: '', notes: '' });
+      setTsForm({ days_worked: '', notes: '', worked_dates: [] });
     }
     setTsModalApp(app);
+  };
+
+  const toggleWorkedDate = (dateStr) => {
+    setTsForm((f) => {
+      const set = new Set(f.worked_dates || []);
+      if (set.has(dateStr)) set.delete(dateStr); else set.add(dateStr);
+      const sorted = Array.from(set).sort();
+      return { ...f, worked_dates: sorted, days_worked: sorted.length || f.days_worked };
+    });
   };
 
   const submitTimesheet = async () => {
@@ -152,6 +162,7 @@ const ProviderInterimTab = ({ user }) => {
       await axios.post(`${API}/interim/missions/${tsModalApp.mission_id}/timesheet`, {
         days_worked: Number(tsForm.days_worked),
         notes: tsForm.notes,
+        worked_dates: tsForm.worked_dates,
       }, auth());
       toast.success('Pointage envoyé');
       setTsModalApp(null);
@@ -447,21 +458,34 @@ const ProviderInterimTab = ({ user }) => {
       </Dialog>
       {/* Timesheet modal */}
       <Dialog open={!!tsModalApp} onOpenChange={(o) => !o && setTsModalApp(null)}>
-        <DialogContent data-testid="timesheet-dialog">
+        <DialogContent className="max-h-[90vh] overflow-y-auto" data-testid="timesheet-dialog">
           <DialogHeader>
             <DialogTitle>Pointage : {tsModalApp?.mission_title}</DialogTitle>
-            <DialogDescription>Renseignez vos jours travaillés. L'entreprise validera votre pointage.</DialogDescription>
+            <DialogDescription>Sélectionnez les jours réellement travaillés. L'entreprise validera votre pointage.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-3">
-            <div>
-              <Label>Nombre de jours travaillés *</Label>
-              <Input type="number" min="0.5" step="0.5" value={tsForm.days_worked} onChange={(e) => setTsForm({ ...tsForm, days_worked: e.target.value })} data-testid="ts-days-input" />
+          {tsModalApp && (
+            <div className="space-y-3">
+              <TimesheetCalendar
+                startDate={missions.find(m => m.id === tsModalApp.mission_id)?.start_date || applications.find(a => a.id === tsModalApp.id)?.mission_start_date}
+                endDate={missions.find(m => m.id === tsModalApp.mission_id)?.end_date || applications.find(a => a.id === tsModalApp.id)?.mission_end_date}
+                selected={new Set(tsForm.worked_dates || [])}
+                onToggle={toggleWorkedDate}
+              />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <Label>Total jours travaillés *</Label>
+                  <Input type="number" min="0.5" step="0.5" value={tsForm.days_worked} onChange={(e) => setTsForm({ ...tsForm, days_worked: e.target.value })} data-testid="ts-days-input" />
+                </div>
+                <div className="flex items-end text-xs text-gray-500">
+                  {tsForm.worked_dates.length > 0 && `${tsForm.worked_dates.length} jour(s) sélectionné(s) dans le calendrier`}
+                </div>
+              </div>
+              <div>
+                <Label>Notes (optionnel)</Label>
+                <Textarea rows={2} value={tsForm.notes} onChange={(e) => setTsForm({ ...tsForm, notes: e.target.value })} placeholder="Détails sur le travail effectué…" maxLength={1000} />
+              </div>
             </div>
-            <div>
-              <Label>Notes (optionnel)</Label>
-              <Textarea rows={3} value={tsForm.notes} onChange={(e) => setTsForm({ ...tsForm, notes: e.target.value })} placeholder="Détails sur le travail effectué…" maxLength={1000} />
-            </div>
-          </div>
+          )}
           <div className="flex justify-end gap-2 mt-2">
             <Button variant="outline" onClick={() => setTsModalApp(null)}>Annuler</Button>
             <Button onClick={submitTimesheet} className="bg-emerald-600 hover:bg-emerald-700" data-testid="submit-ts-btn">Envoyer le pointage</Button>

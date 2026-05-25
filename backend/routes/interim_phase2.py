@@ -138,8 +138,8 @@ async def submit_timesheet(mission_id: str, data: dict = Body(...), current_user
     mission = await db.interim_missions.find_one({'id': mission_id}, {'_id': 0, 'id': 1, 'company_id': 1, 'daily_rate': 1, 'title': 1, 'status': 1})
     if not mission:
         raise HTTPException(status_code=404, detail="Mission introuvable")
-    if mission.get('status') not in ('closed', 'completed'):
-        raise HTTPException(status_code=400, detail="Le pointage n'est possible que lorsque la mission est fermée ou terminée")
+    if mission.get('status') != 'closed':
+        raise HTTPException(status_code=400, detail="Le pointage n'est possible que lorsque la mission est en cours (fermée mais pas encore terminée)")
 
     timesheet = await db.interim_timesheets.find_one({'mission_id': mission_id, 'provider_id': current_user['id']})
     now_iso = datetime.now(timezone.utc).isoformat()

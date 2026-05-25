@@ -49,11 +49,15 @@ const AvailabilityCalendar = ({ unavailable, busyByMission, onToggle }) => {
         {cells.map((d, idx) => {
           if (d === null) return <div key={idx} />;
           const ds = dateStr(d);
+          const dDate = new Date(ds);
+          const todayStr = today.toISOString().slice(0, 10);
+          const isPast = ds < todayStr;
           const isBusy = busyByMission.has(ds);
           const isUnavailable = unavailable.has(ds);
-          const isToday = ds === today.toISOString().slice(0, 10);
+          const isToday = ds === todayStr;
           let cls = 'aspect-square flex items-center justify-center text-sm rounded transition-all';
           if (isBusy) cls += ' bg-red-200 text-red-800 cursor-not-allowed font-bold';
+          else if (isPast) cls += ' bg-gray-100 text-gray-400 cursor-not-allowed';
           else if (isUnavailable) cls += ' bg-gray-300 text-gray-700 cursor-pointer hover:bg-gray-400';
           else cls += ' bg-emerald-50 text-emerald-700 cursor-pointer hover:bg-emerald-100';
           if (isToday) cls += ' ring-2 ring-blue-500';
@@ -61,21 +65,22 @@ const AvailabilityCalendar = ({ unavailable, busyByMission, onToggle }) => {
             <button
               key={idx}
               type="button"
-              disabled={isBusy}
-              onClick={() => !isBusy && onToggle(ds)}
+              disabled={isBusy || isPast}
+              onClick={() => !isBusy && !isPast && onToggle(ds)}
               className={cls}
               data-testid={`day-${ds}`}
-              title={isBusy ? 'Mission acceptée' : isUnavailable ? 'Vous êtes indisponible' : 'Disponible'}
+              title={isBusy ? 'Mission acceptée' : isPast ? 'Date passée' : isUnavailable ? 'Vous êtes indisponible' : 'Disponible'}
             >
               {d}
             </button>
           );
         })}
       </div>
-      <div className="flex items-center gap-4 mt-4 text-xs text-gray-600">
+      <div className="flex items-center flex-wrap gap-3 mt-4 text-xs text-gray-600">
         <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-emerald-50 border border-emerald-200" /> Disponible</span>
         <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-gray-300" /> Indisponible (vous)</span>
         <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-red-200" /> Mission en cours</span>
+        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-gray-100 border border-gray-200" /> Passée</span>
       </div>
     </Card>
   );

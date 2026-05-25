@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Briefcase, Plus, Users, CheckCircle, XCircle, Loader2, Trash2, MapPin, Calendar, Coins, ChevronDown, ChevronUp } from 'lucide-react';
+import { Briefcase, Plus, Users, CheckCircle, XCircle, Loader2, Trash2, MapPin, Calendar, Coins, ChevronDown, ChevronUp, Clock, FileText } from 'lucide-react';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const auth = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('companyToken')}` } });
