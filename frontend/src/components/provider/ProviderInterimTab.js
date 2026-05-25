@@ -39,6 +39,7 @@ const ProviderInterimTab = ({ user }) => {
   const [payingFor, setPayingFor] = useState(null);         // commission object
   const [payForm, setPayForm] = useState({ payment_method: 'orange_money', transfer_reference: '', sender_phone: '', note: '' });
   const [payMethods, setPayMethods] = useState([]);
+  const [decliningMission, setDecliningMission] = useState(null);  // mission object to decline
 
   const suspended = user?.interim_suspended;
 
@@ -101,13 +102,17 @@ const ProviderInterimTab = ({ user }) => {
     } finally { setSubmitting(false); }
   };
 
-  const declineMission = async (missionId) => {
-    if (!window.confirm("Masquer cette mission ? Elle ne s'affichera plus dans votre liste.")) return;
+  const declineMission = async () => {
+    if (!decliningMission) return;
     try {
-      await axios.post(`${API}/interim/missions/${missionId}/decline`, {}, auth());
+      await axios.post(`${API}/interim/missions/${decliningMission.id}/decline`, {}, auth());
       toast.success('Mission masquée');
+      setDecliningMission(null);
       loadAll();
-    } catch (e) { toast.error(e.response?.data?.detail || 'Erreur'); }
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Erreur');
+      setDecliningMission(null);
+    }
   };
 
   if (loading) return <div className="text-center py-10 text-gray-500"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></div>;
@@ -162,7 +167,7 @@ const ProviderInterimTab = ({ user }) => {
                   {alreadyApplied ? 'Déjà postulé' : 'Postuler'}
                 </Button>
                 {!alreadyApplied && (
-                  <Button variant="outline" onClick={() => declineMission(m.id)} className="text-gray-500 border-gray-300 hover:bg-gray-50" data-testid={`decline-mission-${m.id}`}>
+                  <Button variant="outline" onClick={() => setDecliningMission(m)} className="text-gray-500 border-gray-300 hover:bg-gray-50" data-testid={`decline-mission-${m.id}`}>
                     Pas intéressé
                   </Button>
                 )}
@@ -307,6 +312,34 @@ const ProviderInterimTab = ({ user }) => {
             <Button variant="outline" onClick={() => setPayingFor(null)}>Annuler</Button>
             <Button onClick={submitPay} disabled={submitting} className="bg-emerald-600 hover:bg-emerald-700" data-testid="submit-payment-btn">
               {submitting ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Envoi…</> : 'Soumettre la preuve'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      {/* Decline mission confirmation */}
+      <Dialog open={!!decliningMission} onOpenChange={(o) => !o && setDecliningMission(null)}>
+        <DialogContent className="sm:max-w-md" data-testid="decline-mission-dialog">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <XCircle className="h-5 w-5 text-gray-500" />
+              Masquer cette mission ?
+            </DialogTitle>
+            <DialogDescription>
+              <span className="block mt-2 font-semibold text-gray-700">
+                {decliningMission?.title}
+              </span>
+              <span className="block mt-2 text-sm">
+                Cette mission n&apos;apparaîtra plus dans votre liste de missions disponibles.
+                Vous pourrez toujours la retrouver si l&apos;entreprise vous contacte directement.
+              </span>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2 mt-2">
+            <Button variant="outline" onClick={() => setDecliningMission(null)} data-testid="cancel-decline-btn">
+              Annuler
+            </Button>
+            <Button onClick={declineMission} className="bg-gray-700 hover:bg-gray-800 text-white" data-testid="confirm-decline-btn">
+              Masquer la mission
             </Button>
           </div>
         </DialogContent>

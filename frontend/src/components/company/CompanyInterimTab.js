@@ -37,6 +37,8 @@ const CompanyInterimTab = () => {
   const [apps, setApps] = useState({});                    // missionId -> applications[]
   const [completing, setCompleting] = useState(null);      // missionId
   const [completeData, setCompleteData] = useState({ days_worked: 1, daily_rate: '' });
+  const [deletingId, setDeletingId] = useState(null);
+  const [overquotaPending, setOverquotaPending] = useState(null);  // {mission, appId}
 
   const loadMissions = useCallback(async () => {
     setLoading(true);
@@ -93,19 +95,25 @@ const CompanyInterimTab = () => {
 
   const acceptApp = async (mission, aid) => {
     if (mission && (mission.accepted_count || 0) >= (mission.num_providers_needed || 1)) {
-      const ok = window.confirm(
-        `⚠️ Quota déjà atteint (${mission.accepted_count}/${mission.num_providers_needed})\n\n` +
-        `Vous avez déjà accepté le nombre de prestataires prévu pour cette mission.\n\n` +
-        `Voulez-vous tout de même accepter un prestataire supplémentaire ?\n` +
-        `(Utile si un prestataire accepté ne s'est pas présenté.)`
-      );
-      if (!ok) return;
+      setOverquotaPending({ mission, aid });
+      return;
     }
+    await doAccept(mission, aid);
+  };
+
+  const doAccept = async (mission, aid) => {
     try {
       await axios.post(`${API}/interim/applications/${aid}/accept`, {}, auth());
       toast.success('Candidat accepté');
       refreshApps(mission.id); loadMissions();
     } catch (e) { toast.error(e.response?.data?.detail || 'Erreur'); }
+  };
+
+  const confirmOverquota = async () => {
+    if (!overquotaPending) return;
+    const { mission, aid } = overquotaPending;
+    setOverquotaPending(null);
+    await doAccept(mission, aid);
   };
 
   const rejectApp = async (mid, aid) => {
@@ -116,13 +124,17 @@ const CompanyInterimTab = () => {
     } catch (e) { toast.error(e.response?.data?.detail || 'Erreur'); }
   };
 
-  const deleteMission = async (mid) => {
-    if (!window.confirm('Supprimer cette mission ?')) return;
+  const deleteMission = async () => {
+    if (!deletingId) return;
     try {
-      await axios.delete(`${API}/interim/missions/${mid}`, auth());
+      await axios.delete(`${API}/interim/missions/${deletingId}`, auth());
       toast.success('Mission supprimée');
+      setDeletingId(null);
       loadMissions();
-    } catch (e) { toast.error(e.response?.data?.detail || 'Erreur'); }
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Erreur');
+      setDeletingId(null);
+    }
   };
 
   const openComplete = (m) => {
@@ -187,7 +199,7 @@ const CompanyInterimTab = () => {
                   </Button>
                 )}
                 {m.accepted_count === 0 && m.status !== 'completed' && (
-                  <Button size="sm" variant="ghost" className="text-red-600 hover:bg-red-50" onClick={() => deleteMission(m.id)} data-testid={`delete-mission-${m.id}`}>
+                  <Button size="sm" variant="ghost" className="text-red-600 hover:bg-red-50" onClick={() => setDeletingId(m.id)} data-testid={`delete-mission-${m.id}`}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 )}
@@ -330,6 +342,55 @@ const CompanyInterimTab = () => {
           <div className="flex justify-end gap-2 mt-3">
             <Button variant="outline" onClick={() => setCompleting(null)}>Annuler</Button>
             <Button onClick={submitComplete} className="bg-emerald-600 hover:bg-emerald-700" data-testid="confirm-complete-btn">Valider</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      {/* Delete mission confirmation */}
+      <Dialog open={!!deletingId} onOpenChange={(o) => !o && setDeletingId(null)}>
+        <DialogContent className="sm:max-w-md" data-testid="delete-mission-dialog">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <Trash2 className="h-5 w-5" />
+              Supprimer cette mission ?
+            </DialogTitle>
+            <DialogDescription className="mt-2">
+              Cette action est définitive. La mission sera retirée et toutes les candidatures associées seront effacées.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2 mt-3">
+            <Button variant="outline" onClick={() => setDeletingId(null)}>Annuler</Button>
+            <Button onClick={deleteMission} className="bg-red-600 hover:bg-red-700 text-white" data-testid="confirm-delete-btn">
+              Supprimer
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Over-quota acceptance confirmation */}
+      <Dialog open={!!overquotaPending} onOpenChange={(o) => !o && setOverquotaPending(null)}>
+        <DialogContent className="sm:max-w-md" data-testid="overquota-dialog">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-amber-600">
+              <Users className="h-5 w-5" />
+              Quota déjà atteint ({overquotaPending?.mission?.accepted_count}/{overquotaPending?.mission?.num_providers_needed})
+            </DialogTitle>
+            <DialogDescription className="mt-2 space-y-2">
+              <span className="block">
+                Vous avez déjà accepté le nombre de prestataires prévu pour cette mission.
+              </span>
+              <span className="block">
+                Voulez-vous tout de même accepter un prestataire supplémentaire ?
+              </span>
+              <span className="block text-xs italic text-gray-500">
+                Utile si un prestataire accepté ne s&apos;est pas présenté ou s&apos;est désisté.
+              </span>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2 mt-3">
+            <Button variant="outline" onClick={() => setOverquotaPending(null)}>Annuler</Button>
+            <Button onClick={confirmOverquota} className="bg-amber-500 hover:bg-amber-600 text-white" data-testid="confirm-overquota-btn">
+              Accepter quand même
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
