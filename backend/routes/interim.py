@@ -256,8 +256,7 @@ async def accept_application(application_id: str, current_company: dict = Depend
     mission = await db.interim_missions.find_one({'id': app_doc['mission_id']})
     if not mission:
         raise HTTPException(status_code=404, detail="Mission introuvable")
-    if mission.get('accepted_count', 0) >= mission.get('num_providers_needed', 1):
-        raise HTTPException(status_code=400, detail="Quota de prestataires atteint pour cette mission")
+    # Le quota peut être dépassé : si un prestataire accepté ne se présente pas, l'entreprise peut en accepter un autre.
 
     now_iso = datetime.now(timezone.utc).isoformat()
     await db.mission_applications.update_one(

@@ -94,10 +94,10 @@ const CompanyInterimTab = () => {
   const acceptApp = async (mission, aid) => {
     if (mission && (mission.accepted_count || 0) >= (mission.num_providers_needed || 1)) {
       const ok = window.confirm(
-        `⚠️ Quota atteint !\n\n` +
-        `Cette mission demande ${mission.num_providers_needed} prestataire(s) et ${mission.accepted_count} a/ont déjà été accepté(s).\n\n` +
-        `Pour accepter ce candidat, vous devez d'abord augmenter le nombre de places ou refuser un candidat déjà accepté.\n\n` +
-        `Voulez-vous quand même tenter (la mission sera refusée par le serveur) ?`
+        `⚠️ Quota déjà atteint (${mission.accepted_count}/${mission.num_providers_needed})\n\n` +
+        `Vous avez déjà accepté le nombre de prestataires prévu pour cette mission.\n\n` +
+        `Voulez-vous tout de même accepter un prestataire supplémentaire ?\n` +
+        `(Utile si un prestataire accepté ne s'est pas présenté.)`
       );
       if (!ok) return;
     }
