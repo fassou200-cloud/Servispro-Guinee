@@ -12,6 +12,7 @@ const DAYS = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
 const TimesheetCalendar = ({ startDate, endDate, selected, onToggle }) => {
   const startIso = startDate ? String(startDate).slice(0, 10) : null;
   const endIso = endDate ? String(endDate).slice(0, 10) : startIso;
+  const todayIso = new Date().toISOString().slice(0, 10);
   const initial = startIso ? new Date(startIso) : new Date();
   const [year, setYear] = useState(initial.getFullYear());
   const [month, setMonth] = useState(initial.getMonth());
@@ -30,6 +31,7 @@ const TimesheetCalendar = ({ startDate, endDate, selected, onToggle }) => {
     const ds = dateStr(d);
     return ds >= startIso && (!endIso || ds <= endIso);
   };
+  const isFuture = (d) => dateStr(d) > todayIso;
 
   const prev = () => { if (month === 0) { setMonth(11); setYear(y => y - 1); } else { setMonth(m => m - 1); } };
   const next = () => { if (month === 11) { setMonth(0); setYear(y => y + 1); } else { setMonth(m => m + 1); } };
@@ -48,10 +50,12 @@ const TimesheetCalendar = ({ startDate, endDate, selected, onToggle }) => {
         {cells.map((d, idx) => {
           if (d === null) return <div key={idx} />;
           const ds = dateStr(d);
-          const valid = inWindow(d);
+          const valid = inWindow(d) && !isFuture(d);
+          const future = inWindow(d) && isFuture(d);
           const isSelected = selected.has(ds);
           let cls = 'aspect-square flex items-center justify-center text-sm rounded transition-all';
-          if (!valid) cls += ' bg-gray-100 text-gray-300 cursor-not-allowed';
+          if (!valid && !future) cls += ' bg-gray-100 text-gray-300 cursor-not-allowed';
+          else if (future) cls += ' bg-amber-50 text-amber-400 cursor-not-allowed';
           else if (isSelected) cls += ' bg-emerald-500 text-white font-bold cursor-pointer hover:bg-emerald-600';
           else cls += ' bg-emerald-50 text-emerald-700 cursor-pointer hover:bg-emerald-100';
           return (
@@ -61,6 +65,7 @@ const TimesheetCalendar = ({ startDate, endDate, selected, onToggle }) => {
               disabled={!valid}
               onClick={() => valid && onToggle(ds)}
               className={cls}
+              title={future ? 'Date à venir — pointage impossible' : undefined}
               data-testid={`ts-day-${ds}`}
             >
               {d}
@@ -68,9 +73,10 @@ const TimesheetCalendar = ({ startDate, endDate, selected, onToggle }) => {
           );
         })}
       </div>
-      <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
+      <div className="flex items-center gap-3 mt-2 text-xs text-gray-500 flex-wrap">
         <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-emerald-500" /> Travaillé</span>
         <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-emerald-50 border border-emerald-200" /> Disponible</span>
+        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-amber-50 border border-amber-200" /> À venir</span>
         <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-gray-100" /> Hors mission</span>
       </div>
     </Card>

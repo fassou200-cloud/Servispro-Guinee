@@ -148,6 +148,7 @@ async def submit_timesheet(mission_id: str, data: dict = Body(...), current_user
 
     sd = _date_str(mission.get('start_date'))
     ed = _date_str(mission.get('end_date')) or sd
+    today_str = datetime.now(timezone.utc).date().isoformat()
 
     cleaned_days = []
     total_hours = 0.0
@@ -168,6 +169,8 @@ async def submit_timesheet(mission_id: str, data: dict = Body(...), current_user
             raise HTTPException(status_code=400, detail=f"La date {ds} est avant le début de la mission ({sd})")
         if ed and ds > ed:
             raise HTTPException(status_code=400, detail=f"La date {ds} est après la fin de la mission ({ed})")
+        if ds > today_str:
+            raise HTTPException(status_code=400, detail=f"Impossible de pointer une date future ({ds}). Vous ne pouvez pointer que jusqu'à aujourd'hui ({today_str}).")
         cleaned_days.append({'date': ds, 'hours': hours})
         total_hours += hours
         seen.add(ds)
