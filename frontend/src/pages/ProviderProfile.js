@@ -74,6 +74,7 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
   const [refreshReviews, setRefreshReviews] = useState(0);
   const [customer, setCustomer] = useState(null);
   const [reviewStats, setReviewStats] = useState(null);
+  const [interimRatings, setInterimRatings] = useState({ count: 0, average: 0, ratings: [] });
   
   // Check if current user is the owner of this profile (provider viewing their own profile)
   const [isOwnProfile, setIsOwnProfile] = useState(false);
@@ -89,6 +90,7 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
   useEffect(() => {
     fetchProvider();
     fetchReviewStats();
+    fetchInterimRatings();
     const storedCustomer = localStorage.getItem('customer');
     if (storedCustomer) {
       setCustomer(JSON.parse(storedCustomer));
@@ -122,6 +124,15 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
       setReviewStats(response.data);
     } catch (error) {
       console.error('Failed to fetch review stats');
+    }
+  };
+
+  const fetchInterimRatings = async () => {
+    try {
+      const response = await axios.get(`${API}/interim/ratings/provider/${providerId}`);
+      setInterimRatings(response.data || { count: 0, average: 0, ratings: [] });
+    } catch (error) {
+      console.error('Failed to fetch interim ratings');
     }
   };
 
@@ -317,17 +328,26 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
                 </div>
 
                 {/* Rating */}
-                {reviewStats?.total_reviews > 0 && (
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-0.5">
-                        {[...Array(5)].map((_, i) => (
-                          <Star key={i} className={`h-5 w-5 ${i < Math.round(reviewStats.average_rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
-                        ))}
+                {(reviewStats?.total_reviews > 0 || interimRatings.count > 0) && (
+                  <div className="flex items-center gap-4 mb-4 flex-wrap">
+                    {reviewStats?.total_reviews > 0 && (
+                      <div className="flex items-center gap-2" data-testid="header-client-rating">
+                        <div className="flex items-center gap-0.5">
+                          {[...Array(5)].map((_, i) => (
+                            <Star key={i} className={`h-5 w-5 ${i < Math.round(reviewStats.average_rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
+                          ))}
+                        </div>
+                        <span className="text-xl font-bold text-gray-900">{reviewStats.average_rating}</span>
+                        <span className="text-sm text-gray-500">({reviewStats.total_reviews} clients)</span>
                       </div>
-                      <span className="text-xl font-bold text-gray-900">{reviewStats.average_rating}</span>
-                    </div>
-                    <span className="text-gray-500">({reviewStats.total_reviews} avis)</span>
+                    )}
+                    {interimRatings.count > 0 && (
+                      <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 border border-amber-200" data-testid="header-interim-rating">
+                        <Award className="h-4 w-4 text-amber-600" />
+                        <span className="text-lg font-bold text-amber-700">{interimRatings.average.toFixed(1)}</span>
+                        <span className="text-sm text-amber-600">Intérim ({interimRatings.count})</span>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -648,6 +668,45 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
             </Card>
           </div>
         </div>
+
+        {/* Interim Ratings Section */}
+        {interimRatings.count > 0 && (
+          <Card className="rounded-3xl border-0 shadow-lg p-8 mt-8 bg-gradient-to-r from-amber-50 to-yellow-50" data-testid="interim-ratings-section">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+              <h3 className="text-xl font-heading font-bold text-gray-900 flex items-center gap-2">
+                <Award className="h-5 w-5 text-amber-600" />
+                Avis Intérim · Entreprises
+              </h3>
+              <div className="flex items-center gap-2">
+                <span className="text-3xl font-bold text-amber-600">{interimRatings.average.toFixed(1)}</span>
+                <div className="flex gap-0.5">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className={`h-5 w-5 ${i < Math.round(interimRatings.average) ? 'fill-amber-400 text-amber-400' : 'text-gray-300'}`} />
+                  ))}
+                </div>
+                <span className="text-sm text-gray-500">({interimRatings.count} avis)</span>
+              </div>
+            </div>
+            <div className="grid md:grid-cols-2 gap-4">
+              {interimRatings.ratings.slice(0, 6).map((r) => (
+                <div key={r.id} className="bg-white rounded-2xl p-4 border border-amber-100" data-testid={`interim-rating-${r.id}`}>
+                  <div className="flex items-start justify-between gap-2 mb-1">
+                    <div>
+                      <p className="font-semibold text-gray-900">{r.company_name || 'Entreprise'}</p>
+                      <p className="text-xs text-gray-500">{r.mission_title}</p>
+                    </div>
+                    <div className="flex gap-0.5 shrink-0">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className={`h-4 w-4 ${i < r.stars ? 'fill-amber-400 text-amber-400' : 'text-gray-300'}`} />
+                      ))}
+                    </div>
+                  </div>
+                  {r.comment && <p className="text-sm text-gray-700 italic mt-2">« {r.comment} »</p>}
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
 
       </div>
 
