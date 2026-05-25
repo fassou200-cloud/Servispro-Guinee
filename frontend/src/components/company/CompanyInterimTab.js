@@ -91,11 +91,20 @@ const CompanyInterimTab = () => {
     } finally { setCreating(false); }
   };
 
-  const acceptApp = async (mid, aid) => {
+  const acceptApp = async (mission, aid) => {
+    if (mission && (mission.accepted_count || 0) >= (mission.num_providers_needed || 1)) {
+      const ok = window.confirm(
+        `⚠️ Quota atteint !\n\n` +
+        `Cette mission demande ${mission.num_providers_needed} prestataire(s) et ${mission.accepted_count} a/ont déjà été accepté(s).\n\n` +
+        `Pour accepter ce candidat, vous devez d'abord augmenter le nombre de places ou refuser un candidat déjà accepté.\n\n` +
+        `Voulez-vous quand même tenter (la mission sera refusée par le serveur) ?`
+      );
+      if (!ok) return;
+    }
     try {
       await axios.post(`${API}/interim/applications/${aid}/accept`, {}, auth());
       toast.success('Candidat accepté');
-      refreshApps(mid); loadMissions();
+      refreshApps(mission.id); loadMissions();
     } catch (e) { toast.error(e.response?.data?.detail || 'Erreur'); }
   };
 
@@ -205,16 +214,25 @@ const CompanyInterimTab = () => {
                       {a.proposed_rate ? <p className="text-xs text-emerald-700 mt-1">Taux proposé : {fmt(a.proposed_rate)} GNF/jour</p> : null}
                     </div>
                     <div className="flex items-center gap-2">
-                      {a.status === 'pending' ? (
-                        <>
-                          <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 h-8" onClick={() => acceptApp(m.id, a.id)} data-testid={`accept-app-${a.id}`}>
-                            <CheckCircle className="h-3.5 w-3.5 mr-1" /> Accepter
-                          </Button>
-                          <Button size="sm" variant="outline" className="h-8 text-red-600 border-red-200" onClick={() => rejectApp(m.id, a.id)} data-testid={`reject-app-${a.id}`}>
-                            <XCircle className="h-3.5 w-3.5 mr-1" /> Rejeter
-                          </Button>
-                        </>
-                      ) : (
+                      {a.status === 'pending' ? (() => {
+                        const quotaReached = (m.accepted_count || 0) >= (m.num_providers_needed || 1);
+                        return (
+                          <>
+                            <Button
+                              size="sm"
+                              className={quotaReached ? 'bg-amber-500 hover:bg-amber-600 h-8' : 'bg-emerald-600 hover:bg-emerald-700 h-8'}
+                              onClick={() => acceptApp(m, a.id)}
+                              data-testid={`accept-app-${a.id}`}
+                              title={quotaReached ? `Quota atteint (${m.accepted_count}/${m.num_providers_needed})` : 'Accepter'}
+                            >
+                              <CheckCircle className="h-3.5 w-3.5 mr-1" /> {quotaReached ? 'Accepter (quota plein)' : 'Accepter'}
+                            </Button>
+                            <Button size="sm" variant="outline" className="h-8 text-red-600 border-red-200" onClick={() => rejectApp(m.id, a.id)} data-testid={`reject-app-${a.id}`}>
+                              <XCircle className="h-3.5 w-3.5 mr-1" /> Rejeter
+                            </Button>
+                          </>
+                        );
+                      })() : (
                         <Badge variant={a.status === 'accepted' ? 'default' : 'secondary'} className={a.status === 'accepted' ? 'bg-emerald-600' : ''}>{a.status}</Badge>
                       )}
                     </div>
