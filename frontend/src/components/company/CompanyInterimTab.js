@@ -66,12 +66,22 @@ const CompanyInterimTab = () => {
     } catch (e) { toast.error(e.response?.data?.detail || 'Erreur'); }
   };
 
-  const rejectTs = async (id) => {
-    const reason = window.prompt('Motif (optionnel) :', '');
-    if (reason === null) return;
+  const [rejectTsModal, setRejectTsModal] = useState(null);   // timesheet
+  const [rejectReason, setRejectReason] = useState('');
+
+  const rejectTs = (ts) => {
+    setRejectReason('');
+    setRejectTsModal(ts);
+  };
+
+  const submitRejectTs = async () => {
+    if (rejectReason.trim().length < 5) {
+      toast.error('Indiquez un motif d\'au moins 5 caractères'); return;
+    }
     try {
-      await axios.post(`${API}/interim/timesheets/${id}/reject`, { reason }, auth());
+      await axios.post(`${API}/interim/timesheets/${rejectTsModal.id}/reject`, { reason: rejectReason.trim() }, auth());
       toast.success('Pointage rejeté');
+      setRejectTsModal(null);
       loadMissions();
     } catch (e) { toast.error(e.response?.data?.detail || 'Erreur'); }
   };
@@ -363,7 +373,7 @@ const CompanyInterimTab = () => {
                   <Button size="sm" onClick={() => validateTs(t.id)} className="bg-emerald-600 hover:bg-emerald-700 h-8" data-testid={`validate-ts-${t.id}`}>
                     <CheckCircle className="h-3.5 w-3.5 mr-1" /> Valider
                   </Button>
-                  <Button size="sm" variant="outline" onClick={() => rejectTs(t.id)} className="h-8 text-red-600 border-red-200" data-testid={`reject-ts-${t.id}`}>
+                  <Button size="sm" variant="outline" onClick={() => rejectTs(t)} className="h-8 text-red-600 border-red-200" data-testid={`reject-ts-${t.id}`}>
                     <XCircle className="h-3.5 w-3.5 mr-1" /> Rejeter
                   </Button>
                 </>
@@ -464,6 +474,37 @@ const CompanyInterimTab = () => {
           </div>
         </DialogContent>
       </Dialog>
+      {/* Reject timesheet modal */}
+      <Dialog open={!!rejectTsModal} onOpenChange={(o) => !o && setRejectTsModal(null)}>
+        <DialogContent data-testid="reject-ts-dialog">
+          <DialogHeader>
+            <DialogTitle className="text-red-600">Rejeter le pointage</DialogTitle>
+            <DialogDescription>
+              Pointage de <strong>{rejectTsModal?.provider_name}</strong> sur «&nbsp;{rejectTsModal?.mission_title}&nbsp;»<br/>
+              <strong>{rejectTsModal?.total_hours || (rejectTsModal?.days_worked * 8)}h</strong> = {rejectTsModal?.days_worked} jour(s)
+            </DialogDescription>
+          </DialogHeader>
+          <div>
+            <Label>Motif du rejet *</Label>
+            <Textarea
+              rows={3}
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="Ex: Le 28 mai n'a pas été travaillé, présence absente sur site."
+              maxLength={500}
+              data-testid="reject-reason-input"
+            />
+            <p className="text-xs text-gray-500 mt-1">Le prestataire verra ce motif dans son pointage.</p>
+          </div>
+          <div className="flex justify-end gap-2 mt-2">
+            <Button variant="outline" onClick={() => setRejectTsModal(null)}>Annuler</Button>
+            <Button onClick={submitRejectTs} className="bg-red-600 hover:bg-red-700 text-white" data-testid="confirm-reject-ts-btn">
+              Rejeter le pointage
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Rate provider modal */}
       <Dialog open={!!rateProviderModal} onOpenChange={(o) => !o && setRateProviderModal(null)}>
         <DialogContent data-testid="rate-provider-dialog">

@@ -256,12 +256,14 @@ async def reject_timesheet(ts_id: str, data: dict = Body(default={}), current_co
     if ts['status'] != 'submitted':
         raise HTTPException(status_code=400, detail=f"Pointage déjà {ts['status']}")
     reason = (data.get('reason') or '').strip()[:500]
+    if not reason or len(reason) < 5:
+        raise HTTPException(status_code=400, detail="Un motif de rejet d'au moins 5 caractères est obligatoire")
     await db.interim_timesheets.update_one(
         {'id': ts_id},
         {'$set': {
             'status': 'rejected',
             'rejected_at': datetime.now(timezone.utc).isoformat(),
-            'rejection_reason': reason or 'Pointage incohérent',
+            'rejection_reason': reason,
         }}
     )
     return {'ok': True}
