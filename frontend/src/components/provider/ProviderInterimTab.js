@@ -36,6 +36,7 @@ const ProviderInterimTab = ({ user }) => {
   const [commissions, setCommissions] = useState([]);
   const [timesheets, setTimesheets] = useState([]);
   const [availability, setAvailability] = useState({ manual_unavailable_dates: [], mission_busy_dates: [] });
+  const [ratingsReceived, setRatingsReceived] = useState({ count: 0, average: 0, ratings: [] });
   const [loading, setLoading] = useState(true);
   const [applyTo, setApplyTo] = useState(null);             // mission object
   const [applyForm, setApplyForm] = useState({ cover_message: '', proposed_rate: '' });
@@ -50,22 +51,24 @@ const ProviderInterimTab = ({ user }) => {
   const loadAll = useCallback(async () => {
     setLoading(true);
     try {
-      const [m, a, c, ts, av] = await Promise.all([
+      const [m, a, c, ts, av, r] = await Promise.all([
         axios.get(`${API}/interim/missions`, auth()),
         axios.get(`${API}/interim/applications/mine`, auth()),
         axios.get(`${API}/interim/commissions/mine`, auth()),
         axios.get(`${API}/interim/timesheets/mine`, auth()),
         axios.get(`${API}/interim/availability/mine`, auth()),
+        axios.get(`${API}/interim/ratings/provider/${user.id}`),
       ]);
       setMissions(m.data || []);
       setApplications(a.data || []);
       setCommissions(c.data || []);
       setTimesheets(ts.data || []);
       setAvailability(av.data || { manual_unavailable_dates: [], mission_busy_dates: [] });
+      setRatingsReceived(r.data || { count: 0, average: 0, ratings: [] });
     } catch {
       toast.error('Erreur de chargement');
     } finally { setLoading(false); }
-  }, []);
+  }, [user.id]);
 
   useEffect(() => { loadAll(); }, [loadAll]);
 
@@ -133,36 +136,51 @@ const ProviderInterimTab = ({ user }) => {
   };
 
   const [tsModalApp, setTsModalApp] = useState(null);
-  const [tsForm, setTsForm] = useState({ days_worked: '', notes: '', worked_dates: [] });
+  const [tsForm, setTsForm] = useState({ notes: '', worked_days: [] });   // worked_days = [{date, hours}]
 
   const openTimesheet = (app) => {
     const existing = timesheets.find(t => t.mission_id === app.mission_id);
     if (existing) {
-      setTsForm({ days_worked: existing.days_worked, notes: existing.notes || '', worked_dates: existing.worked_dates || [] });
+      const wd = existing.worked_days && existing.worked_days.length
+        ? existing.worked_days
+        : (existing.worked_dates || []).map(d => ({ date: d, hours: 8 }));
+      setTsForm({ notes: existing.notes || '', worked_days: wd });
     } else {
-      setTsForm({ days_worked: '', notes: '', worked_dates: [] });
+      setTsForm({ notes: '', worked_days: [] });
     }
     setTsModalApp(app);
   };
 
   const toggleWorkedDate = (dateStr) => {
     setTsForm((f) => {
-      const set = new Set(f.worked_dates || []);
-      if (set.has(dateStr)) set.delete(dateStr); else set.add(dateStr);
-      const sorted = Array.from(set).sort();
-      return { ...f, worked_dates: sorted, days_worked: sorted.length || f.days_worked };
+      const list = [...(f.worked_days || [])];
+      const idx = list.findIndex(x => x.date === dateStr);
+      if (idx >= 0) list.splice(idx, 1);
+      else list.push({ date: dateStr, hours: 8 });
+      list.sort((a, b) => a.date.localeCompare(b.date));
+      return { ...f, worked_days: list };
     });
   };
 
+  const setHoursForDate = (dateStr, hours) => {
+    setTsForm((f) => ({
+      ...f,
+      worked_days: (f.worked_days || []).map(d => d.date === dateStr ? { ...d, hours: Number(hours) } : d),
+    }));
+  };
+
   const submitTimesheet = async () => {
-    if (!Number(tsForm.days_worked) || Number(tsForm.days_worked) <= 0) {
-      toast.error('Indiquez le nombre de jours travaillés'); return;
+    if (!tsForm.worked_days || tsForm.worked_days.length === 0) {
+      toast.error('Sélectionnez au moins un jour travaillé'); return;
+    }
+    const invalid = tsForm.worked_days.find(d => !d.hours || d.hours <= 0 || d.hours > 24);
+    if (invalid) {
+      toast.error(`Heures invalides pour ${invalid.date}`); return;
     }
     try {
       await axios.post(`${API}/interim/missions/${tsModalApp.mission_id}/timesheet`, {
-        days_worked: Number(tsForm.days_worked),
+        worked_days: tsForm.worked_days,
         notes: tsForm.notes,
-        worked_dates: tsForm.worked_dates,
       }, auth());
       toast.success('Pointage envoyé');
       setTsModalApp(null);
@@ -200,6 +218,35 @@ const ProviderInterimTab = ({ user }) => {
             <p className="text-sm text-red-600">Vous avez {unpaidCount} commission(s) à régler. Vous pourrez postuler à nouveau dès la validation par l'admin.</p>
           </div>
         </div>
+      )}
+
+      {ratingsReceived.count > 0 && (
+        <Card className="p-4 bg-gradient-to-r from-amber-50 to-yellow-50 border-amber-200" data-testid="ratings-summary">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-sm text-gray-600">Votre réputation Intérim</p>
+              <div className="flex items-baseline gap-2 mt-1">
+                <span className="text-3xl font-bold text-amber-600">{ratingsReceived.average.toFixed(1)}</span>
+                <span className="text-amber-500 text-xl">{'★'.repeat(Math.round(ratingsReceived.average))}{'☆'.repeat(5 - Math.round(ratingsReceived.average))}</span>
+                <span className="text-xs text-gray-500">({ratingsReceived.count} avis)</span>
+              </div>
+            </div>
+          </div>
+          {ratingsReceived.ratings.length > 0 && (
+            <div className="mt-3 space-y-2 max-h-48 overflow-y-auto">
+              {ratingsReceived.ratings.slice(0, 5).map(r => (
+                <div key={r.id} className="text-sm bg-white/70 rounded p-2 border border-amber-100" data-testid={`rating-${r.id}`}>
+                  <div className="flex items-center justify-between">
+                    <strong className="text-gray-800">{r.company_name}</strong>
+                    <span className="text-amber-500 text-xs">{'★'.repeat(r.stars)}{'☆'.repeat(5 - r.stars)}</span>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-0.5">{r.mission_title}</p>
+                  {r.comment && <p className="text-xs text-gray-700 italic mt-1">« {r.comment} »</p>}
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
       )}
 
       <div className="flex gap-2 flex-wrap">
@@ -347,9 +394,18 @@ const ProviderInterimTab = ({ user }) => {
       ) : timesheets.map(t => (
         <Card key={t.id} className="p-4" data-testid={`my-timesheet-${t.id}`}>
           <div className="flex items-start justify-between gap-3">
-            <div>
+            <div className="flex-1">
               <h3 className="font-bold">{t.mission_title}</h3>
-              <p className="text-sm text-gray-700"><strong>{t.days_worked}</strong> jour(s) travaillé(s)</p>
+              <p className="text-sm text-gray-700">
+                <strong>{t.total_hours || (t.days_worked * 8)} h</strong> = <strong>{t.days_worked}</strong> jour(s)
+              </p>
+              {t.worked_days && t.worked_days.length > 0 && (
+                <div className="mt-2 text-xs text-gray-600 space-y-0.5">
+                  {t.worked_days.map(d => (
+                    <div key={d.date}>• {new Date(d.date).toLocaleDateString('fr-FR', { weekday:'short', day:'2-digit', month:'short' })} — <strong>{d.hours}h</strong></div>
+                  ))}
+                </div>
+              )}
               {t.notes && <p className="text-xs text-gray-500 italic mt-1">« {t.notes} »</p>}
               {t.rejection_reason && <p className="text-xs text-red-600 mt-1">✗ {t.rejection_reason}</p>}
             </div>
@@ -468,19 +524,36 @@ const ProviderInterimTab = ({ user }) => {
               <TimesheetCalendar
                 startDate={tsModalApp.mission_start_date}
                 endDate={tsModalApp.mission_end_date}
-                selected={new Set(tsForm.worked_dates || [])}
+                selected={new Set((tsForm.worked_days || []).map(d => d.date))}
                 onToggle={toggleWorkedDate}
               />
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <Label>Total jours travaillés *</Label>
-                  <Input type="number" min="0.5" step="0.5" value={tsForm.days_worked} readOnly className="bg-gray-50" data-testid="ts-days-input" />
-                  <p className="text-xs text-gray-400 mt-1">Calculé depuis les jours cochés</p>
+              {tsForm.worked_days.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Heures travaillées par jour</Label>
+                  <div className="max-h-48 overflow-y-auto space-y-1.5 border rounded-lg p-2 bg-gray-50">
+                    {tsForm.worked_days.map(d => (
+                      <div key={d.date} className="flex items-center gap-2" data-testid={`hours-row-${d.date}`}>
+                        <span className="text-sm font-mono w-28">{new Date(d.date).toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: 'short' })}</span>
+                        <Input
+                          type="number"
+                          step="0.5"
+                          min="0.5"
+                          max="24"
+                          value={d.hours}
+                          onChange={(e) => setHoursForDate(d.date, e.target.value)}
+                          className="h-8 w-24"
+                          data-testid={`hours-input-${d.date}`}
+                        />
+                        <span className="text-xs text-gray-500">h</span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-600">
+                    Total : <strong>{tsForm.worked_days.reduce((s, d) => s + Number(d.hours || 0), 0)} heures</strong>
+                    {' '}≈ <strong>{(tsForm.worked_days.reduce((s, d) => s + Number(d.hours || 0), 0) / 8).toFixed(2)} jour(s)</strong> (base 8h)
+                  </p>
                 </div>
-                <div className="flex items-end text-xs text-emerald-700">
-                  {tsForm.worked_dates.length > 0 ? `✓ ${tsForm.worked_dates.length} jour(s) sélectionné(s)` : 'Cliquez sur les jours travaillés ci-dessus'}
-                </div>
-              </div>
+              )}
               <div>
                 <Label>Notes (optionnel)</Label>
                 <Textarea rows={2} value={tsForm.notes} onChange={(e) => setTsForm({ ...tsForm, notes: e.target.value })} placeholder="Détails sur le travail effectué…" maxLength={1000} />

@@ -120,12 +120,17 @@ async def public_availability(provider_id: str, current_company: dict = Depends(
 
 @router.post("/interim/missions/{mission_id}/timesheet")
 async def submit_timesheet(mission_id: str, data: dict = Body(...), current_user: dict = Depends(get_current_user)):
-    """Provider submits worked days for an accepted mission."""
-    days_worked = data.get('days_worked')
+    """Provider submits worked days for an accepted mission.
+    Body: { worked_days: [{date: 'YYYY-MM-DD', hours: float}], notes: str }
+    days_worked is derived as total hours / 8 (1 day = 8h)."""
     notes = (data.get('notes') or '').strip()[:1000]
-    worked_dates = data.get('worked_dates') or []
-    if not isinstance(days_worked, (int, float)) or days_worked <= 0:
-        raise HTTPException(status_code=400, detail="days_worked doit être > 0")
+    worked_days_raw = data.get('worked_days') or []
+    # Backward compat : old "worked_dates" + "days_worked"
+    if not worked_days_raw and data.get('worked_dates'):
+        worked_days_raw = [{'date': d, 'hours': 8} for d in data.get('worked_dates', [])]
+
+    if not isinstance(worked_days_raw, list) or len(worked_days_raw) == 0:
+        raise HTTPException(status_code=400, detail="Sélectionnez au moins un jour travaillé")
 
     app_doc = await db.mission_applications.find_one({
         'mission_id': mission_id,
@@ -141,20 +146,34 @@ async def submit_timesheet(mission_id: str, data: dict = Body(...), current_user
     if mission.get('status') != 'closed':
         raise HTTPException(status_code=400, detail="Le pointage n'est possible que lorsque la mission est en cours (fermée mais pas encore terminée)")
 
-    # Valide les dates par rapport à la fenêtre de mission
     sd = _date_str(mission.get('start_date'))
     ed = _date_str(mission.get('end_date')) or sd
-    cleaned_dates = []
-    for d in worked_dates:
-        ds = _date_str(d)
-        if not ds:
+
+    cleaned_days = []
+    total_hours = 0.0
+    seen = set()
+    for entry in worked_days_raw:
+        if not isinstance(entry, dict):
             continue
+        ds = _date_str(entry.get('date'))
+        try:
+            hours = float(entry.get('hours') or 0)
+        except (TypeError, ValueError):
+            hours = 0
+        if not ds or ds in seen:
+            continue
+        if hours <= 0 or hours > 24:
+            raise HTTPException(status_code=400, detail=f"Le nombre d'heures pour {ds} doit être entre 0.1 et 24")
         if sd and ds < sd:
             raise HTTPException(status_code=400, detail=f"La date {ds} est avant le début de la mission ({sd})")
         if ed and ds > ed:
             raise HTTPException(status_code=400, detail=f"La date {ds} est après la fin de la mission ({ed})")
-        cleaned_dates.append(ds)
-    cleaned_dates = sorted(set(cleaned_dates))
+        cleaned_days.append({'date': ds, 'hours': hours})
+        total_hours += hours
+        seen.add(ds)
+
+    cleaned_days.sort(key=lambda x: x['date'])
+    days_worked = round(total_hours / 8, 2)        # 1 jour ouvré = 8 h
 
     timesheet = await db.interim_timesheets.find_one({'mission_id': mission_id, 'provider_id': current_user['id']})
     now_iso = datetime.now(timezone.utc).isoformat()
@@ -164,8 +183,10 @@ async def submit_timesheet(mission_id: str, data: dict = Body(...), current_user
         await db.interim_timesheets.update_one(
             {'id': timesheet['id']},
             {'$set': {
-                'days_worked': float(days_worked),
-                'worked_dates': cleaned_dates,
+                'days_worked': days_worked,
+                'total_hours': total_hours,
+                'worked_days': cleaned_days,
+                'worked_dates': [d['date'] for d in cleaned_days],  # backward compat
                 'notes': notes,
                 'status': 'submitted',
                 'updated_at': now_iso,
@@ -183,8 +204,10 @@ async def submit_timesheet(mission_id: str, data: dict = Body(...), current_user
             'provider_id': current_user['id'],
             'provider_name': f"{current_user.get('first_name','')} {current_user.get('last_name','')}".strip(),
             'application_id': app_doc['id'],
-            'days_worked': float(days_worked),
-            'worked_dates': cleaned_dates,
+            'days_worked': days_worked,
+            'total_hours': total_hours,
+            'worked_days': cleaned_days,
+            'worked_dates': [d['date'] for d in cleaned_days],
             'notes': notes,
             'status': 'submitted',
             'created_at': now_iso,

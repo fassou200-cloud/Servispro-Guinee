@@ -341,10 +341,19 @@ const CompanyInterimTab = () => {
       ) : timesheets.map(t => (
         <Card key={t.id} className="p-4" data-testid={`company-ts-${t.id}`}>
           <div className="flex items-start justify-between gap-3">
-            <div>
+            <div className="flex-1">
               <h3 className="font-bold">{t.mission_title}</h3>
               <p className="text-sm text-gray-700">Prestataire : <strong>{t.provider_name}</strong></p>
-              <p className="text-sm text-gray-700"><strong>{t.days_worked}</strong> jour(s) travaillé(s)</p>
+              <p className="text-sm text-gray-700">
+                <strong>{t.total_hours || (t.days_worked * 8)} h</strong> = <strong>{t.days_worked}</strong> jour(s)
+              </p>
+              {t.worked_days && t.worked_days.length > 0 && (
+                <div className="mt-2 text-xs text-gray-600 space-y-0.5">
+                  {t.worked_days.map(d => (
+                    <div key={d.date}>• {new Date(d.date).toLocaleDateString('fr-FR', { weekday:'short', day:'2-digit', month:'short' })} — <strong>{d.hours}h</strong></div>
+                  ))}
+                </div>
+              )}
               {t.notes && <p className="text-xs text-gray-500 italic mt-1">« {t.notes} »</p>}
               {t.rejection_reason && <p className="text-xs text-red-600 mt-1">✗ {t.rejection_reason}</p>}
             </div>
