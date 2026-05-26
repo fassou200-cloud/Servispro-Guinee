@@ -84,8 +84,12 @@ async def create_mission(data: dict = Body(...), current_company: dict = Depends
 
     mission = {
         'id': str(uuid.uuid4()),
+        'owner_type': 'company',
+        'owner_id': current_company['id'],
+        'owner_name': current_company.get('company_name') or current_company.get('name', ''),
         'company_id': current_company['id'],
         'company_name': current_company.get('company_name') or current_company.get('name', ''),
+        'customer_id': None,
         'title': title,
         'description': description,
         'job_type': job_type,

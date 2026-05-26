@@ -277,7 +277,14 @@ const ProviderInterimTab = ({ user }) => {
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
                 <h3 className="font-bold text-lg">{m.title}</h3>
-                <p className="text-sm text-emerald-700 font-semibold">{m.company_name}</p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="text-sm text-emerald-700 font-semibold">{m.company_name}</p>
+                  {m.owner_type === 'customer' ? (
+                    <Badge className="bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200" data-testid={`particulier-badge-${m.id}`}>Particulier</Badge>
+                  ) : (
+                    <Badge className="bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200">Entreprise</Badge>
+                  )}
+                </div>
                 <p className="text-sm text-gray-600 mt-1 line-clamp-3">{m.description}</p>
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 mt-2">
                   <span><Badge variant="outline" className="text-xs">{m.job_type}</Badge></span>

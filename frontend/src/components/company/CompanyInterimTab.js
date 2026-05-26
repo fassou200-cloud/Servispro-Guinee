@@ -13,7 +13,24 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { getRegions, getVillesByRegion, getCommunesByVille } from '@/data/guineaLocations';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
-const auth = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('companyToken')}` } });
+
+// Default routes (company mode). Customer mode injects /interim/customer/* equivalents.
+const DEFAULT_ROUTES = {
+  createMission:    '/interim/missions',
+  listMissions:     '/interim/missions/mine',
+  updateMission:    (id) => `/interim/missions/${id}`,
+  deleteMission:    (id) => `/interim/missions/${id}`,
+  listApplications: (id) => `/interim/missions/${id}/applications`,
+  acceptApp:        (aid) => `/interim/applications/${aid}/accept`,
+  rejectApp:        (aid) => `/interim/applications/${aid}/reject`,
+  completeMission:  (id) => `/interim/missions/${id}/complete`,
+  rateProvider:     (id) => `/interim/missions/${id}/rate-provider`,
+  listTimesheets:   '/interim/timesheets/company',
+  validateTs:       (id) => `/interim/timesheets/${id}/validate`,
+  rejectTs:         (id) => `/interim/timesheets/${id}/reject`,
+};
+
+const buildAuth = (tokenKey) => ({ headers: { Authorization: `Bearer ${localStorage.getItem(tokenKey)}` } });
 
 const fmt = (n) => new Intl.NumberFormat('fr-FR').format(n || 0);
 const statusBadge = (s) => ({
@@ -30,7 +47,8 @@ const blankForm = {
   num_providers_needed: 1, documents_required: [],
 };
 
-const CompanyInterimTab = () => {
+const CompanyInterimTab = ({ routes = DEFAULT_ROUTES, tokenKey = 'companyToken', mode = 'company', ownerHeaderTitle = 'Missions Intérim', ownerHeaderSubtitle = 'Publiez des missions ponctuelles et recrutez des prestataires.' }) => {
+  const auth = () => buildAuth(tokenKey);
   const [missions, setMissions] = useState([]);
   const [timesheets, setTimesheets] = useState([]);
   const [view, setView] = useState('missions');     // missions | timesheets
@@ -49,8 +67,8 @@ const CompanyInterimTab = () => {
     setLoading(true);
     try {
       const [m, t] = await Promise.all([
-        axios.get(`${API}/interim/missions/mine`, auth()),
-        axios.get(`${API}/interim/timesheets/company`, auth()),
+        axios.get(`${API}${routes.listMissions}`, auth()),
+        axios.get(`${API}${routes.listTimesheets}`, auth()),
       ]);
       setMissions(m.data || []);
       setTimesheets(t.data || []);
@@ -59,11 +77,11 @@ const CompanyInterimTab = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [routes, tokenKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const validateTs = async (id) => {
     try {
-      await axios.post(`${API}/interim/timesheets/${id}/validate`, {}, auth());
+      await axios.post(`${API}${routes.validateTs(id)}`, {}, auth());
       toast.success('Pointage validé');
       loadMissions();
     } catch (e) { toast.error(e.response?.data?.detail || 'Erreur'); }
@@ -82,7 +100,7 @@ const CompanyInterimTab = () => {
       toast.error('Indiquez un motif d\'au moins 5 caractères'); return;
     }
     try {
-      await axios.post(`${API}/interim/timesheets/${rejectTsModal.id}/reject`, { reason: rejectReason.trim() }, auth());
+      await axios.post(`${API}${routes.rejectTs(rejectTsModal.id)}`, { reason: rejectReason.trim() }, auth());
       toast.success('Pointage rejeté');
       setRejectTsModal(null);
       loadMissions();
@@ -95,7 +113,7 @@ const CompanyInterimTab = () => {
   const submitRateProvider = async () => {
     if (!rateProviderModal) return;
     try {
-      await axios.post(`${API}/interim/missions/${rateProviderModal.mission_id}/rate-provider`, {
+      await axios.post(`${API}${routes.rateProvider(rateProviderModal.mission_id)}`, {
         provider_id: rateProviderModal.provider_id,
         stars: rateForm.stars,
         comment: rateForm.comment,
@@ -117,7 +135,7 @@ const CompanyInterimTab = () => {
     setExpanded(next);
     if (next[missionId] && !apps[missionId]) {
       try {
-        const res = await axios.get(`${API}/interim/missions/${missionId}/applications`, auth());
+        const res = await axios.get(`${API}${routes.listApplications(missionId)}`, auth());
         setApps((p) => ({ ...p, [missionId]: res.data || [] }));
       } catch {
         toast.error("Erreur de chargement des candidatures");
@@ -127,7 +145,7 @@ const CompanyInterimTab = () => {
 
   const refreshApps = async (missionId) => {
     try {
-      const res = await axios.get(`${API}/interim/missions/${missionId}/applications`, auth());
+      const res = await axios.get(`${API}${routes.listApplications(missionId)}`, auth());
       setApps((p) => ({ ...p, [missionId]: res.data || [] }));
     } catch {/* */}
   };
@@ -139,7 +157,7 @@ const CompanyInterimTab = () => {
     }
     setCreating(true);
     try {
-      await axios.post(`${API}/interim/missions`, {
+      await axios.post(`${API}${routes.createMission}`, {
         ...form,
         daily_rate: Number(form.daily_rate) || 0,
         num_providers_needed: Number(form.num_providers_needed) || 1,
@@ -161,7 +179,7 @@ const CompanyInterimTab = () => {
 
   const doAccept = async (mission, aid) => {
     try {
-      await axios.post(`${API}/interim/applications/${aid}/accept`, {}, auth());
+      await axios.post(`${API}${routes.acceptApp(aid)}`, {}, auth());
       toast.success('Candidat accepté');
       refreshApps(mission.id); loadMissions();
     } catch (e) { toast.error(e.response?.data?.detail || 'Erreur'); }
@@ -176,7 +194,7 @@ const CompanyInterimTab = () => {
 
   const rejectApp = async (mid, aid) => {
     try {
-      await axios.post(`${API}/interim/applications/${aid}/reject`, { reason: '' }, auth());
+      await axios.post(`${API}${routes.rejectApp(aid)}`, { reason: '' }, auth());
       toast.success('Candidature rejetée');
       refreshApps(mid);
     } catch (e) { toast.error(e.response?.data?.detail || 'Erreur'); }
@@ -185,7 +203,7 @@ const CompanyInterimTab = () => {
   const deleteMission = async () => {
     if (!deletingId) return;
     try {
-      await axios.delete(`${API}/interim/missions/${deletingId}`, auth());
+      await axios.delete(`${API}${routes.deleteMission(deletingId)}`, auth());
       toast.success('Mission supprimée');
       setDeletingId(null);
       loadMissions();
@@ -202,7 +220,7 @@ const CompanyInterimTab = () => {
 
   const submitComplete = async () => {
     try {
-      await axios.post(`${API}/interim/missions/${completing}/complete`, {
+      await axios.post(`${API}${routes.completeMission(completing)}`, {
         days_worked: Number(completeData.days_worked) || 1,
         daily_rate: Number(completeData.daily_rate) || 0,
       }, auth());
@@ -217,8 +235,8 @@ const CompanyInterimTab = () => {
     <div className="space-y-6" data-testid="company-interim-tab">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold flex items-center gap-2"><Briefcase className="h-5 w-5 text-emerald-600" /> Missions Intérim</h2>
-          <p className="text-sm text-gray-500">Publiez des missions ponctuelles et recrutez des prestataires.</p>
+          <h2 className="text-xl font-bold flex items-center gap-2"><Briefcase className="h-5 w-5 text-emerald-600" /> {ownerHeaderTitle}</h2>
+          <p className="text-sm text-gray-500">{ownerHeaderSubtitle}</p>
         </div>
         <Button onClick={() => setShowCreate(true)} className="bg-emerald-600 hover:bg-emerald-700 gap-2" data-testid="open-create-mission-btn">
           <Plus className="h-4 w-4" /> Publier une mission

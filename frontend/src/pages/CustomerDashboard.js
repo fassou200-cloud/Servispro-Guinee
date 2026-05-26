@@ -16,6 +16,7 @@ import { CustomerOverviewTab } from '@/components/customer/CustomerOverviewTab';
 import { CustomerDemandesTab } from '@/components/customer/CustomerDemandesTab';
 import { CustomerCreancesTab } from '@/components/customer/CustomerCreancesTab';
 import { CustomerAchatsTab } from '@/components/customer/CustomerAchatsTab';
+import CustomerInterimTab from '@/components/customer/CustomerInterimTab';
 import GuineaFlag from '@/components/GuineaFlag';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -475,6 +476,15 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
               </span>
             )}
           </Button>
+          <Button
+            variant={activeTab === 'interim' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('interim')}
+            className={`rounded-xl ${activeTab === 'interim' ? 'bg-emerald-600 hover:bg-emerald-700' : ''}`}
+            data-testid="tab-interim"
+          >
+            <Briefcase className="h-4 w-4 mr-2" />
+            Intérim
+          </Button>
         </div>
 
         {/* Tab Content */}
@@ -531,6 +541,10 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
             productInquiries={productInquiries}
             loadingProductInquiries={loadingProductInquiries}
           />
+        )}
+
+        {activeTab === 'interim' && (
+          <CustomerInterimTab />
         )}
       </div>
 
