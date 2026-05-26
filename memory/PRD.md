@@ -37,6 +37,12 @@ ServisPro est une plateforme guinéenne (Conakry) qui connecte clients, prestata
   - Admin valide ou rejette → auto-unsuspend du prestataire
 
 ## Changelog
+- **2026-02-26** : **Module Intérim Client** livré. Backend `routes/interim_customer.py` (14 endpoints `/api/interim/customer/*`, quota 2 missions actives). Frontend : `CompanyInterimTab.js` rendu paramétrique (props routes/tokenKey), wrapper `CustomerInterimTab.js`, onglet Intérim dans dashboard client. Badge « Particulier » vs « Entreprise » sur les missions côté prestataire.
+- **2026-02-26** : Compteur **« N missions réussies »** sur profil prestataire (header + section avis) et cartes Browse. Endpoint `/interim/ratings/provider/{id}` enrichi avec `completed_missions`.
+- **2026-02-26** : Localisation Région/Ville/Commune/Quartier (4 niveaux) dans le formulaire mission entreprise — identique inscription prestataire.
+- **2026-02-26** : Catégorie « Vêtements de sport » ajoutée au carousel Makiti + admin.
+- **2026-02-26** : Avis Intérim affichés sur profil prestataire (header badge + section dédiée) ; note combinée Clients+Intérim sur cartes Browse.
+- **2026-02-26** : Calendriers Disponibilité + Pointage compacts (`max-w-md`, cellules h-9) + dates futures grisées sur calendrier pointage. Modal Shadcn pour rejet de pointage avec motif obligatoire ≥ 5 caractères.
 - **2026-02-25** : **Phase 2 Intérim livrée** (28/28 tests). Backend : `routes/interim_phase2.py` (availability, timesheets, invoice HTML, ratings). Frontend : `AvailabilityCalendar.js`, 2 nouvelles vues côté prestataire (Pointages + Disponibilité) et 1 côté entreprise (Pointages), modales Pointage + Notation, boutons Facture + Noter sur missions complétées.
 - **2026-02-24** : Module Intérim Phase 1 complet
 - **2026-02-23** : Footer Makiti avec numéros tel: cliquables, réseaux sociaux, copyright
@@ -51,16 +57,17 @@ ServisPro est une plateforme guinéenne (Conakry) qui connecte clients, prestata
 ## Roadmap
 
 ### P0
-- Intégration Mobile Money (paiement réel) — phase 2 du module Intérim
+- Intégration Mobile Money (Orange / MTN) — paiement réel des commissions intérim
 - Rebascule DB_NAME vers `servispro_production` avant redéploiement
 
 ### P1
 - Refactor `CompanyDashboard.js` (~1060 lignes) via Context API
-- Module Intérim — Phase 2 : calendrier de dispo, pointage, facturation auto, notation
+- Refactor `CompanyInterimTab.js` / `ProviderInterimTab.js` devenus volumineux
 
 ### P2
 - Statut "En ligne/Hors ligne" en temps réel via WebSockets
-- Bug "Erreur lors de l'approbation" Admin
+- Bug "Erreur lors de l'approbation" Admin (à reproduire avec étapes utilisateur)
+- **Classement « Top prestataires de la semaine »** sur la home Makiti (missions réussies + note moyenne 7 derniers jours)
 
 ### P3
 - Localisation i18next pour textes français hardcodés
