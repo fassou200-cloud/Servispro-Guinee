@@ -664,18 +664,28 @@ const BrowseProviders = ({ isCustomerAuthenticated }) => {
                     {/* Rating */}
                     {(() => {
                       const combined = combinedRating(provider);
-                      if (!combined) return null;
+                      const completed = (interimStats[provider.id] || {}).completed_missions || 0;
+                      if (!combined && completed === 0) return null;
                       return (
                         <div className="flex items-center gap-2 mb-3 flex-wrap" data-testid={`combined-rating-${provider.id}`}>
-                          <div className="flex items-center gap-1">
-                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                            <span className="font-bold text-gray-900">{combined.avg.toFixed(1)}</span>
-                          </div>
-                          <span className="text-sm text-gray-500">({combined.total} avis)</span>
-                          {combined.cCount > 0 && combined.iCount > 0 && (
+                          {combined && (
+                            <>
+                              <div className="flex items-center gap-1">
+                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                                <span className="font-bold text-gray-900">{combined.avg.toFixed(1)}</span>
+                              </div>
+                              <span className="text-sm text-gray-500">({combined.total} avis)</span>
+                            </>
+                          )}
+                          {completed > 0 && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-semibold text-emerald-700">
+                              ✓ {completed} mission{completed > 1 ? 's' : ''}
+                            </span>
+                          )}
+                          {combined && combined.cCount > 0 && combined.iCount > 0 && (
                             <span className="text-[10px] text-gray-400">· {combined.cCount} clients · {combined.iCount} entreprises</span>
                           )}
-                          {combined.iCount > 0 && combined.cCount === 0 && (
+                          {combined && combined.iCount > 0 && combined.cCount === 0 && (
                             <span className="text-[10px] text-amber-600 font-semibold">Intérim</span>
                           )}
                         </div>

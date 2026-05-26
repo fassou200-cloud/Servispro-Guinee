@@ -493,10 +493,27 @@ async def provider_ratings_summary(provider_id: str):
         {'provider_id': provider_id, 'direction': 'company_to_provider'},
         {'_id': 0}
     ).sort('created_at', -1).to_list(50)
+    # Count completed missions for this provider (accepted applications
+    # whose mission has been marked as completed)
+    completed_mission_ids = await db.mission_applications.distinct('mission_id', {
+        'provider_id': provider_id,
+        'status': 'accepted',
+    })
+    completed_count = 0
+    if completed_mission_ids:
+        completed_count = await db.interim_missions.count_documents({
+            'id': {'$in': completed_mission_ids},
+            'status': 'completed',
+        })
     if not ratings:
-        return {'count': 0, 'average': 0, 'ratings': []}
+        return {'count': 0, 'average': 0, 'ratings': [], 'completed_missions': completed_count}
     avg = sum(r['stars'] for r in ratings) / len(ratings)
-    return {'count': len(ratings), 'average': round(avg, 2), 'ratings': ratings}
+    return {
+        'count': len(ratings),
+        'average': round(avg, 2),
+        'ratings': ratings,
+        'completed_missions': completed_count,
+    }
 
 
 @router.get("/interim/ratings/company/{company_id}")

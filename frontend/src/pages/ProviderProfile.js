@@ -328,7 +328,7 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
                 </div>
 
                 {/* Rating */}
-                {(reviewStats?.total_reviews > 0 || interimRatings.count > 0) && (
+                {(reviewStats?.total_reviews > 0 || interimRatings.count > 0 || interimRatings.completed_missions > 0) && (
                   <div className="flex items-center gap-4 mb-4 flex-wrap">
                     {reviewStats?.total_reviews > 0 && (
                       <div className="flex items-center gap-2" data-testid="header-client-rating">
@@ -346,6 +346,14 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
                         <Award className="h-4 w-4 text-amber-600" />
                         <span className="text-lg font-bold text-amber-700">{interimRatings.average.toFixed(1)}</span>
                         <span className="text-sm text-amber-600">Intérim ({interimRatings.count})</span>
+                      </div>
+                    )}
+                    {interimRatings.completed_missions > 0 && (
+                      <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200" data-testid="header-completed-missions">
+                        <CheckCircle className="h-4 w-4 text-emerald-600" />
+                        <span className="text-sm font-semibold text-emerald-700">
+                          {interimRatings.completed_missions} mission{interimRatings.completed_missions > 1 ? 's' : ''} réussie{interimRatings.completed_missions > 1 ? 's' : ''}
+                        </span>
                       </div>
                     )}
                   </div>
@@ -677,14 +685,24 @@ const ProviderProfile = ({ isCustomerAuthenticated }) => {
                 <Award className="h-5 w-5 text-amber-600" />
                 Avis Intérim · Entreprises
               </h3>
-              <div className="flex items-center gap-2">
-                <span className="text-3xl font-bold text-amber-600">{interimRatings.average.toFixed(1)}</span>
-                <div className="flex gap-0.5">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className={`h-5 w-5 ${i < Math.round(interimRatings.average) ? 'fill-amber-400 text-amber-400' : 'text-gray-300'}`} />
-                  ))}
+              <div className="flex flex-wrap items-center gap-3">
+                {interimRatings.completed_missions > 0 && (
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-100 border border-emerald-200" data-testid="completed-missions-badge">
+                    <CheckCircle className="h-4 w-4 text-emerald-600" />
+                    <span className="text-sm font-semibold text-emerald-700">
+                      {interimRatings.completed_missions} mission{interimRatings.completed_missions > 1 ? 's' : ''} réussie{interimRatings.completed_missions > 1 ? 's' : ''}
+                    </span>
+                  </div>
+                )}
+                <div className="flex items-center gap-2">
+                  <span className="text-3xl font-bold text-amber-600">{interimRatings.average.toFixed(1)}</span>
+                  <div className="flex gap-0.5">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className={`h-5 w-5 ${i < Math.round(interimRatings.average) ? 'fill-amber-400 text-amber-400' : 'text-gray-300'}`} />
+                    ))}
+                  </div>
+                  <span className="text-sm text-gray-500">({interimRatings.count} avis)</span>
                 </div>
-                <span className="text-sm text-gray-500">({interimRatings.count} avis)</span>
               </div>
             </div>
             <div className="grid md:grid-cols-2 gap-4">
