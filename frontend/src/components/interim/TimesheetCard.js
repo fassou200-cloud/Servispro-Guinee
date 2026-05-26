@@ -1,0 +1,43 @@
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { CheckCircle, XCircle } from 'lucide-react';
+
+const TimesheetCard = ({ timesheet: t, onValidate, onReject }) => (
+  <Card className="p-4" data-testid={`company-ts-${t.id}`}>
+    <div className="flex items-start justify-between gap-3">
+      <div className="flex-1">
+        <h3 className="font-bold">{t.mission_title}</h3>
+        <p className="text-sm text-gray-700">Prestataire : <strong>{t.provider_name}</strong></p>
+        <p className="text-sm text-gray-700">
+          <strong>{t.total_hours || (t.days_worked * 8)} h</strong> = <strong>{t.days_worked}</strong> jour(s)
+        </p>
+        {t.worked_days && t.worked_days.length > 0 && (
+          <div className="mt-2 text-xs text-gray-600 space-y-0.5">
+            {t.worked_days.map(d => (
+              <div key={d.date}>• {new Date(d.date).toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: 'short' })} — <strong>{d.hours}h</strong></div>
+            ))}
+          </div>
+        )}
+        {t.notes && <p className="text-xs text-gray-500 italic mt-1">« {t.notes} »</p>}
+        {t.rejection_reason && <p className="text-xs text-red-600 mt-1">✗ {t.rejection_reason}</p>}
+      </div>
+      <div className="flex flex-col gap-2 shrink-0">
+        {t.status === 'submitted' ? (
+          <>
+            <Button size="sm" onClick={() => onValidate(t.id)} className="bg-emerald-600 hover:bg-emerald-700 h-8" data-testid={`validate-ts-${t.id}`}>
+              <CheckCircle className="h-3.5 w-3.5 mr-1" /> Valider
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => onReject(t)} className="h-8 text-red-600 border-red-200" data-testid={`reject-ts-${t.id}`}>
+              <XCircle className="h-3.5 w-3.5 mr-1" /> Rejeter
+            </Button>
+          </>
+        ) : (
+          <Badge className={t.status === 'validated' ? 'bg-green-600' : 'bg-red-500'}>{t.status === 'validated' ? 'Validé' : 'Rejeté'}</Badge>
+        )}
+      </div>
+    </div>
+  </Card>
+);
+
+export default TimesheetCard;
