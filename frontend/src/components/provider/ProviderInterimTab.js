@@ -2,26 +2,22 @@ import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Briefcase, Coins, MapPin, Calendar, Send, Loader2, AlertTriangle, CheckCircle, Clock, XCircle, FileText } from 'lucide-react';
+import { Briefcase, Coins, MapPin, Calendar, Loader2, AlertTriangle, CheckCircle, Clock, XCircle, FileText, Send } from 'lucide-react';
 import AvailabilityCalendar from './AvailabilityCalendar';
-import TimesheetCalendar from './TimesheetCalendar';
+import {
+  ApplyMissionDialog,
+  PayCommissionDialog,
+  TimesheetSubmitDialog,
+  RateCompanyDialog,
+  DeclineMissionDialog,
+} from '@/components/interim/dialogs/ProviderInterimDialogs';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const auth = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
 const fmt = (n) => new Intl.NumberFormat('fr-FR').format(n || 0);
 
-const PAY_METHOD_LABELS = {
-  orange_money: 'Orange Money',
-  mtn_money: 'MTN Money',
-  bank: 'Virement bancaire',
-  other: 'Autre',
-};
 const COMMISSION_LABEL = {
   pending: { label: 'À payer', cls: 'bg-orange-100 text-orange-700' },
   submitted: { label: 'En vérification', cls: 'bg-blue-100 text-blue-700' },
@@ -436,200 +432,49 @@ const ProviderInterimTab = ({ user }) => {
       )}
 
       {/* Apply dialog */}
-      <Dialog open={!!applyTo} onOpenChange={(o) => !o && setApplyTo(null)}>
-        <DialogContent data-testid="apply-mission-dialog">
-          <DialogHeader>
-            <DialogTitle>Postuler à : {applyTo?.title}</DialogTitle>
-            <DialogDescription>Votre profil ({user?.first_name} {user?.last_name}) sera envoyé à {applyTo?.company_name}.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div>
-              <Label>Message (optionnel)</Label>
-              <Textarea rows={3} value={applyForm.cover_message} onChange={(e) => setApplyForm({ ...applyForm, cover_message: e.target.value })} placeholder="Présentez brièvement votre expérience…" maxLength={1000} data-testid="cover-message-input" />
-            </div>
-            <div>
-              <Label>Taux journalier proposé (GNF, optionnel)</Label>
-              <Input type="number" min="0" value={applyForm.proposed_rate} onChange={(e) => setApplyForm({ ...applyForm, proposed_rate: e.target.value })} placeholder={applyTo?.rate_negotiable ? 'Proposez votre taux' : `Offre: ${fmt(applyTo?.daily_rate)} GNF`} data-testid="proposed-rate-input" />
-            </div>
-          </div>
-          <div className="flex justify-end gap-2 mt-2">
-            <Button variant="outline" onClick={() => setApplyTo(null)}>Annuler</Button>
-            <Button onClick={submitApply} disabled={submitting} className="bg-emerald-600 hover:bg-emerald-700" data-testid="submit-apply-btn">
-              {submitting ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Envoi…</> : <><Send className="h-4 w-4 mr-2" /> Envoyer ma candidature</>}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ApplyMissionDialog
+        mission={applyTo}
+        user={user}
+        form={applyForm}
+        setForm={setApplyForm}
+        onClose={() => setApplyTo(null)}
+        onSubmit={submitApply}
+        submitting={submitting}
+      />
 
-      {/* Pay commission dialog */}
-      <Dialog open={!!payingFor} onOpenChange={(o) => !o && setPayingFor(null)}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto" data-testid="pay-commission-dialog">
-          <DialogHeader>
-            <DialogTitle>Payer la commission ServisPro</DialogTitle>
-            <DialogDescription>Effectuez le transfert puis saisissez les détails ci-dessous.</DialogDescription>
-          </DialogHeader>
-          {payingFor && (
-            <div className="space-y-3">
-              <Card className="p-3 bg-emerald-50 border-emerald-200">
-                <p className="text-sm text-gray-700">Mission : <strong>{payingFor.mission_title}</strong></p>
-                <p className="text-sm text-gray-700">Montant à régler : <strong className="text-red-600">{fmt(payingFor.commission_amount)} GNF</strong></p>
-              </Card>
+      <PayCommissionDialog
+        commission={payingFor}
+        form={payForm}
+        setForm={setPayForm}
+        payMethods={payMethods}
+        onClose={() => setPayingFor(null)}
+        onSubmit={submitPay}
+        submitting={submitting}
+      />
 
-              {payMethods.length > 0 && (
-                <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
-                  <p className="text-xs font-semibold text-blue-700 mb-1">Comptes ServisPro où transférer :</p>
-                  {payMethods.map(pm => (
-                    <div key={pm.id} className="text-sm py-1">
-                      <span className="font-semibold">{PAY_METHOD_LABELS[pm.type] || pm.type}</span> — {pm.label || pm.account_name}<br />
-                      <span className="font-mono text-gray-700">{pm.account_number}</span>
-                      {pm.instructions && <p className="text-xs text-gray-500 mt-0.5">{pm.instructions}</p>}
-                    </div>
-                  ))}
-                </div>
-              )}
+      <TimesheetSubmitDialog
+        app={tsModalApp}
+        form={tsForm}
+        setForm={setTsForm}
+        onToggleDate={toggleWorkedDate}
+        onSetHours={setHoursForDate}
+        onClose={() => setTsModalApp(null)}
+        onSubmit={submitTimesheet}
+      />
 
-              <div>
-                <Label>Moyen utilisé *</Label>
-                <select className="w-full h-10 px-3 border rounded-md text-sm" value={payForm.payment_method} onChange={(e) => setPayForm({ ...payForm, payment_method: e.target.value })} data-testid="pay-method-select">
-                  <option value="orange_money">Orange Money</option>
-                  <option value="mtn_money">MTN Money</option>
-                  <option value="bank">Virement bancaire</option>
-                  <option value="other">Autre</option>
-                </select>
-              </div>
-              <div>
-                <Label>Référence du transfert *</Label>
-                <Input value={payForm.transfer_reference} onChange={(e) => setPayForm({ ...payForm, transfer_reference: e.target.value })} placeholder="N° de transaction" data-testid="transfer-ref-input" required />
-              </div>
-              <div>
-                <Label>Numéro émetteur (optionnel)</Label>
-                <Input value={payForm.sender_phone} onChange={(e) => setPayForm({ ...payForm, sender_phone: e.target.value })} placeholder="+224..." />
-              </div>
-              <div>
-                <Label>Note (optionnel)</Label>
-                <Textarea rows={2} value={payForm.note} onChange={(e) => setPayForm({ ...payForm, note: e.target.value })} maxLength={500} />
-              </div>
-            </div>
-          )}
-          <div className="flex justify-end gap-2 mt-3">
-            <Button variant="outline" onClick={() => setPayingFor(null)}>Annuler</Button>
-            <Button onClick={submitPay} disabled={submitting} className="bg-emerald-600 hover:bg-emerald-700" data-testid="submit-payment-btn">
-              {submitting ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Envoi…</> : 'Soumettre la preuve'}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-      {/* Timesheet modal */}
-      <Dialog open={!!tsModalApp} onOpenChange={(o) => !o && setTsModalApp(null)}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto" data-testid="timesheet-dialog">
-          <DialogHeader>
-            <DialogTitle>Pointage : {tsModalApp?.mission_title}</DialogTitle>
-            <DialogDescription>Sélectionnez les jours réellement travaillés. L'entreprise validera votre pointage.</DialogDescription>
-          </DialogHeader>
-          {tsModalApp && (
-            <div className="space-y-3">
-              <TimesheetCalendar
-                startDate={tsModalApp.mission_start_date}
-                endDate={tsModalApp.mission_end_date}
-                selected={new Set((tsForm.worked_days || []).map(d => d.date))}
-                onToggle={toggleWorkedDate}
-              />
-              {tsForm.worked_days.length > 0 && (
-                <div className="space-y-2">
-                  <Label>Heures travaillées par jour</Label>
-                  <div className="max-h-48 overflow-y-auto space-y-1.5 border rounded-lg p-2 bg-gray-50">
-                    {tsForm.worked_days.map(d => (
-                      <div key={d.date} className="flex items-center gap-2" data-testid={`hours-row-${d.date}`}>
-                        <span className="text-sm font-mono w-28">{new Date(d.date).toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: 'short' })}</span>
-                        <Input
-                          type="number"
-                          step="0.5"
-                          min="0.5"
-                          max="24"
-                          value={d.hours}
-                          onChange={(e) => setHoursForDate(d.date, e.target.value)}
-                          className="h-8 w-24"
-                          data-testid={`hours-input-${d.date}`}
-                        />
-                        <span className="text-xs text-gray-500">h</span>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-xs text-gray-600">
-                    Total : <strong>{tsForm.worked_days.reduce((s, d) => s + Number(d.hours || 0), 0)} heures</strong>
-                    {' '}≈ <strong>{(tsForm.worked_days.reduce((s, d) => s + Number(d.hours || 0), 0) / 8).toFixed(2)} jour(s)</strong> (base 8h)
-                  </p>
-                </div>
-              )}
-              <div>
-                <Label>Notes (optionnel)</Label>
-                <Textarea rows={2} value={tsForm.notes} onChange={(e) => setTsForm({ ...tsForm, notes: e.target.value })} placeholder="Détails sur le travail effectué…" maxLength={1000} />
-              </div>
-            </div>
-          )}
-          <div className="flex justify-end gap-2 mt-2">
-            <Button variant="outline" onClick={() => setTsModalApp(null)}>Annuler</Button>
-            <Button onClick={submitTimesheet} className="bg-emerald-600 hover:bg-emerald-700" data-testid="submit-ts-btn">Envoyer le pointage</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <RateCompanyDialog
+        app={rateCompanyApp}
+        form={rateForm}
+        setForm={setRateForm}
+        onClose={() => setRateCompanyApp(null)}
+        onSubmit={submitRateCompany}
+      />
 
-      {/* Rate company modal */}
-      <Dialog open={!!rateCompanyApp} onOpenChange={(o) => !o && setRateCompanyApp(null)}>
-        <DialogContent data-testid="rate-company-dialog">
-          <DialogHeader>
-            <DialogTitle>Noter : {rateCompanyApp?.company_name}</DialogTitle>
-            <DialogDescription>Votre avis aide les futurs prestataires.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div>
-              <Label>Note</Label>
-              <div className="flex gap-1 text-3xl">
-                {[1,2,3,4,5].map(s => (
-                  <button key={s} type="button" onClick={() => setRateForm({ ...rateForm, stars: s })} className={s <= rateForm.stars ? 'text-amber-400' : 'text-gray-300'} data-testid={`star-${s}`}>★</button>
-                ))}
-              </div>
-            </div>
-            <div>
-              <Label>Commentaire (optionnel)</Label>
-              <Textarea rows={3} value={rateForm.comment} onChange={(e) => setRateForm({ ...rateForm, comment: e.target.value })} maxLength={1000} />
-            </div>
-          </div>
-          <div className="flex justify-end gap-2 mt-2">
-            <Button variant="outline" onClick={() => setRateCompanyApp(null)}>Annuler</Button>
-            <Button onClick={submitRateCompany} className="bg-amber-500 hover:bg-amber-600" data-testid="submit-rating-btn">Envoyer la note</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Decline mission confirmation */}
-      <Dialog open={!!decliningMission} onOpenChange={(o) => !o && setDecliningMission(null)}>
-        <DialogContent className="sm:max-w-md" data-testid="decline-mission-dialog">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <XCircle className="h-5 w-5 text-gray-500" />
-              Masquer cette mission ?
-            </DialogTitle>
-            <DialogDescription>
-              <span className="block mt-2 font-semibold text-gray-700">
-                {decliningMission?.title}
-              </span>
-              <span className="block mt-2 text-sm">
-                Cette mission n&apos;apparaîtra plus dans votre liste de missions disponibles.
-                Vous pourrez toujours la retrouver si l&apos;entreprise vous contacte directement.
-              </span>
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex justify-end gap-2 mt-2">
-            <Button variant="outline" onClick={() => setDecliningMission(null)} data-testid="cancel-decline-btn">
-              Annuler
-            </Button>
-            <Button onClick={declineMission} className="bg-gray-700 hover:bg-gray-800 text-white" data-testid="confirm-decline-btn">
-              Masquer la mission
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <DeclineMissionDialog
+        mission={decliningMission}
+        onClose={() => setDecliningMission(null)}
+        onConfirm={declineMission}
+      />
     </div>
   );
 };
