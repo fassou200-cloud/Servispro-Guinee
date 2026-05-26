@@ -193,7 +193,7 @@ const AuthPage = ({ setIsAuthenticated }) => {
   // Handle document upload
   const handleDocumentUpload = (e) => {
     const files = Array.from(e.target.files);
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    const maxSize = 2 * 1024 * 1024; // 2MB - aligned with platform proxy limit
     
     console.log('[DocumentUpload] Files selected:', files.length, files.map(f => f.name));
     
@@ -208,7 +208,7 @@ const AuthPage = ({ setIsAuthenticated }) => {
       console.log('[DocumentUpload] Processing file:', file.name, 'Size:', file.size);
       
       if (file.size > maxSize) {
-        toast.error(`${file.name} est trop volumineux (max 5MB)`);
+        toast.error(`${file.name} est trop volumineux (max 2 Mo). Compressez votre image/PDF avant de réessayer.`);
         return;
       }
       
@@ -1024,7 +1024,7 @@ const AuthPage = ({ setIsAuthenticated }) => {
                       <span className="text-sm text-slate-600 font-medium">
                         {documents.length === 0 ? 'Cliquez pour ajouter un document (obligatoire)' : 'Ajouter un autre document'}
                       </span>
-                      <span className="text-xs text-slate-500 mt-1">PDF, JPG, PNG (max 5MB par fichier)</span>
+                      <span className="text-xs text-slate-500 mt-1">PDF, JPG, PNG (max 2 Mo par fichier)</span>
                       <input
                         type="file"
                         accept=".pdf,.jpg,.jpeg,.png"

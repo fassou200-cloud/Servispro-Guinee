@@ -157,20 +157,35 @@ async def register(
             result = await upload_to_cloudinary(profile_photo, folder="servispro/profiles")
             if result["success"]:
                 profile_photo_path = result["url"]
+            else:
+                raise HTTPException(status_code=502, detail=f"Échec du téléversement de la photo de profil : {result.get('error', 'Cloudinary indisponible')}. Réessayez avec une image plus légère.")
     
     # Handle documents upload to Cloudinary
     uploaded_documents = []
+    rejected_documents = []
     for idx, doc in enumerate(documents):
         if doc and doc.filename:
             file_ext = doc.filename.split('.')[-1].lower()
-            if file_ext in ['jpg', 'jpeg', 'png', 'pdf', 'webp']:
-                result = await upload_to_cloudinary(doc, folder="servispro/documents")
-                if result["success"]:
-                    uploaded_documents.append({
-                        "filename": doc.filename,
-                        "path": result["url"],
-                        "uploaded_at": datetime.now(timezone.utc).isoformat()
-                    })
+            if file_ext not in ['jpg', 'jpeg', 'png', 'pdf', 'webp']:
+                rejected_documents.append(f"{doc.filename} (format non supporté)")
+                continue
+            result = await upload_to_cloudinary(doc, folder="servispro/documents")
+            if result["success"]:
+                uploaded_documents.append({
+                    "filename": doc.filename,
+                    "path": result["url"],
+                    "uploaded_at": datetime.now(timezone.utc).isoformat()
+                })
+            else:
+                rejected_documents.append(f"{doc.filename} ({result.get('error', 'upload échoué')})")
+    
+    # Fail if NO document was successfully uploaded
+    if not uploaded_documents:
+        msg = "Aucun document n'a pu être téléversé."
+        if rejected_documents:
+            msg += " Détails : " + " ; ".join(rejected_documents)
+        msg += " Compressez vos fichiers (max 2 Mo, formats PDF/JPG/PNG) puis réessayez."
+        raise HTTPException(status_code=400, detail=msg)
     
     user_doc = {
         'id': user_id,

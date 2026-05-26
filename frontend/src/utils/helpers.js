@@ -11,6 +11,24 @@
  * @returns {string} Human-readable error message
  */
 export const getErrorMessage = (error, defaultMessage = 'Une erreur est survenue') => {
+  // Network / no response (CORS, timeout, connection lost)
+  if (error && !error.response) {
+    if (error.code === 'ECONNABORTED') {
+      return "Le téléversement a expiré. Réessayez avec des fichiers plus légers (compressez vos images ou PDF).";
+    }
+    if (error.message && /Network/i.test(error.message)) {
+      return "Connexion réseau interrompue. Vérifiez votre connexion internet et réessayez.";
+    }
+  }
+
+  const status = error?.response?.status;
+  if (status === 413) {
+    return "Vos fichiers sont trop volumineux pour le serveur. Réduisez la taille (max 2 Mo par document recommandé) et réessayez.";
+  }
+  if (status === 502 || status === 503 || status === 504) {
+    return "Le serveur est momentanément indisponible. Réessayez dans quelques instants.";
+  }
+
   const detail = error.response?.data?.detail;
   
   if (!detail) return defaultMessage;
