@@ -120,24 +120,32 @@ const JwtSecurityCard = () => {
             </div>
           </div>
           <div className="flex gap-2 flex-wrap">
-            <Button
-              onClick={() => setShowRotateDlg(true)}
-              disabled={restarting}
-              className={due ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-emerald-600 hover:bg-emerald-700 text-white'}
-              data-testid="rotate-jwt-btn"
-            >
-              {restarting ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1.5" />}
-              Effectuer la rotation
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => setShowFinalizeDlg(true)}
-              disabled={restarting || !grace}
-              data-testid="finalize-jwt-btn"
-            >
-              <CheckCircle className="h-4 w-4 mr-1.5" />
-              Finaliser
-            </Button>
+            {status.live_rotation_enabled ? (
+              <>
+                <Button
+                  onClick={() => setShowRotateDlg(true)}
+                  disabled={restarting}
+                  className={due ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-emerald-600 hover:bg-emerald-700 text-white'}
+                  data-testid="rotate-jwt-btn"
+                >
+                  {restarting ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1.5" />}
+                  Effectuer la rotation
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowFinalizeDlg(true)}
+                  disabled={restarting || !grace}
+                  data-testid="finalize-jwt-btn"
+                >
+                  <CheckCircle className="h-4 w-4 mr-1.5" />
+                  Finaliser
+                </Button>
+              </>
+            ) : (
+              <span className="text-xs px-3 py-1.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200 font-semibold" data-testid="jwt-readonly-badge">
+                Production · rotation manuelle
+              </span>
+            )}
           </div>
         </div>
 
@@ -163,6 +171,25 @@ const JwtSecurityCard = () => {
           <div className="mt-4 p-3 rounded-lg bg-blue-100 border border-blue-300 text-blue-900 text-sm flex items-center gap-2" data-testid="jwt-restarting">
             <Loader2 className="h-4 w-4 animate-spin" />
             Backend en cours de redémarrage… (5-10 secondes)
+          </div>
+        )}
+
+        {!status.live_rotation_enabled && (
+          <div className="mt-4 p-4 rounded-lg bg-blue-50 border border-blue-200 text-sm text-slate-700" data-testid="jwt-prod-instructions">
+            <div className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
+              <Shield className="h-4 w-4" /> Procédure de rotation en production
+            </div>
+            <ol className="list-decimal list-inside space-y-1 text-slate-700">
+              <li>Sur Emergent : <strong>Deploy → Environment Variables</strong></li>
+              <li>Copier la valeur actuelle de <code className="bg-white px-1.5 py-0.5 rounded text-xs">JWT_SECRET</code> dans <code className="bg-white px-1.5 py-0.5 rounded text-xs">JWT_SECRET_PREVIOUS</code></li>
+              <li>Générer un nouveau secret (86+ caractères) et le mettre dans <code className="bg-white px-1.5 py-0.5 rounded text-xs">JWT_SECRET</code></li>
+              <li>Mettre la date du jour dans <code className="bg-white px-1.5 py-0.5 rounded text-xs">JWT_SECRET_ROTATED_AT</code> (format ISO : <code>2026-11-23T00:00:00Z</code>)</li>
+              <li><strong>Redéployer</strong></li>
+              <li>Après 24h : retirer <code className="bg-white px-1.5 py-0.5 rounded text-xs">JWT_SECRET_PREVIOUS</code> puis redéployer à nouveau</li>
+            </ol>
+            <div className="mt-3 text-xs text-slate-500">
+              Astuce générateur : <code className="bg-white px-1.5 py-0.5 rounded text-xs">python3 -c "import secrets; print(secrets.token_urlsafe(64))"</code>
+            </div>
           </div>
         )}
       </Card>

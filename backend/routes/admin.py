@@ -6,7 +6,7 @@ import logging
 import bcrypt
 
 from database import db
-from config import ADMIN_ACCOUNTS, RATE_LIMIT_WINDOW, RATE_LIMIT_MAX_ATTEMPTS, RATE_LIMIT_BLOCK_DURATION, JWT_SECRET_PREVIOUS
+from config import ADMIN_ACCOUNTS, RATE_LIMIT_WINDOW, RATE_LIMIT_MAX_ATTEMPTS, RATE_LIMIT_BLOCK_DURATION, JWT_SECRET_PREVIOUS, JWT_ROTATION_ENABLED
 import os
 from dependencies import get_current_user, get_current_company, get_current_customer, create_token
 from models import (
@@ -51,14 +51,27 @@ async def admin_jwt_rotation_status():
         'next_rotation_recommended_at': next_rotation_iso,
         'rotation_due': rotation_due,
         'grace_window_active': bool(JWT_SECRET_PREVIOUS),
-        'how_to_rotate': "Run on server: python3 /app/backend/scripts/rotate_jwt_secret.py",
+        'live_rotation_enabled': JWT_ROTATION_ENABLED,
+        'how_to_rotate': (
+            "Run on server: python3 /app/backend/scripts/rotate_jwt_secret.py"
+            if JWT_ROTATION_ENABLED else
+            "Production: update JWT_SECRET in Emergent → Deploy → Environment variables, then redeploy."
+        ),
     }
 
 
 @router.post("/admin/jwt/rotate")
 async def admin_jwt_rotate():
-    """Rotate JWT_SECRET. Triggers a backend restart in ~2 seconds.
-    Frontend should display a 'restart in progress' state then re-query /jwt/status."""
+    """Rotate JWT_SECRET. Disabled on production deployments where the .env is read-only."""
+    if not JWT_ROTATION_ENABLED:
+        raise HTTPException(
+            status_code=403,
+            detail=(
+                "Rotation à chaud désactivée sur cet environnement. "
+                "En production : modifiez JWT_SECRET et JWT_SECRET_PREVIOUS dans Emergent → Deploy → "
+                "Environment Variables, puis redéployez."
+            ),
+        )
     try:
         result = perform_rotation()
     except RuntimeError as e:
@@ -69,8 +82,16 @@ async def admin_jwt_rotate():
 
 @router.post("/admin/jwt/finalize")
 async def admin_jwt_finalize():
-    """Remove JWT_SECRET_PREVIOUS. All tokens signed with the previous secret
-    become invalid. Triggers a backend restart in ~2 seconds."""
+    """Remove JWT_SECRET_PREVIOUS. Disabled on production deployments."""
+    if not JWT_ROTATION_ENABLED:
+        raise HTTPException(
+            status_code=403,
+            detail=(
+                "Finalisation à chaud désactivée sur cet environnement. "
+                "En production : supprimez JWT_SECRET_PREVIOUS dans Emergent → Deploy → "
+                "Environment Variables, puis redéployez."
+            ),
+        )
     result = perform_finalize()
     schedule_backend_restart(delay_seconds=2)
     return {**result, 'restart_in_seconds': 2}
