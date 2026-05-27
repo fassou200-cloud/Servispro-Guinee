@@ -15,6 +15,7 @@ from models import (
     InquiryMessage, ProductUpdate, RefundDecision
 )
 from utils.cloudinary_helper import upload_to_cloudinary, delete_from_cloudinary, delete_provider_cloudinary_files, delete_company_cloudinary_files
+from utils.jwt_rotation import perform_rotation, perform_finalize, schedule_backend_restart
 from utils.security import (
     log_audit_event, get_client_ip, is_ip_blocked, record_failed_attempt,
     clear_failed_attempts, login_attempts, blocked_ips
@@ -52,6 +53,27 @@ async def admin_jwt_rotation_status():
         'grace_window_active': bool(JWT_SECRET_PREVIOUS),
         'how_to_rotate': "Run on server: python3 /app/backend/scripts/rotate_jwt_secret.py",
     }
+
+
+@router.post("/admin/jwt/rotate")
+async def admin_jwt_rotate():
+    """Rotate JWT_SECRET. Triggers a backend restart in ~2 seconds.
+    Frontend should display a 'restart in progress' state then re-query /jwt/status."""
+    try:
+        result = perform_rotation()
+    except RuntimeError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    schedule_backend_restart(delay_seconds=2)
+    return {**result, 'restart_in_seconds': 2}
+
+
+@router.post("/admin/jwt/finalize")
+async def admin_jwt_finalize():
+    """Remove JWT_SECRET_PREVIOUS. All tokens signed with the previous secret
+    become invalid. Triggers a backend restart in ~2 seconds."""
+    result = perform_finalize()
+    schedule_backend_restart(delay_seconds=2)
+    return {**result, 'restart_in_seconds': 2}
 
 
 @router.get("/admin/vehicle-sales")
