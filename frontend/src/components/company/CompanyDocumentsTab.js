@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card';
 import {
   Shield, FileText, ExternalLink, Eye, Upload, CheckCircle, XCircle
 } from 'lucide-react';
+import { getImageUrl } from '@/utils/imageUrl';
 
 // Document Upload Card Component (extracted from CompanyDashboard)
 const DocumentUploadCard = ({ title, document: docPath, docType, onUpload, required, isImage, BACKEND_URL }) => {
@@ -34,7 +35,7 @@ const DocumentUploadCard = ({ title, document: docPath, docType, onUpload, requi
 
       {isImage && docPath && (
         <div className="mb-4">
-          <img src={`${BACKEND_URL}${docPath}`} alt={title} className="h-24 w-24 object-cover rounded-lg" />
+          <img src={getImageUrl(docPath, 'thumb')} alt={title} className="h-24 w-24 object-cover rounded-lg" />
         </div>
       )}
 

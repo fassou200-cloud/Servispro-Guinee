@@ -258,7 +258,7 @@ const BrowsePropertySales = ({ isCustomerAuthenticated }) => {
                 <div className="relative h-48 bg-gray-200">
                   {property.photos && property.photos.length > 0 ? (
                     <img
-                      src={getImageUrl(property.photos[0])}
+                      src={getImageUrl(property.photos[0], 'card')}
                       alt={property.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
@@ -346,7 +346,7 @@ const BrowsePropertySales = ({ isCustomerAuthenticated }) => {
                 {selectedProperty.photos && selectedProperty.photos.length > 0 ? (
                   <>
                     <img
-                      src={getImageUrl(selectedProperty.photos[currentImageIndex])}
+                      src={getImageUrl(selectedProperty.photos[currentImageIndex], 'large')}
                       alt={selectedProperty.title}
                       className="w-full h-64 md:h-full object-cover"
                     />

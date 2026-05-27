@@ -538,7 +538,7 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
               >
                 <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-gray-100 border border-gray-100">
                   {product.photos?.length > 0 ? (
-                    <img src={getImageUrl(product.photos[0])} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    <img src={getImageUrl(product.photos[0], 'card')} alt={product.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center"><Package className="h-10 w-10 text-gray-300" /></div>
                   )}
@@ -781,7 +781,7 @@ const Marketplace = ({ isCustomerAuthenticated }) => {
                 >
                   <div className="relative aspect-square rounded-2xl overflow-hidden bg-gray-100 border border-gray-100">
                     {product.photos?.length > 0 ? (
-                      <img src={getImageUrl(product.photos[0])} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      <img src={getImageUrl(product.photos[0], 'card')} alt={product.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center"><Package className="h-12 w-12 text-gray-300" /></div>
                     )}

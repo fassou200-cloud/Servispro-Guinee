@@ -279,7 +279,7 @@ const BrowseRentals = () => {
                   <div className="relative aspect-[4/3] overflow-hidden">
                     {rental.photos && rental.photos.length > 0 ? (
                       <img
-                        src={getImageUrl(rental.photos[0])}
+                        src={getImageUrl(rental.photos[0], 'card')}
                         alt={rental.title}
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                       />

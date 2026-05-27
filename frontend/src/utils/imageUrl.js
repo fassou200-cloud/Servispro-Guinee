@@ -1,27 +1,37 @@
 // Utility function to get the correct image URL
 // Handles both Cloudinary URLs (full URLs starting with https://) and local URLs (/api/uploads/...)
+// `size` triggers Cloudinary responsive transformation to save bandwidth.
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
-export const getImageUrl = (imagePath) => {
+const SIZE_TRANSFORMS = {
+  thumb: 'f_auto,q_auto,w_200,c_limit',
+  card: 'f_auto,q_auto,w_600,c_limit',
+  medium: 'f_auto,q_auto,w_1000,c_limit',
+  large: 'f_auto,q_auto,w_1600,c_limit',
+  // default: just format + quality optimization (no size constraint)
+  default: 'f_auto,q_auto',
+};
+
+export const getImageUrl = (imagePath, size = 'default') => {
   if (!imagePath) return null;
-  
-  // If it's a Cloudinary URL, add f_auto transformation for browser compatibility
-  // This converts HEIC/HEIF and other unsupported formats to JPEG/WebP automatically
+
+  // Cloudinary URL → inject transformation
   if (imagePath.includes('res.cloudinary.com')) {
-    // Insert f_auto,q_auto after /upload/ if not already present
-    if (!imagePath.includes('/f_auto') && !imagePath.includes('/f_jpg')) {
-      return imagePath.replace('/upload/', '/upload/f_auto,q_auto/');
+    const transform = SIZE_TRANSFORMS[size] || SIZE_TRANSFORMS.default;
+    // If a transformation already exists right after /upload/, leave it alone
+    if (/\/upload\/(f_|w_|q_|c_)/.test(imagePath)) {
+      return imagePath;
     }
-    return imagePath;
+    return imagePath.replace('/upload/', `/upload/${transform}/`);
   }
-  
-  // If it's already a full URL, return as-is
+
+  // Already a full URL (Unsplash, external) → leave as-is
   if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
     return imagePath;
   }
-  
-  // Otherwise, it's a local path, prepend backend URL
+
+  // Local backend path
   return `${BACKEND_URL}${imagePath}`;
 };
 

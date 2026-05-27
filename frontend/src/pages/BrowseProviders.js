@@ -615,7 +615,7 @@ const BrowseProviders = ({ isCustomerAuthenticated }) => {
                     <div className="absolute -bottom-10 left-6">
                       <Avatar className="h-20 w-20 ring-4 ring-white shadow-lg">
                         <AvatarImage
-                          src={getImageUrl(provider.profile_picture)}
+                          src={getImageUrl(provider.profile_picture, 'thumb')}
                           alt={`${provider.first_name} ${provider.last_name}`}
                         />
                         <AvatarFallback className="text-2xl font-bold bg-white text-gray-700">

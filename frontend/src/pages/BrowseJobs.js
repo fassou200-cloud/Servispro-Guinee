@@ -9,6 +9,7 @@ import {
   Calendar, Users, ChevronRight, Home, Filter, X
 } from 'lucide-react';
 import axios from 'axios';
+import { getImageUrl } from '@/utils/imageUrl';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -236,7 +237,7 @@ const BrowseJobs = () => {
                     <div className="flex-shrink-0">
                       {job.company_logo ? (
                         <img 
-                          src={`${BACKEND_URL}${job.company_logo}`}
+                          src={getImageUrl(job.company_logo, 'thumb')}
                           alt={job.company_name}
                           className="w-16 h-16 rounded-xl object-cover"
                         />
@@ -297,7 +298,7 @@ const BrowseJobs = () => {
                   <div className="flex items-center gap-4 mb-6 pb-6 border-b">
                     {selectedJob.company_logo ? (
                       <img 
-                        src={`${BACKEND_URL}${selectedJob.company_logo}`}
+                        src={getImageUrl(selectedJob.company_logo, 'medium')}
                         alt={selectedJob.company_name}
                         className="w-16 h-16 rounded-xl object-cover"
                       />

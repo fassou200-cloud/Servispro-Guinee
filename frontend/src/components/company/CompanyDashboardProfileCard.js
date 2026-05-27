@@ -1,6 +1,7 @@
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Building2, MapPin, Phone, Mail } from 'lucide-react';
+import { getImageUrl } from '@/utils/imageUrl';
 
 const STATUS_BADGE = {
   approved: { label: 'Approuvée', cls: 'bg-green-100 text-green-700' },
@@ -14,7 +15,7 @@ const CompanyDashboardProfileCard = ({ company, backendUrl, docStatus }) => {
     <Card className="p-6 mb-6">
       <div className="flex items-center gap-6">
         <Avatar className="h-20 w-20 ring-4 ring-primary/20">
-          <AvatarImage src={company.logo ? `${backendUrl}${company.logo}` : undefined} />
+          <AvatarImage src={getImageUrl(company.logo, 'thumb') || undefined} />
           <AvatarFallback className="text-2xl font-heading bg-primary text-primary-foreground">
             <Building2 className="h-8 w-8" />
           </AvatarFallback>
