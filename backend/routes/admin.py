@@ -6,7 +6,7 @@ import logging
 import bcrypt
 
 from database import db
-from config import ADMIN_ACCOUNTS, RATE_LIMIT_WINDOW, RATE_LIMIT_MAX_ATTEMPTS, RATE_LIMIT_BLOCK_DURATION, JWT_SECRET_PREVIOUS, JWT_ROTATION_ENABLED
+from config import ADMIN_ACCOUNTS, RATE_LIMIT_WINDOW, RATE_LIMIT_MAX_ATTEMPTS, RATE_LIMIT_BLOCK_DURATION
 import os
 from dependencies import get_current_user, get_current_company, get_current_customer, create_token
 from models import (
@@ -15,7 +15,6 @@ from models import (
     InquiryMessage, ProductUpdate, RefundDecision
 )
 from utils.cloudinary_helper import upload_to_cloudinary, delete_from_cloudinary, delete_provider_cloudinary_files, delete_company_cloudinary_files
-from utils.jwt_rotation import perform_rotation, perform_finalize, schedule_backend_restart
 from utils.security import (
     log_audit_event, get_client_ip, is_ip_blocked, record_failed_attempt,
     clear_failed_attempts, login_attempts, blocked_ips
@@ -23,78 +22,6 @@ from utils.security import (
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
-
-
-# ============================================================================
-# JWT secret rotation status (visible from admin dashboard)
-# ============================================================================
-@router.get("/admin/jwt/status")
-async def admin_jwt_rotation_status():
-    """Show JWT secret rotation status to the admin dashboard."""
-    rotated_iso = os.environ.get('JWT_SECRET_ROTATED_AT', '').strip() or None
-    days_since = None
-    next_rotation_iso = None
-    rotation_due = False
-    if rotated_iso:
-        try:
-            d = datetime.fromisoformat(rotated_iso.replace('Z', '+00:00'))
-            days_since = (datetime.now(timezone.utc) - d).days
-            next_dt = d + timedelta(days=180)
-            next_rotation_iso = next_dt.isoformat()
-            rotation_due = days_since >= 180
-        except Exception:
-            pass
-    return {
-        'rotated_at': rotated_iso,
-        'days_since_rotation': days_since,
-        'recommended_interval_days': 180,
-        'next_rotation_recommended_at': next_rotation_iso,
-        'rotation_due': rotation_due,
-        'grace_window_active': bool(JWT_SECRET_PREVIOUS),
-        'live_rotation_enabled': JWT_ROTATION_ENABLED,
-        'how_to_rotate': (
-            "Run on server: python3 /app/backend/scripts/rotate_jwt_secret.py"
-            if JWT_ROTATION_ENABLED else
-            "Production: update JWT_SECRET in Emergent → Deploy → Environment variables, then redeploy."
-        ),
-    }
-
-
-@router.post("/admin/jwt/rotate")
-async def admin_jwt_rotate():
-    """Rotate JWT_SECRET. Disabled on production deployments where the .env is read-only."""
-    if not JWT_ROTATION_ENABLED:
-        raise HTTPException(
-            status_code=403,
-            detail=(
-                "Rotation à chaud désactivée sur cet environnement. "
-                "En production : modifiez JWT_SECRET et JWT_SECRET_PREVIOUS dans Emergent → Deploy → "
-                "Environment Variables, puis redéployez."
-            ),
-        )
-    try:
-        result = perform_rotation()
-    except RuntimeError as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    schedule_backend_restart(delay_seconds=2)
-    return {**result, 'restart_in_seconds': 2}
-
-
-@router.post("/admin/jwt/finalize")
-async def admin_jwt_finalize():
-    """Remove JWT_SECRET_PREVIOUS. Disabled on production deployments."""
-    if not JWT_ROTATION_ENABLED:
-        raise HTTPException(
-            status_code=403,
-            detail=(
-                "Finalisation à chaud désactivée sur cet environnement. "
-                "En production : supprimez JWT_SECRET_PREVIOUS dans Emergent → Deploy → "
-                "Environment Variables, puis redéployez."
-            ),
-        )
-    result = perform_finalize()
-    schedule_backend_restart(delay_seconds=2)
-    return {**result, 'restart_in_seconds': 2}
 
 
 @router.get("/admin/vehicle-sales")

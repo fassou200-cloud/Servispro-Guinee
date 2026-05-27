@@ -8,14 +8,6 @@ if not JWT_SECRET or JWT_SECRET == 'your-secret-key-change-in-production' or len
         "JWT_SECRET must be set in environment (.env) and at least 32 chars. "
         "Generate one with: python3 -c \"import secrets; print(secrets.token_urlsafe(64))\""
     )
-# Optional: previous secret kept during a grace window (e.g., 24h after rotation)
-# so existing tokens stay valid. Set to None / empty when no rotation in progress.
-JWT_SECRET_PREVIOUS = os.environ.get('JWT_SECRET_PREVIOUS') or None
-JWT_SECRET_ROTATED_AT = os.environ.get('JWT_SECRET_ROTATED_AT')  # ISO date string, informational
-# Live rotation via HTTP endpoints only on environments where the .env is writable
-# (typically preview / dev). On production deployments the env vars are managed by
-# the platform (Emergent), so set JWT_ROTATION_ENABLED=false in prod.
-JWT_ROTATION_ENABLED = (os.environ.get('JWT_ROTATION_ENABLED', 'true').lower() in ('1', 'true', 'yes'))
 JWT_ALGORITHM = 'HS256'
 JWT_EXPIRATION_HOURS = 24
 

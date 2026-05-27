@@ -1,7 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { AlertCircle, Building, CheckCircle, DollarSign, Eye, Home, Loader2, RefreshCw, Save, Settings, Sparkles, TrendingUp } from 'lucide-react';
-import JwtSecurityCard from '@/components/admin/JwtSecurityCard';
 
 const AdminSettingsTab = ({
   commissionRevenue,
@@ -20,9 +19,6 @@ const AdminSettingsTab = ({
 }) => {
   return (
     <div className="space-y-6">
-      {/* JWT Security card — always visible at the top of settings */}
-      <JwtSecurityCard />
-
       {tabLoading && !loadedTabs['settings'] ? (
         <Card className="p-8 bg-slate-800 border-slate-700 text-center">
           <Loader2 className="h-8 w-8 animate-spin text-purple-500 mx-auto mb-2" />
