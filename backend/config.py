@@ -1,32 +1,36 @@
 import os
 from pathlib import Path
 
-# JWT Configuration
-JWT_SECRET = os.environ.get('JWT_SECRET', 'your-secret-key-change-in-production')
+# JWT Configuration — REQUIRED in .env, fail fast if missing/default
+JWT_SECRET = os.environ.get('JWT_SECRET')
+if not JWT_SECRET or JWT_SECRET == 'your-secret-key-change-in-production' or len(JWT_SECRET) < 32:
+    raise RuntimeError(
+        "JWT_SECRET must be set in environment (.env) and at least 32 chars. "
+        "Generate one with: python3 -c \"import secrets; print(secrets.token_urlsafe(64))\""
+    )
+# Optional: previous secret kept during a grace window (e.g., 24h after rotation)
+# so existing tokens stay valid. Set to None / empty when no rotation in progress.
+JWT_SECRET_PREVIOUS = os.environ.get('JWT_SECRET_PREVIOUS') or None
+JWT_SECRET_ROTATED_AT = os.environ.get('JWT_SECRET_ROTATED_AT')  # ISO date string, informational
 JWT_ALGORITHM = 'HS256'
 JWT_EXPIRATION_HOURS = 24
 
-# Admin accounts configuration (multiple admins supported)
-ADMIN_ACCOUNTS = [
-    {
-        "username": "herman.haba@servisprogn.com",
-        "password": "Servisproguinea2026$2027",
-        "role": "super-admin"
-    },
-    {
-        "username": "barthelemy.haba@servisprogn.com",
-        "password": "DDraper2026Servisprogn",
-        "role": "super-admin"
-    },
-    {
-        "username": "servispro@servisprogn.com",
-        "password": "Servisproguinea2026#",
-        "role": "super-admin"
-    }
-]
+# Admin accounts — credentials loaded from environment ONLY.
+# Format ADMIN_ACCOUNTS env var: "user1@x:pwd1,user2@x:pwd2"
+_admin_env = os.environ.get('ADMIN_ACCOUNTS', '').strip()
+ADMIN_ACCOUNTS = []
+if _admin_env:
+    for entry in _admin_env.split(','):
+        if ':' in entry:
+            u, p = entry.split(':', 1)
+            ADMIN_ACCOUNTS.append({'username': u.strip(), 'password': p.strip(), 'role': 'super-admin'})
 
-# Admin invitation code for registration
-ADMIN_INVITE_CODE = os.environ.get('ADMIN_INVITE_CODE', 'SERVISPRO2024')
+# Admin invitation code for registration — REQUIRED in .env
+ADMIN_INVITE_CODE = os.environ.get('ADMIN_INVITE_CODE')
+if not ADMIN_INVITE_CODE or len(ADMIN_INVITE_CODE) < 16:
+    raise RuntimeError(
+        "ADMIN_INVITE_CODE must be set in environment (.env) and at least 16 chars."
+    )
 
 # Rate Limiting Configuration
 RATE_LIMIT_WINDOW = 300  # 5 minutes window

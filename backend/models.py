@@ -277,6 +277,35 @@ class ServiceProvider(BaseModel):
     is_active: bool = True
     created_at: str
 
+
+class ServiceProviderPublic(BaseModel):
+    """Public-safe projection of a provider — strips PII documents that
+    must not leak via public endpoints (national ID photo, diplomas, etc.).
+    Used by the public `/providers` and `/providers/{id}` endpoints.
+    """
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    first_name: str
+    last_name: str
+    phone_number: str
+    profession: str
+    profession_group: Optional[str] = None
+    years_experience: Optional[str] = None
+    custom_profession: Optional[str] = None
+    about_me: Optional[str] = None
+    profile_picture: Optional[str] = None
+    online_status: bool = False
+    price: Optional[int] = None
+    investigation_fee: Optional[int] = None
+    location: Optional[str] = None
+    region: Optional[str] = None
+    ville: Optional[str] = None
+    commune: Optional[str] = None
+    quartier: Optional[str] = None
+    verification_status: Optional[str] = None
+    is_active: bool = True
+    created_at: str
+
 class Company(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str

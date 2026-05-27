@@ -3,9 +3,21 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from config import JWT_SECRET, JWT_ALGORITHM, ADMIN_ACCOUNTS
+from config import JWT_SECRET, JWT_SECRET_PREVIOUS, JWT_ALGORITHM, ADMIN_ACCOUNTS
 from database import db
 from utils.security import get_client_ip, is_ip_blocked, log_audit_event
+
+
+def _decode_with_rotation(token: str):
+    """Decode JWT trying CURRENT secret first, fall back to PREVIOUS during grace window."""
+    try:
+        return jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+    except jwt.ExpiredSignatureError:
+        raise
+    except jwt.InvalidTokenError:
+        if JWT_SECRET_PREVIOUS:
+            return jwt.decode(token, JWT_SECRET_PREVIOUS, algorithms=[JWT_ALGORITHM])
+        raise
 
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
@@ -71,7 +83,7 @@ class AdminAuthMiddleware(BaseHTTPMiddleware):
         
         token = auth_header.split("Bearer ")[1]
         try:
-            payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+            payload = _decode_with_rotation(token)
             user_id = payload.get("user_id")
             
             is_admin = False

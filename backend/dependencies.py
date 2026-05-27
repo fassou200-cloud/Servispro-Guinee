@@ -5,7 +5,7 @@ from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from database import db
-from config import JWT_SECRET, JWT_ALGORITHM, JWT_EXPIRATION_HOURS
+from config import JWT_SECRET, JWT_SECRET_PREVIOUS, JWT_ALGORITHM, JWT_EXPIRATION_HOURS
 
 security = HTTPBearer()
 
@@ -19,6 +19,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 
 def create_token(user_id: str) -> str:
+    """Always sign new tokens with the CURRENT secret."""
     expiration = datetime.now(timezone.utc) + timedelta(hours=JWT_EXPIRATION_HOURS)
     payload = {
         'user_id': user_id,
@@ -27,12 +28,29 @@ def create_token(user_id: str) -> str:
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
 
+def decode_token(token: str) -> dict:
+    """Verify token against CURRENT secret, fall back to PREVIOUS during grace period.
+
+    Raises jwt.ExpiredSignatureError or jwt.InvalidTokenError so callers keep their
+    existing try/except blocks unchanged.
+    """
+    try:
+        return jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+    except jwt.ExpiredSignatureError:
+        raise
+    except jwt.InvalidTokenError:
+        # During the post-rotation grace window try the previous secret
+        if JWT_SECRET_PREVIOUS:
+            return jwt.decode(token, JWT_SECRET_PREVIOUS, algorithms=[JWT_ALGORITHM])
+        raise
+
+
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     try:
         token = credentials.credentials
-        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        payload = decode_token(token)
         user_id = payload.get('user_id')
-        
+
         user = await db.service_providers.find_one({'id': user_id}, {'_id': 0, 'password': 0})
         if not user:
             raise HTTPException(status_code=401, detail="User not found")
@@ -47,9 +65,9 @@ async def get_current_company(credentials: HTTPAuthorizationCredentials = Depend
     """Get current authenticated company"""
     try:
         token = credentials.credentials
-        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        payload = decode_token(token)
         company_id = payload.get('user_id')
-        
+
         company = await db.companies.find_one({'id': company_id}, {'_id': 0, 'password': 0})
         if not company:
             raise HTTPException(status_code=401, detail="Company not found")
@@ -64,9 +82,9 @@ async def get_current_customer(credentials: HTTPAuthorizationCredentials = Depen
     """Get current authenticated customer"""
     try:
         token = credentials.credentials
-        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        payload = decode_token(token)
         customer_id = payload.get('user_id')
-        
+
         customer = await db.customers.find_one({'id': customer_id}, {'_id': 0, 'password': 0})
         if not customer:
             raise HTTPException(status_code=401, detail="Customer not found")

@@ -565,23 +565,36 @@ async def get_all_companies(
     sector: Optional[str] = None,
     region: Optional[str] = None
 ):
-    """Get all approved companies (public)"""
+    """Get all approved companies (public) — strips internal legal documents."""
     query = {'verification_status': 'approved'}
     if sector:
         query['sector'] = sector
     if region:
         query['region'] = region
-    
-    companies = await db.companies.find(query, {'_id': 0, 'password': 0}).to_list(None)
+
+    companies = await db.companies.find(
+        query,
+        {
+            '_id': 0, 'password': 0,
+            'licence_exploitation': 0, 'rccm_document': 0,
+            'nif_document': 0, 'attestation_fiscale': 0,
+            'documents_additionnels': 0,
+        }
+    ).to_list(None)
     return companies
 
 
 @router.get("/companies/{company_id}")
 async def get_company(company_id: str):
-    """Get a specific company (public)"""
+    """Get a specific company (public) — strips internal legal documents."""
     company = await db.companies.find_one(
         {'id': company_id, 'verification_status': 'approved'},
-        {'_id': 0, 'password': 0}
+        {
+            '_id': 0, 'password': 0,
+            'licence_exploitation': 0, 'rccm_document': 0,
+            'nif_document': 0, 'attestation_fiscale': 0,
+            'documents_additionnels': 0,
+        }
     )
     if not company:
         raise HTTPException(status_code=404, detail="Entreprise non trouvée")

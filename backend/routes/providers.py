@@ -6,7 +6,7 @@ import logging
 
 from database import db
 from dependencies import get_current_user
-from models import ServiceProvider, ProfileUpdate
+from models import ServiceProvider, ServiceProviderPublic, ProfileUpdate
 from utils.cloudinary_helper import upload_to_cloudinary, delete_from_cloudinary
 
 logger = logging.getLogger(__name__)
@@ -112,28 +112,31 @@ async def set_offline(current_user: dict = Depends(get_current_user)):
     return {'online_status': False}
 
 
-@router.get("/providers", response_model=List[ServiceProvider])
+@router.get("/providers", response_model=List[ServiceProviderPublic])
 async def get_all_providers():
-    # Only return active, non-deleted providers
+    # Only return active, non-deleted providers — strip PII documents
     providers = await db.service_providers.find(
         {
             '$or': [{'is_active': True}, {'is_active': {'$exists': False}}],
             'is_deleted': {'$ne': True}
         },
-        {'_id': 0, 'password': 0}
+        {'_id': 0, 'password': 0, 'id_verification_picture': 0, 'documents': 0}
     ).to_list(None)
-    return [ServiceProvider(**p) for p in providers]
+    return [ServiceProviderPublic(**p) for p in providers]
 
 
-@router.get("/providers/{provider_id}", response_model=ServiceProvider)
+@router.get("/providers/{provider_id}", response_model=ServiceProviderPublic)
 async def get_provider_by_id(provider_id: str):
-    provider = await db.service_providers.find_one({'id': provider_id}, {'_id': 0, 'password': 0})
+    provider = await db.service_providers.find_one(
+        {'id': provider_id},
+        {'_id': 0, 'password': 0, 'id_verification_picture': 0, 'documents': 0}
+    )
     if not provider:
         raise HTTPException(status_code=404, detail="Provider not found")
     # Check if provider is active
     if provider.get('is_active') == False:
         raise HTTPException(status_code=404, detail="Ce prestataire n'est plus disponible")
-    return ServiceProvider(**provider)
+    return ServiceProviderPublic(**provider)
 
 # Provider Document Management
 

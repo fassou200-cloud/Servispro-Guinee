@@ -6,7 +6,8 @@ import logging
 import bcrypt
 
 from database import db
-from config import ADMIN_ACCOUNTS, RATE_LIMIT_WINDOW, RATE_LIMIT_MAX_ATTEMPTS, RATE_LIMIT_BLOCK_DURATION
+from config import ADMIN_ACCOUNTS, RATE_LIMIT_WINDOW, RATE_LIMIT_MAX_ATTEMPTS, RATE_LIMIT_BLOCK_DURATION, JWT_SECRET_PREVIOUS
+import os
 from dependencies import get_current_user, get_current_company, get_current_customer, create_token
 from models import (
     UpdateProviderAboutInput, UpdateProviderProfileInput,
@@ -21,6 +22,37 @@ from utils.security import (
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+
+# ============================================================================
+# JWT secret rotation status (visible from admin dashboard)
+# ============================================================================
+@router.get("/admin/jwt/status")
+async def admin_jwt_rotation_status():
+    """Show JWT secret rotation status to the admin dashboard."""
+    rotated_iso = os.environ.get('JWT_SECRET_ROTATED_AT', '').strip() or None
+    days_since = None
+    next_rotation_iso = None
+    rotation_due = False
+    if rotated_iso:
+        try:
+            d = datetime.fromisoformat(rotated_iso.replace('Z', '+00:00'))
+            days_since = (datetime.now(timezone.utc) - d).days
+            next_dt = d + timedelta(days=180)
+            next_rotation_iso = next_dt.isoformat()
+            rotation_due = days_since >= 180
+        except Exception:
+            pass
+    return {
+        'rotated_at': rotated_iso,
+        'days_since_rotation': days_since,
+        'recommended_interval_days': 180,
+        'next_rotation_recommended_at': next_rotation_iso,
+        'rotation_due': rotation_due,
+        'grace_window_active': bool(JWT_SECRET_PREVIOUS),
+        'how_to_rotate': "Run on server: python3 /app/backend/scripts/rotate_jwt_secret.py",
+    }
+
 
 @router.get("/admin/vehicle-sales")
 async def admin_get_all_vehicle_sales(status: str = None):
