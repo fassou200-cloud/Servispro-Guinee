@@ -72,7 +72,7 @@ const JobsList = () => {
       toast.success('Travail marqué comme terminé ! En attente de confirmation du client.');
       fetchJobs();
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Échec de l\'opération');
+      toast.error(getErrorMessage(error, 'Échec de l\'opération'));
     }
   };
 

@@ -1,11 +1,13 @@
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
 from typing import List, Optional
 from datetime import datetime, timezone
+import os
 import uuid
 import logging
 
 from database import db
 from dependencies import get_current_user
+from config import UPLOAD_DIR
 from models import ServiceProvider, ServiceProviderPublic, ProfileUpdate
 from utils.storage import upload_to_cloudinary, delete_from_cloudinary
 

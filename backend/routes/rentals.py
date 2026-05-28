@@ -8,7 +8,7 @@ from database import db
 from dependencies import get_current_user, get_current_customer
 from models import (
     RentalListingCreate, RentalListing, PropertyType, ListingApprovalStatus,
-    VisitRequestCreate, VisitRequestUpdate, VisitPaymentUpdate,
+    VisitRequestCreate, VisitRequestUpdate, VisitPaymentUpdate, VisitRequestStatus,
     ChatMessageCreate, ChatMessage, RentalMessageInput
 )
 from utils.storage import upload_to_cloudinary

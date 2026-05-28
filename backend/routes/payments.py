@@ -11,6 +11,19 @@ from models import PaymentCreate, PaymentStatus, PayWithCreditsRequest, RefundRe
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
+
+def generate_transaction_reference(payment_method: str) -> str:
+    """Generate a unique transaction reference. Prefix matches the mobile money provider."""
+    method = (payment_method or '').lower()
+    if 'orange' in method:
+        prefix = 'OM'
+    elif 'mtn' in method or 'momo' in method:
+        prefix = 'MTN'
+    else:
+        prefix = 'TX'
+    return f"{prefix}-{uuid.uuid4().hex[:12].upper()}"
+
+
 @router.post("/payments/initiate")
 async def initiate_payment(payment: PaymentCreate):
     """

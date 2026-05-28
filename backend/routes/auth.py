@@ -12,7 +12,7 @@ from models import (
     RegisterInput, LoginInput, AuthResponse, CustomerRegisterInput,
     CompanyRegisterInput, CompanyLoginInput, CompanyResetPasswordInput,
     AdminLoginInput, AdminRegisterInput, PasswordResetRequest, PasswordResetVerify,
-    ProfessionType, UserType, ServiceProvider
+    ProfessionType, UserType, ServiceProvider, ProviderStatus
 )
 from utils.security import log_audit_event, get_client_ip, is_ip_blocked, record_failed_attempt, clear_failed_attempts
 from utils.storage import upload_to_cloudinary

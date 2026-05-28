@@ -12,7 +12,8 @@ from dependencies import get_current_user, get_current_company, get_current_cust
 from models import (
     UpdateProviderAboutInput, UpdateProviderProfileInput,
     AdminSettingsUpdate, ServiceFeesUpdate, AdminPropertyInquiryResponse,
-    InquiryMessage, ProductUpdate, RefundDecision
+    InquiryMessage, ProductUpdate, RefundDecision,
+    ProviderStatus, VehicleSaleStatus, ListingApprovalStatus
 )
 from utils.storage import upload_to_cloudinary, delete_from_cloudinary, delete_provider_cloudinary_files, delete_company_cloudinary_files
 from utils.security import (

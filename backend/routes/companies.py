@@ -10,7 +10,7 @@ from dependencies import get_current_company, get_current_user, hash_password, v
 from models import (
     CompanyProfileUpdate, CompanyChangePassword, CompanyServiceCreate, CompanyService,
     CompanyJobOfferCreate, CompanyJobOffer, RentalListingCreate, RentalListing,
-    PropertySaleCreate, PropertySale, RentalMessageInput
+    PropertySaleCreate, PropertySale, RentalMessageInput, ListingApprovalStatus
 )
 from utils.storage import upload_to_cloudinary, delete_from_cloudinary
 
