@@ -120,6 +120,18 @@ const CompanyAuth = ({ setIsCompanyAuthenticated }) => {
       if (setIsCompanyAuthenticated) setIsCompanyAuthenticated(true);
       navigate('/company/dashboard');
     } catch (error) {
+      const detail = error?.response?.data?.detail;
+      if (detail && typeof detail === 'object' && detail.error_code === 'PHONE_NOT_VERIFIED') {
+        toast.info('Veuillez d\'abord vérifier le numéro de l\'entreprise.');
+        navigate('/verify-phone', {
+          state: {
+            phone_number: detail.phone_number || loginData.phone_number,
+            user_type: 'company',
+            redirectTo: '/company/auth',
+          },
+        });
+        return;
+      }
       toast.error(getErrorMessage(error, 'Échec de la connexion'));
     } finally {
       setLoading(false);
@@ -283,9 +295,14 @@ const CompanyAuth = ({ setIsCompanyAuthenticated }) => {
         }
       }
 
-      toast.success('Documents téléchargés avec succès !');
-      if (setIsCompanyAuthenticated) setIsCompanyAuthenticated(true);
-      navigate('/company/dashboard');
+      toast.success('Documents téléchargés avec succès ! Vérifiez votre numéro pour activer le compte.');
+      navigate('/verify-phone', {
+        state: {
+          phone_number: formData.phone_number,
+          user_type: 'company',
+          redirectTo: '/company/auth',
+        },
+      });
     } catch (error) {
       toast.error(getErrorMessage(error, 'Échec du téléchargement'));
     } finally {

@@ -279,6 +279,19 @@ const AuthPage = ({ setIsAuthenticated }) => {
         toast.success(`Bienvenue ${response.data.user.first_name} !`);
         setIsAuthenticated(true);
       } catch (error) {
+        // Detect "phone not verified" → redirect to verification page
+        const detail = error?.response?.data?.detail;
+        if (detail && typeof detail === 'object' && detail.error_code === 'PHONE_NOT_VERIFIED') {
+          toast.info('Veuillez d\'abord vérifier votre numéro de téléphone.');
+          navigate('/verify-phone', {
+            state: {
+              phone_number: detail.phone_number || formData.phone_number,
+              user_type: 'provider',
+              redirectTo: '/auth',
+            },
+          });
+          return;
+        }
         toast.error(getErrorMessage(error, 'Une erreur est survenue'));
       } finally {
         setLoading(false);
@@ -376,8 +389,14 @@ const AuthPage = ({ setIsAuthenticated }) => {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
       
-      toast.success('Inscription réussie ! Bienvenue sur ServisPro.');
-      setIsAuthenticated(true);
+      toast.success('Inscription réussie ! Vérifiez votre numéro pour activer votre compte.');
+      navigate('/verify-phone', {
+        state: {
+          phone_number: response.data.user.phone_number || formData.phone_number,
+          user_type: 'provider',
+          redirectTo: '/auth',
+        },
+      });
     } catch (error) {
       toast.error(getErrorMessage(error, 'Une erreur est survenue'));
     } finally {

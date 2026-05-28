@@ -210,6 +210,7 @@ async def register(
         'verification_status': ProviderStatus.PENDING.value,
         'price': None,
         'investigation_fee': None,
+        'phone_verified': False,
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     
@@ -276,6 +277,17 @@ async def login(input_data: LoginInput, request: Request):
         )
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
+    # Block login if phone not verified — but still let them through to verify
+    if not user.get('phone_verified', False):
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "error_code": "PHONE_NOT_VERIFIED",
+                "message": "Votre numéro n'est pas encore vérifié. Un code vous a été envoyé par SMS.",
+                "phone_number": user.get('phone_number'),
+            },
+        )
+    
     # Clear failed attempts on successful login
     clear_failed_attempts(client_ip)
     
@@ -337,6 +349,7 @@ async def register_customer(input_data: CustomerRegisterInput):
         'last_name': input_data.last_name,
         'phone_number': normalized_phone,
         'password': hashed_pwd,
+        'phone_verified': False,
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     
@@ -400,6 +413,7 @@ async def register_company(input_data: CompanyRegisterInput):
         # Status
         'verification_status': 'pending',
         'online_status': False,
+        'phone_verified': False,
         'created_at': now,
         'updated_at': now
     }
@@ -458,6 +472,17 @@ async def login_company(input_data: CompanyLoginInput, request: Request):
             success=False
         )
         raise HTTPException(status_code=401, detail="Numéro de téléphone ou mot de passe incorrect")
+    
+    # Block login if phone not verified
+    if not company.get('phone_verified', False):
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "error_code": "PHONE_NOT_VERIFIED",
+                "message": "Le numéro de l'entreprise n'est pas encore vérifié. Un code vous a été envoyé par SMS.",
+                "phone_number": company.get('phone_number'),
+            },
+        )
     
     # Clear failed attempts on successful login
     clear_failed_attempts(client_ip)

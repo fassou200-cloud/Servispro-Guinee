@@ -162,3 +162,23 @@ Suite à un rapport de code review automatisé. Tous les **bugs critiques runtim
 
 ### P1 — Monitoring
 - **Endpoint `/api/health`** : retourne `{"status":"ok","db":"connected","storage":"r2"}` pour surveillance externe (UptimeRobot/cronjob). Détection instantanée d'un crash backend post-redéploiement. ~30min
+
+## Phone Verification (OTP) — mai 2026
+Vérification obligatoire du numéro de téléphone à l'inscription pour les 3 types d'utilisateurs (prestataires, clients, entreprises). SMS via **Africa's Talking** (mode `sandbox` actif pour dev).
+
+**Architecture** :
+- `utils/sms_helper.py` — wrapper Africa's Talking SDK
+- `utils/otp_helper.py` — génération + stockage + vérification (6 chiffres, 10min, max 5 tentatives, max 3 envois/h)
+- `routes/otp.py` — `POST /api/otp/send`, `POST /api/otp/verify`
+- `scripts/grandfather_phone_verified.py` — marque tous les utilisateurs existants comme vérifiés (exécuté sur dev + prod le 28 mai)
+- Frontend : page `/verify-phone` (`VerifyPhonePage.js`) + redirections depuis `AuthPage`, `CustomerAuth`, `CompanyAuth`
+
+**Login flow** : Si `phone_verified=False`, l'API retourne HTTP 403 avec `error_code: "PHONE_NOT_VERIFIED"` + `phone_number`. Le frontend détecte et redirige automatiquement vers `/verify-phone`.
+
+**WhatsApp** : Bouton "support" ouvre `wa.me/<support>` pour vérification manuelle. **Phase 2** : intégrer Twilio WhatsApp Sandbox pour automatisation.
+
+**À déployer en prod** :
+1. Ajouter dans Emergent Deploy → Env Vars : `AT_USERNAME`, `AT_API_KEY`, `AT_SENDER_ID` (vide pour sandbox)
+2. Le script grandfather a déjà été exécuté sur prod le 28 mai (les 212 utilisateurs existants sont marqués vérifiés)
+3. Pour passer Africa's Talking en **mode Live** : créer une app payante AT (~$5 minimum), demander approbation Sender ID `ServisPro` (2-7j), mettre à jour `AT_USERNAME=ServisPro` + `AT_SENDER_ID=ServisPro` dans `.env` prod
+

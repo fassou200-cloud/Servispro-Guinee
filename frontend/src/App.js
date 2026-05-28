@@ -19,6 +19,7 @@ import AdminAuth from '@/pages/AdminAuth';
 import AdminDashboard from '@/pages/AdminDashboard';
 import CompanyAuth from '@/pages/CompanyAuth';
 import CompanyDashboard from '@/pages/CompanyDashboard';
+import VerifyPhonePage from '@/pages/VerifyPhonePage';
 import { Toaster } from '@/components/ui/sonner';
 import FeedbackButton from '@/components/FeedbackButton';
 import IOSInstallBanner from '@/components/IOSInstallBanner';
@@ -94,6 +95,9 @@ function App() {
             path="/company/dashboard" 
             element={isCompanyAuthenticated ? <CompanyDashboard setIsCompanyAuthenticated={setIsCompanyAuthenticated} /> : <Navigate to="/company/auth" />} 
           />
+
+          {/* Phone verification */}
+          <Route path="/verify-phone" element={<VerifyPhonePage />} />
 
           {/* Admin Routes */}
           <Route 

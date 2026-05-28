@@ -126,13 +126,38 @@ const CustomerAuth = ({ setIsCustomerAuthenticated }) => {
       localStorage.setItem('customerToken', response.data.token);
       localStorage.setItem('customer', JSON.stringify(response.data.user));
       
+      if (!isLogin) {
+        // New customer — force phone verification before they can use the app
+        toast.success(`Compte créé avec succès, ${response.data.user.first_name} ! Vérifiez votre numéro pour continuer.`);
+        navigate('/verify-phone', {
+          state: {
+            phone_number: response.data.user.phone_number || formData.phone_number,
+            user_type: 'customer',
+            redirectTo: '/customer/auth',
+          },
+        });
+        return;
+      }
+      
       if (setIsCustomerAuthenticated) {
         setIsCustomerAuthenticated(true);
       }
       
-      toast.success(isLogin ? `Bienvenue ${response.data.user.first_name} !` : `Compte créé avec succès, bienvenue ${response.data.user.first_name} !`);
+      toast.success(`Bienvenue ${response.data.user.first_name} !`);
       navigate('/customer/dashboard');
     } catch (error) {
+      const detail = error?.response?.data?.detail;
+      if (detail && typeof detail === 'object' && detail.error_code === 'PHONE_NOT_VERIFIED') {
+        toast.info('Veuillez d\'abord vérifier votre numéro de téléphone.');
+        navigate('/verify-phone', {
+          state: {
+            phone_number: detail.phone_number || formData.phone_number,
+            user_type: 'customer',
+            redirectTo: '/customer/auth',
+          },
+        });
+        return;
+      }
       toast.error(getErrorMessage(error, 'Une erreur est survenue'));
     } finally {
       setLoading(false);
