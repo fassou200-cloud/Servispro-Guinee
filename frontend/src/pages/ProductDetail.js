@@ -9,6 +9,8 @@ import { formatGuineanPhone } from '@/utils/phone';
 import { toast } from 'sonner';
 import axios from 'axios';
 import { getImageUrl } from '@/utils/imageUrl';
+import { getCurrentUserContact, isPhoneVerifiedInSession } from '@/utils/helpers';
+import PhoneVerifyBox from '@/components/PhoneVerifyBox';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -42,6 +44,9 @@ const ProductDetail = () => {
   const [sending, setSending] = useState(false);
   const [contactForm, setContactForm] = useState({ sender_name: '', sender_phone: '', message: '' });
   const [phoneRevealed, setPhoneRevealed] = useState(false);
+  const [phoneLocked, setPhoneLocked] = useState(false);
+  const [needsOtp, setNeedsOtp] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
   const [reviews, setReviews] = useState([]);
   const [reviewForm, setReviewForm] = useState({ rating: 0, comment: '' });
   const [submittingReview, setSubmittingReview] = useState(false);
@@ -58,6 +63,24 @@ const ProductDetail = () => {
       if (contacted.includes(productId)) setPhoneRevealed(true);
     } catch {}
   }, [productId]);
+
+  // Pre-fill contact form from any logged-in user (customer/provider/company) when modal opens.
+  useEffect(() => {
+    if (!showContactForm) return;
+    const me = getCurrentUserContact();
+    if (me?.phone) {
+      setContactForm((prev) => ({
+        ...prev,
+        sender_name: prev.sender_name || me.name || '',
+        sender_phone: me.phone,
+      }));
+      setPhoneLocked(true);
+      setOtpVerified(true); // Logged-in user is already phone-verified at login
+      setNeedsOtp(false);
+    } else {
+      setPhoneLocked(false);
+    }
+  }, [showContactForm]);
 
   const fetchProduct = async () => {
     try {
@@ -102,6 +125,11 @@ const ProductDetail = () => {
       toast.error('Veuillez écrire un message');
       return;
     }
+    // Anonymous user: require OTP verification of the phone before sending
+    if (!phoneLocked && !otpVerified && !isPhoneVerifiedInSession(phone)) {
+      setNeedsOtp(true);
+      return;
+    }
     setSending(true);
     try {
       await axios.post(`${API}/marketplace/products/${productId}/message`, {
@@ -112,6 +140,8 @@ const ProductDetail = () => {
       toast.success('Message envoyé au vendeur !');
       setShowContactForm(false);
       setContactForm({ sender_name: '', sender_phone: '', message: '' });
+      setNeedsOtp(false);
+      setOtpVerified(false);
       // Reveal seller phone after sending message
       setPhoneRevealed(true);
       try {
@@ -412,7 +442,14 @@ const ProductDetail = () => {
                       type="tel"
                       minLength={8}
                       required
+                      disabled={phoneLocked}
+                      className={phoneLocked ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : ''}
                     />
+                    {phoneLocked && (
+                      <p className="text-xs text-emerald-600 -mt-1.5 flex items-center gap-1">
+                        <Check className="h-3 w-3" /> Numéro vérifié de votre compte
+                      </p>
+                    )}
                     <Textarea
                       data-testid="contact-message"
                       placeholder={`Bonjour, je suis intéressé par "${product.name}"...`}
@@ -421,13 +458,24 @@ const ProductDetail = () => {
                       rows={3}
                       required
                     />
+                    {needsOtp && !otpVerified && (
+                      <PhoneVerifyBox
+                        phone={contactForm.sender_phone}
+                        onVerified={() => {
+                          setOtpVerified(true);
+                          setNeedsOtp(false);
+                          // Auto-submit the form after verification
+                          handleSendMessage({ preventDefault: () => {} });
+                        }}
+                      />
+                    )}
                     <Button
                       data-testid="send-message-btn"
                       type="submit"
                       className="w-full bg-green-500 hover:bg-green-600 py-5 text-base disabled:opacity-50"
-                      disabled={sending || !contactForm.sender_name.trim() || contactForm.sender_phone.trim().length < 8 || !contactForm.message.trim()}
+                      disabled={sending || !contactForm.sender_name.trim() || contactForm.sender_phone.trim().length < 8 || !contactForm.message.trim() || (needsOtp && !otpVerified)}
                     >
-                      {sending ? 'Envoi...' : 'Envoyer le message'}
+                      {sending ? 'Envoi...' : (needsOtp && !otpVerified ? 'Vérifiez votre numéro ci-dessus' : 'Envoyer le message')}
                     </Button>
                   </form>
                   {!phoneRevealed && (

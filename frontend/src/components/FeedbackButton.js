@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,12 +16,15 @@ import {
   CheckCircle2,
   User,
   FileText,
-  HelpCircle
+  HelpCircle,
+  Check
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
 import { formatGuineanPhone } from '@/utils/phone';
 import GuineaFlag from '@/components/GuineaFlag';
+import PhoneVerifyBox from '@/components/PhoneVerifyBox';
+import { getCurrentUserContact, isPhoneVerifiedInSession } from '@/utils/helpers';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -30,12 +33,36 @@ const FeedbackButton = ({ className = '' }) => {
   const [open, setOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [phoneLocked, setPhoneLocked] = useState(false);
+  const [needsOtp, setNeedsOtp] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
   const [formData, setFormData] = useState({
     user_name: '',
     title: '',
     description: '',
     user_phone: ''
   });
+
+  // Pre-fill name + phone from logged-in user when dialog opens.
+  useEffect(() => {
+    if (!open) {
+      // Reset OTP state on close
+      setNeedsOtp(false);
+      setOtpVerified(false);
+      setPhoneLocked(false);
+      return;
+    }
+    const me = getCurrentUserContact();
+    if (me?.phone) {
+      setFormData((prev) => ({
+        ...prev,
+        user_name: prev.user_name || me.name || '',
+        user_phone: me.phone,
+      }));
+      setPhoneLocked(true);
+      setOtpVerified(true);
+    }
+  }, [open]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -58,6 +85,11 @@ const FeedbackButton = ({ className = '' }) => {
     }
     if (formData.description.trim().length < 10) {
       toast.error('Le message doit contenir au moins 10 caractères');
+      return;
+    }
+    // Anonymous user: require OTP verification first
+    if (!phoneLocked && !otpVerified && !isPhoneVerifiedInSession(formData.user_phone)) {
+      setNeedsOtp(true);
       return;
     }
 
@@ -161,10 +193,16 @@ const FeedbackButton = ({ className = '' }) => {
                       onBlur={(e) => setFormData((prev) => ({ ...prev, user_phone: formatGuineanPhone(e.target.value) }))}
                       placeholder="Ex: 224 6XX XXX XXX"
                       required
-                      className="pl-12 border-gray-200 focus:border-green-500 focus:ring-green-500"
+                      disabled={phoneLocked}
+                      className={`pl-12 border-gray-200 focus:border-green-500 focus:ring-green-500 ${phoneLocked ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : ''}`}
                       data-testid="contact-phone-input"
                     />
                   </div>
+                  {phoneLocked && (
+                    <p className="text-xs text-emerald-600 flex items-center gap-1">
+                      <Check className="h-3 w-3" /> Numéro vérifié de votre compte
+                    </p>
+                  )}
                 </div>
 
                 {/* Title/Subject */}
@@ -203,6 +241,17 @@ const FeedbackButton = ({ className = '' }) => {
                   <p className="text-xs text-gray-400 text-right">{formData.description.length}/1000</p>
                 </div>
 
+                {needsOtp && !otpVerified && (
+                  <PhoneVerifyBox
+                    phone={formData.user_phone}
+                    onVerified={() => {
+                      setOtpVerified(true);
+                      setNeedsOtp(false);
+                      handleSubmit();
+                    }}
+                  />
+                )}
+
                 {/* Submit Button */}
                 <div className="flex gap-3 pt-2">
                   <Button
@@ -214,7 +263,7 @@ const FeedbackButton = ({ className = '' }) => {
                   </Button>
                   <Button
                     onClick={handleSubmit}
-                    disabled={submitting || !formData.user_name.trim() || !formData.title.trim() || formData.description.trim().length < 10}
+                    disabled={submitting || !formData.user_name.trim() || !formData.title.trim() || formData.description.trim().length < 10 || (needsOtp && !otpVerified)}
                     className="flex-1 bg-green-500 hover:bg-green-600 text-white"
                     data-testid="contact-submit-btn"
                   >
@@ -223,6 +272,8 @@ const FeedbackButton = ({ className = '' }) => {
                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                         Envoi...
                       </div>
+                    ) : needsOtp && !otpVerified ? (
+                      'Vérifiez votre numéro'
                     ) : (
                       <div className="flex items-center gap-2">
                         <Send className="h-4 w-4" />

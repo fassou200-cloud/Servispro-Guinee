@@ -112,3 +112,66 @@ export const getRelativeTime = (dateString) => {
   if (diff < 604800) return `Il y a ${Math.floor(diff / 86400)} j`;
   return formatDate(dateString);
 };
+
+/**
+ * Returns the currently-logged-in user's contact info (name + phone) from
+ * any of the 3 user types (customer, provider, company). Returns null when
+ * no user is logged in.
+ */
+export const getCurrentUserContact = () => {
+  try {
+    const customer = JSON.parse(localStorage.getItem('customer') || 'null');
+    if (customer) {
+      return {
+        name: `${customer.first_name || ''} ${customer.last_name || ''}`.trim(),
+        phone: customer.phone_number || '',
+        type: 'customer',
+      };
+    }
+  } catch {}
+  try {
+    const provider = JSON.parse(localStorage.getItem('user') || 'null');
+    if (provider) {
+      return {
+        name: `${provider.first_name || ''} ${provider.last_name || ''}`.trim(),
+        phone: provider.phone_number || '',
+        type: 'provider',
+      };
+    }
+  } catch {}
+  try {
+    const company = JSON.parse(localStorage.getItem('company') || 'null');
+    if (company) {
+      return {
+        name: company.contact_person_name || company.company_name || '',
+        phone: company.contact_person_phone || company.phone_number || '',
+        type: 'company',
+      };
+    }
+  } catch {}
+  return null;
+};
+
+/**
+ * Stash a verified phone in sessionStorage so a user doesn't re-verify
+ * the same number twice during the same session.
+ */
+const VERIFIED_PHONES_KEY = 'verified_phones_session';
+export const isPhoneVerifiedInSession = (phone) => {
+  try {
+    const arr = JSON.parse(sessionStorage.getItem(VERIFIED_PHONES_KEY) || '[]');
+    return arr.includes((phone || '').replace(/\D/g, ''));
+  } catch {
+    return false;
+  }
+};
+export const markPhoneVerifiedInSession = (phone) => {
+  try {
+    const arr = JSON.parse(sessionStorage.getItem(VERIFIED_PHONES_KEY) || '[]');
+    const norm = (phone || '').replace(/\D/g, '');
+    if (norm && !arr.includes(norm)) {
+      arr.push(norm);
+      sessionStorage.setItem(VERIFIED_PHONES_KEY, JSON.stringify(arr));
+    }
+  } catch {}
+};
