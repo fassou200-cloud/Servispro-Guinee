@@ -14,7 +14,7 @@ from models import (
     AdminSettingsUpdate, ServiceFeesUpdate, AdminPropertyInquiryResponse,
     InquiryMessage, ProductUpdate, RefundDecision
 )
-from utils.cloudinary_helper import upload_to_cloudinary, delete_from_cloudinary, delete_provider_cloudinary_files, delete_company_cloudinary_files
+from utils.storage import upload_to_cloudinary, delete_from_cloudinary, delete_provider_cloudinary_files, delete_company_cloudinary_files
 from utils.security import (
     log_audit_event, get_client_ip, is_ip_blocked, record_failed_attempt,
     clear_failed_attempts, login_attempts, blocked_ips

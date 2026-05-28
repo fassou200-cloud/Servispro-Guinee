@@ -12,7 +12,7 @@ from models import (
     ShopCreate, ShopUpdate, ProductCreate, ProductUpdate,
     ProductMessageCreate, ProductReviewCreate
 )
-from utils.cloudinary_helper import upload_to_cloudinary, delete_from_cloudinary
+from utils.storage import upload_to_cloudinary, delete_from_cloudinary
 from utils.security import filter_contact_info
 
 logger = logging.getLogger(__name__)

@@ -7,7 +7,7 @@ import logging
 from database import db
 from dependencies import get_current_user
 from models import ServiceProvider, ServiceProviderPublic, ProfileUpdate
-from utils.cloudinary_helper import upload_to_cloudinary, delete_from_cloudinary
+from utils.storage import upload_to_cloudinary, delete_from_cloudinary
 
 logger = logging.getLogger(__name__)
 router = APIRouter()

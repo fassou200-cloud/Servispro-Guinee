@@ -135,3 +135,12 @@ Toutes les interactions agent ↔ utilisateur doivent être en **français**.
 - **PREVIEW** (`shop-marketplace-47.preview.emergentagent.com`) — DB = `servispro_dev`
 - **PRODUCTION** (`https://servisprogn.com`) — DB = `servispro_production`
 - ⚠️ Pour redéployer : remettre `DB_NAME="servispro_production"` dans `backend/.env`
+
+## Storage (mai 2026)
+Migration de Cloudinary vers **Cloudflare R2** pour réduire les coûts de bande passante.
+- **Provider actif** : R2 (variable `STORAGE_PROVIDER=r2` dans `.env`)
+- **Nouveau helper** : `/app/backend/utils/r2_helper.py` (boto3 S3-compatible)
+- **Facade** : `/app/backend/utils/storage.py` — route les uploads vers R2 et les deletes vers le bon provider selon l'URL. Les anciennes URLs Cloudinary continuent de fonctionner.
+- **Bucket** : `servispro-media` — public URL `https://pub-50bc696e8a3e4a70baf84e8e8800084f.r2.dev`
+- **Endpoint S3** : `https://89b8b5177ed7aaf6fbf827e2833d7104.r2.cloudflarestorage.com`
+- **À redéployer** : ajouter `R2_*` + `STORAGE_PROVIDER` dans Emergent Deploy → Env Vars

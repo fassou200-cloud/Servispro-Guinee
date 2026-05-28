@@ -15,7 +15,7 @@ from models import (
     ProfessionType, UserType, ServiceProvider
 )
 from utils.security import log_audit_event, get_client_ip, is_ip_blocked, record_failed_attempt, clear_failed_attempts
-from utils.cloudinary_helper import upload_to_cloudinary
+from utils.storage import upload_to_cloudinary
 
 logger = logging.getLogger(__name__)
 router = APIRouter()

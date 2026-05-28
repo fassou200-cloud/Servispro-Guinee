@@ -10,7 +10,7 @@ from models import (
     VehicleSaleCreate, VehicleSaleUpdate, VehicleSaleInquiry, VehicleSaleStatus,
     VehicleListingCreate, VehicleListing, VehicleBookingCreate, VehicleBooking
 )
-from utils.cloudinary_helper import upload_to_cloudinary, delete_from_cloudinary
+from utils.storage import upload_to_cloudinary, delete_from_cloudinary
 from utils.security import filter_contact_info
 
 logger = logging.getLogger(__name__)

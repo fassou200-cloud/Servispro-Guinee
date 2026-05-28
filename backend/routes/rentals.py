@@ -11,7 +11,7 @@ from models import (
     VisitRequestCreate, VisitRequestUpdate, VisitPaymentUpdate,
     ChatMessageCreate, ChatMessage, RentalMessageInput
 )
-from utils.cloudinary_helper import upload_to_cloudinary
+from utils.storage import upload_to_cloudinary
 from utils.security import filter_contact_info
 
 logger = logging.getLogger(__name__)

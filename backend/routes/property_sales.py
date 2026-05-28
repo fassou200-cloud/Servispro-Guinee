@@ -7,7 +7,7 @@ import logging
 from database import db
 from dependencies import get_current_user, get_current_customer
 from models import PropertySaleCreate, PropertySale, PropertySaleInquiry, InquiryMessage
-from utils.cloudinary_helper import upload_to_cloudinary
+from utils.storage import upload_to_cloudinary
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
