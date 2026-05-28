@@ -191,6 +191,12 @@ Vérification obligatoire du numéro de téléphone à l'inscription pour les 3 
 - Dépendances ajoutées : `leaflet@1.9.4`, `react-leaflet@5.0.0`
 
 **À venir Phase 4 (reste)** :
-- Filtres avancés missions (région/ville/commune, salaire, type)
-- Alertes mission par SMS
-- Favoris entreprises
+- ✅ ~Filtres avancés missions (4 niveaux location, salaire, type)~ — livré (mai 2026)
+- Alertes mission par SMS (Africa's Talking déjà en place) → P1 backlog
+- Favoris entreprises côté prestataire → P1 backlog
+
+## Intérim Phase 4 — Filtres avancés (mai 2026)
+- 🔍 `/app/frontend/src/components/interim/MissionFilters.js` — panneau collapsible avec 4 selects cascade (Région > Ville > Commune > Quartier) issus de `guineaLocations.js`, select `job_type` dynamique extrait des missions, et inputs tarif min/max
+- Application via `applyMissionFilters(missions, filters)` (pure fn) — fonctionne pour la liste ET la carte
+- Compteur "N actifs" + "N résultats" dans le header du panneau, bouton "Effacer les filtres"
+- Intégré dans `ProviderInterimTab.js` au-dessus du toggle Liste/Carte

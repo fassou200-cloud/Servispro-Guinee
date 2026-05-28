@@ -4,9 +4,10 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Briefcase, Coins, MapPin, Calendar, Loader2, AlertTriangle, CheckCircle, Clock, XCircle, FileText, Send, List, Map as MapIcon } from 'lucide-react';
+import { Briefcase, Coins, MapPin, Calendar, Loader2, AlertTriangle, CheckCircle, Clock, XCircle, FileText, Send, List, Map as MapIcon, Filter } from 'lucide-react';
 import AvailabilityCalendar from './AvailabilityCalendar';
 import MissionsMap from '@/components/interim/MissionsMap';
+import MissionFilters, { EMPTY_FILTERS, applyMissionFilters } from '@/components/interim/MissionFilters';
 import {
   ApplyMissionDialog,
   PayCommissionDialog,
@@ -43,6 +44,7 @@ const ProviderInterimTab = ({ user }) => {
   const [payMethods, setPayMethods] = useState([]);
   const [decliningMission, setDecliningMission] = useState(null);  // mission object to decline
   const [missionsMode, setMissionsMode] = useState('list');         // 'list' | 'map'
+  const [missionFilters, setMissionFilters] = useState(EMPTY_FILTERS);
 
   const suspended = user?.interim_suspended;
 
@@ -268,6 +270,12 @@ const ProviderInterimTab = ({ user }) => {
 
       {view === 'missions' && (
         <>
+          <MissionFilters
+            missions={missions}
+            value={missionFilters}
+            onChange={setMissionFilters}
+            resultsCount={applyMissionFilters(missions, missionFilters).length}
+          />
           {missions.length > 0 && (
             <div className="flex items-center justify-end gap-2" data-testid="missions-mode-toggle">
               <Button
@@ -290,21 +298,30 @@ const ProviderInterimTab = ({ user }) => {
               </Button>
             </div>
           )}
-          {missions.length === 0 ? (
-            <Card className="p-10 text-center text-gray-500"><Briefcase className="h-12 w-12 mx-auto text-gray-300 mb-3" />Aucune mission ouverte.</Card>
-          ) : missionsMode === 'map' ? (
-            <MissionsMap
-              missions={missions}
-              onSelect={(m) => {
-                if (suspended) return;
-                if (applications.find(a => a.mission_id === m.id)) {
-                  toast.info('Vous avez déjà postulé à cette mission.');
-                  return;
-                }
-                openApply(m);
-              }}
-            />
-          ) : missions.map((m) => {
+          {(() => {
+            const filteredMissions = applyMissionFilters(missions, missionFilters);
+            if (missions.length === 0) {
+              return <Card className="p-10 text-center text-gray-500"><Briefcase className="h-12 w-12 mx-auto text-gray-300 mb-3" />Aucune mission ouverte.</Card>;
+            }
+            if (filteredMissions.length === 0) {
+              return <Card className="p-10 text-center text-gray-500"><Filter className="h-12 w-12 mx-auto text-gray-300 mb-3" />Aucune mission ne correspond à vos filtres.</Card>;
+            }
+            if (missionsMode === 'map') {
+              return (
+                <MissionsMap
+                  missions={filteredMissions}
+                  onSelect={(m) => {
+                    if (suspended) return;
+                    if (applications.find(a => a.mission_id === m.id)) {
+                      toast.info('Vous avez déjà postulé à cette mission.');
+                      return;
+                    }
+                    openApply(m);
+                  }}
+                />
+              );
+            }
+            return filteredMissions.map((m) => {
         const alreadyApplied = applications.find(a => a.mission_id === m.id);
         return (
           <Card key={m.id} className="p-4" data-testid={`available-mission-${m.id}`}>
@@ -340,7 +357,8 @@ const ProviderInterimTab = ({ user }) => {
             </div>
           </Card>
         );
-      })}
+      });
+          })()}
         </>
       )}
 
