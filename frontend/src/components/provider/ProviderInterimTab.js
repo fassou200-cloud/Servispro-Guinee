@@ -480,14 +480,32 @@ const ProviderInterimTab = ({ user }) => {
                 <strong>{t.total_hours || (t.days_worked * 8)} h</strong> = <strong>{t.days_worked}</strong> jour(s)
               </p>
               {t.worked_days && t.worked_days.length > 0 && (
-                <div className="mt-2 text-xs text-gray-600 space-y-0.5">
+                <div className="mt-2 text-xs text-gray-700 space-y-1">
                   {t.worked_days.map(d => (
-                    <div key={d.date}>• {new Date(d.date).toLocaleDateString('fr-FR', { weekday:'short', day:'2-digit', month:'short' })} — <strong>{d.hours}h</strong></div>
+                    <div key={d.date} className="leading-tight">
+                      <span className="text-gray-600">• {new Date(d.date).toLocaleDateString('fr-FR', { weekday:'short', day:'2-digit', month:'short' })} — </span>
+                      <strong>{d.hours}h</strong>
+                      {d.note && (
+                        <span className="text-gray-500 italic"> — « {d.note} »</span>
+                      )}
+                    </div>
                   ))}
                 </div>
               )}
-              {t.notes && <p className="text-xs text-gray-500 italic mt-1">« {t.notes} »</p>}
-              {t.rejection_reason && <p className="text-xs text-red-600 mt-1">✗ {t.rejection_reason}</p>}
+              {t.notes && (
+                <div className="mt-2 text-xs bg-slate-50 border border-slate-200 rounded px-2 py-1.5 text-slate-600">
+                  <span className="font-semibold text-slate-500">Notes générales :</span> {t.notes}
+                </div>
+              )}
+              {t.status === 'rejected' && t.rejection_reason && (
+                <div className="mt-2 text-sm bg-red-50 border-l-4 border-red-500 rounded px-3 py-2 text-red-800" data-testid={`rejection-reason-${t.id}`}>
+                  <div className="flex items-center gap-1.5 font-semibold mb-0.5">
+                    <XCircle className="h-4 w-4" /> Pointage rejeté par l&apos;entreprise
+                  </div>
+                  <p className="text-xs text-red-700">Motif : « {t.rejection_reason} »</p>
+                  <p className="text-[11px] text-red-600 mt-1 italic">Vous pouvez maintenant corriger vos jours et renvoyer le pointage.</p>
+                </div>
+              )}
             </div>
             <Badge className={
               t.status === 'validated' ? 'bg-green-600' :

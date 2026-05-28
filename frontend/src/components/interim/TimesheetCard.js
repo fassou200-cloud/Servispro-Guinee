@@ -13,14 +13,28 @@ const TimesheetCard = ({ timesheet: t, onValidate, onReject }) => (
           <strong>{t.total_hours || (t.days_worked * 8)} h</strong> = <strong>{t.days_worked}</strong> jour(s)
         </p>
         {t.worked_days && t.worked_days.length > 0 && (
-          <div className="mt-2 text-xs text-gray-600 space-y-0.5">
+          <div className="mt-2 text-xs text-gray-700 space-y-1">
             {t.worked_days.map(d => (
-              <div key={d.date}>• {new Date(d.date).toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: 'short' })} — <strong>{d.hours}h</strong></div>
+              <div key={d.date} className="leading-tight">
+                <span className="text-gray-600">• {new Date(d.date).toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: 'short' })} — </span>
+                <strong>{d.hours}h</strong>
+                {d.note && (
+                  <span className="text-gray-500 italic"> — « {d.note} »</span>
+                )}
+              </div>
             ))}
           </div>
         )}
-        {t.notes && <p className="text-xs text-gray-500 italic mt-1">« {t.notes} »</p>}
-        {t.rejection_reason && <p className="text-xs text-red-600 mt-1">✗ {t.rejection_reason}</p>}
+        {t.notes && (
+          <div className="mt-2 text-xs bg-slate-50 border border-slate-200 rounded px-2 py-1.5 text-slate-600">
+            <span className="font-semibold text-slate-500">Notes générales :</span> {t.notes}
+          </div>
+        )}
+        {t.rejection_reason && (
+          <div className="mt-2 text-xs bg-red-50 border border-red-200 rounded px-2 py-1.5 text-red-700">
+            <span className="font-semibold">Motif du rejet précédent :</span> {t.rejection_reason}
+          </div>
+        )}
       </div>
       <div className="flex flex-col gap-2 shrink-0">
         {t.status === 'submitted' ? (
