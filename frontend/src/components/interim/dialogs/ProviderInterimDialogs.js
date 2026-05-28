@@ -103,7 +103,9 @@ export const PayCommissionDialog = ({ commission, form, setForm, payMethods, onC
   </Dialog>
 );
 
-export const TimesheetSubmitDialog = ({ app, form, setForm, onToggleDate, onSetHours, onClose, onSubmit }) => (
+export const TimesheetSubmitDialog = ({ app, form, setForm, onToggleDate, onSetHours, onSetDayNote, onClose, onSubmit }) => {
+  const lockedDates = form.lockedDates instanceof Set ? form.lockedDates : new Set(form.lockedDates || []);
+  return (
   <Dialog open={!!app} onOpenChange={(o) => !o && onClose()}>
     <DialogContent className="max-h-[90vh] overflow-y-auto" data-testid="timesheet-dialog">
       <DialogHeader>
@@ -112,32 +114,57 @@ export const TimesheetSubmitDialog = ({ app, form, setForm, onToggleDate, onSetH
       </DialogHeader>
       {app && (
         <div className="space-y-3">
+          {lockedDates.size > 0 && (
+            <div className="rounded-md bg-slate-100 border border-slate-200 px-3 py-2 text-xs text-slate-600">
+              <strong>{lockedDates.size}</strong> jour{lockedDates.size > 1 ? 's' : ''} déjà soumis — modifiable seulement si l&apos;entreprise rejette le pointage. Vous pouvez ajouter de nouveaux jours.
+            </div>
+          )}
           <TimesheetCalendar
             startDate={app.mission_start_date}
             endDate={app.mission_end_date}
             selected={new Set((form.worked_days || []).map(d => d.date))}
+            lockedDates={lockedDates}
             onToggle={onToggleDate}
           />
           {form.worked_days.length > 0 && (
             <div className="space-y-2">
               <Label>Heures travaillées par jour</Label>
-              <div className="max-h-48 overflow-y-auto space-y-1.5 border rounded-lg p-2 bg-gray-50">
-                {form.worked_days.map(d => (
-                  <div key={d.date} className="flex items-center gap-2" data-testid={`hours-row-${d.date}`}>
-                    <span className="text-sm font-mono w-28">{new Date(d.date).toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: 'short' })}</span>
+              <div className="max-h-72 overflow-y-auto space-y-2 border rounded-lg p-2 bg-gray-50">
+                {form.worked_days.map(d => {
+                  const isLocked = lockedDates.has(d.date);
+                  return (
+                  <div key={d.date} className={`rounded p-2 ${isLocked ? 'bg-slate-200/60' : 'bg-white'} border border-slate-200`} data-testid={`hours-row-${d.date}`}>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-mono w-28">{new Date(d.date).toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: 'short' })}</span>
+                      <Input
+                        type="number"
+                        step="0.5"
+                        min="0.5"
+                        max="24"
+                        value={d.hours}
+                        onChange={(e) => onSetHours(d.date, e.target.value)}
+                        disabled={isLocked}
+                        className={`h-8 w-24 ${isLocked ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : ''}`}
+                        data-testid={`hours-input-${d.date}`}
+                      />
+                      <span className="text-xs text-gray-500">h</span>
+                      {isLocked && (
+                        <span className="ml-auto text-[10px] text-slate-500 font-semibold uppercase tracking-wide">Soumis</span>
+                      )}
+                    </div>
                     <Input
-                      type="number"
-                      step="0.5"
-                      min="0.5"
-                      max="24"
-                      value={d.hours}
-                      onChange={(e) => onSetHours(d.date, e.target.value)}
-                      className="h-8 w-24"
-                      data-testid={`hours-input-${d.date}`}
+                      type="text"
+                      placeholder="Note du jour (optionnel) : ex. départ famille, heures sup…"
+                      value={d.note || ''}
+                      onChange={(e) => onSetDayNote && onSetDayNote(d.date, e.target.value)}
+                      disabled={isLocked}
+                      maxLength={200}
+                      className={`mt-1.5 h-8 text-xs ${isLocked ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : ''}`}
+                      data-testid={`note-input-${d.date}`}
                     />
-                    <span className="text-xs text-gray-500">h</span>
                   </div>
-                ))}
+                  );
+                })}
               </div>
               <p className="text-xs text-gray-600">
                 Total : <strong>{form.worked_days.reduce((s, d) => s + Number(d.hours || 0), 0)} heures</strong>
@@ -146,8 +173,8 @@ export const TimesheetSubmitDialog = ({ app, form, setForm, onToggleDate, onSetH
             </div>
           )}
           <div>
-            <Label>Notes (optionnel)</Label>
-            <Textarea rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Détails sur le travail effectué…" maxLength={1000} />
+            <Label>Notes générales (optionnel)</Label>
+            <Textarea rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Commentaire global sur la mission…" maxLength={1000} />
           </div>
         </div>
       )}
@@ -157,7 +184,8 @@ export const TimesheetSubmitDialog = ({ app, form, setForm, onToggleDate, onSetH
       </div>
     </DialogContent>
   </Dialog>
-);
+  );
+};
 
 export const RateCompanyDialog = ({ app, form, setForm, onClose, onSubmit }) => (
   <Dialog open={!!app} onOpenChange={(o) => !o && onClose()}>

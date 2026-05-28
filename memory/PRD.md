@@ -200,3 +200,16 @@ Vérification obligatoire du numéro de téléphone à l'inscription pour les 3 
 - Application via `applyMissionFilters(missions, filters)` (pure fn) — fonctionne pour la liste ET la carte
 - Compteur "N actifs" + "N résultats" dans le header du panneau, bouton "Effacer les filtres"
 - Intégré dans `ProviderInterimTab.js` au-dessus du toggle Liste/Carte
+
+## Pointages — Note par jour + verrouillage (mai 2026)
+**Backend** (`routes/interim_phase2.py` `submit_timesheet`) :
+- Schéma `worked_days[]` étendu : `{date, hours, note?}` (note ≤ 200 chars/jour)
+- **Verrouillage** : si timesheet en statut `submitted`, les jours déjà envoyés sont LOCKED — toute tentative de modif/suppression renvoie 400 avec message clair ; seule l'ADDITION de nouveaux jours est permise (merge automatique)
+- **Déverrouillage automatique** : statut `rejected` (suite à rejet entreprise) → tous les jours redeviennent éditables
+
+**Frontend** :
+- `TimesheetCalendar.js` : nouveau prop `lockedDates` (Set), tuiles grises non-cliquables avec tooltip "Jour déjà soumis"
+- `ProviderInterimDialogs.TimesheetSubmitDialog` : input note inline par jour (200 chars), badge "Soumis" + disabled sur jours verrouillés, encart explicatif si jours bloqués présents
+- `ProviderInterimTab.openTimesheet` : calcule `lockedDates` selon `existing.status === 'submitted'`
+
+Tests backend exhaustifs validés : ajout autorisé, modification refusée, suppression refusée, déverrouillage après rejet OK.

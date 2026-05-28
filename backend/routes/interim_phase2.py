@@ -121,8 +121,15 @@ async def public_availability(provider_id: str, current_company: dict = Depends(
 @router.post("/interim/missions/{mission_id}/timesheet")
 async def submit_timesheet(mission_id: str, data: dict = Body(...), current_user: dict = Depends(get_current_user)):
     """Provider submits worked days for an accepted mission.
-    Body: { worked_days: [{date: 'YYYY-MM-DD', hours: float}], notes: str }
-    days_worked is derived as total hours / 8 (1 day = 8h)."""
+    Body: { worked_days: [{date: 'YYYY-MM-DD', hours: float, note?: str}], notes: str }
+    days_worked is derived as total hours / 8 (1 day = 8h).
+
+    Locking rules:
+    - Status 'submitted' (provider sent, not yet reviewed): days already submitted are
+      LOCKED. Provider may only ADD new days; existing ones cannot be modified or removed.
+    - Status 'rejected' (company rejected): ALL days unlock and can be re-edited.
+    - Status 'validated': no edits possible at all.
+    """
     notes = (data.get('notes') or '').strip()[:1000]
     worked_days_raw = data.get('worked_days') or []
     # Backward compat : old "worked_dates" + "days_worked"
@@ -161,6 +168,7 @@ async def submit_timesheet(mission_id: str, data: dict = Body(...), current_user
             hours = float(entry.get('hours') or 0)
         except (TypeError, ValueError):
             hours = 0
+        note = (entry.get('note') or '').strip()[:200]
         if not ds or ds in seen:
             continue
         if hours <= 0 or hours > 24:
@@ -171,18 +179,41 @@ async def submit_timesheet(mission_id: str, data: dict = Body(...), current_user
             raise HTTPException(status_code=400, detail=f"La date {ds} est après la fin de la mission ({ed})")
         if ds > today_str:
             raise HTTPException(status_code=400, detail=f"Impossible de pointer une date future ({ds}). Vous ne pouvez pointer que jusqu'à aujourd'hui ({today_str}).")
-        cleaned_days.append({'date': ds, 'hours': hours})
+        cleaned_days.append({'date': ds, 'hours': hours, 'note': note})
         total_hours += hours
         seen.add(ds)
 
     cleaned_days.sort(key=lambda x: x['date'])
-    days_worked = round(total_hours / 8, 2)        # 1 jour ouvré = 8 h
 
     timesheet = await db.interim_timesheets.find_one({'mission_id': mission_id, 'provider_id': current_user['id']})
     now_iso = datetime.now(timezone.utc).isoformat()
     if timesheet:
         if timesheet.get('status') == 'validated':
             raise HTTPException(status_code=400, detail="Pointage déjà validé — modifications impossibles")
+
+        # If the timesheet is in 'submitted' state, existing days are LOCKED.
+        # Merge: keep all previously-submitted days untouched, append new ones.
+        if timesheet.get('status') == 'submitted':
+            existing_days = timesheet.get('worked_days') or []
+            existing_by_date = {d['date']: d for d in existing_days if isinstance(d, dict) and d.get('date')}
+            new_by_date = {d['date']: d for d in cleaned_days}
+            # Reject if the request tried to remove or modify a locked day
+            for locked_date, locked_entry in existing_by_date.items():
+                submitted_again = new_by_date.get(locked_date)
+                if not submitted_again:
+                    raise HTTPException(status_code=400, detail=f"Le jour {locked_date} est déjà soumis et ne peut pas être supprimé. Attendez la validation ou un rejet de l'entreprise.")
+                if float(submitted_again.get('hours', 0)) != float(locked_entry.get('hours', 0)) or (submitted_again.get('note') or '') != (locked_entry.get('note') or ''):
+                    raise HTTPException(status_code=400, detail=f"Le jour {locked_date} est déjà soumis et ne peut pas être modifié. Attendez la validation ou un rejet de l'entreprise.")
+            # Final merged list = existing (locked) + only-new
+            merged_days = list(existing_by_date.values())
+            for new_date, new_entry in new_by_date.items():
+                if new_date not in existing_by_date:
+                    merged_days.append(new_entry)
+            merged_days.sort(key=lambda x: x['date'])
+            cleaned_days = merged_days
+            total_hours = sum(float(d.get('hours', 0)) for d in cleaned_days)
+
+        days_worked = round(total_hours / 8, 2)
         await db.interim_timesheets.update_one(
             {'id': timesheet['id']},
             {'$set': {
@@ -198,6 +229,7 @@ async def submit_timesheet(mission_id: str, data: dict = Body(...), current_user
         )
         ts_id = timesheet['id']
     else:
+        days_worked = round(total_hours / 8, 2)
         ts_id = str(uuid.uuid4())
         await db.interim_timesheets.insert_one({
             'id': ts_id,

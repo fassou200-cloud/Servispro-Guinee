@@ -136,37 +136,56 @@ const ProviderInterimTab = ({ user }) => {
   };
 
   const [tsModalApp, setTsModalApp] = useState(null);
-  const [tsForm, setTsForm] = useState({ notes: '', worked_days: [] });   // worked_days = [{date, hours}]
+  const [tsForm, setTsForm] = useState({ notes: '', worked_days: [], lockedDates: new Set() });
 
   const openTimesheet = (app) => {
     const existing = timesheets.find(t => t.mission_id === app.mission_id);
     if (existing) {
       const wd = existing.worked_days && existing.worked_days.length
-        ? existing.worked_days
-        : (existing.worked_dates || []).map(d => ({ date: d, hours: 8 }));
-      setTsForm({ notes: existing.notes || '', worked_days: wd });
+        ? existing.worked_days.map(d => ({ date: d.date, hours: d.hours, note: d.note || '' }))
+        : (existing.worked_dates || []).map(d => ({ date: d, hours: 8, note: '' }));
+      // Lock days only when status is 'submitted'; on 'rejected' all become editable again
+      const lockedDates = existing.status === 'submitted'
+        ? new Set(wd.map(d => d.date))
+        : new Set();
+      setTsForm({ notes: existing.notes || '', worked_days: wd, lockedDates });
     } else {
-      setTsForm({ notes: '', worked_days: [] });
+      setTsForm({ notes: '', worked_days: [], lockedDates: new Set() });
     }
     setTsModalApp(app);
   };
 
   const toggleWorkedDate = (dateStr) => {
     setTsForm((f) => {
+      // Locked days cannot be toggled off
+      if (f.lockedDates && f.lockedDates.has(dateStr)) return f;
       const list = [...(f.worked_days || [])];
       const idx = list.findIndex(x => x.date === dateStr);
       if (idx >= 0) list.splice(idx, 1);
-      else list.push({ date: dateStr, hours: 8 });
+      else list.push({ date: dateStr, hours: 8, note: '' });
       list.sort((a, b) => a.date.localeCompare(b.date));
       return { ...f, worked_days: list };
     });
   };
 
   const setHoursForDate = (dateStr, hours) => {
-    setTsForm((f) => ({
-      ...f,
-      worked_days: (f.worked_days || []).map(d => d.date === dateStr ? { ...d, hours: Number(hours) } : d),
-    }));
+    setTsForm((f) => {
+      if (f.lockedDates && f.lockedDates.has(dateStr)) return f;
+      return {
+        ...f,
+        worked_days: (f.worked_days || []).map(d => d.date === dateStr ? { ...d, hours: Number(hours) } : d),
+      };
+    });
+  };
+
+  const setDayNote = (dateStr, note) => {
+    setTsForm((f) => {
+      if (f.lockedDates && f.lockedDates.has(dateStr)) return f;
+      return {
+        ...f,
+        worked_days: (f.worked_days || []).map(d => d.date === dateStr ? { ...d, note } : d),
+      };
+    });
   };
 
   const submitTimesheet = async () => {
@@ -516,6 +535,7 @@ const ProviderInterimTab = ({ user }) => {
         setForm={setTsForm}
         onToggleDate={toggleWorkedDate}
         onSetHours={setHoursForDate}
+        onSetDayNote={setDayNote}
         onClose={() => setTsModalApp(null)}
         onSubmit={submitTimesheet}
       />

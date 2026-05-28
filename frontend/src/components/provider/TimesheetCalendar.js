@@ -8,14 +8,17 @@ const DAYS = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
 
 /**
  * Click days you worked, within the mission start/end window.
+ * `lockedDates` (Set<string>): dates already submitted, displayed as
+ * non-interactive locked tiles (cannot toggle off).
  */
-const TimesheetCalendar = ({ startDate, endDate, selected, onToggle }) => {
+const TimesheetCalendar = ({ startDate, endDate, selected, onToggle, lockedDates }) => {
   const startIso = startDate ? String(startDate).slice(0, 10) : null;
   const endIso = endDate ? String(endDate).slice(0, 10) : startIso;
   const todayIso = new Date().toISOString().slice(0, 10);
   const initial = startIso ? new Date(startIso) : new Date();
   const [year, setYear] = useState(initial.getFullYear());
   const [month, setMonth] = useState(initial.getMonth());
+  const locked = lockedDates instanceof Set ? lockedDates : new Set();
 
   const firstOfMonth = new Date(year, month, 1);
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -53,19 +56,21 @@ const TimesheetCalendar = ({ startDate, endDate, selected, onToggle }) => {
           const valid = inWindow(d) && !isFuture(d);
           const future = inWindow(d) && isFuture(d);
           const isSelected = selected.has(ds);
+          const isLocked = locked.has(ds);
           let cls = 'aspect-square flex items-center justify-center text-sm rounded transition-all';
           if (!valid && !future) cls += ' bg-gray-100 text-gray-300 cursor-not-allowed';
           else if (future) cls += ' bg-amber-50 text-amber-400 cursor-not-allowed';
+          else if (isLocked) cls += ' bg-slate-300 text-slate-600 font-semibold cursor-not-allowed';
           else if (isSelected) cls += ' bg-emerald-500 text-white font-bold cursor-pointer hover:bg-emerald-600';
           else cls += ' bg-emerald-50 text-emerald-700 cursor-pointer hover:bg-emerald-100';
           return (
             <button
               key={idx}
               type="button"
-              disabled={!valid}
-              onClick={() => valid && onToggle(ds)}
+              disabled={!valid || isLocked}
+              onClick={() => valid && !isLocked && onToggle(ds)}
               className={cls}
-              title={future ? 'Date à venir — pointage impossible' : undefined}
+              title={isLocked ? 'Jour déjà soumis — modifiable seulement après rejet' : future ? 'Date à venir — pointage impossible' : undefined}
               data-testid={`ts-day-${ds}`}
             >
               {d}
@@ -76,6 +81,7 @@ const TimesheetCalendar = ({ startDate, endDate, selected, onToggle }) => {
       <div className="flex items-center gap-3 mt-2 text-xs text-gray-500 flex-wrap">
         <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-emerald-500" /> Travaillé</span>
         <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-emerald-50 border border-emerald-200" /> Disponible</span>
+        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-slate-300" /> Déjà soumis</span>
         <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-amber-50 border border-amber-200" /> À venir</span>
         <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-gray-100" /> Hors mission</span>
       </div>
