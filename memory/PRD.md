@@ -159,3 +159,6 @@ Suite à un rapport de code review automatisé. Tous les **bugs critiques runtim
 ### P3 — Sécurité long terme
 - **Migration `localStorage` → `httpOnly cookies`** pour les tokens (XSS protection), ~8-10h (refactor auth complet)
 - **Hardcoded credentials dans `tests/`** — déplacer vers fixtures pytest avec `os.getenv()`, ~1h
+
+### P1 — Monitoring
+- **Endpoint `/api/health`** : retourne `{"status":"ok","db":"connected","storage":"r2"}` pour surveillance externe (UptimeRobot/cronjob). Détection instantanée d'un crash backend post-redéploiement. ~30min
