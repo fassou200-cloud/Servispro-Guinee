@@ -117,36 +117,45 @@ export const getRelativeTime = (dateString) => {
  * Returns the currently-logged-in user's contact info (name + phone) from
  * any of the 3 user types (customer, provider, company). Returns null when
  * no user is logged in.
+ *
+ * IMPORTANT: requires BOTH the auth token AND the user blob in localStorage.
+ * Otherwise a logged-out user with stale cached data would be treated as logged in.
  */
 export const getCurrentUserContact = () => {
   try {
-    const customer = JSON.parse(localStorage.getItem('customer') || 'null');
-    if (customer) {
-      return {
-        name: `${customer.first_name || ''} ${customer.last_name || ''}`.trim(),
-        phone: customer.phone_number || '',
-        type: 'customer',
-      };
+    if (localStorage.getItem('customerToken')) {
+      const customer = JSON.parse(localStorage.getItem('customer') || 'null');
+      if (customer) {
+        return {
+          name: `${customer.first_name || ''} ${customer.last_name || ''}`.trim(),
+          phone: customer.phone_number || '',
+          type: 'customer',
+        };
+      }
     }
   } catch {}
   try {
-    const provider = JSON.parse(localStorage.getItem('user') || 'null');
-    if (provider) {
-      return {
-        name: `${provider.first_name || ''} ${provider.last_name || ''}`.trim(),
-        phone: provider.phone_number || '',
-        type: 'provider',
-      };
+    if (localStorage.getItem('token')) {
+      const provider = JSON.parse(localStorage.getItem('user') || 'null');
+      if (provider) {
+        return {
+          name: `${provider.first_name || ''} ${provider.last_name || ''}`.trim(),
+          phone: provider.phone_number || '',
+          type: 'provider',
+        };
+      }
     }
   } catch {}
   try {
-    const company = JSON.parse(localStorage.getItem('company') || 'null');
-    if (company) {
-      return {
-        name: company.contact_person_name || company.company_name || '',
-        phone: company.contact_person_phone || company.phone_number || '',
-        type: 'company',
-      };
+    if (localStorage.getItem('companyToken')) {
+      const company = JSON.parse(localStorage.getItem('company') || 'null');
+      if (company) {
+        return {
+          name: company.contact_person_name || company.company_name || '',
+          phone: company.contact_person_phone || company.phone_number || '',
+          type: 'company',
+        };
+      }
     }
   } catch {}
   return null;
