@@ -144,3 +144,18 @@ Migration de Cloudinary vers **Cloudflare R2** pour réduire les coûts de bande
 - **Bucket** : `servispro-media` — public URL `https://pub-50bc696e8a3e4a70baf84e8e8800084f.r2.dev`
 - **Endpoint S3** : `https://89b8b5177ed7aaf6fbf827e2833d7104.r2.cloudflarestorage.com`
 - **À redéployer** : ajouter `R2_*` + `STORAGE_PROVIDER` dans Emergent Deploy → Env Vars
+
+## Code Quality Backlog (reporté mai 2026)
+Suite à un rapport de code review automatisé. Tous les **bugs critiques runtime** ont été corrigés (imports manquants `VehicleSaleStatus`, `ProviderStatus`, `ListingApprovalStatus`, `VisitRequestStatus`, `os`, `UPLOAD_DIR`, `generate_transaction_reference`, parenthèse `JobsList.js:75`). Reste en backlog :
+
+### P2 — Refactoring & Polish
+- **`is` → `==`** (53 instances dans `routes/`, `tests/`) — auto-fixable via `ruff --fix --unsafe-fixes`, ~30min
+- **Array index as key** (`ProviderProfile.js`, `LandingPage.js`, `AuthPage.js`, `TimesheetCalendar.js`) — remplacer `key={index}` par `key={item.id}`, ~1-2h
+- **`useEffect` missing dependencies** (50+ instances dans `Marketplace.js`, `Dashboard.js`, `CustomerDashboard.js`, `ProviderProfile.js`, `ProductDetail.js`) — refactor par fichier avec `useCallback`, ~4-6h total
+- **Composants > 600 lignes à splitter** : `RentalListingForm.js` (939), `MyShop.js` (835), `PropertySaleForm.js` (763), `AdminCompaniesTab.js` (754), `InvestigationFeePopup.js` (650), `MyRentals.js` (607), ~4-6h
+- **Fonctions admin.py à haute complexité** : `get_visit_fees_stats()`, `get_demand_stats()`, `admin_update_property_inquiry()` — extraire en helpers, ~3-4h
+- **Type hints Python** sur `models.py`, `server.py`, tests, ~4-6h
+
+### P3 — Sécurité long terme
+- **Migration `localStorage` → `httpOnly cookies`** pour les tokens (XSS protection), ~8-10h (refactor auth complet)
+- **Hardcoded credentials dans `tests/`** — déplacer vers fixtures pytest avec `os.getenv()`, ~1h
