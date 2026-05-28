@@ -162,9 +162,27 @@ export const getCurrentUserContact = () => {
 };
 
 /**
- * Stash a verified phone in sessionStorage so a user doesn't re-verify
- * the same number twice during the same session.
+ * Clear ALL auth state for a given user role. Always removes the token AND
+ * the user blob together, preventing orphaned state where the system thinks
+ * a user is still logged in (the "auto-fill bug").
+ *
+ * `roles` is one or more of: 'customer' | 'provider' | 'company' | 'admin'.
+ * Pass nothing to clear everything.
  */
+const TOKEN_KEYS = {
+  customer: ['customerToken', 'customer'],
+  provider: ['token', 'user'],
+  company: ['companyToken', 'company'],
+  admin: ['adminToken', 'admin'],
+};
+export const clearAuth = (...roles) => {
+  const list = roles.length === 0 ? Object.keys(TOKEN_KEYS) : roles;
+  list.forEach((role) => {
+    (TOKEN_KEYS[role] || []).forEach((k) => {
+      try { localStorage.removeItem(k); } catch {}
+    });
+  });
+};
 const VERIFIED_PHONES_KEY = 'verified_phones_session';
 export const isPhoneVerifiedInSession = (phone) => {
   try {

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { clearAuth } from '@/utils/helpers';
 import { AlertTriangle } from 'lucide-react';
 import axios from 'axios';
 import { getErrorMessage } from '@/utils/helpers';
@@ -71,7 +72,7 @@ const CompanyDashboard = () => {
         setCompany(response.data);
       } catch (error) {
         if (error.response?.status === 401) {
-          localStorage.removeItem('companyToken');
+          clearAuth('company');
           navigate('/company/auth');
         }
       } finally {
@@ -128,8 +129,7 @@ const CompanyDashboard = () => {
   }, [company]);
 
   const handleLogout = () => {
-    localStorage.removeItem('companyToken');
-    localStorage.removeItem('company');
+    clearAuth('company');
     toast.success('Déconnexion réussie');
     navigate('/');
   };

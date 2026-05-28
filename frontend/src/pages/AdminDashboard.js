@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { clearAuth } from '@/utils/helpers';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -48,8 +49,7 @@ adminApi.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-      localStorage.removeItem('adminToken');
-      localStorage.removeItem('admin');
+      clearAuth('admin');
       window.location.href = '/admin';
     }
     return Promise.reject(error);
@@ -487,8 +487,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('adminToken');
-    localStorage.removeItem('admin');
+    clearAuth('admin');
     setIsAdminAuthenticated(false);
     toast.success('Déconnexion réussie');
     navigate('/');

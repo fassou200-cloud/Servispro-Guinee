@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getErrorMessage } from '@/utils/helpers';
+import { getErrorMessage, clearAuth } from '@/utils/helpers';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -161,8 +161,7 @@ const Dashboard = ({ setIsAuthenticated }) => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    clearAuth('provider');
     setIsAuthenticated(false);
   };
 

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { getErrorMessage } from '@/utils/helpers';
+import { getErrorMessage, clearAuth } from '@/utils/helpers';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -274,8 +274,7 @@ const CustomerDashboard = ({ setIsCustomerAuthenticated }) => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('customerToken');
-    localStorage.removeItem('customer');
+    clearAuth('customer');
     setIsCustomerAuthenticated(false);
     toast.success('Déconnexion réussie');
     navigate('/');

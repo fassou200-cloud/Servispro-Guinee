@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useNavigate } from 'react-router-dom';
+import { clearAuth } from '@/utils/helpers';
 import { 
   Zap, Wrench, Droplet, Truck, Home, ArrowRight, Shield, Clock, Star, 
   User, LogOut, Hammer, Building, Settings, Flame, CheckCircle, 
@@ -201,8 +202,7 @@ const LandingPage = ({ isCustomerAuthenticated }) => {
   }, []);
 
   const handleCustomerLogout = () => {
-    localStorage.removeItem('customerToken');
-    localStorage.removeItem('customer');
+    clearAuth('customer');
     setCustomer(null);
     window.location.reload();
   };
