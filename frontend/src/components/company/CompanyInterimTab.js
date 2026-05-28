@@ -210,13 +210,14 @@ const CompanyInterimTab = ({ routes = DEFAULT_ROUTES, tokenKey = 'companyToken',
     setCompleteData({ days_worked: m.days_worked || 1, daily_rate: m.daily_rate || '' });
   };
 
-  const submitComplete = async () => {
+  const submitComplete = async (payload) => {
     try {
       await axios.post(`${API}${routes.completeMission(completing)}`, {
-        days_worked: Number(completeData.days_worked) || 1,
-        daily_rate: Number(completeData.daily_rate) || 0,
+        days_worked: Number(payload.days_worked) || 1,
+        daily_rate: Number(payload.daily_rate) || 0,
+        ratings: payload.ratings || [],
       }, auth());
-      toast.success('Mission marquée terminée — commission(s) générée(s)');
+      toast.success('Mission clôturée — en attente des évaluations des prestataires');
       setCompleting(null); loadMissions();
     } catch (e) { toast.error(e.response?.data?.detail || 'Erreur'); }
   };
@@ -293,6 +294,7 @@ const CompanyInterimTab = ({ routes = DEFAULT_ROUTES, tokenKey = 'companyToken',
         completeData={completeData}
         setCompleteData={setCompleteData}
         onSubmit={submitComplete}
+        mission={missions.find((m) => m.id === completing)}
       />
 
       <RejectTimesheetDialog

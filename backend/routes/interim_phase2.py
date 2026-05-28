@@ -11,7 +11,7 @@ Architecture :
 from fastapi import APIRouter, HTTPException, Depends, Body
 from fastapi.responses import HTMLResponse
 from typing import Optional
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import uuid
 
 from database import db
@@ -441,7 +441,85 @@ async def mission_invoice(mission_id: str, provider_id: str, token: Optional[str
 # RATINGS  (bidirectional)
 # ======================================================================
 
-@router.post("/interim/missions/{mission_id}/rate-provider")
+# ============================================================================
+# Mandatory-rating finalization
+# ============================================================================
+
+AUTO_RATE_AFTER_DAYS = 7
+DEFAULT_NEUTRAL_STARS = 3
+
+
+async def _try_finalize_mission(mission_id: str) -> bool:
+    """Transition a 'closed' mission to 'completed' once EVERY accepted provider
+    has submitted a provider→company rating. Returns True if transition happened."""
+    mission = await db.interim_missions.find_one(
+        {'id': mission_id}, {'_id': 0, 'id': 1, 'status': 1, 'awaiting_rating': 1, 'company_rated': 1}
+    )
+    if not mission or mission.get('status') != 'closed' or not mission.get('awaiting_rating'):
+        return False
+    accepted = await db.mission_applications.find(
+        {'mission_id': mission_id, 'status': 'accepted'}, {'_id': 0, 'provider_id': 1}
+    ).to_list(None)
+    if not accepted:
+        return False
+    accepted_ids = [a['provider_id'] for a in accepted]
+    rated = await db.interim_ratings.distinct(
+        'provider_id',
+        {'mission_id': mission_id, 'direction': 'provider_to_company', 'provider_id': {'$in': accepted_ids}},
+    )
+    if set(rated) >= set(accepted_ids):
+        now_iso = datetime.now(timezone.utc).isoformat()
+        await db.interim_missions.update_one(
+            {'id': mission_id},
+            {'$set': {
+                'status': 'completed',
+                'awaiting_rating': False,
+                'completed_at': now_iso,
+                'updated_at': now_iso,
+            }},
+        )
+        return True
+    return False
+
+
+async def sweep_auto_rate_expired_missions(limit: int = 50):
+    """Find missions stuck in 'closed' + awaiting_rating for > 7 days, insert a
+    neutral 3⭐ rating for any provider who didn't rate, and finalize them."""
+    threshold = (datetime.now(timezone.utc) - timedelta(days=AUTO_RATE_AFTER_DAYS)).isoformat()
+    stuck = await db.interim_missions.find(
+        {'status': 'closed', 'awaiting_rating': True, 'company_completed_at': {'$lte': threshold}},
+        {'_id': 0, 'id': 1, 'title': 1, 'company_id': 1, 'company_name': 1},
+    ).to_list(limit)
+    for m in stuck:
+        accepted = await db.mission_applications.find(
+            {'mission_id': m['id'], 'status': 'accepted'}, {'_id': 0, 'provider_id': 1}
+        ).to_list(None)
+        rated = set(await db.interim_ratings.distinct(
+            'provider_id',
+            {'mission_id': m['id'], 'direction': 'provider_to_company'},
+        ))
+        now_iso = datetime.now(timezone.utc).isoformat()
+        for a in accepted:
+            if a['provider_id'] in rated:
+                continue
+            await db.interim_ratings.insert_one({
+                'id': str(uuid.uuid4()),
+                'mission_id': m['id'],
+                'mission_title': m.get('title', ''),
+                'company_id': m['company_id'],
+                'company_name': m.get('company_name', ''),
+                'provider_id': a['provider_id'],
+                'direction': 'provider_to_company',
+                'stars': DEFAULT_NEUTRAL_STARS,
+                'comment': 'Évaluation automatique neutre (aucune évaluation soumise dans les 7 jours).',
+                'auto_generated': True,
+                'created_at': now_iso,
+                'updated_at': now_iso,
+            })
+        await _try_finalize_mission(m['id'])
+
+
+# ============================================================================
 async def rate_provider(mission_id: str, data: dict = Body(...), current_company: dict = Depends(get_current_company)):
     provider_id = (data.get('provider_id') or '').strip()
     stars = int(data.get('stars') or 0)
@@ -451,8 +529,8 @@ async def rate_provider(mission_id: str, data: dict = Body(...), current_company
     mission = await db.interim_missions.find_one({'id': mission_id, 'company_id': current_company['id']})
     if not mission:
         raise HTTPException(status_code=404, detail="Mission introuvable")
-    if mission.get('status') != 'completed':
-        raise HTTPException(status_code=400, detail="La mission doit être terminée")
+    if mission.get('status') not in ('closed', 'completed'):
+        raise HTTPException(status_code=400, detail="La mission doit être clôturée pour être évaluée")
     # Vérifier que ce prestataire a bien été accepté sur cette mission
     accepted = await db.mission_applications.find_one({
         'mission_id': mission_id, 'provider_id': provider_id, 'status': 'accepted'
@@ -494,8 +572,8 @@ async def rate_company(mission_id: str, data: dict = Body(...), current_user: di
     if not app_doc:
         raise HTTPException(status_code=403, detail="Vous n'avez pas été accepté sur cette mission")
     mission = await db.interim_missions.find_one({'id': mission_id})
-    if not mission or mission.get('status') != 'completed':
-        raise HTTPException(status_code=400, detail="La mission doit être terminée")
+    if not mission or mission.get('status') not in ('closed', 'completed'):
+        raise HTTPException(status_code=400, detail="La mission doit être clôturée pour être évaluée")
     existing = await db.interim_ratings.find_one({
         'mission_id': mission_id, 'provider_id': current_user['id'], 'direction': 'provider_to_company'
     })
@@ -512,11 +590,50 @@ async def rate_company(mission_id: str, data: dict = Body(...), current_user: di
     }
     if existing:
         await db.interim_ratings.update_one({'id': existing['id']}, {'$set': payload})
+        await _try_finalize_mission(mission_id)
         return {'ok': True, 'updated': True}
     payload['id'] = str(uuid.uuid4())
     payload['created_at'] = payload['updated_at']
     await db.interim_ratings.insert_one(payload)
-    return {'ok': True, 'created': True}
+    finalized = await _try_finalize_mission(mission_id)
+    return {'ok': True, 'created': True, 'mission_finalized': finalized}
+
+
+@router.get("/interim/provider/pending-ratings")
+async def provider_pending_ratings(current_user: dict = Depends(get_current_user)):
+    """List missions where the current provider was accepted, the mission is
+    closed + awaiting_rating, and the provider has NOT yet rated the company.
+    Used by the frontend to show a banner / modal prompting evaluation."""
+    # Lazy sweep of expired missions every call (cheap, indexed query)
+    await sweep_auto_rate_expired_missions(limit=20)
+
+    apps = await db.mission_applications.find(
+        {'provider_id': current_user['id'], 'status': 'accepted'},
+        {'_id': 0, 'mission_id': 1},
+    ).to_list(None)
+    mission_ids = [a['mission_id'] for a in apps]
+    if not mission_ids:
+        return []
+    missions = await db.interim_missions.find(
+        {'id': {'$in': mission_ids}, 'status': 'closed', 'awaiting_rating': True},
+        {'_id': 0, 'id': 1, 'title': 1, 'company_name': 1, 'company_completed_at': 1},
+    ).to_list(None)
+    if not missions:
+        return []
+    rated_mids = set(await db.interim_ratings.distinct(
+        'mission_id',
+        {'provider_id': current_user['id'], 'direction': 'provider_to_company',
+         'mission_id': {'$in': [m['id'] for m in missions]}},
+    ))
+    pending = [m for m in missions if m['id'] not in rated_mids]
+    # Add deadline iso to each entry
+    for m in pending:
+        try:
+            ts = datetime.fromisoformat(m['company_completed_at'].replace('Z', '+00:00'))
+            m['rating_deadline'] = (ts + timedelta(days=AUTO_RATE_AFTER_DAYS)).isoformat()
+        except Exception:
+            m['rating_deadline'] = None
+    return pending
 
 
 @router.get("/interim/ratings/provider/{provider_id}")

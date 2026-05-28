@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Briefcase, Coins, MapPin, Calendar, Loader2, AlertTriangle, CheckCircle, Clock, XCircle, FileText, Send, List, Map as MapIcon, Filter } from 'lucide-react';
+import { Briefcase, Coins, MapPin, Calendar, Loader2, AlertTriangle, CheckCircle, Clock, XCircle, FileText, Send, List, Map as MapIcon, Filter, Star } from 'lucide-react';
 import AvailabilityCalendar from './AvailabilityCalendar';
 import MissionsMap from '@/components/interim/MissionsMap';
 import MissionFilters, { EMPTY_FILTERS, applyMissionFilters } from '@/components/interim/MissionFilters';
@@ -45,24 +45,27 @@ const ProviderInterimTab = ({ user }) => {
   const [decliningMission, setDecliningMission] = useState(null);  // mission object to decline
   const [missionsMode, setMissionsMode] = useState('list');         // 'list' | 'map'
   const [missionFilters, setMissionFilters] = useState(EMPTY_FILTERS);
+  const [pendingRatings, setPendingRatings] = useState([]);             // missions to rate (mandatory)
 
   const suspended = user?.interim_suspended;
 
   const loadAll = useCallback(async () => {
     setLoading(true);
     try {
-      const [m, a, c, ts, av, r] = await Promise.all([
+      const [m, a, c, ts, av, r, pr] = await Promise.all([
         axios.get(`${API}/interim/missions`, auth()),
         axios.get(`${API}/interim/applications/mine`, auth()),
         axios.get(`${API}/interim/commissions/mine`, auth()),
         axios.get(`${API}/interim/timesheets/mine`, auth()),
         axios.get(`${API}/interim/availability/mine`, auth()),
         axios.get(`${API}/interim/ratings/provider/${user.id}`),
+        axios.get(`${API}/interim/provider/pending-ratings`, auth()),
       ]);
       setMissions(m.data || []);
       setApplications(a.data || []);
       setCommissions(c.data || []);
       setTimesheets(ts.data || []);
+      setPendingRatings(pr.data || []);
       setAvailability(av.data || { manual_unavailable_dates: [], mission_busy_dates: [] });
       setRatingsReceived(r.data || { count: 0, average: 0, ratings: [] });
     } catch {
@@ -229,6 +232,38 @@ const ProviderInterimTab = ({ user }) => {
 
   return (
     <div className="space-y-4" data-testid="provider-interim-tab">
+      {pendingRatings.length > 0 && (
+        <div className="p-4 rounded-xl bg-amber-50 border-2 border-amber-300 flex items-start gap-3" data-testid="pending-ratings-banner">
+          <Star className="h-6 w-6 text-amber-500 mt-0.5 shrink-0 fill-amber-400" />
+          <div className="flex-1">
+            <p className="font-semibold text-amber-800">
+              {pendingRatings.length} mission{pendingRatings.length > 1 ? 's' : ''} à évaluer
+            </p>
+            <p className="text-sm text-amber-700">
+              Notez votre expérience avec chaque entreprise pour finaliser la mission. Sans évaluation sous 7 jours, une note neutre sera attribuée automatiquement.
+            </p>
+            <div className="mt-2 space-y-1.5">
+              {pendingRatings.map((m) => (
+                <div key={m.id} className="flex items-center justify-between gap-2 bg-white rounded px-3 py-1.5 border border-amber-200">
+                  <div className="text-xs">
+                    <span className="font-semibold text-slate-700">{m.title}</span>
+                    <span className="text-slate-400"> · {m.company_name}</span>
+                  </div>
+                  <Button
+                    size="sm"
+                    className="h-7 bg-amber-500 hover:bg-amber-600 text-xs"
+                    onClick={() => { setRateCompanyApp({ mission_id: m.id, mission_title: m.title, company_name: m.company_name }); setRateForm({ stars: 5, comment: '' }); }}
+                    data-testid={`rate-company-btn-${m.id}`}
+                  >
+                    Évaluer
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {suspended && (
         <div className="p-4 rounded-xl bg-red-50 border border-red-200 flex items-start gap-3" data-testid="suspension-banner">
           <AlertTriangle className="h-5 w-5 text-red-600 mt-0.5 shrink-0" />

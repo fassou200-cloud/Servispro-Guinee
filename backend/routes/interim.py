@@ -335,22 +335,66 @@ async def withdraw_application(application_id: str, current_user: dict = Depends
 
 @router.post("/interim/missions/{mission_id}/complete")
 async def complete_mission(mission_id: str, data: dict = Body(default={}), current_company: dict = Depends(get_current_company)):
+    """Mark a mission as 'closed' + finalize commissions + collect MANDATORY ratings
+    for each accepted provider (company → provider).
+
+    Body shape:
+        {
+            "days_worked": 3,
+            "daily_rate": 150000,        // optional
+            "ratings": [                  // REQUIRED, one entry per accepted provider
+                {"provider_id": "...", "stars": 1-5, "comment": "..."},
+                ...
+            ]
+        }
+
+    Status transitions:
+        open / closed (in progress) → 'closed' + awaiting_rating=true + company_rated=true
+        When ALL accepted providers have rated back, transitions to 'completed'.
+        Lazy auto-completion fallback: 7 days after company_completed_at,
+        any missing provider ratings default to 3⭐.
+    """
     mission = await db.interim_missions.find_one({'id': mission_id, 'company_id': current_company['id']})
     if not mission:
         raise HTTPException(status_code=404, detail="Mission introuvable")
     if mission.get('status') == 'completed':
         raise HTTPException(status_code=400, detail="Déjà marquée terminée")
+    if mission.get('company_rated'):
+        raise HTTPException(status_code=400, detail="Vous avez déjà clôturé cette mission")
 
-    # Optional override of days worked
     days_worked = int(data.get('days_worked') or 1)
     daily_rate_override = float(data.get('daily_rate') or 0) or mission.get('daily_rate', 0)
-
-    settings = await _get_interim_settings()
-    commission_percent = float(settings.get('commission_percent') or 10.0)
 
     accepted = await db.mission_applications.find(
         {'mission_id': mission_id, 'status': 'accepted'}, {'_id': 0}
     ).to_list(None)
+    if not accepted:
+        raise HTTPException(status_code=400, detail="Aucun prestataire accepté sur cette mission")
+
+    # Validate ratings — one per accepted provider, stars in [1,5]
+    raw_ratings = data.get('ratings') or []
+    if not isinstance(raw_ratings, list) or len(raw_ratings) == 0:
+        raise HTTPException(status_code=400, detail="Évaluation obligatoire de chaque prestataire accepté pour terminer la mission")
+    ratings_by_provider = {}
+    for r in raw_ratings:
+        if not isinstance(r, dict):
+            continue
+        pid = (r.get('provider_id') or '').strip()
+        try:
+            stars = int(r.get('stars') or 0)
+        except (TypeError, ValueError):
+            stars = 0
+        comment = (r.get('comment') or '').strip()[:1000]
+        if not pid or stars < 1 or stars > 5:
+            raise HTTPException(status_code=400, detail="Chaque évaluation doit comporter un prestataire et 1 à 5 étoiles")
+        ratings_by_provider[pid] = {'stars': stars, 'comment': comment}
+    accepted_ids = {a['provider_id'] for a in accepted}
+    missing = accepted_ids - set(ratings_by_provider.keys())
+    if missing:
+        raise HTTPException(status_code=400, detail=f"Évaluation manquante pour {len(missing)} prestataire(s) accepté(s)")
+
+    settings = await _get_interim_settings()
+    commission_percent = float(settings.get('commission_percent') or 10.0)
 
     now_iso = datetime.now(timezone.utc).isoformat()
     created_commissions = []
@@ -373,33 +417,66 @@ async def complete_mission(mission_id: str, data: dict = Body(default={}), curre
             'commission_percent': commission_percent,
             'commission_amount': commission_amount,
             'currency': 'GNF',
-            'status': 'pending',           # pending | submitted | validated | rejected
+            'status': 'pending',
             'created_at': now_iso,
         }
         await db.interim_commissions.insert_one(commission)
         commission.pop('_id', None)
         created_commissions.append(commission)
-        # Auto-suspend the provider (must pay commission before applying elsewhere)
         await db.service_providers.update_one({'id': app_doc['provider_id']}, {'$set': {'interim_suspended': True}})
 
+        # Insert/update the company→provider rating
+        r = ratings_by_provider[app_doc['provider_id']]
+        rating_payload = {
+            'mission_id': mission_id,
+            'mission_title': mission.get('title', ''),
+            'company_id': mission['company_id'],
+            'company_name': mission.get('company_name', ''),
+            'provider_id': app_doc['provider_id'],
+            'direction': 'company_to_provider',
+            'stars': r['stars'],
+            'comment': r['comment'],
+            'updated_at': now_iso,
+        }
+        existing_rating = await db.interim_ratings.find_one({
+            'mission_id': mission_id, 'provider_id': app_doc['provider_id'], 'direction': 'company_to_provider'
+        })
+        if existing_rating:
+            await db.interim_ratings.update_one({'id': existing_rating['id']}, {'$set': rating_payload})
+        else:
+            rating_payload['id'] = str(uuid.uuid4())
+            rating_payload['created_at'] = now_iso
+            await db.interim_ratings.insert_one(rating_payload)
+
+    # Stay in 'closed' status with awaiting_rating flag until all providers have rated back.
     await db.interim_missions.update_one(
         {'id': mission_id},
-        {'$set': {'status': 'completed', 'completed_at': now_iso, 'updated_at': now_iso,
-                  'days_worked': days_worked}}
+        {'$set': {
+            'status': 'closed',
+            'awaiting_rating': True,
+            'company_rated': True,
+            'company_completed_at': now_iso,
+            'updated_at': now_iso,
+            'days_worked': days_worked,
+        }}
     )
 
-    # Auto-rejeter toutes les candidatures encore en attente : la mission est définitivement terminée
+    # Auto-reject any pending applications (mission is closed)
     await db.mission_applications.update_many(
         {'mission_id': mission_id, 'status': 'pending'},
         {'$set': {
             'status': 'rejected',
+            'rejection_reason': 'Mission terminée — candidature non retenue',
             'rejected_at': now_iso,
-            'rejection_reason': 'Mission terminée par l\'entreprise',
-            'auto_rejected': True,
         }}
     )
 
-    return {'ok': True, 'commissions_created': len(created_commissions), 'commissions': created_commissions}
+    return {
+        'ok': True,
+        'awaiting_provider_ratings': len(accepted),
+        'commissions_created': len(created_commissions),
+        'message': "Mission clôturée. En attente des évaluations de chaque prestataire (auto-complétion sous 7 jours).",
+    }
 
 
 # ======================================================================
