@@ -182,3 +182,15 @@ Vérification obligatoire du numéro de téléphone à l'inscription pour les 3 
 2. Le script grandfather a déjà été exécuté sur prod le 28 mai (les 212 utilisateurs existants sont marqués vérifiés)
 3. Pour passer Africa's Talking en **mode Live** : créer une app payante AT (~$5 minimum), demander approbation Sender ID `ServisPro` (2-7j), mettre à jour `AT_USERNAME=ServisPro` + `AT_SENDER_ID=ServisPro` dans `.env` prod
 
+
+## Intérim Phase 4 — Vue Carte (mai 2026)
+- 🗺️ **MissionsMap** (`/app/frontend/src/components/interim/MissionsMap.js`) — composant Leaflet + OpenStreetMap (100% gratuit)
+- 📍 **guineaCoords.js** (`/app/frontend/src/data/guineaCoords.js`) — coordonnées GPS approximatives par région / ville / commune (priorité commune > city > region) + jitter déterministe pour éviter le chevauchement
+- 🔀 **Toggle Liste/Carte** dans `ProviderInterimTab.js` au-dessus du listing des missions ouvertes
+- Marqueur custom emerald, popups avec titre, badges (Particulier/Entreprise, type contrat), localisation, dates, tarif, CTA "Voir/Postuler"
+- Dépendances ajoutées : `leaflet@1.9.4`, `react-leaflet@5.0.0`
+
+**À venir Phase 4 (reste)** :
+- Filtres avancés missions (région/ville/commune, salaire, type)
+- Alertes mission par SMS
+- Favoris entreprises

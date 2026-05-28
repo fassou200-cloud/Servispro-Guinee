@@ -4,8 +4,9 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Briefcase, Coins, MapPin, Calendar, Loader2, AlertTriangle, CheckCircle, Clock, XCircle, FileText, Send } from 'lucide-react';
+import { Briefcase, Coins, MapPin, Calendar, Loader2, AlertTriangle, CheckCircle, Clock, XCircle, FileText, Send, List, Map as MapIcon } from 'lucide-react';
 import AvailabilityCalendar from './AvailabilityCalendar';
+import MissionsMap from '@/components/interim/MissionsMap';
 import {
   ApplyMissionDialog,
   PayCommissionDialog,
@@ -41,6 +42,7 @@ const ProviderInterimTab = ({ user }) => {
   const [payForm, setPayForm] = useState({ payment_method: 'orange_money', transfer_reference: '', sender_phone: '', note: '' });
   const [payMethods, setPayMethods] = useState([]);
   const [decliningMission, setDecliningMission] = useState(null);  // mission object to decline
+  const [missionsMode, setMissionsMode] = useState('list');         // 'list' | 'map'
 
   const suspended = user?.interim_suspended;
 
@@ -264,9 +266,45 @@ const ProviderInterimTab = ({ user }) => {
         </Button>
       </div>
 
-      {view === 'missions' && (missions.length === 0 ? (
-        <Card className="p-10 text-center text-gray-500"><Briefcase className="h-12 w-12 mx-auto text-gray-300 mb-3" />Aucune mission ouverte.</Card>
-      ) : missions.map((m) => {
+      {view === 'missions' && (
+        <>
+          {missions.length > 0 && (
+            <div className="flex items-center justify-end gap-2" data-testid="missions-mode-toggle">
+              <Button
+                size="sm"
+                variant={missionsMode === 'list' ? 'default' : 'outline'}
+                onClick={() => setMissionsMode('list')}
+                className={missionsMode === 'list' ? 'bg-emerald-600 hover:bg-emerald-700' : ''}
+                data-testid="missions-mode-list-btn"
+              >
+                <List className="h-4 w-4 mr-1" /> Liste
+              </Button>
+              <Button
+                size="sm"
+                variant={missionsMode === 'map' ? 'default' : 'outline'}
+                onClick={() => setMissionsMode('map')}
+                className={missionsMode === 'map' ? 'bg-emerald-600 hover:bg-emerald-700' : ''}
+                data-testid="missions-mode-map-btn"
+              >
+                <MapIcon className="h-4 w-4 mr-1" /> Carte
+              </Button>
+            </div>
+          )}
+          {missions.length === 0 ? (
+            <Card className="p-10 text-center text-gray-500"><Briefcase className="h-12 w-12 mx-auto text-gray-300 mb-3" />Aucune mission ouverte.</Card>
+          ) : missionsMode === 'map' ? (
+            <MissionsMap
+              missions={missions}
+              onSelect={(m) => {
+                if (suspended) return;
+                if (applications.find(a => a.mission_id === m.id)) {
+                  toast.info('Vous avez déjà postulé à cette mission.');
+                  return;
+                }
+                openApply(m);
+              }}
+            />
+          ) : missions.map((m) => {
         const alreadyApplied = applications.find(a => a.mission_id === m.id);
         return (
           <Card key={m.id} className="p-4" data-testid={`available-mission-${m.id}`}>
@@ -302,7 +340,9 @@ const ProviderInterimTab = ({ user }) => {
             </div>
           </Card>
         );
-      }))}
+      })}
+        </>
+      )}
 
       {view === 'applications' && (applications.length === 0 ? (
         <Card className="p-10 text-center text-gray-500"><Send className="h-12 w-12 mx-auto text-gray-300 mb-3" />Aucune candidature.</Card>
