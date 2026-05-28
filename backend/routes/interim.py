@@ -251,17 +251,20 @@ async def my_provider_applications(current_user: dict = Depends(get_current_user
 
 @router.get("/interim/missions/{mission_id}/applications")
 async def list_mission_applications(mission_id: str, current_company: dict = Depends(get_current_company)):
-    mission = await db.interim_missions.find_one({'id': mission_id, 'company_id': current_company['id']}, {'_id': 0, 'id': 1})
+    mission = await db.interim_missions.find_one({'id': mission_id, 'company_id': current_company['id']}, {'_id': 0, 'id': 1, 'status': 1})
     if not mission:
         raise HTTPException(status_code=404, detail="Mission introuvable")
     apps = await db.mission_applications.find(
         {'mission_id': mission_id}, {'_id': 0}
     ).sort('created_at', -1).to_list(None)
-    # Masquer le numéro tant que la candidature n'est pas acceptée (anti-contournement)
+    # Masquer le numéro tant que la candidature n'est pas acceptée (anti-contournement).
+    # Une fois la mission terminée, masquer à nouveau pour TOUS (anti-démarchage).
+    mission_completed = mission.get('status') == 'completed'
     for a in apps:
-        if a.get('status') != 'accepted':
+        if mission_completed or a.get('status') != 'accepted':
             a['provider_phone'] = None
             a['phone_locked'] = True
+            a['phone_lock_reason'] = 'mission_completed' if mission_completed else 'not_accepted'
         else:
             a['phone_locked'] = False
     return apps

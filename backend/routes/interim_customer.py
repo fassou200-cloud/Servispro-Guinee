@@ -134,7 +134,16 @@ async def delete_customer_mission(mission_id: str, current_customer: dict = Depe
 @router.get("/interim/customer/missions/{mission_id}/applications")
 async def list_customer_mission_applications(mission_id: str, current_customer: dict = Depends(get_current_customer)):
     await _ensure_owns_mission(mission_id, current_customer['id'])
+    mission = await db.interim_missions.find_one({'id': mission_id}, {'_id': 0, 'status': 1})
     apps = await db.mission_applications.find({'mission_id': mission_id}, {'_id': 0}).sort('created_at', -1).to_list(None)
+    mission_completed = (mission or {}).get('status') == 'completed'
+    for a in apps:
+        if mission_completed or a.get('status') != 'accepted':
+            a['provider_phone'] = None
+            a['phone_locked'] = True
+            a['phone_lock_reason'] = 'mission_completed' if mission_completed else 'not_accepted'
+        else:
+            a['phone_locked'] = False
     return apps
 
 

@@ -72,7 +72,12 @@ const MissionCard = ({
                 <p className="text-xs text-gray-500">
                   {a.provider_city}
                   {a.provider_phone && !a.phone_locked ? <> · <span className="font-mono text-emerald-700">{a.provider_phone}</span></> : null}
-                  {a.phone_locked && <> · <span className="italic text-gray-400">📞 visible après acceptation</span></>}
+                  {a.phone_locked && a.phone_lock_reason === 'mission_completed' && (
+                    <> · <span className="italic text-gray-400">🔒 contact masqué — mission terminée</span></>
+                  )}
+                  {a.phone_locked && a.phone_lock_reason !== 'mission_completed' && (
+                    <> · <span className="italic text-gray-400">📞 visible après acceptation</span></>
+                  )}
                 </p>
                 {a.cover_message && <p className="text-xs text-gray-600 mt-1 italic">« {a.cover_message} »</p>}
                 {a.proposed_rate ? <p className="text-xs text-emerald-700 mt-1">Taux proposé : {fmt(a.proposed_rate)} GNF/jour</p> : null}

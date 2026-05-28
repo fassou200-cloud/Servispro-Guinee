@@ -213,3 +213,11 @@ Vérification obligatoire du numéro de téléphone à l'inscription pour les 3 
 - `ProviderInterimTab.openTimesheet` : calcule `lockedDates` selon `existing.status === 'submitted'`
 
 Tests backend exhaustifs validés : ajout autorisé, modification refusée, suppression refusée, déverrouillage après rejet OK.
+
+## Masquage contacts post-mission (mai 2026)
+**Anti-démarchage** : une fois une mission marquée `completed` (terminée), les numéros des prestataires (acceptés ET rejetés) sont masqués pour l'entreprise / le particulier-propriétaire.
+- Backend `routes/interim.py` + `routes/interim_customer.py` `list_*_applications` : ajout flag `phone_lock_reason: 'mission_completed'|'not_accepted'`
+- Frontend `components/interim/MissionCard.js` : affiche `🔒 contact masqué — mission terminée` quand `phone_lock_reason === 'mission_completed'`
+
+### Backlog SMS notifications (P1)
+- 📲 Notification SMS au prestataire lors d'acceptation/rejet de candidature, validation/rejet de pointage (Africa's Talking déjà branché, ~30min)
