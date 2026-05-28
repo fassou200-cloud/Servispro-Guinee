@@ -15,6 +15,8 @@ import axios from 'axios';
 import { toast } from 'sonner';
 import VisitRequestForm from '@/components/VisitRequestForm';
 import { getImageUrl } from '@/utils/imageUrl';
+import { getCurrentUserContact, isPhoneVerifiedInSession } from '@/utils/helpers';
+import PhoneVerifyBox from '@/components/PhoneVerifyBox';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -140,11 +142,34 @@ const RentalDetail = () => {
   const [showContactForm, setShowContactForm] = useState(false);
   const [contactForm, setContactForm] = useState({ sender_name: '', sender_phone: '', message: '' });
   const [sendingContact, setSendingContact] = useState(false);
+  const [phoneLocked, setPhoneLocked] = useState(false);
+  const [needsOtp, setNeedsOtp] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
     fetchRental();
   }, [rentalId]);
+
+  // Auto-fill the contact form from logged-in user when modal opens
+  useEffect(() => {
+    if (!showContactForm) {
+      setPhoneLocked(false);
+      setNeedsOtp(false);
+      setOtpVerified(false);
+      return;
+    }
+    const me = getCurrentUserContact();
+    if (me?.phone) {
+      setContactForm((prev) => ({
+        ...prev,
+        sender_name: prev.sender_name || me.name || '',
+        sender_phone: me.phone,
+      }));
+      setPhoneLocked(true);
+      setOtpVerified(true);
+    }
+  }, [showContactForm]);
 
   useEffect(() => {
     if (showChat) {
@@ -180,12 +205,19 @@ const RentalDetail = () => {
       toast.error('Veuillez remplir tous les champs');
       return;
     }
+    // Anonymous user: require OTP verification before sending
+    if (!phoneLocked && !otpVerified && !isPhoneVerifiedInSession(contactForm.sender_phone)) {
+      setNeedsOtp(true);
+      return;
+    }
     setSendingContact(true);
     try {
       await axios.post(`${API}/rentals/${rentalId}/messages`, contactForm);
       toast.success('Message envoyé au propriétaire !');
       setShowContactForm(false);
       setContactForm({ sender_name: '', sender_phone: '', message: '' });
+      setNeedsOtp(false);
+      setOtpVerified(false);
     } catch (err) {
       toast.error("Erreur lors de l'envoi du message");
     } finally {
@@ -644,7 +676,14 @@ const RentalDetail = () => {
                 value={contactForm.sender_phone}
                 onChange={(e) => setContactForm({...contactForm, sender_phone: e.target.value})}
                 required
+                disabled={phoneLocked}
+                className={phoneLocked ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : ''}
               />
+              {phoneLocked && (
+                <p className="text-xs text-emerald-600 -mt-1.5 flex items-center gap-1">
+                  <CheckCircle className="h-3 w-3" /> Numéro vérifié de votre compte
+                </p>
+              )}
               <textarea
                 data-testid="rental-contact-message"
                 placeholder={`Bonjour, je suis intéressé par "${rental?.title || 'ce logement'}"...`}
@@ -654,13 +693,23 @@ const RentalDetail = () => {
                 required
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-green-500"
               />
+              {needsOtp && !otpVerified && (
+                <PhoneVerifyBox
+                  phone={contactForm.sender_phone}
+                  onVerified={() => {
+                    setOtpVerified(true);
+                    setNeedsOtp(false);
+                    handleSendContact({ preventDefault: () => {} });
+                  }}
+                />
+              )}
               <Button
                 data-testid="send-rental-contact-btn"
                 type="submit"
                 className="w-full bg-green-500 hover:bg-green-600"
-                disabled={sendingContact}
+                disabled={sendingContact || (needsOtp && !otpVerified)}
               >
-                {sendingContact ? 'Envoi...' : 'Envoyer le message'}
+                {sendingContact ? 'Envoi...' : (needsOtp && !otpVerified ? 'Vérifiez votre numéro' : 'Envoyer le message')}
               </Button>
             </form>
           </Card>

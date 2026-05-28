@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getErrorMessage } from '@/utils/helpers';
+import { getErrorMessage, getCurrentUserContact } from '@/utils/helpers';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,6 +19,7 @@ const ServiceRequestForm = ({ providerId, providerName, provider, onSuccess }) =
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [phoneLocked, setPhoneLocked] = useState(false);
   
   const [formData, setFormData] = useState({
     client_name: '',
@@ -31,15 +32,15 @@ const ServiceRequestForm = ({ providerId, providerName, provider, onSuccess }) =
   });
 
   useEffect(() => {
-    // Pre-fill with customer data if logged in
-    const storedCustomer = localStorage.getItem('customer');
-    if (storedCustomer) {
-      const customerData = JSON.parse(storedCustomer);
+    // Pre-fill with logged-in user data (customer/provider/company)
+    const me = getCurrentUserContact();
+    if (me?.phone) {
       setFormData(prev => ({
         ...prev,
-        client_name: `${customerData.first_name} ${customerData.last_name}`,
-        phone_number: customerData.phone_number
+        client_name: me.name || '',
+        phone_number: me.phone,
       }));
+      setPhoneLocked(true);
     }
   }, []);
 
@@ -191,9 +192,13 @@ const ServiceRequestForm = ({ providerId, providerName, provider, onSuccess }) =
             value={formData.phone_number}
             onChange={handleChange}
             required
-            className="h-11"
+            disabled={phoneLocked}
+            className={`h-11 ${phoneLocked ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : ''}`}
             placeholder="+224 6XX XXX XXX"
           />
+          {phoneLocked && (
+            <p className="text-xs text-emerald-600">✓ Numéro vérifié de votre compte</p>
+          )}
         </div>
 
         {/* Service Type */}

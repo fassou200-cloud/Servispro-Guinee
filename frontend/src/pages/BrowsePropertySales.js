@@ -13,6 +13,7 @@ import {
 import { toast } from 'sonner';
 import axios from 'axios';
 import { getImageUrl } from '@/utils/imageUrl';
+import { getCurrentUserContact } from '@/utils/helpers';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -39,19 +40,15 @@ const BrowsePropertySales = ({ isCustomerAuthenticated }) => {
 
   useEffect(() => {
     fetchProperties();
-    // Load customer info if authenticated
-    if (isCustomerAuthenticated) {
-      const storedCustomer = localStorage.getItem('customer');
-      if (storedCustomer) {
-        const customerData = JSON.parse(storedCustomer);
-        setCustomer(customerData);
-        setInquiryForm(prev => ({
-          ...prev,
-          customer_name: customerData.full_name || '',
-          customer_phone: customerData.phone || '',
-          customer_email: customerData.email || ''
-        }));
-      }
+    // Load customer info from any logged-in user (customer/provider/company)
+    const me = getCurrentUserContact();
+    if (me) {
+      setCustomer({ name: me.name, phone: me.phone, type: me.type });
+      setInquiryForm(prev => ({
+        ...prev,
+        customer_name: me.name || '',
+        customer_phone: me.phone || '',
+      }));
     }
   }, [isCustomerAuthenticated]);
 
@@ -498,10 +495,14 @@ const BrowsePropertySales = ({ isCustomerAuthenticated }) => {
                       value={inquiryForm.customer_phone}
                       onChange={(e) => setInquiryForm({...inquiryForm, customer_phone: e.target.value})}
                       placeholder="Ex: 620 00 00 00"
-                      className="pl-10"
+                      className={`pl-10 ${customer?.phone ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : ''}`}
                       required
+                      disabled={!!customer?.phone}
                     />
                   </div>
+                  {customer?.phone && (
+                    <p className="text-xs text-emerald-600 mt-1">✓ Numéro vérifié de votre compte</p>
+                  )}
                 </div>
 
                 <div>
