@@ -37,6 +37,7 @@ ServisPro est une plateforme guinéenne (Conakry) qui connecte clients, prestata
   - Admin valide ou rejette → auto-unsuspend du prestataire
 
 ## Changelog
+- **2026-02-29** : **Fix P0 verrouillage pointage validé** — Le pointage validé par l'entreprise est désormais entièrement en lecture seule côté prestataire. `ProviderInterimTab.openTimesheet` calcule `lockedDates` pour les statuts `submitted` ET `validated`, ajoute un flag `readOnly` qui désactive calendrier + inputs + cache le bouton « Envoyer ». `TimesheetCalendar` accepte un prop `readOnly`. `ProviderInterimDialogs.TimesheetSubmitDialog` affiche une bannière verte « Pointage validé par l'entreprise. Les jours et heures sont figés ». Backend renvoyait déjà HTTP 400 « Pointage déjà validé » (testé via curl).
 - **2026-02-26** : **Module Intérim Client** livré. Backend `routes/interim_customer.py` (14 endpoints `/api/interim/customer/*`, quota 2 missions actives). Frontend : `CompanyInterimTab.js` rendu paramétrique (props routes/tokenKey), wrapper `CustomerInterimTab.js`, onglet Intérim dans dashboard client. Badge « Particulier » vs « Entreprise » sur les missions côté prestataire.
 - **2026-02-26** : Compteur **« N missions réussies »** sur profil prestataire (header + section avis) et cartes Browse. Endpoint `/interim/ratings/provider/{id}` enrichi avec `completed_missions`.
 - **2026-02-26** : Localisation Région/Ville/Commune/Quartier (4 niveaux) dans le formulaire mission entreprise — identique inscription prestataire.

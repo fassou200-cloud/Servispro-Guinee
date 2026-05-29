@@ -139,7 +139,7 @@ const ProviderInterimTab = ({ user }) => {
   };
 
   const [tsModalApp, setTsModalApp] = useState(null);
-  const [tsForm, setTsForm] = useState({ notes: '', worked_days: [], lockedDates: new Set() });
+  const [tsForm, setTsForm] = useState({ notes: '', worked_days: [], lockedDates: new Set(), tsStatus: null, readOnly: false });
 
   const openTimesheet = (app) => {
     const existing = timesheets.find(t => t.mission_id === app.mission_id);
@@ -147,19 +147,30 @@ const ProviderInterimTab = ({ user }) => {
       const wd = existing.worked_days && existing.worked_days.length
         ? existing.worked_days.map(d => ({ date: d.date, hours: d.hours, note: d.note || '' }))
         : (existing.worked_dates || []).map(d => ({ date: d, hours: 8, note: '' }));
-      // Lock days only when status is 'submitted'; on 'rejected' all become editable again
-      const lockedDates = existing.status === 'submitted'
+      // Lock days for 'submitted' AND 'validated' status; on 'rejected' all become editable again.
+      // 'validated' is fully read-only — no new days can be added either.
+      const isSubmitted = existing.status === 'submitted';
+      const isValidated = existing.status === 'validated';
+      const lockedDates = (isSubmitted || isValidated)
         ? new Set(wd.map(d => d.date))
         : new Set();
-      setTsForm({ notes: existing.notes || '', worked_days: wd, lockedDates });
+      setTsForm({
+        notes: existing.notes || '',
+        worked_days: wd,
+        lockedDates,
+        tsStatus: existing.status,
+        readOnly: isValidated,
+      });
     } else {
-      setTsForm({ notes: '', worked_days: [], lockedDates: new Set() });
+      setTsForm({ notes: '', worked_days: [], lockedDates: new Set(), tsStatus: null, readOnly: false });
     }
     setTsModalApp(app);
   };
 
   const toggleWorkedDate = (dateStr) => {
     setTsForm((f) => {
+      // Read-only timesheet (validated) — no toggles at all
+      if (f.readOnly) return f;
       // Locked days cannot be toggled off
       if (f.lockedDates && f.lockedDates.has(dateStr)) return f;
       const list = [...(f.worked_days || [])];
@@ -173,6 +184,7 @@ const ProviderInterimTab = ({ user }) => {
 
   const setHoursForDate = (dateStr, hours) => {
     setTsForm((f) => {
+      if (f.readOnly) return f;
       if (f.lockedDates && f.lockedDates.has(dateStr)) return f;
       return {
         ...f,
@@ -183,6 +195,7 @@ const ProviderInterimTab = ({ user }) => {
 
   const setDayNote = (dateStr, note) => {
     setTsForm((f) => {
+      if (f.readOnly) return f;
       if (f.lockedDates && f.lockedDates.has(dateStr)) return f;
       return {
         ...f,
@@ -192,6 +205,9 @@ const ProviderInterimTab = ({ user }) => {
   };
 
   const submitTimesheet = async () => {
+    if (tsForm.readOnly) {
+      toast.error('Pointage déjà validé — modifications impossibles'); return;
+    }
     if (!tsForm.worked_days || tsForm.worked_days.length === 0) {
       toast.error('Sélectionnez au moins un jour travaillé'); return;
     }

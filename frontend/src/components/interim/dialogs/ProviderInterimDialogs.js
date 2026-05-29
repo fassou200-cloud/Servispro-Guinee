@@ -105,16 +105,27 @@ export const PayCommissionDialog = ({ commission, form, setForm, payMethods, onC
 
 export const TimesheetSubmitDialog = ({ app, form, setForm, onToggleDate, onSetHours, onSetDayNote, onClose, onSubmit }) => {
   const lockedDates = form.lockedDates instanceof Set ? form.lockedDates : new Set(form.lockedDates || []);
+  const isReadOnly = !!form.readOnly;
+  const isValidated = form.tsStatus === 'validated';
   return (
   <Dialog open={!!app} onOpenChange={(o) => !o && onClose()}>
     <DialogContent className="max-h-[90vh] overflow-y-auto" data-testid="timesheet-dialog">
       <DialogHeader>
         <DialogTitle>Pointage : {app?.mission_title}</DialogTitle>
-        <DialogDescription>Sélectionnez les jours réellement travaillés. L&apos;entreprise validera votre pointage.</DialogDescription>
+        <DialogDescription>
+          {isValidated
+            ? 'Ce pointage a été validé par l\u2019entreprise. Aucune modification n\u2019est possible.'
+            : 'Sélectionnez les jours réellement travaillés. L\u2019entreprise validera votre pointage.'}
+        </DialogDescription>
       </DialogHeader>
       {app && (
         <div className="space-y-3">
-          {lockedDates.size > 0 && (
+          {isValidated && (
+            <div className="rounded-md bg-emerald-50 border border-emerald-200 px-3 py-2 text-xs text-emerald-800" data-testid="ts-validated-banner">
+              <strong>Pointage validé</strong> par l&apos;entreprise. Les jours et heures sont figés et ne peuvent plus être modifiés.
+            </div>
+          )}
+          {!isValidated && lockedDates.size > 0 && (
             <div className="rounded-md bg-slate-100 border border-slate-200 px-3 py-2 text-xs text-slate-600">
               <strong>{lockedDates.size}</strong> jour{lockedDates.size > 1 ? 's' : ''} déjà soumis — modifiable seulement si l&apos;entreprise rejette le pointage. Vous pouvez ajouter de nouveaux jours.
             </div>
@@ -125,13 +136,14 @@ export const TimesheetSubmitDialog = ({ app, form, setForm, onToggleDate, onSetH
             selected={new Set((form.worked_days || []).map(d => d.date))}
             lockedDates={lockedDates}
             onToggle={onToggleDate}
+            readOnly={isReadOnly}
           />
           {form.worked_days.length > 0 && (
             <div className="space-y-2">
               <Label>Heures travaillées par jour</Label>
               <div className="max-h-72 overflow-y-auto space-y-2 border rounded-lg p-2 bg-gray-50">
                 {form.worked_days.map(d => {
-                  const isLocked = lockedDates.has(d.date);
+                  const isLocked = isReadOnly || lockedDates.has(d.date);
                   return (
                   <div key={d.date} className={`rounded p-2 ${isLocked ? 'bg-slate-200/60' : 'bg-white'} border border-slate-200`} data-testid={`hours-row-${d.date}`}>
                     <div className="flex items-center gap-2">
@@ -149,7 +161,9 @@ export const TimesheetSubmitDialog = ({ app, form, setForm, onToggleDate, onSetH
                       />
                       <span className="text-xs text-gray-500">h</span>
                       {isLocked && (
-                        <span className="ml-auto text-[10px] text-slate-500 font-semibold uppercase tracking-wide">Soumis</span>
+                        <span className="ml-auto text-[10px] text-slate-500 font-semibold uppercase tracking-wide">
+                          {isValidated ? 'Validé' : 'Soumis'}
+                        </span>
                       )}
                     </div>
                     <Input
@@ -174,13 +188,24 @@ export const TimesheetSubmitDialog = ({ app, form, setForm, onToggleDate, onSetH
           )}
           <div>
             <Label>Notes générales (optionnel)</Label>
-            <Textarea rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Commentaire global sur la mission…" maxLength={1000} />
+            <Textarea
+              rows={2}
+              value={form.notes}
+              onChange={(e) => setForm({ ...form, notes: e.target.value })}
+              placeholder="Commentaire global sur la mission…"
+              maxLength={1000}
+              disabled={isReadOnly}
+              className={isReadOnly ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : ''}
+              data-testid="ts-general-notes"
+            />
           </div>
         </div>
       )}
       <div className="flex justify-end gap-2 mt-2">
-        <Button variant="outline" onClick={onClose}>Annuler</Button>
-        <Button onClick={onSubmit} className="bg-emerald-600 hover:bg-emerald-700" data-testid="submit-ts-btn">Envoyer le pointage</Button>
+        <Button variant="outline" onClick={onClose}>{isReadOnly ? 'Fermer' : 'Annuler'}</Button>
+        {!isReadOnly && (
+          <Button onClick={onSubmit} className="bg-emerald-600 hover:bg-emerald-700" data-testid="submit-ts-btn">Envoyer le pointage</Button>
+        )}
       </div>
     </DialogContent>
   </Dialog>

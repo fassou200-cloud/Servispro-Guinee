@@ -8,10 +8,12 @@ const DAYS = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
 
 /**
  * Click days you worked, within the mission start/end window.
- * `lockedDates` (Set<string>): dates already submitted, displayed as
+ * `lockedDates` (Set<string>): dates already submitted/validated, displayed as
  * non-interactive locked tiles (cannot toggle off).
+ * `readOnly` (bool): if true, ALL dates are locked (no new toggles either).
+ *   Used when the timesheet has been validated by the company.
  */
-const TimesheetCalendar = ({ startDate, endDate, selected, onToggle, lockedDates }) => {
+const TimesheetCalendar = ({ startDate, endDate, selected, onToggle, lockedDates, readOnly = false }) => {
   const startIso = startDate ? String(startDate).slice(0, 10) : null;
   const endIso = endDate ? String(endDate).slice(0, 10) : startIso;
   const todayIso = new Date().toISOString().slice(0, 10);
@@ -56,21 +58,22 @@ const TimesheetCalendar = ({ startDate, endDate, selected, onToggle, lockedDates
           const valid = inWindow(d) && !isFuture(d);
           const future = inWindow(d) && isFuture(d);
           const isSelected = selected.has(ds);
-          const isLocked = locked.has(ds);
+          const isLocked = locked.has(ds) || (readOnly && isSelected);
           let cls = 'aspect-square flex items-center justify-center text-sm rounded transition-all';
           if (!valid && !future) cls += ' bg-gray-100 text-gray-300 cursor-not-allowed';
           else if (future) cls += ' bg-amber-50 text-amber-400 cursor-not-allowed';
           else if (isLocked) cls += ' bg-slate-300 text-slate-600 font-semibold cursor-not-allowed';
+          else if (readOnly) cls += ' bg-gray-100 text-gray-400 cursor-not-allowed';
           else if (isSelected) cls += ' bg-emerald-500 text-white font-bold cursor-pointer hover:bg-emerald-600';
           else cls += ' bg-emerald-50 text-emerald-700 cursor-pointer hover:bg-emerald-100';
           return (
             <button
               key={idx}
               type="button"
-              disabled={!valid || isLocked}
-              onClick={() => valid && !isLocked && onToggle(ds)}
+              disabled={!valid || isLocked || readOnly}
+              onClick={() => valid && !isLocked && !readOnly && onToggle(ds)}
               className={cls}
-              title={isLocked ? 'Jour déjà soumis — modifiable seulement après rejet' : future ? 'Date à venir — pointage impossible' : undefined}
+              title={isLocked ? (readOnly ? 'Pointage validé — modifications impossibles' : 'Jour déjà soumis — modifiable seulement après rejet') : future ? 'Date à venir — pointage impossible' : undefined}
               data-testid={`ts-day-${ds}`}
             >
               {d}

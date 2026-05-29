@@ -255,7 +255,16 @@ const CompanyInterimTab = ({ routes = DEFAULT_ROUTES, tokenKey = 'companyToken',
           <Briefcase className="h-12 w-12 mx-auto text-gray-300 mb-3" />
           <p>Aucune mission publiée.</p>
         </Card>
-      ) : missions.map((m) => (
+      ) : (() => {
+        // Display order: open → closed → completed → others. Within a status, newest first.
+        const order = { open: 0, closed: 1, completed: 2 };
+        const sorted = [...missions].sort((a, b) => {
+          const sa = order[a.status] ?? 99;
+          const sb = order[b.status] ?? 99;
+          if (sa !== sb) return sa - sb;
+          return String(b.created_at || '').localeCompare(String(a.created_at || ''));
+        });
+        return sorted.map((m) => (
         <MissionCard
           key={m.id}
           mission={m}
@@ -269,7 +278,8 @@ const CompanyInterimTab = ({ routes = DEFAULT_ROUTES, tokenKey = 'companyToken',
           onRateProvider={(target) => { setRateProviderModal(target); setRateForm({ stars: 5, comment: '' }); }}
           onDownloadInvoice={downloadInvoice}
         />
-      ))}
+        ));
+      })()}
       </>
       )}
 
