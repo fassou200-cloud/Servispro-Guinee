@@ -150,8 +150,22 @@ const AdminSMSTab = () => {
 
   return (
     <div className="space-y-5" data-testid="admin-sms-tab">
+      {/* SMS globally disabled banner */}
+      {balance && balance.sms_enabled === false && (
+        <Card className="p-4 bg-amber-950/60 border border-amber-700 text-amber-100 flex items-center gap-3" data-testid="sms-disabled-banner">
+          <AlertTriangle className="h-6 w-6 text-amber-400 shrink-0" />
+          <div className="flex-1">
+            <p className="font-semibold">Envoi SMS temporairement désactivé</p>
+            <p className="text-sm text-amber-200/90">
+              Le kill-switch <code className="bg-amber-900/60 px-1 py-0.5 rounded text-xs">SMS_ENABLED=false</code> est actif dans le backend.
+              Les utilisateurs sont auto-vérifiés à l&apos;inscription ; aucun SMS réel n&apos;est envoyé. Réactivez via <code className="bg-amber-900/60 px-1 py-0.5 rounded text-xs">SMS_ENABLED=true</code> une fois le top-up Africa&apos;s Talking validé.
+            </p>
+          </div>
+        </Card>
+      )}
+
       {/* Low balance alert */}
-      {balance?.is_low && (
+      {balance?.sms_enabled !== false && balance?.is_low && (
         <Card className="p-4 bg-red-950/60 border border-red-700 text-red-200 flex items-center gap-3" data-testid="sms-low-balance-alert">
           <AlertTriangle className="h-6 w-6 text-red-400 shrink-0" />
           <div className="flex-1">

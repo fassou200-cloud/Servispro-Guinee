@@ -2,13 +2,17 @@
 
 Generates a 6-digit code, stores it in MongoDB with a 10-min expiry, and
 verifies it. Includes basic rate-limiting (max 5 wrong attempts, max 3 resends/hour).
+
+When SMS_ENABLED=false (kill-switch), send_otp/verify_otp short-circuit:
+they return success without involving Africa's Talking, so registration and
+anonymous contact flows remain usable while the AT top-up is pending.
 """
 import logging
 import random
 from datetime import datetime, timedelta, timezone
 
 from database import db
-from utils.sms_helper import send_sms
+from utils.sms_helper import send_sms, is_sms_enabled
 
 logger = logging.getLogger(__name__)
 
@@ -36,8 +40,21 @@ async def send_otp(phone_number: str, purpose: str = 'verification') -> dict:
     """Generate, save and send a fresh OTP via SMS to `phone_number`.
 
     Returns {success, message, retry_after?}.
+
+    When SMS is globally disabled, returns a success result that tells the
+    caller to skip the verification step.
     """
     phone = normalize_phone(phone_number)
+
+    if not is_sms_enabled():
+        # Auto-verify the user in any of the 3 collections (idempotent)
+        await mark_user_phone_verified(phone)
+        return {
+            "success": True,
+            "auto_verified": True,
+            "message": "Vérification SMS temporairement désactivée. Votre numéro est validé automatiquement.",
+        }
+
     now = datetime.now(timezone.utc)
 
     # Rate limit: max N resends per hour
@@ -91,9 +108,18 @@ async def send_otp(phone_number: str, purpose: str = 'verification') -> dict:
 
 
 async def verify_otp(phone_number: str, code: str, purpose: str = 'verification') -> dict:
-    """Check the code. On success, marks the OTP as consumed. Returns {success, error?}."""
+    """Check the code. On success, marks the OTP as consumed. Returns {success, error?}.
+
+    When SMS is globally disabled, any non-empty code is accepted (the user
+    is auto-verified at send time).
+    """
     phone = normalize_phone(phone_number)
     code = (code or '').strip()
+
+    if not is_sms_enabled():
+        await mark_user_phone_verified(phone)
+        return {"success": True, "auto_verified": True, "message": "Vérification SMS désactivée — validation automatique."}
+
     if len(code) != OTP_LENGTH or not code.isdigit():
         return {"success": False, "error": "INVALID_FORMAT", "message": "Le code doit contenir 6 chiffres."}
 

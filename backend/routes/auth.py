@@ -16,6 +16,7 @@ from models import (
 )
 from utils.security import log_audit_event, get_client_ip, is_ip_blocked, record_failed_attempt, clear_failed_attempts
 from utils.storage import upload_to_cloudinary
+from utils.sms_helper import is_sms_enabled
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -210,7 +211,7 @@ async def register(
         'verification_status': ProviderStatus.PENDING.value,
         'price': None,
         'investigation_fee': None,
-        'phone_verified': False,
+        'phone_verified': not is_sms_enabled(),
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     
@@ -278,7 +279,7 @@ async def login(input_data: LoginInput, request: Request):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
     # Block login if phone not verified — but still let them through to verify
-    if not user.get('phone_verified', False):
+    if is_sms_enabled() and not user.get('phone_verified', False):
         raise HTTPException(
             status_code=403,
             detail={
@@ -349,7 +350,7 @@ async def register_customer(input_data: CustomerRegisterInput):
         'last_name': input_data.last_name,
         'phone_number': normalized_phone,
         'password': hashed_pwd,
-        'phone_verified': False,
+        'phone_verified': not is_sms_enabled(),
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     
@@ -413,7 +414,7 @@ async def register_company(input_data: CompanyRegisterInput):
         # Status
         'verification_status': 'pending',
         'online_status': False,
-        'phone_verified': False,
+        'phone_verified': not is_sms_enabled(),
         'created_at': now,
         'updated_at': now
     }
@@ -474,7 +475,7 @@ async def login_company(input_data: CompanyLoginInput, request: Request):
         raise HTTPException(status_code=401, detail="Numéro de téléphone ou mot de passe incorrect")
     
     # Block login if phone not verified
-    if not company.get('phone_verified', False):
+    if is_sms_enabled() and not company.get('phone_verified', False):
         raise HTTPException(
             status_code=403,
             detail={

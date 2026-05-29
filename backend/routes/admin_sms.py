@@ -11,7 +11,7 @@ from typing import Optional
 from fastapi import APIRouter, Body, HTTPException, Query
 
 from database import db
-from utils.sms_helper import fetch_balance
+from utils.sms_helper import fetch_balance, is_sms_enabled
 
 router = APIRouter()
 
@@ -159,8 +159,24 @@ async def admin_sms_logs(
 
 @router.get("/admin/sms/balance")
 async def admin_sms_balance():
-    """Live Africa's Talking account balance + threshold + alert flag."""
+    """Live Africa's Talking account balance + threshold + alert flag.
+    Also reports the global SMS_ENABLED kill-switch state so the admin UI
+    can display a clear "Désactivé" banner.
+    """
     settings = await _get_sms_settings()
+    enabled = is_sms_enabled()
+    if not enabled:
+        return {
+            'success': True,
+            'sms_enabled': False,
+            'error': None,
+            'balance_str': None,
+            'currency': '',
+            'balance_amount': None,
+            'balance_usd': None,
+            'threshold_usd': settings['low_balance_threshold_usd'],
+            'is_low': False,
+        }
     bal = fetch_balance()
     balance_amount = bal.get('balance_amount')
     currency = bal.get('currency') or ''
@@ -172,6 +188,7 @@ async def admin_sms_balance():
     low = (balance_usd is not None) and (balance_usd < settings['low_balance_threshold_usd'])
     return {
         'success': bal.get('success', False),
+        'sms_enabled': True,
         'error': bal.get('error'),
         'balance_str': bal.get('balance_str'),
         'currency': currency,

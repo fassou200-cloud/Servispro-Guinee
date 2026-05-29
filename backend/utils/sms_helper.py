@@ -18,6 +18,13 @@ _AT_USERNAME = os.environ.get('AT_USERNAME', '').strip()
 _AT_API_KEY = os.environ.get('AT_API_KEY', '').strip()
 _AT_SENDER_ID = os.environ.get('AT_SENDER_ID', '').strip() or None
 
+
+def is_sms_enabled() -> bool:
+    """Master kill-switch. When SMS_ENABLED=false, no real SMS is sent.
+    Used during the AT top-up validation window so users are not blocked.
+    """
+    return (os.environ.get('SMS_ENABLED', 'true').strip().lower() != 'false')
+
 _initialized = False
 _sms = None
 _application = None
@@ -75,7 +82,16 @@ def send_sms(phone_number: str, message: str, purpose: str = 'other') -> dict:
     """Send an SMS to a single recipient. `phone_number` must be E.164 (+224...).
 
     `purpose` is logged for analytics: 'otp', 'alert', 'notification', 'other'.
+
+    If SMS_ENABLED=false, the call short-circuits: no real SMS is sent, the
+    attempt is logged with success=true and an explicit disabled marker so the
+    admin dashboard can show a clear "Désactivé" banner.
     """
+    if not is_sms_enabled():
+        result = {"success": True, "message_id": None, "cost": None, "disabled": True}
+        _schedule_log(phone_number, message, purpose, {**result, "error": "SMS_DISABLED"})
+        return result
+
     if not _init():
         result = {"success": False, "error": "SMS provider not configured"}
         _schedule_log(phone_number, message, purpose, result)
