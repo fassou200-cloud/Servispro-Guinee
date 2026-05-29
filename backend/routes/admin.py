@@ -2207,9 +2207,6 @@ async def admin_delete_product_photo(product_id: str, photo_index: int):
 @router.post("/admin/products/{product_id}/photos")
 async def admin_upload_product_photos(product_id: str, files: List[UploadFile] = File(...)):
     """Admin: upload photos to any product"""
-    import cloudinary
-    import cloudinary.uploader
-    
     product = await db.products.find_one({'id': product_id})
     if not product:
         raise HTTPException(status_code=404, detail="Produit non trouvé")
@@ -2217,9 +2214,10 @@ async def admin_upload_product_photos(product_id: str, files: List[UploadFile] =
     photo_urls = list(product.get('photos', []))
     for file in files:
         try:
-            contents = await file.read()
-            result = cloudinary.uploader.upload(contents, folder=f"servispro/products/{product_id}")
-            photo_urls.append(result['secure_url'])
+            result = await upload_to_cloudinary(file, folder=f"servispro/products/{product_id}")
+            if not result.get('success', True) and 'url' not in result:
+                raise Exception(result.get('error', 'Upload failed'))
+            photo_urls.append(result['url'])
         except Exception as e:
             logger.error(f"Admin photo upload failed for product {product_id}: {e}")
             raise HTTPException(status_code=500, detail=f"Erreur upload: {str(e)}")
