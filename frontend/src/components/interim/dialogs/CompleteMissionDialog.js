@@ -64,20 +64,17 @@ const CompleteMissionDialog = ({ open, onOpenChange, completeData, setCompleteDa
   const setStars = (pid, stars) => setRatings((r) => ({ ...r, [pid]: { ...r[pid], stars } }));
   const setComment = (pid, comment) => setRatings((r) => ({ ...r, [pid]: { ...r[pid], comment } }));
 
-  const allRated = accepted.length > 0 && accepted.every((a) => (ratings[a.provider_id]?.stars || 0) >= 1);
-
   const submitWithRatings = () => {
-    if (!allRated) {
-      toast.error('Veuillez attribuer une note à chaque prestataire accepté');
-      return;
-    }
+    // Ratings are optional — only send entries that have stars
     const payload = {
       ...completeData,
-      ratings: accepted.map((a) => ({
-        provider_id: a.provider_id,
-        stars: ratings[a.provider_id].stars,
-        comment: (ratings[a.provider_id].comment || '').trim(),
-      })),
+      ratings: accepted
+        .filter((a) => (ratings[a.provider_id]?.stars || 0) >= 1)
+        .map((a) => ({
+          provider_id: a.provider_id,
+          stars: ratings[a.provider_id].stars,
+          comment: (ratings[a.provider_id].comment || '').trim(),
+        })),
     };
     onSubmit(payload);
   };
@@ -106,7 +103,7 @@ const CompleteMissionDialog = ({ open, onOpenChange, completeData, setCompleteDa
           </div>
 
           <div className="border-t pt-3 space-y-3">
-            <Label className="text-sm font-semibold">Évaluation des prestataires *</Label>
+            <Label className="text-sm font-semibold">Évaluation des prestataires (optionnel)</Label>
             {loading && <div className="text-center py-4"><Loader2 className="h-5 w-5 animate-spin mx-auto text-slate-400" /></div>}
             {!loading && accepted.length === 0 && (
               <p className="text-sm text-red-600">Aucun prestataire accepté — impossible de clôturer cette mission.</p>
@@ -135,14 +132,13 @@ const CompleteMissionDialog = ({ open, onOpenChange, completeData, setCompleteDa
           </div>
 
           <p className="text-[11px] text-slate-500 italic">
-            Après clôture, les prestataires recevront un rappel pour vous évaluer en retour. La mission sera complètement terminée
-            quand tous auront évalué (ou automatiquement après 7 jours avec note neutre).
+            Les évaluations sont optionnelles. La mission est terminée immédiatement après la clôture.
           </p>
         </div>
 
         <div className="flex justify-end gap-2 mt-3">
           <Button variant="outline" onClick={() => onOpenChange(false)}>Annuler</Button>
-          <Button onClick={submitWithRatings} disabled={loading || !allRated} className="bg-emerald-600 hover:bg-emerald-700" data-testid="confirm-complete-btn">
+          <Button onClick={submitWithRatings} disabled={loading || accepted.length === 0} className="bg-emerald-600 hover:bg-emerald-700" data-testid="confirm-complete-btn">
             Clôturer la mission
           </Button>
         </div>

@@ -217,7 +217,7 @@ const CompanyInterimTab = ({ routes = DEFAULT_ROUTES, tokenKey = 'companyToken',
         daily_rate: Number(payload.daily_rate) || 0,
         ratings: payload.ratings || [],
       }, auth());
-      toast.success('Mission clôturée — en attente des évaluations des prestataires');
+      toast.success('Mission terminée — commission(s) générée(s)');
       setCompleting(null); loadMissions();
     } catch (e) { toast.error(e.response?.data?.detail || 'Erreur'); }
   };

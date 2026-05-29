@@ -221,3 +221,10 @@ Tests backend exhaustifs validés : ajout autorisé, modification refusée, supp
 
 ### Backlog SMS notifications (P1)
 - 📲 Notification SMS au prestataire lors d'acceptation/rejet de candidature, validation/rejet de pointage (Africa's Talking déjà branché, ~30min)
+
+## Évaluations rendues OPTIONNELLES (mai 2026)
+Suite à choix produit, le caractère obligatoire des évaluations a été levé :
+- `routes/interim.py /complete` accepte `ratings` mais ne les exige plus ; les entrées invalides sont ignorées silencieusement
+- Mission passe directement à `completed` (plus de phase intermédiaire `awaiting_rating`)
+- Frontend `CompleteMissionDialog.js` : section "Évaluation des prestataires (optionnel)", bouton "Clôturer" plus bloqué tant que pas tout noté
+- Le système de pending-ratings côté prestataire reste en place (banner amber) — utilisable plus tard si retour à obligatoire

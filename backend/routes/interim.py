@@ -359,8 +359,6 @@ async def complete_mission(mission_id: str, data: dict = Body(default={}), curre
         raise HTTPException(status_code=404, detail="Mission introuvable")
     if mission.get('status') == 'completed':
         raise HTTPException(status_code=400, detail="Déjà marquée terminée")
-    if mission.get('company_rated'):
-        raise HTTPException(status_code=400, detail="Vous avez déjà clôturé cette mission")
 
     days_worked = int(data.get('days_worked') or 1)
     daily_rate_override = float(data.get('daily_rate') or 0) or mission.get('daily_rate', 0)
@@ -371,27 +369,22 @@ async def complete_mission(mission_id: str, data: dict = Body(default={}), curre
     if not accepted:
         raise HTTPException(status_code=400, detail="Aucun prestataire accepté sur cette mission")
 
-    # Validate ratings — one per accepted provider, stars in [1,5]
+    # Ratings are OPTIONAL — validate when provided but don't require them.
     raw_ratings = data.get('ratings') or []
-    if not isinstance(raw_ratings, list) or len(raw_ratings) == 0:
-        raise HTTPException(status_code=400, detail="Évaluation obligatoire de chaque prestataire accepté pour terminer la mission")
     ratings_by_provider = {}
-    for r in raw_ratings:
-        if not isinstance(r, dict):
-            continue
-        pid = (r.get('provider_id') or '').strip()
-        try:
-            stars = int(r.get('stars') or 0)
-        except (TypeError, ValueError):
-            stars = 0
-        comment = (r.get('comment') or '').strip()[:1000]
-        if not pid or stars < 1 or stars > 5:
-            raise HTTPException(status_code=400, detail="Chaque évaluation doit comporter un prestataire et 1 à 5 étoiles")
-        ratings_by_provider[pid] = {'stars': stars, 'comment': comment}
-    accepted_ids = {a['provider_id'] for a in accepted}
-    missing = accepted_ids - set(ratings_by_provider.keys())
-    if missing:
-        raise HTTPException(status_code=400, detail=f"Évaluation manquante pour {len(missing)} prestataire(s) accepté(s)")
+    if isinstance(raw_ratings, list):
+        for r in raw_ratings:
+            if not isinstance(r, dict):
+                continue
+            pid = (r.get('provider_id') or '').strip()
+            try:
+                stars = int(r.get('stars') or 0)
+            except (TypeError, ValueError):
+                stars = 0
+            comment = (r.get('comment') or '').strip()[:1000]
+            if not pid or stars < 1 or stars > 5:
+                continue  # silently skip invalid entries instead of blocking
+            ratings_by_provider[pid] = {'stars': stars, 'comment': comment}
 
     settings = await _get_interim_settings()
     commission_percent = float(settings.get('commission_percent') or 10.0)
@@ -425,37 +418,38 @@ async def complete_mission(mission_id: str, data: dict = Body(default={}), curre
         created_commissions.append(commission)
         await db.service_providers.update_one({'id': app_doc['provider_id']}, {'$set': {'interim_suspended': True}})
 
-        # Insert/update the company→provider rating
-        r = ratings_by_provider[app_doc['provider_id']]
-        rating_payload = {
-            'mission_id': mission_id,
-            'mission_title': mission.get('title', ''),
-            'company_id': mission['company_id'],
-            'company_name': mission.get('company_name', ''),
-            'provider_id': app_doc['provider_id'],
-            'direction': 'company_to_provider',
-            'stars': r['stars'],
-            'comment': r['comment'],
-            'updated_at': now_iso,
-        }
-        existing_rating = await db.interim_ratings.find_one({
-            'mission_id': mission_id, 'provider_id': app_doc['provider_id'], 'direction': 'company_to_provider'
-        })
-        if existing_rating:
-            await db.interim_ratings.update_one({'id': existing_rating['id']}, {'$set': rating_payload})
-        else:
-            rating_payload['id'] = str(uuid.uuid4())
-            rating_payload['created_at'] = now_iso
-            await db.interim_ratings.insert_one(rating_payload)
+        # Insert/update the company→provider rating only if one was provided
+        r = ratings_by_provider.get(app_doc['provider_id'])
+        if r:
+            rating_payload = {
+                'mission_id': mission_id,
+                'mission_title': mission.get('title', ''),
+                'company_id': mission['company_id'],
+                'company_name': mission.get('company_name', ''),
+                'provider_id': app_doc['provider_id'],
+                'direction': 'company_to_provider',
+                'stars': r['stars'],
+                'comment': r['comment'],
+                'updated_at': now_iso,
+            }
+            existing_rating = await db.interim_ratings.find_one({
+                'mission_id': mission_id, 'provider_id': app_doc['provider_id'], 'direction': 'company_to_provider'
+            })
+            if existing_rating:
+                await db.interim_ratings.update_one({'id': existing_rating['id']}, {'$set': rating_payload})
+            else:
+                rating_payload['id'] = str(uuid.uuid4())
+                rating_payload['created_at'] = now_iso
+                await db.interim_ratings.insert_one(rating_payload)
 
-    # Stay in 'closed' status with awaiting_rating flag until all providers have rated back.
+    # Mark mission fully completed — ratings remain optional for both sides.
     await db.interim_missions.update_one(
         {'id': mission_id},
         {'$set': {
-            'status': 'closed',
-            'awaiting_rating': True,
-            'company_rated': True,
-            'company_completed_at': now_iso,
+            'status': 'completed',
+            'awaiting_rating': False,
+            'company_rated': bool(ratings_by_provider),
+            'completed_at': now_iso,
             'updated_at': now_iso,
             'days_worked': days_worked,
         }}
@@ -473,9 +467,9 @@ async def complete_mission(mission_id: str, data: dict = Body(default={}), curre
 
     return {
         'ok': True,
-        'awaiting_provider_ratings': len(accepted),
         'commissions_created': len(created_commissions),
-        'message': "Mission clôturée. En attente des évaluations de chaque prestataire (auto-complétion sous 7 jours).",
+        'ratings_recorded': len(ratings_by_provider),
+        'message': "Mission terminée avec succès.",
     }
 
 
