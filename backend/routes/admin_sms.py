@@ -39,7 +39,8 @@ async def _get_sms_settings() -> dict:
 
 
 def _parse_cost_to_usd(cost_str) -> float:
-    """Africa's Talking returns cost as 'KES 0.8000' or 'USD 0.025'. Convert KES → USD with a fixed rate."""
+    """Africa's Talking returns cost as 'KES 0.8000', 'USD 0.025', or 'GNF 215' depending on
+    the account currency. Convert to USD using fixed 2026 rates."""
     if cost_str is None:
         return 0.0
     if isinstance(cost_str, (int, float)):
@@ -53,12 +54,17 @@ def _parse_cost_to_usd(cost_str) -> float:
     except (ValueError, IndexError):
         return 0.0
     currency = parts[0].upper() if len(parts) >= 2 else 'USD'
-    if currency == 'USD':
-        return amt
-    if currency == 'KES':
-        # Approx 1 USD ≈ 129 KES (2026). Conservative — refined later if needed.
-        return amt / 129.0
-    return amt  # unknown currency — treat as raw
+    # Fixed FX rates (2026 approx). Refine via env vars if needed.
+    rates_to_usd = {
+        'USD': 1.0,
+        'KES': 1.0 / 129.0,    # 1 USD ≈ 129 KES
+        'GNF': 1.0 / 8600.0,   # 1 USD ≈ 8 600 GNF (Guinea Franc)
+        'NGN': 1.0 / 1600.0,
+        'UGX': 1.0 / 3800.0,
+        'TZS': 1.0 / 2500.0,
+    }
+    rate = rates_to_usd.get(currency, 1.0)
+    return amt * rate
 
 
 # ---------------------------------------------------------------------------
