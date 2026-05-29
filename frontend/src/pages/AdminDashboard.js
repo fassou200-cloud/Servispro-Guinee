@@ -29,6 +29,7 @@ import AdminRefundsTab from '@/components/admin/AdminRefundsTab';
 import AdminFeedbacksTab from '@/components/admin/AdminFeedbacksTab';
 import AdminMakitiTab from '@/components/admin/AdminMakitiTab';
 import AdminInterimTab from '@/components/admin/AdminInterimTab';
+import AdminSMSTab from '@/components/admin/AdminSMSTab';
 import AdminMakitiInsights from '@/components/admin/AdminMakitiInsights';
 import AdminSettingsTab from '@/components/admin/AdminSettingsTab';
 
@@ -1333,6 +1334,15 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
             Intérim
           </Button>
           <Button
+            variant={activeTab === 'sms' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('sms')}
+            className={activeTab === 'sms' ? 'bg-sky-600 hover:bg-sky-700' : 'border-slate-600 text-slate-300'}
+            data-testid="admin-sms-tab-btn"
+          >
+            <MessageSquare className="h-4 w-4 mr-2" />
+            SMS
+          </Button>
+          <Button
             variant={activeTab === 'settings' ? 'default' : 'outline'}
             onClick={() => setActiveTab('settings')}
             className={activeTab === 'settings' ? 'bg-purple-600 hover:bg-purple-700' : 'border-slate-600 text-slate-300'}
@@ -1621,6 +1631,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
         {activeTab === 'makiti' && <AdminMakitiTab {...allTabProps} />}
         {activeTab === 'makiti-insights' && <AdminMakitiInsights />}
         {activeTab === 'interim' && <AdminInterimTab />}
+        {activeTab === 'sms' && <AdminSMSTab />}
 
 
         {/* Messages Tab */}

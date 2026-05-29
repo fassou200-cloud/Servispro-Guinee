@@ -74,7 +74,7 @@ async def send_otp(phone_number: str, purpose: str = 'verification') -> dict:
     })
 
     message = f"ServisPro : votre code de vérification est {code}. Valable {OTP_VALIDITY_MINUTES} minutes. Ne le partagez avec personne."
-    result = send_sms(f"+{phone}", message)
+    result = send_sms(f"+{phone}", message, purpose='otp')
     if not result.get('success'):
         logger.warning(f"SMS send failed for {phone}: {result.get('error')}")
         return {
