@@ -323,12 +323,20 @@ async def browse_shops(sector: Optional[str] = None, search: Optional[str] = Non
     
     shops = await db.shops.find(shop_query, {'_id': 0}).sort('created_at', -1).to_list(None)
     
+    # Build a quick lookup of company logos for fallback
+    company_logos = {c['id']: c.get('logo') for c in valid_companies}
+    
     # Only keep shops that have at least 1 product
     result = []
     for shop in shops:
         product_count = await db.products.count_documents({'shop_id': shop['id'], 'is_deleted': {'$ne': True}})
         if product_count > 0:
             shop['total_products'] = product_count
+            # Fallback: use company logo if shop has no logo
+            if not shop.get('logo'):
+                fb = company_logos.get(shop.get('owner_id'))
+                if fb:
+                    shop['logo'] = fb
             result.append(shop)
     
     return result
@@ -339,6 +347,20 @@ async def get_shop_detail(shop_id: str):
     shop = await db.shops.find_one({'id': shop_id, 'is_active': True}, {'_id': 0})
     if not shop:
         raise HTTPException(status_code=404, detail="Boutique non trouvée")
+    
+    # Fallback: if shop has no logo, use the owner's (company or provider) profile logo/picture
+    if not shop.get('logo'):
+        owner_id = shop.get('owner_id')
+        owner_type = shop.get('owner_type')
+        if owner_id:
+            if owner_type == 'company':
+                owner = await db.companies.find_one({'id': owner_id}, {'_id': 0, 'logo': 1})
+                if owner and owner.get('logo'):
+                    shop['logo'] = owner['logo']
+            else:
+                owner = await db.service_providers.find_one({'id': owner_id}, {'_id': 0, 'profile_picture': 1})
+                if owner and owner.get('profile_picture'):
+                    shop['logo'] = owner['profile_picture']
     
     # Increment view count
     await db.shops.update_one({'id': shop_id}, {'$inc': {'total_views': 1}})
