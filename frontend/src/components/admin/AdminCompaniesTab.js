@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { getImageUrl } from '@/utils/imageUrl';
-import { Building, Camera, CheckCircle, ChevronLeft, ChevronRight, Eye, FileText, Image as ImageIcon, Loader2, MapPin, MessageCircle, Package, Pencil, Save, Store, Trash2, UserCheck, UserCircle, UserX, X, XCircle } from 'lucide-react';
+import { Building, Camera, CheckCircle, ChevronLeft, ChevronRight, Eye, FileText, Image as ImageIcon, ImagePlus, Loader2, MapPin, MessageCircle, Package, Pencil, Save, Store, Trash2, UserCheck, UserCircle, UserX, X, XCircle } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
 
 const COMPANIES_PER_PAGE = 10;
@@ -32,6 +32,8 @@ const AdminCompaniesTab = ({
   handleAdminDeletePhoto,
   handleAdminDeleteProduct,
   handleAdminUpdateProduct,
+  handleAdminAddPhotos,
+  uploadingAdminPhotos,
   handleApproveCompany,
   handleRejectCompany,
   loadCompanyProducts,
@@ -627,6 +629,53 @@ const AdminCompaniesTab = ({
                                   >
                                     Annuler
                                   </button>
+                                </div>
+                                {/* Photo management inside edit mode */}
+                                <div className="pt-2 border-t border-slate-700">
+                                  <p className="text-xs text-slate-400 mb-2">
+                                    Photos ({product.photos?.length || 0})
+                                    {product.photos?.length > 0 && ' — cliquez sur la croix pour supprimer'}
+                                  </p>
+                                  {product.photos?.length > 0 && (
+                                    <div className="flex gap-2 flex-wrap mb-2">
+                                      {product.photos.map((photo, idx) => (
+                                        <div key={idx} className="relative group h-14 w-14 rounded border border-slate-600 overflow-hidden bg-slate-900">
+                                          <img src={getImageUrl(photo)} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover" />
+                                          <button
+                                            type="button"
+                                            onClick={() => handleAdminDeletePhoto(product.id, idx)}
+                                            disabled={deletingAdminPhoto === `${product.id}-${idx}`}
+                                            className="absolute -top-1 -right-1 bg-red-500 hover:bg-red-600 text-white rounded-full p-0.5 shadow"
+                                            data-testid={`admin-edit-delete-photo-${product.id}-${idx}`}
+                                          >
+                                            {deletingAdminPhoto === `${product.id}-${idx}` ? (
+                                              <Loader2 className="h-3 w-3 animate-spin" />
+                                            ) : (
+                                              <X className="h-3 w-3" />
+                                            )}
+                                          </button>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                  <label
+                                    className={`inline-flex items-center gap-1 px-3 py-1 text-xs rounded font-medium cursor-pointer ${uploadingAdminPhotos === product.id ? 'bg-slate-700 text-slate-400 cursor-wait' : 'bg-teal-600/20 hover:bg-teal-600/40 text-teal-400'}`}
+                                    data-testid={`admin-edit-add-photos-${product.id}`}
+                                  >
+                                    {uploadingAdminPhotos === product.id ? (
+                                      <><Loader2 className="h-3 w-3 animate-spin" /> Envoi…</>
+                                    ) : (
+                                      <><ImagePlus className="h-3 w-3" /> Ajouter une / des photo(s)</>
+                                    )}
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      multiple
+                                      className="hidden"
+                                      onChange={(e) => { handleAdminAddPhotos(product.id, e.target.files); e.target.value = ''; }}
+                                      disabled={uploadingAdminPhotos === product.id}
+                                    />
+                                  </label>
                                 </div>
                               </div>
                             ) : (

@@ -785,6 +785,28 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
     } finally { setDeletingAdminPhoto(null); }
   };
 
+  const [uploadingAdminPhotos, setUploadingAdminPhotos] = useState(null);
+  const handleAdminAddPhotos = async (productId, files) => {
+    if (!files || files.length === 0) return;
+    setUploadingAdminPhotos(productId);
+    try {
+      const formData = new FormData();
+      Array.from(files).forEach(f => formData.append('files', f));
+      const res = await adminApi.post(`${API}/admin/products/${productId}/photos`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setCompanyProducts(prev => prev.map(p =>
+        p.id === productId ? { ...p, photos: res.data.photos } : p
+      ));
+      toast.success(`${files.length} photo(s) ajoutée(s)`);
+    } catch (error) {
+      toast.error(error?.response?.data?.detail || 'Erreur lors de l\u2019ajout de photo');
+    } finally {
+      setUploadingAdminPhotos(null);
+    }
+  };
+
+
   const handleAdminUpdateProduct = async (productId) => {
     try {
       const res = await adminApi.put(`${API}/admin/products/${productId}`, {
@@ -1067,6 +1089,7 @@ const AdminDashboard = ({ setIsAdminAuthenticated }) => {
     handleToggleProviderActive, handleToggleCustomerActive, handleDeleteRental,
     handleApproveCompany, handleRejectCompany, handleDeleteCompany,
     loadCompanyProducts, handleAdminDeleteProduct, handleAdminDeletePhoto, handleAdminUpdateProduct,
+    handleAdminAddPhotos, uploadingAdminPhotos,
     loadAllMessages, loadMakitiProducts, handleMakitiUpdateProduct, handleMakitiDeleteProduct,
     handleMakitiDeletePhoto, handleAdminDocUpload, handleDeleteAdminDoc,
     handleApproveRental, handleRejectRental, handleSaveAbout, handleSaveProfile,
