@@ -133,24 +133,24 @@ const AdminFeedbacksTab = ({
                 return (
                   <Card
                     key={feedback.id}
-                    className={`p-5 bg-slate-800 border-slate-700 cursor-pointer hover:border-pink-500/50 transition-colors ${selectedFeedback?.id === feedback.id ? 'border-pink-500' : ''}`}
+                    className={`p-5 bg-slate-800 border-slate-700 cursor-pointer hover:border-pink-500/50 transition-colors overflow-hidden ${selectedFeedback?.id === feedback.id ? 'border-pink-500' : ''}`}
                     onClick={() => setSelectedFeedback(selectedFeedback?.id === feedback.id ? null : feedback)}
                   >
-                    <div className="flex items-start gap-4">
+                    <div className="flex items-start gap-4 min-w-0">
                       <div className={`h-12 w-12 rounded-xl ${typeInfo.bg} flex items-center justify-center flex-shrink-0`}>
                         <TypeIcon className={`h-6 w-6 ${typeInfo.color}`} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h4 className="font-bold text-white truncate">{feedback.title}</h4>
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium text-white ${statusInfo.color}`}>
+                        <div className="flex flex-wrap items-center gap-2 mb-2">
+                          <h4 className="font-bold text-white break-words min-w-0 flex-1">{feedback.title}</h4>
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium text-white whitespace-nowrap ${statusInfo.color}`}>
                             {statusInfo.label}
                           </span>
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${typeInfo.bg} ${typeInfo.color}`}>
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${typeInfo.bg} ${typeInfo.color}`}>
                             {typeInfo.label}
                           </span>
                         </div>
-                        <p className="text-slate-400 text-sm line-clamp-2">{feedback.description}</p>
+                        <p className="text-slate-400 text-sm line-clamp-2 break-words">{feedback.description}</p>
                         <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-slate-500">
                           {feedback.user_name && (
                             <span className="flex items-center gap-1">
