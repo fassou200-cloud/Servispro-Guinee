@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Store, Plus, Package, Eye, MessageCircle, Edit, Trash2, Upload, Camera,
-  Check, X, Loader2, Image as ImageIcon, DollarSign, Tag, Save, Star, User,
+  Check, X, Loader2, Image as ImageIcon, ImagePlus, DollarSign, Tag, Save, Star, User,
   ChevronLeft, ChevronRight, ZoomIn, Phone, MapPin, Mail, Pencil
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -401,6 +401,32 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
     setShowAddProduct(false);
   };
 
+  const editPhotosInputRef = useRef(null);
+
+  const handleAddPhotosInEdit = async (e) => {
+    const files = Array.from(e.target.files);
+    e.target.value = '';
+    if (!files.length || !editingProduct) return;
+    setUploadingPhotos(editingProduct.id);
+    try {
+      const formData = new FormData();
+      files.forEach(f => formData.append('files', f));
+      const res = await axios.post(
+        `${API}/${apiPrefix}/products/${editingProduct.id}/photos`,
+        formData,
+        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' } },
+      );
+      // Sync both the products list and the editing dialog state
+      setProducts((prev) => prev.map(p => p.id === editingProduct.id ? { ...p, photos: res.data.photos } : p));
+      setEditingProduct((prev) => prev ? { ...prev, photos: res.data.photos } : prev);
+      toast.success(`${files.length} photo(s) ajoutée(s)`);
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || 'Erreur upload photos');
+    } finally {
+      setUploadingPhotos(null);
+    }
+  };
+
   const handleAddPhotosToProduct = async (e) => {
     const files = Array.from(e.target.files);
     if (!files.length || !addPhotosProductId) return;
@@ -757,6 +783,35 @@ const MyShop = ({ token, apiPrefix = 'shop' }) => {
                     </div>
                   </div>
                 )}
+                {/* Add new photos */}
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Ajouter de nouvelles photos :</p>
+                  <input
+                    ref={editPhotosInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleAddPhotosInEdit}
+                    className="hidden"
+                    data-testid="edit-product-add-photos-input"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => editPhotosInputRef.current?.click()}
+                    disabled={uploadingPhotos === editingProduct.id}
+                    className="gap-2"
+                    data-testid="edit-product-add-photos-btn"
+                  >
+                    {uploadingPhotos === editingProduct.id ? (
+                      <><Loader2 className="h-4 w-4 animate-spin" /> Envoi en cours…</>
+                    ) : (
+                      <><ImagePlus className="h-4 w-4" /> Ajouter des photos</>
+                    )}
+                  </Button>
+                  <p className="text-[11px] text-gray-400 mt-1">JPG, PNG, WEBP — plusieurs fichiers possibles</p>
+                </div>
                 <div className="flex gap-2">
                   <Button type="submit" className="bg-blue-600 hover:bg-blue-700 gap-2" disabled={saving}>
                     {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Save className="h-4 w-4" /> Enregistrer</>}
