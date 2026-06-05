@@ -9,6 +9,7 @@ anonymous contact flows remain usable while the AT top-up is pending.
 """
 import logging
 import random
+import re
 from datetime import datetime, timedelta, timezone
 
 from database import db
@@ -20,6 +21,33 @@ OTP_LENGTH = 6
 OTP_VALIDITY_MINUTES = 10
 OTP_MAX_ATTEMPTS = 5
 OTP_RESEND_LIMIT_PER_HOUR = 3
+
+# Guinea mobile numbers: +224 6XX XX XX XX (9 digits after country code, starting with 6)
+GUINEA_PHONE_RE = re.compile(r'^224[6-7]\d{8}$')
+
+# Map Africa's Talking error strings to user-friendly French messages
+AT_ERROR_MESSAGES = {
+    'InvalidPhoneNumber': "Numéro de téléphone inexistant ou invalide.",
+    'UserInBlacklist': "Ce numéro est bloqué par l'opérateur.",
+    'UserNotInDeliveryGroup': "Ce numéro n'est pas joignable.",
+    'UserNotSubscribedToShortcode': "Ce numéro ne peut pas recevoir de SMS de ce service.",
+    'InsufficientBalance': "Service SMS temporairement indisponible. Réessayez plus tard.",
+    'InvalidSenderId': "Configuration SMS invalide.",
+    'InvalidMessage': "Format de message invalide.",
+    'InvalidServiceProvider': "Opérateur non supporté.",
+    'CouldNotRoute': "Numéro de téléphone inexistant ou non joignable.",
+    'NoSenderId': "Configuration SMS manquante.",
+}
+
+
+def _humanize_sms_error(raw_error: str | None) -> str:
+    """Convert raw provider error to a user-friendly French message."""
+    if not raw_error:
+        return "Échec de l'envoi du SMS. Vérifiez votre numéro et réessayez."
+    for code, msg in AT_ERROR_MESSAGES.items():
+        if code.lower() in raw_error.lower():
+            return msg
+    return f"Échec de l'envoi du SMS : {raw_error}"
 
 
 def generate_code() -> str:
@@ -34,6 +62,11 @@ def normalize_phone(raw: str) -> str:
     if phone.startswith('224') and len(phone) > 9:
         return phone
     return '224' + phone
+
+
+def is_valid_guinea_phone(normalized: str) -> bool:
+    """Check that a normalized phone matches the Guinean mobile format."""
+    return bool(GUINEA_PHONE_RE.match(normalized))
 
 
 async def send_otp(phone_number: str, purpose: str = 'verification') -> dict:
@@ -53,6 +86,14 @@ async def send_otp(phone_number: str, purpose: str = 'verification') -> dict:
             "success": True,
             "auto_verified": True,
             "message": "Vérification SMS temporairement désactivée. Votre numéro est validé automatiquement.",
+        }
+
+    # Validate Guinean phone format upfront to avoid paying for impossible deliveries
+    if not is_valid_guinea_phone(phone):
+        return {
+            "success": False,
+            "error": "INVALID_PHONE",
+            "message": "Numéro de téléphone inexistant. Saisissez un numéro guinéen valide au format +224 6XX XX XX XX.",
         }
 
     now = datetime.now(timezone.utc)
@@ -94,10 +135,18 @@ async def send_otp(phone_number: str, purpose: str = 'verification') -> dict:
     result = send_sms(f"+{phone}", message, purpose='otp')
     if not result.get('success'):
         logger.warning(f"SMS send failed for {phone}: {result.get('error')}")
+        raw_err = (result.get('error') or '').strip()
+        # Surface a clean "phone does not exist" message for the most common AT failures
+        user_msg = _humanize_sms_error(raw_err)
+        error_code = "INVALID_PHONE" if (
+            'invalidphonenumber' in raw_err.lower()
+            or 'couldnotroute' in raw_err.lower()
+            or 'usernotindeliverygroup' in raw_err.lower()
+        ) else "SMS_SEND_FAILED"
         return {
             "success": False,
-            "error": "SMS_SEND_FAILED",
-            "message": f"Échec de l'envoi du SMS : {result.get('error', 'erreur inconnue')}",
+            "error": error_code,
+            "message": user_msg,
         }
 
     return {
