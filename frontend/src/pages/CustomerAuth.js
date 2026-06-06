@@ -13,6 +13,7 @@ import axios from 'axios';
 import { getRegions, getVillesByRegion, getCommunesByVille, getQuartiersByCommune } from '@/data/guineaLocations';
 import ForgotPassword from '@/components/ForgotPassword';
 import TermsConditionsModal from '@/components/TermsConditionsModal';
+import PreRegisterOtpGate from '@/components/PreRegisterOtpGate';
 import { formatGuineanPhone } from '@/utils/phone';
 import GuineaFlag from '@/components/GuineaFlag';
 
@@ -28,6 +29,8 @@ const CustomerAuth = ({ setIsCustomerAuthenticated }) => {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  // Two-step registration: after pre-register, show OTP gate
+  const [otpPhase, setOtpPhase] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [formData, setFormData] = useState({
@@ -73,10 +76,57 @@ const CustomerAuth = ({ setIsCustomerAuthenticated }) => {
     }
   }, [formData.commune]);
 
+  // Helper: build the registration payload from formData
+  const buildRegistrationPayload = (otpCode) => {
+    const locationParts = [];
+    if (formData.quartier) locationParts.push(formData.quartier);
+    if (formData.commune) {
+      const communeObj = communes.find(c => c.id === formData.commune);
+      if (communeObj) locationParts.push(communeObj.name);
+    }
+    if (formData.ville) {
+      const villeObj = villes.find(v => v.id === formData.ville);
+      if (villeObj) locationParts.push(villeObj.name);
+    }
+    if (formData.region) {
+      const regionObj = getRegions().find(r => r.id === formData.region);
+      if (regionObj) locationParts.push(regionObj.name);
+    }
+    return {
+      first_name: formData.first_name,
+      last_name: formData.last_name,
+      phone_number: formData.phone_number,
+      password: formData.password,
+      otp_code: otpCode,
+      location: locationParts.join(', '),
+      region: formData.region,
+      ville: formData.ville,
+      commune: formData.commune,
+      quartier: formData.quartier,
+    };
+  };
+
+  // Phase 2 — called by PreRegisterOtpGate when the user submits the SMS code
+  const submitRegistration = async (otpCode) => {
+    setLoading(true);
+    try {
+      const response = await axios.post(`${API}/auth/customer/register`, buildRegistrationPayload(otpCode));
+      localStorage.setItem('customerToken', response.data.token);
+      localStorage.setItem('customer', JSON.stringify(response.data.user));
+      toast.success(`Bienvenue ${response.data.user.first_name} ! Votre compte est créé et vérifié.`);
+      if (setIsCustomerAuthenticated) setIsCustomerAuthenticated(true);
+      navigate('/customer/dashboard');
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Erreur lors de la création du compte"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Phase 1 — pre-register (validates phone + sends OTP), or login
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Check terms acceptance for registration
     if (!isLogin && !termsAccepted) {
       toast.error('Vous devez accepter les Conditions Générales d\'Utilisation pour créer un compte');
       return;
@@ -85,80 +135,28 @@ const CustomerAuth = ({ setIsCustomerAuthenticated }) => {
     setLoading(true);
 
     try {
-      let response;
-      
       if (isLogin) {
-        response = await axios.post(`${API}/auth/login`, {
+        const response = await axios.post(`${API}/auth/login`, {
           phone_number: formData.phone_number,
           password: formData.password,
           user_type: 'customer'
         });
-      } else {
-        // Build location string for registration
-        const locationParts = [];
-        if (formData.quartier) locationParts.push(formData.quartier);
-        if (formData.commune) {
-          const communeObj = communes.find(c => c.id === formData.commune);
-          if (communeObj) locationParts.push(communeObj.name);
-        }
-        if (formData.ville) {
-          const villeObj = villes.find(v => v.id === formData.ville);
-          if (villeObj) locationParts.push(villeObj.name);
-        }
-        if (formData.region) {
-          const regionObj = getRegions().find(r => r.id === formData.region);
-          if (regionObj) locationParts.push(regionObj.name);
-        }
-
-        response = await axios.post(`${API}/auth/customer/register`, {
-          first_name: formData.first_name,
-          last_name: formData.last_name,
-          phone_number: formData.phone_number,
-          password: formData.password,
-          location: locationParts.join(', '),
-          region: formData.region,
-          ville: formData.ville,
-          commune: formData.commune,
-          quartier: formData.quartier
-        });
-      }
-      
-      localStorage.setItem('customerToken', response.data.token);
-      localStorage.setItem('customer', JSON.stringify(response.data.user));
-      
-      if (!isLogin) {
-        // New customer — force phone verification before they can use the app
-        toast.success(`Compte créé avec succès, ${response.data.user.first_name} ! Vérifiez votre numéro pour continuer.`);
-        navigate('/verify-phone', {
-          state: {
-            phone_number: response.data.user.phone_number || formData.phone_number,
-            user_type: 'customer',
-            redirectTo: '/customer/auth',
-          },
-        });
+        localStorage.setItem('customerToken', response.data.token);
+        localStorage.setItem('customer', JSON.stringify(response.data.user));
+        if (setIsCustomerAuthenticated) setIsCustomerAuthenticated(true);
+        toast.success(`Bienvenue ${response.data.user.first_name} !`);
+        navigate('/customer/dashboard');
         return;
       }
-      
-      if (setIsCustomerAuthenticated) {
-        setIsCustomerAuthenticated(true);
-      }
-      
-      toast.success(`Bienvenue ${response.data.user.first_name} !`);
-      navigate('/customer/dashboard');
+      // Registration phase 1 — pre-register triggers OTP send
+      await axios.post(`${API}/auth/pre-register`, {
+        phone_number: formData.phone_number,
+        user_type: 'customer',
+      });
+      setOtpPhase(true);
+      toast.success(`Code de vérification envoyé au ${formData.phone_number}`);
     } catch (error) {
-      const detail = error?.response?.data?.detail;
-      if (detail && typeof detail === 'object' && detail.error_code === 'PHONE_NOT_VERIFIED') {
-        toast.info('Veuillez d\'abord vérifier votre numéro de téléphone.');
-        navigate('/verify-phone', {
-          state: {
-            phone_number: detail.phone_number || formData.phone_number,
-            user_type: 'customer',
-            redirectTo: '/customer/auth',
-          },
-        });
-        return;
-      }
-      toast.error(getErrorMessage(error, 'Une erreur est survenue'));
+      toast.error(getErrorMessage(error, "Une erreur est survenue"));
     } finally {
       setLoading(false);
     }
@@ -269,6 +267,16 @@ const CustomerAuth = ({ setIsCustomerAuthenticated }) => {
                 </p>
               </div>
 
+              {/* OTP gate — visible after pre-register on the registration flow */}
+              {!isLogin && otpPhase ? (
+                <PreRegisterOtpGate
+                  phoneNumber={formData.phone_number}
+                  userType="customer"
+                  submitting={loading}
+                  onVerified={submitRegistration}
+                  onCancel={() => setOtpPhase(false)}
+                />
+              ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
                 {!isLogin && (
                   <>
@@ -500,6 +508,7 @@ const CustomerAuth = ({ setIsCustomerAuthenticated }) => {
                   )}
                 </Button>
               </form>
+              )}
 
               <div className="mt-6 text-center">
                 <p className="text-gray-600">

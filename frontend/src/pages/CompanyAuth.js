@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import ForgotPassword from '@/components/ForgotPassword';
 import TermsConditionsModal from '@/components/TermsConditionsModal';
+import PreRegisterOtpGate from '@/components/PreRegisterOtpGate';
 import axios from 'axios';
 import { GUINEA_LOCATIONS, getVillesByRegion, getRegions } from '../data/guineaLocations';
 import { formatGuineanPhone } from '@/utils/phone';
@@ -46,6 +47,7 @@ const CompanyAuth = ({ setIsCompanyAuthenticated }) => {
   // Default to login, but switch to register if URL contains ?mode=register
   const initialIsLogin = !(/[?&](mode=register|signup=1)/.test(location.search));
   const [isLogin, setIsLogin] = useState(initialIsLogin);
+  const [otpPhase, setOtpPhase] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
@@ -189,6 +191,23 @@ const CompanyAuth = ({ setIsCompanyAuthenticated }) => {
     setLoading(true);
 
     try {
+      // Phase 1 of registration — pre-register sends an OTP, no DB write yet
+      await axios.post(`${API}/auth/pre-register`, {
+        phone_number: formData.phone_number,
+        user_type: 'company',
+      });
+      setOtpPhase(true);
+      toast.success(`Code de vérification envoyé au ${formData.phone_number}`);
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Échec de l'envoi du code"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const submitCompanyRegistration = async (otpCode) => {
+    setLoading(true);
+    try {
       const response = await axios.post(`${API}/auth/company/register`, {
         company_name: formData.company_name,
         rccm_number: formData.rccm_number || null,
@@ -203,16 +222,18 @@ const CompanyAuth = ({ setIsCompanyAuthenticated }) => {
         description: formData.description,
         password: formData.password,
         contact_person_name: formData.contact_person_name,
-        contact_person_phone: formData.contact_person_phone
+        contact_person_phone: formData.contact_person_phone,
+        otp_code: otpCode,
       });
 
       localStorage.setItem('companyToken', response.data.token);
       localStorage.setItem('company', JSON.stringify(response.data.user));
       setCreatedCompanyId(response.data.user.id);
-      toast.success('Entreprise créée ! Veuillez télécharger vos documents.');
+      toast.success('Entreprise créée et numéro vérifié ! Téléchargez vos documents.');
+      setOtpPhase(false);
       setCurrentStep(2);
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Échec de inscription'));
+      toast.error(getErrorMessage(error, "Échec de l'inscription"));
     } finally {
       setLoading(false);
     }
@@ -488,8 +509,20 @@ const CompanyAuth = ({ setIsCompanyAuthenticated }) => {
             />
           )}
 
+          {/* OTP GATE - between step 1 form and step 2 documents */}
+          {!isLogin && currentStep === 1 && otpPhase && (
+            <PreRegisterOtpGate
+              phoneNumber={formData.phone_number}
+              userType="company"
+              submitting={loading}
+              onVerified={submitCompanyRegistration}
+              onCancel={() => setOtpPhase(false)}
+              submitLabel="Créer mon compte entreprise"
+            />
+          )}
+
           {/* REGISTER STEP 1 - Company Information */}
-          {!isLogin && currentStep === 1 && (
+          {!isLogin && currentStep === 1 && !otpPhase && (
             <form onSubmit={handleRegisterStep1} className="space-y-6">
               {/* Company Name */}
               <div className="space-y-2">

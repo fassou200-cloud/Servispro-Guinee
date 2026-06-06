@@ -18,6 +18,7 @@ import { getProfessionGroups, getProfessionsByGroup } from '@/data/professions';
 import { getErrorMessage } from '@/utils/helpers';
 import ForgotPassword from '@/components/ForgotPassword';
 import TermsConditionsModal from '@/components/TermsConditionsModal';
+import PreRegisterOtpGate from '@/components/PreRegisterOtpGate';
 import { formatGuineanPhone } from '@/utils/phone';
 import GuineaFlag from '@/components/GuineaFlag';
 
@@ -31,6 +32,7 @@ const AuthPage = ({ setIsAuthenticated }) => {
   const initialIsLogin = !(/[?&](mode=register|signup=1)/.test(location.search));
   const [isLogin, setIsLogin] = useState(initialIsLogin);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [otpPhase, setOtpPhase] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -353,12 +355,50 @@ const AuthPage = ({ setIsAuthenticated }) => {
       const selectedGroup = professionGroups.find(g => g.id === professionGroup);
       const groupName = selectedGroup ? selectedGroup.name : professionGroup;
       
-      // Create FormData for file upload
+      // Phase 1 of registration — pre-register sends an OTP, no DB write yet.
+      // The actual upload + account creation happens in submitProviderRegistration().
+      await axios.post(`${API}/auth/pre-register`, {
+        phone_number: formData.phone_number,
+        user_type: 'provider',
+      });
+      setOtpPhase(true);
+      toast.success(`Code de vérification envoyé au ${formData.phone_number}`);
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Échec de l'envoi du code"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Phase 2 — called by PreRegisterOtpGate after the user enters the 6-digit code
+  const submitProviderRegistration = async (otpCode) => {
+    setLoading(true);
+    try {
+      const selectedProfession = professions.find(p => p.id === formData.profession);
+      const professionName = selectedProfession ? selectedProfession.name : formData.profession;
+      const selectedGroup = professionGroups.find(g => g.id === professionGroup);
+      const groupName = selectedGroup ? selectedGroup.name : professionGroup;
+      const locationParts = [];
+      if (formData.quartier) locationParts.push(formData.quartier);
+      if (formData.commune) {
+        const c = communes.find((x) => x.id === formData.commune);
+        if (c) locationParts.push(c.name);
+      }
+      if (formData.ville) {
+        const v = villes.find((x) => x.id === formData.ville);
+        if (v) locationParts.push(v.name);
+      }
+      if (formData.region) {
+        const r = getRegions().find((x) => x.id === formData.region);
+        if (r) locationParts.push(r.name);
+      }
+
       const submitData = new FormData();
       submitData.append('first_name', formData.first_name);
       submitData.append('last_name', formData.last_name);
       submitData.append('phone_number', formData.phone_number);
       submitData.append('password', formData.password);
+      submitData.append('otp_code', otpCode);
       submitData.append('profession', professionName);
       submitData.append('profession_group', groupName);
       submitData.append('years_experience', formData.years_experience);
@@ -369,36 +409,20 @@ const AuthPage = ({ setIsAuthenticated }) => {
       submitData.append('commune', formData.commune);
       submitData.append('quartier', formData.quartier || '');
       submitData.append('about', formData.about || '');
-      
-      // Add profile photo
-      if (profilePhoto) {
-        submitData.append('profile_photo', profilePhoto);
-      }
-      
-      // Add documents
-      documents.forEach((doc) => {
-        submitData.append(`documents`, doc);
-      });
+      if (profilePhoto) submitData.append('profile_photo', profilePhoto);
+      documents.forEach((doc) => submitData.append('documents', doc));
 
       const response = await axios.post(`${API}/auth/register`, submitData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
-      
+
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
-      
-      toast.success('Inscription réussie ! Vérifiez votre numéro pour activer votre compte.');
-      navigate('/verify-phone', {
-        state: {
-          phone_number: response.data.user.phone_number || formData.phone_number,
-          user_type: 'provider',
-          redirectTo: '/auth',
-        },
-      });
+      toast.success('Inscription réussie ! Votre compte est créé et votre numéro vérifié.');
+      setOtpPhase(false);
+      setIsAuthenticated(true);
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Une erreur est survenue'));
+      toast.error(getErrorMessage(error, "Échec de l'inscription"));
     } finally {
       setLoading(false);
     }
@@ -596,6 +620,17 @@ const AuthPage = ({ setIsAuthenticated }) => {
               </div>
             )}
 
+            {/* OTP gate — visible after pre-register on the registration flow */}
+            {!isLogin && otpPhase ? (
+              <PreRegisterOtpGate
+                phoneNumber={formData.phone_number}
+                userType="provider"
+                submitting={loading}
+                onVerified={submitProviderRegistration}
+                onCancel={() => setOtpPhase(false)}
+                submitLabel="Créer mon compte prestataire"
+              />
+            ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* LOGIN FORM */}
               {isLogin && (
@@ -1118,6 +1153,7 @@ const AuthPage = ({ setIsAuthenticated }) => {
                 </>
               )}
             </form>
+            )}
 
             {/* Footer links - Only in Login or Step 1 */}
             {(isLogin || registrationStep === 1) && (

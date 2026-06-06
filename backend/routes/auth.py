@@ -12,18 +12,80 @@ from models import (
     RegisterInput, LoginInput, AuthResponse, CustomerRegisterInput,
     CompanyRegisterInput, CompanyLoginInput, CompanyResetPasswordInput,
     AdminLoginInput, AdminRegisterInput, PasswordResetRequest, PasswordResetVerify,
-    ProfessionType, UserType, ServiceProvider, ProviderStatus
+    PreRegisterInput, ProfessionType, UserType, ServiceProvider, ProviderStatus
 )
 from utils.security import log_audit_event, get_client_ip, is_ip_blocked, record_failed_attempt, clear_failed_attempts
 from utils.storage import upload_to_cloudinary
 from utils.sms_helper import is_sms_enabled
-from utils.otp_helper import is_valid_guinea_phone
+from utils.otp_helper import is_valid_guinea_phone, send_otp, verify_otp
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
 # In-memory OTP storage for password reset (consider Redis for production)
 password_reset_otps = {}
+
+
+# ==================== PRE-REGISTRATION (OTP send) ====================
+
+async def _phone_exists(phone_normalized: str, base_phone: str, user_type: str) -> bool:
+    """Check if a phone number already exists in the matching user collection."""
+    variants = [phone_normalized, base_phone, '224' + base_phone, '+224' + base_phone]
+    collections = {
+        'provider': db.service_providers,
+        'customer': db.customers,
+        'company': db.companies,
+    }
+    coll = collections.get(user_type)
+    if coll is None:
+        return False
+    for v in variants:
+        if await coll.find_one({'phone_number': v}):
+            return True
+    return False
+
+
+@router.post("/auth/pre-register")
+async def pre_register(input_data: PreRegisterInput):
+    """Step 1 of the two-step registration flow.
+
+    Validates the phone format + uniqueness in the target collection, then
+    sends an OTP via Africa's Talking. No account is created here.
+    The client must then call the actual `/auth/.../register` endpoint with
+    the OTP code received by SMS to finish the flow.
+    """
+    raw_phone = input_data.phone_number.strip().replace(" ", "").replace("-", "").replace(".", "").replace("+", "")
+    base_phone = raw_phone[3:] if raw_phone.startswith('224') else raw_phone
+    normalized = raw_phone if raw_phone.startswith('224') else '224' + base_phone
+    
+    # 1. Validate Guinean mobile format
+    if not is_valid_guinea_phone(normalized):
+        raise HTTPException(
+            status_code=400,
+            detail="Numéro de téléphone invalide. Saisissez un numéro guinéen au format +224 6XX XX XX XX (9 chiffres commençant par 6 ou 7).",
+        )
+    
+    # 2. Uniqueness check on the target collection
+    if await _phone_exists(normalized, base_phone, input_data.user_type):
+        labels = {'provider': 'prestataire', 'customer': 'client', 'company': 'entreprise'}
+        raise HTTPException(
+            status_code=400,
+            detail=f"Ce numéro de téléphone est déjà enregistré comme {labels.get(input_data.user_type, 'utilisateur')}.",
+        )
+    
+    # 3. Send OTP (purpose='registration' so the verify_otp at register time matches)
+    result = await send_otp(normalized, purpose='registration')
+    if not result.get('success'):
+        status = 429 if result.get('error') == 'RATE_LIMITED' else 400
+        raise HTTPException(status_code=status, detail=result.get('message', "Échec de l'envoi du code"))
+    
+    return {
+        "success": True,
+        "message": result.get('message', f"Code envoyé au +{normalized}. Saisissez-le pour finaliser l'inscription."),
+        "phone_number": f"+{normalized}",
+        "expires_in_minutes": result.get('expires_in_minutes', 10),
+        "auto_verified": result.get('auto_verified', False),
+    }
 
 
 def normalize_phone(raw: str) -> str:
@@ -60,6 +122,7 @@ async def register(
     last_name: str = Form(...),
     phone_number: str = Form(...),
     password: str = Form(...),
+    otp_code: str = Form(...),
     profession: str = Form(...),
     profession_group: str = Form(""),
     years_experience: str = Form(""),
@@ -137,6 +200,11 @@ async def register(
             status_code=400,
             detail="Numéro de téléphone invalide. Saisissez un numéro guinéen au format +224 6XX XX XX XX (9 chiffres commençant par 6 ou 7).",
         )
+    
+    # Verify the OTP code obtained from the pre-register step
+    otp_result = await verify_otp(candidate, otp_code, purpose='registration')
+    if not otp_result.get('success'):
+        raise HTTPException(status_code=400, detail=otp_result.get('message', 'Code OTP invalide'))
     
     # Create all possible variants to check
     phone_variants = [
@@ -220,7 +288,7 @@ async def register(
         'verification_status': ProviderStatus.PENDING.value,
         'price': None,
         'investigation_fee': None,
-        'phone_verified': not is_sms_enabled(),
+        'phone_verified': True,
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     
@@ -340,6 +408,11 @@ async def register_customer(input_data: CustomerRegisterInput):
             detail="Numéro de téléphone invalide. Saisissez un numéro guinéen au format +224 6XX XX XX XX (9 chiffres commençant par 6 ou 7).",
         )
     
+    # Verify the OTP code obtained from the pre-register step
+    otp_result = await verify_otp(candidate, input_data.otp_code, purpose='registration')
+    if not otp_result.get('success'):
+        raise HTTPException(status_code=400, detail=otp_result.get('message', 'Code OTP invalide'))
+    
     # Create all possible variants to check
     phone_variants = [
         phone,                    # As provided (normalized)
@@ -367,7 +440,7 @@ async def register_customer(input_data: CustomerRegisterInput):
         'last_name': input_data.last_name,
         'phone_number': normalized_phone,
         'password': hashed_pwd,
-        'phone_verified': not is_sms_enabled(),
+        'phone_verified': True,
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     
@@ -401,6 +474,10 @@ async def register_company(input_data: CompanyRegisterInput):
             status_code=400,
             detail="Numéro de téléphone invalide. Saisissez un numéro guinéen au format +224 6XX XX XX XX (9 chiffres commençant par 6 ou 7).",
         )
+    # Verify the OTP code obtained from the pre-register step
+    otp_result = await verify_otp(normalized, input_data.otp_code, purpose='registration')
+    if not otp_result.get('success'):
+        raise HTTPException(status_code=400, detail=otp_result.get('message', 'Code OTP invalide'))
     for variant in phone_variants(input_data.phone_number):
         existing_phone = await db.companies.find_one({'phone_number': variant})
         if existing_phone:
@@ -437,7 +514,7 @@ async def register_company(input_data: CompanyRegisterInput):
         # Status
         'verification_status': 'pending',
         'online_status': False,
-        'phone_verified': not is_sms_enabled(),
+        'phone_verified': True,
         'created_at': now,
         'updated_at': now
     }

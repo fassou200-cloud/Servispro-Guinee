@@ -25,7 +25,10 @@ async def main():
     total = {}
     for col in ('service_providers', 'customers', 'companies'):
         r = await db[col].update_many(
-            {'phone_verified': {'$exists': False}},
+            {'$or': [
+                {'phone_verified': {'$exists': False}},
+                {'phone_verified': False},
+            ]},
             {'$set': {'phone_verified': True, 'phone_verified_at': now, 'phone_verified_grandfathered': True}},
         )
         total[col] = r.modified_count

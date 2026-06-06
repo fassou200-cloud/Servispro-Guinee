@@ -138,11 +138,18 @@ class CustomerRegisterInput(BaseModel):
     last_name: str
     phone_number: str
     password: str
+    otp_code: str
     
     @field_validator('phone_number')
     def validate_phone(cls, v):
         if not v or len(v) < 10:
             raise ValueError('Phone number must be at least 10 digits')
+        return v
+    
+    @field_validator('otp_code')
+    def validate_otp(cls, v):
+        if not v or len(v) != 6 or not v.isdigit():
+            raise ValueError('OTP code must be exactly 6 digits')
         return v
 
 class AuthResponse(BaseModel):
@@ -206,11 +213,36 @@ class CompanyRegisterInput(BaseModel):
     password: str
     contact_person_name: str
     contact_person_phone: str
+    otp_code: str
     
     @field_validator('phone_number')
     def validate_phone(cls, v):
         if not v or len(v) < 10:
             raise ValueError('Phone number must be at least 10 digits')
+        return v
+    
+    @field_validator('otp_code')
+    def validate_otp(cls, v):
+        if not v or len(v) != 6 or not v.isdigit():
+            raise ValueError('OTP code must be exactly 6 digits')
+        return v
+
+
+class PreRegisterInput(BaseModel):
+    """Phone-only payload used to trigger the OTP send before any account creation."""
+    phone_number: str
+    user_type: str  # 'provider' | 'customer' | 'company'
+    
+    @field_validator('phone_number')
+    def validate_phone(cls, v):
+        if not v or len(v) < 10:
+            raise ValueError('Phone number must be at least 10 digits')
+        return v
+    
+    @field_validator('user_type')
+    def validate_user_type(cls, v):
+        if v not in ('provider', 'customer', 'company'):
+            raise ValueError("user_type must be 'provider', 'customer' or 'company'")
         return v
 
 
