@@ -17,6 +17,7 @@ from models import (
 from utils.security import log_audit_event, get_client_ip, is_ip_blocked, record_failed_attempt, clear_failed_attempts
 from utils.storage import upload_to_cloudinary
 from utils.sms_helper import is_sms_enabled
+from utils.otp_helper import is_valid_guinea_phone
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -128,6 +129,14 @@ async def register(
         base_phone = phone[3:]
     else:
         base_phone = phone
+    
+    # Validate Guinean mobile format BEFORE doing any work / DB writes
+    candidate = phone if phone.startswith('224') else '224' + base_phone
+    if not is_valid_guinea_phone(candidate):
+        raise HTTPException(
+            status_code=400,
+            detail="Numéro de téléphone invalide. Saisissez un numéro guinéen au format +224 6XX XX XX XX (9 chiffres commençant par 6 ou 7).",
+        )
     
     # Create all possible variants to check
     phone_variants = [
@@ -323,6 +332,14 @@ async def register_customer(input_data: CustomerRegisterInput):
     else:
         base_phone = phone
     
+    # Validate Guinean mobile format BEFORE any DB write
+    candidate = phone if phone.startswith('224') else '224' + base_phone
+    if not is_valid_guinea_phone(candidate):
+        raise HTTPException(
+            status_code=400,
+            detail="Numéro de téléphone invalide. Saisissez un numéro guinéen au format +224 6XX XX XX XX (9 chiffres commençant par 6 ou 7).",
+        )
+    
     # Create all possible variants to check
     phone_variants = [
         phone,                    # As provided (normalized)
@@ -378,6 +395,12 @@ async def register_company(input_data: CompanyRegisterInput):
     
     # Normalize phone and check all variants
     normalized = normalize_phone(input_data.phone_number)
+    # Validate Guinean mobile format BEFORE any DB write
+    if not is_valid_guinea_phone(normalized):
+        raise HTTPException(
+            status_code=400,
+            detail="Numéro de téléphone invalide. Saisissez un numéro guinéen au format +224 6XX XX XX XX (9 chiffres commençant par 6 ou 7).",
+        )
     for variant in phone_variants(input_data.phone_number):
         existing_phone = await db.companies.find_one({'phone_number': variant})
         if existing_phone:
