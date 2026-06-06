@@ -187,7 +187,8 @@ export default function PreRegisterOtpGate({
             type="button"
             variant="outline"
             onClick={sendCode}
-            disabled={sending || (!deliveryError && resendIn > 0)}
+            disabled={sending || !!deliveryError || (!deliveryError && resendIn > 0)}
+            className={deliveryError ? 'opacity-50 cursor-not-allowed' : ''}
             data-testid="pre-register-resend-btn"
           >
             {sending ? (
