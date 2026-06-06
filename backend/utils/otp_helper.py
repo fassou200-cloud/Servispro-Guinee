@@ -188,6 +188,17 @@ async def verify_otp(phone_number: str, code: str, purpose: str = 'verification'
     )
     if not record:
         return {"success": False, "error": "NO_ACTIVE_CODE", "message": "Aucun code actif. Demandez un nouveau code."}
+    
+    # If Africa's Talking reported a delivery failure, refuse the code even if
+    # it would otherwise match. The user must request a new code with a valid number.
+    if record.get('delivery_failed'):
+        reason = record.get('delivery_failure_reason') or 'Numéro invalide'
+        await db.otp_codes.update_one({'_id': record['_id']}, {'$set': {'consumed': True}})
+        return {
+            "success": False,
+            "error": "INVALID_PHONE",
+            "message": f"Numéro de téléphone inexistant ou invalide ({reason}). Saisissez un autre numéro.",
+        }
 
     if record.get('expires_at') and now.isoformat() > record['expires_at']:
         return {"success": False, "error": "EXPIRED", "message": "Code expiré. Demandez un nouveau code."}

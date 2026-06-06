@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
-import { Loader2, ShieldCheck, RefreshCw } from 'lucide-react';
+import { Loader2, ShieldCheck, RefreshCw, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -112,15 +112,34 @@ export default function PreRegisterOtpGate({
   };
 
   return (
-    <div className="rounded-lg border border-emerald-200 bg-emerald-50/60 p-5 space-y-4" data-testid="pre-register-otp-gate">
+    <div
+      className={`rounded-lg border p-5 space-y-4 ${deliveryError ? 'border-red-300 bg-red-50/70' : 'border-emerald-200 bg-emerald-50/60'}`}
+      data-testid="pre-register-otp-gate"
+    >
       <div className="flex items-start gap-3">
-        <ShieldCheck className="h-6 w-6 text-emerald-600 mt-0.5 shrink-0" />
+        {deliveryError ? (
+          <AlertTriangle className="h-6 w-6 text-red-600 mt-0.5 shrink-0" />
+        ) : (
+          <ShieldCheck className="h-6 w-6 text-emerald-600 mt-0.5 shrink-0" />
+        )}
         <div className="space-y-1">
-          <h3 className="font-semibold text-emerald-900">Vérification du numéro</h3>
-          <p className="text-sm text-emerald-800">
-            Un code de vérification a été envoyé par SMS au <strong>{phoneNumber}</strong>.
-            Saisissez-le ci-dessous pour finaliser la création de votre compte.
-          </p>
+          {deliveryError ? (
+            <>
+              <h3 className="font-semibold text-red-900" data-testid="otp-delivery-failed-title">Numéro de téléphone invalide</h3>
+              <p className="text-sm text-red-800">{deliveryError}</p>
+              <p className="text-sm text-red-800">
+                Le SMS n&apos;a pas pu être livré au <strong>{phoneNumber}</strong>. Modifiez votre numéro de téléphone et réessayez.
+              </p>
+            </>
+          ) : (
+            <>
+              <h3 className="font-semibold text-emerald-900">Vérification du numéro</h3>
+              <p className="text-sm text-emerald-800">
+                Un code de vérification a été envoyé par SMS au <strong>{phoneNumber}</strong>.
+                Saisissez-le ci-dessous pour finaliser la création de votre compte.
+              </p>
+            </>
+          )}
         </div>
       </div>
 
@@ -136,20 +155,23 @@ export default function PreRegisterOtpGate({
             placeholder="123456"
             value={code}
             onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, CODE_LENGTH))}
-            className="text-center text-2xl tracking-[0.5em] font-mono mt-1"
+            disabled={!!deliveryError}
+            className={`text-center text-2xl tracking-[0.5em] font-mono mt-1 ${deliveryError ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : ''}`}
             data-testid="pre-register-otp-input"
             autoFocus
           />
-          <p className="text-xs text-emerald-700 mt-1">
-            Le code expire dans 10 minutes.
-          </p>
+          {!deliveryError && (
+            <p className="text-xs text-emerald-700 mt-1">
+              Le code expire dans 10 minutes.
+            </p>
+          )}
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2">
           <Button
             type="submit"
-            className="bg-emerald-600 hover:bg-emerald-700 text-white flex-1"
-            disabled={submitting || code.length !== CODE_LENGTH}
+            className={`flex-1 text-white ${deliveryError ? 'bg-slate-400 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700'}`}
+            disabled={submitting || code.length !== CODE_LENGTH || !!deliveryError}
             data-testid="pre-register-submit-btn"
           >
             {submitting ? (
@@ -165,7 +187,7 @@ export default function PreRegisterOtpGate({
             type="button"
             variant="outline"
             onClick={sendCode}
-            disabled={sending || resendIn > 0}
+            disabled={sending || (!deliveryError && resendIn > 0)}
             data-testid="pre-register-resend-btn"
           >
             {sending ? (
@@ -173,17 +195,17 @@ export default function PreRegisterOtpGate({
             ) : (
               <RefreshCw className="h-4 w-4 mr-1" />
             )}
-            {resendIn > 0 ? `Renvoyer (${resendIn}s)` : 'Renvoyer le code'}
+            {!deliveryError && resendIn > 0 ? `Renvoyer (${resendIn}s)` : 'Renvoyer le code'}
           </Button>
         </div>
         {onCancel && (
           <button
             type="button"
             onClick={onCancel}
-            className="text-xs text-emerald-700 hover:underline"
+            className={`text-xs hover:underline font-medium ${deliveryError ? 'text-red-700' : 'text-emerald-700'}`}
             data-testid="pre-register-back-btn"
           >
-            ← Modifier mes informations
+            ← {deliveryError ? 'Saisir un autre numéro' : 'Modifier mes informations'}
           </button>
         )}
       </form>
@@ -192,22 +214,6 @@ export default function PreRegisterOtpGate({
         <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2">
           Le code n&apos;a pas pu être envoyé. Vérifiez votre numéro et cliquez sur « Renvoyer le code ».
         </p>
-      )}
-      {deliveryError && (
-        <div className="rounded-md border border-red-300 bg-red-50 px-3 py-3 text-sm text-red-800" data-testid="otp-delivery-failed">
-          <p className="font-semibold mb-1">❌ Numéro invalide</p>
-          <p className="text-xs leading-relaxed">{deliveryError}</p>
-          {onCancel && (
-            <button
-              type="button"
-              onClick={onCancel}
-              className="mt-2 text-xs text-red-700 hover:underline font-medium"
-              data-testid="otp-delivery-failed-back"
-            >
-              ← Saisir un autre numéro
-            </button>
-          )}
-        </div>
       )}
     </div>
   );
