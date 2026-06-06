@@ -37,11 +37,12 @@ export default function PreRegisterOtpGate({
   submitLabel = 'Créer mon compte',
 }) {
   const [sending, setSending] = useState(false);
-  const [sent, setSent] = useState(false);
+  // The parent always calls /auth/pre-register before mounting this gate,
+  // so we start in the "sent" state and only re-send via the manual button.
+  const [sent, setSent] = useState(true);
   const [code, setCode] = useState('');
-  const [resendIn, setResendIn] = useState(0);
+  const [resendIn, setResendIn] = useState(RESEND_COOLDOWN_S);
   const [deliveryError, setDeliveryError] = useState(null);
-  const sentOnce = useRef(false);
   const pollRef = useRef(null);
 
   useEffect(() => {
@@ -93,14 +94,6 @@ export default function PreRegisterOtpGate({
       setSending(false);
     }
   };
-
-  // Auto-send the code on mount
-  useEffect(() => {
-    if (phoneNumber && !sentOnce.current) {
-      sentOnce.current = true;
-      sendCode();
-    }
-  }, [phoneNumber]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
