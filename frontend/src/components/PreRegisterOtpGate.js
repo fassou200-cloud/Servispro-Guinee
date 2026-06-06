@@ -40,7 +40,9 @@ export default function PreRegisterOtpGate({
   const [sent, setSent] = useState(false);
   const [code, setCode] = useState('');
   const [resendIn, setResendIn] = useState(0);
+  const [deliveryError, setDeliveryError] = useState(null);
   const sentOnce = useRef(false);
+  const pollRef = useRef(null);
 
   useEffect(() => {
     if (resendIn <= 0) return;
@@ -48,9 +50,35 @@ export default function PreRegisterOtpGate({
     return () => clearTimeout(t);
   }, [resendIn]);
 
+  // Poll delivery status every 4 seconds while waiting for the user to enter the code.
+  // Stops on failure or when the code is submitted.
+  useEffect(() => {
+    if (!sent || deliveryError) {
+      if (pollRef.current) clearInterval(pollRef.current);
+      return;
+    }
+    const checkDelivery = async () => {
+      try {
+        const { data } = await axios.get(`${API}/otp/delivery-status`, {
+          params: { phone_number: phoneNumber },
+        });
+        if (data.status === 'failed') {
+          setDeliveryError(data.message || 'Numéro invalide. Le SMS n\u2019a pas pu être livré.');
+        }
+      } catch {
+        /* ignore polling errors */
+      }
+    };
+    pollRef.current = setInterval(checkDelivery, 4000);
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, [sent, deliveryError, phoneNumber]);
+
   const sendCode = async () => {
     if (!phoneNumber) return;
     setSending(true);
+    setDeliveryError(null);
     try {
       await axios.post(`${API}/auth/pre-register`, {
         phone_number: phoneNumber,
@@ -72,7 +100,6 @@ export default function PreRegisterOtpGate({
       sentOnce.current = true;
       sendCode();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phoneNumber]);
 
   const handleSubmit = (e) => {
@@ -161,10 +188,26 @@ export default function PreRegisterOtpGate({
         )}
       </form>
 
-      {!sent && !sending && (
+      {!sent && !sending && !deliveryError && (
         <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2">
           Le code n&apos;a pas pu être envoyé. Vérifiez votre numéro et cliquez sur « Renvoyer le code ».
         </p>
+      )}
+      {deliveryError && (
+        <div className="rounded-md border border-red-300 bg-red-50 px-3 py-3 text-sm text-red-800" data-testid="otp-delivery-failed">
+          <p className="font-semibold mb-1">❌ Numéro invalide</p>
+          <p className="text-xs leading-relaxed">{deliveryError}</p>
+          {onCancel && (
+            <button
+              type="button"
+              onClick={onCancel}
+              className="mt-2 text-xs text-red-700 hover:underline font-medium"
+              data-testid="otp-delivery-failed-back"
+            >
+              ← Saisir un autre numéro
+            </button>
+          )}
+        </div>
       )}
     </div>
   );

@@ -44,6 +44,7 @@ from routes.interim_phase2 import router as interim_phase2_router
 from routes.interim_customer import router as interim_customer_router
 from routes.otp import router as otp_router
 from routes.admin_sms import router as admin_sms_router
+from routes.sms_webhooks import router as sms_webhooks_router
 
 # Configure logging
 logging.basicConfig(
@@ -73,6 +74,7 @@ app.include_router(interim_phase2_router, prefix="/api")
 app.include_router(interim_customer_router, prefix="/api")
 app.include_router(otp_router, prefix="/api")
 app.include_router(admin_sms_router, prefix="/api")
+app.include_router(sms_webhooks_router, prefix="/api")
 
 # Serve uploaded files
 app.mount("/api/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")

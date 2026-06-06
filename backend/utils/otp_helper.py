@@ -148,6 +148,14 @@ async def send_otp(phone_number: str, purpose: str = 'verification') -> dict:
             "error": error_code,
             "message": user_msg,
         }
+    
+    # Stash the provider message_id on the OTP doc so the delivery-report
+    # webhook can correlate the eventual Failed/Success status with this code.
+    if result.get('message_id'):
+        await db.otp_codes.update_one(
+            {'phone_number': phone, 'code': code, 'consumed': False},
+            {'$set': {'message_id': result['message_id']}},
+        )
 
     return {
         "success": True,
